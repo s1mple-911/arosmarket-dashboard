@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aros Market Dashboard</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+  
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* LOGIN */
+  .login-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; background: #fff; }
+  .logo-box { width: 56px; height: 56px; background: #E6F1FB; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .login-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .login-sub { font-size: 14px; color: #666; margin-bottom: 28px; }
+  .input-field { width: 100%; padding: 13px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 12px; background: #fafafa; outline: none; }
+  .input-field:focus { border-color: #185FA5; background: #fff; }
+  .login-btn { width: 100%; padding: 14px; background: #185FA5; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .login-btn:active { opacity: 0.85; }
+  .error-box { padding: 11px 14px; background: #FCEBEB; color: #A32D2D; border-radius: 10px; font-size: 13px; margin-bottom: 14px; display: none; }
+
+  /* HEADER */
+  .header { background: #fff; padding: 14px 16px 12px; border-bottom: 1px solid #ebebeb; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; }
+  .header-name { font-size: 17px; font-weight: 600; }
+  .header-wh { font-size: 13px; color: #888; margin-top: 2px; }
+  .refresh-btn { padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 8px; background: none; font-size: 13px; color: #185FA5; cursor: pointer; }
+
+  /* SUMMARY */
+  .summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #ebebeb; }
+  .sum-card { background: #f5f5f5; border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .sum-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .sum-val { font-size: 14px; font-weight: 600; }
+  .sum-val.red { color: #A32D2D; }
+  .sum-val.yellow { color: #854F0B; }
+  .sum-val.blue { color: #185FA5; }
+
+  /* TABS */
+  .tabs { display: flex; background: #fff; border-bottom: 1px solid #ebebeb; position: sticky; top: 0; z-index: 10; }
+  .tab { flex: 1; padding: 11px 4px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; border: none; background: none; color: #888; border-bottom: 2px solid transparent; }
+  .tab.active { color: #185FA5; border-bottom-color: #185FA5; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 11px; font-weight: 600; margin-left: 3px; }
+  .b-red { background: #FCEBEB; color: #A32D2D; }
+  .b-yellow { background: #FAEEDA; color: #854F0B; }
+  .b-blue { background: #E6F1FB; color: #185FA5; }
+
+  /* LIST */
+  .list { flex: 1; padding: 12px; overflow-y: auto; }
+  .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid #ebebeb; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .card-name { font-size: 15px; font-weight: 600; }
+  .card-phone { font-size: 13px; color: #888; margin-top: 2px; }
+  .pill { padding: 3px 9px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+  .pill-red { background: #FCEBEB; color: #A32D2D; }
+  .pill-yellow { background: #FAEEDA; color: #854F0B; }
+  .pill-blue { background: #E6F1FB; color: #185FA5; }
+  .card-amount { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .amount-red { color: #A32D2D; }
+  .amount-yellow { color: #854F0B; }
+  .amount-blue { color: #185FA5; }
+  .orders { border-top: 1px solid #f0f0f0; padding-top: 8px; margin-bottom: 10px; }
+  .order-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #555; }
+  .call-btn { display: block; width: 100%; padding: 10px; text-align: center; background: #E6F1FB; color: #185FA5; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; }
+  .call-btn:active { opacity: 0.8; }
+
+  /* LOADING / EMPTY */
+  .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #e0e0e0; border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: #888; }
+  .empty { text-align: center; padding: 50px 20px; color: #aaa; font-size: 14px; }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="screen active">
+  <div class="login-wrap">
+    <div class="logo-box">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#185FA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="login-title">Aros Market</div>
+    <div class="login-sub">Qarzdorlar paneli</div>
+    <div class="error-box" id="err-box"></div>
+    <input class="input-field" type="tel" id="phone-inp" placeholder="Telefon: +998901234567" />
+    <input class="input-field" type="password" id="pass-inp" placeholder="Parol" />
+    <button class="login-btn" onclick="doLogin()">Kirish</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-screen" class="screen">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-name" id="h-name">—</div>
+        <div class="header-wh" id="h-wh">—</div>
+      </div>
+      <button class="refresh-btn" onclick="loadData()">Yangilash</button>
+    </div>
+  </div>
+  <div class="summary">
+    <div class="sum-card">
+      <div class="sum-label">O'tgan</div>
+      <div class="sum-val red" id="s-overdue">—</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Bugun</div>
+      <div class="sum-val yellow" id="s-today">—</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Ertaga</div>
+      <div class="sum-val blue" id="s-tomorrow">—</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-overdue" onclick="switchTab('overdue')">
+      O'tgan <span class="badge b-red" id="cnt-overdue">0</span>
+    </button>
+    <button class="tab" id="tab-today" onclick="switchTab('today')">
+      Bugun <span class="badge b-yellow" id="cnt-today">0</span>
+    </button>
+    <button class="tab" id="tab-tomorrow" onclick="switchTab('tomorrow')">
+      Ertaga <span class="badge b-blue" id="cnt-tomorrow">0</span>
+    </button>
+  </div>
+  <div class="list" id="list-area">
+    <div class="loading"><div class="spinner"></div><div class="loading-text">Yuklanmoqda...</div></div>
+  </div>
+</div>
+
+<script>
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx1xWI2IQAogj33z_uBbl8P05zoDocLWCS21-Twi7NvosfU5hQ-rcwn-rHJZ37jrOJ1/exec';
+const API = 'https://api.mobilux.uz/api';
+
+let user = null;
+let data = { overdue: [], today: [], tomorrow: [] };
+let tab = 'overdue';
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function fmt(n) {
+  n = parseFloat(n) || 0;
+  if (n >= 1000000) return (n/1000000).toFixed(1) + ' mln';
+  if (n >= 1000) return Math.round(n/1000) + ' ming';
+  return Math.round(n).toLocaleString();
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function tomorrowStr() { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
+
+async function doLogin() {
+  const phone = document.getElementById('phone-inp').value.trim();
+  const pass = document.getElementById('pass-inp').value.trim();
+  const err = document.getElementById('err-box');
+  err.style.display = 'none';
+  if (!phone || !pass) { err.textContent = 'Telefon va parolni kiriting'; err.style.display = 'block'; return; }
+  try {
+    const r = await fetch(SHEET_URL + '?phone=' + encodeURIComponent(phone));
+    const d = await r.json();
+    if (!d.success) { err.textContent = "Foydalanuvchi topilmadi"; err.style.display = 'block'; return; }
+    if (d.password !== pass) { err.textContent = "Parol noto'g'ri"; err.style.display = 'block'; return; }
+    user = { phone: d.phone, password: d.password, warehouse_id: d.warehouse_id, name: d.name };
+    localStorage.setItem('aros_u', JSON.stringify(user));
+    initMain();
+  } catch(e) {
+    err.textContent = 'Xatolik. Internetni tekshiring.';
+    err.style.display = 'block';
+  }
+}
+
+function initMain() {
+  document.getElementById('h-name').textContent = user.name || 'Hodim';
+  document.getElementById('h-wh').textContent = 'Filial ID: ' + user.warehouse_id;
+  show('main-screen');
+  loadData();
+}
+
+async function loadData() {
+  const listEl = document.getElementById('list-area');
+  listEl.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">Yuklanmoqda...</div></div>';
+
+  try {
+    const creds = btoa(user.phone + ':' + user.password);
+    const today = todayStr();
+    const tmrw = tomorrowStr();
+
+    let debtors = [];
+    let page = 1;
+    while (true) {
+      const r = await fetch(`${API}/admin/v2/report/debtors-list/?is_excel=false&report_date=${today}&warehouse=${user.warehouse_id}&page_size=100&page=${page}`, {
+        headers: { 'Authorization': 'Basic ' + creds }
+      });
+      const d = await r.json();
+      const filtered = (d.results || []).filter(u => u.total_debt > 0);
+      debtors = debtors.concat(filtered);
+      if (!d.next || debtors.length >= 500) break;
+      page++;
+    }
+
+    const overdue = [], todays = [], tomorrows = [];
+
+    await Promise.all(debtors.slice(0, 150).map(async debtor => {
+      try {
+        const r = await fetch(`${API}/admin/wallet/v2/orders/${debtor.user_id}?page_size=50`, {
+          headers: { 'Authorization': 'Basic ' + creds }
+        });
+        const d = await r.json();
+        const unpaid = (d.results || []).filter(o => o.payment && o.payment.status === 'unpaid');
+        const dl = (o) => o.payment.deadline.split('T')[0];
+
+        const ov = unpaid.filter(o => dl(o) < today);
+        const td = unpaid.filter(o => dl(o) === today);
+        const tm = unpaid.filter(o => dl(o) === tmrw);
+
+        if (ov.length) overdue.push({ ...debtor, orders: ov });
+        if (td.length) todays.push({ ...debtor, orders: td });
+        if (tm.length) tomorrows.push({ ...debtor, orders: tm });
+      } catch(e) {}
+    }));
+
+    data = { overdue, today: todays, tomorrow: tomorrows };
+    updateSummary();
+    renderTab(tab);
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Xatolik yuz berdi</div>';
+  }
+}
+
+function updateSummary() {
+  const sum = arr => arr.reduce((s, d) => s + d.orders.reduce((ss, o) => ss + parseFloat(o.payment.total_amount), 0), 0);
+  document.getElementById('s-overdue').textContent = fmt(sum(data.overdue));
+  document.getElementById('s-today').textContent = fmt(sum(data.today));
+  document.getElementById('s-tomorrow').textContent = fmt(sum(data.tomorrow));
+  document.getElementById('cnt-overdue').textContent = data.overdue.length;
+  document.getElementById('cnt-today').textContent = data.today.length;
+  document.getElementById('cnt-tomorrow').textContent = data.tomorrow.length;
+}
+
+function switchTab(t) {
+  tab = t;
+  ['overdue','today','tomorrow'].forEach(id => {
+    document.getElementById('tab-'+id).classList.toggle('active', id === t);
+  });
+  renderTab(t);
+}
+
+function renderTab(t) {
+  const arr = data[t];
+  const listEl = document.getElementById('list-area');
+  if (!arr || arr.length === 0) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>Hech kim yo\'q</div>';
+    return;
+  }
+  const pillCls = t==='overdue'?'pill-red':t==='today'?'pill-yellow':'pill-blue';
+  const pillTxt = t==='overdue'?"Muddati o'tgan":t==='today'?'Bugun tugaydi':'Ertaga tugaydi';
+  const amtCls = t==='overdue'?'amount-red':t==='today'?'amount-yellow':'amount-blue';
+
+  listEl.innerHTML = arr.map(d => {
+    const total = d.orders.reduce((s,o) => s + parseFloat(o.payment.total_amount), 0);
+    const orderRows = d.orders.map(o => `
+      <div class="order-row">
+        <span>#${o.id}</span>
+        <span style="font-weight:600;">${fmt(o.payment.total_amount)} so'm</span>
+      </div>
+    `).join('');
+    return `
+      <div class="card">
+        <div class="card-top">
+          <div>
+            <div class="card-name">${d.first_name} ${d.last_name}</div>
+            <div class="card-phone">${d.username}</div>
+          </div>
+          <span class="pill ${pillCls}">${pillTxt}</span>
+        </div>
+        <div class="card-amount ${amtCls}">${fmt(total)} so'm</div>
+        <div class="orders">${orderRows}</div>
+        <a class="call-btn" href="tel:${d.username}">Qo'ng'iroq qilish</a>
+      </div>
+    `;
+  }).join('');
+}
+
+// Auto login
+try {
+  const saved = localStorage.getItem('aros_u');
+  if (saved) { user = JSON.parse(saved); initMain(); }
+} catch(e) {}
+
+// Telegram WebApp setup
+if (window.Telegram && window.Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
+</script>
+</body>
+</html>
