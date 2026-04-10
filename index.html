@@ -3,305 +3,302 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Aros Market Dashboard</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Statistika — AROS</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
-  
-  .screen { display: none; min-height: 100vh; flex-direction: column; }
-  .screen.active { display: flex; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh;font-size:15px}
 
-  /* LOGIN */
-  .login-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; background: #fff; }
-  .logo-box { width: 56px; height: 56px; background: #E6F1FB; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-  .login-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .login-sub { font-size: 14px; color: #666; margin-bottom: 28px; }
-  .input-field { width: 100%; padding: 13px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 12px; background: #fafafa; outline: none; }
-  .input-field:focus { border-color: #185FA5; background: #fff; }
-  .login-btn { width: 100%; padding: 14px; background: #185FA5; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
-  .login-btn:active { opacity: 0.85; }
-  .error-box { padding: 11px 14px; background: #FCEBEB; color: #A32D2D; border-radius: 10px; font-size: 13px; margin-bottom: 14px; display: none; }
+.hdr{background:#fff;border-bottom:1.5px solid #e5e5e5;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.hdr-avatar{width:36px;height:36px;border-radius:50%;background:#e8f5ec;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#22c55e;border:1.5px solid #22c55e;flex-shrink:0}
+.hdr-info{flex:1}
+.hdr-name{font-size:14px;font-weight:700;color:#111}
+.hdr-sub{font-size:11px;color:#888;margin-top:1px}
+.aros{color:#22c55e;font-size:9px;font-weight:800;padding:3px 8px;border-radius:8px;border:1.5px solid #22c55e;letter-spacing:.8px}
 
-  /* HEADER */
-  .header { background: #fff; padding: 14px 16px 12px; border-bottom: 1px solid #ebebeb; }
-  .header-top { display: flex; justify-content: space-between; align-items: center; }
-  .header-name { font-size: 17px; font-weight: 600; }
-  .header-wh { font-size: 13px; color: #888; margin-top: 2px; }
-  .refresh-btn { padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 8px; background: none; font-size: 13px; color: #185FA5; cursor: pointer; }
+.tabs{display:flex;background:#fff;border-bottom:1.5px solid #e5e5e5}
+.tab{flex:1;padding:11px 4px 10px;text-align:center;font-size:10px;font-weight:700;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a}
+.tab-ic{font-size:17px}
 
-  /* SUMMARY */
-  .summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #ebebeb; }
-  .sum-card { background: #f5f5f5; border-radius: 10px; padding: 10px 8px; text-align: center; }
-  .sum-label { font-size: 11px; color: #888; margin-bottom: 4px; }
-  .sum-val { font-size: 14px; font-weight: 600; }
-  .sum-val.red { color: #A32D2D; }
-  .sum-val.yellow { color: #854F0B; }
-  .sum-val.blue { color: #185FA5; }
+.page{display:none;padding:14px;animation:fi .2s ease}
+.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-  /* TABS */
-  .tabs { display: flex; background: #fff; border-bottom: 1px solid #ebebeb; position: sticky; top: 0; z-index: 10; }
-  .tab { flex: 1; padding: 11px 4px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; border: none; background: none; color: #888; border-bottom: 2px solid transparent; }
-  .tab.active { color: #185FA5; border-bottom-color: #185FA5; }
-  .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 11px; font-weight: 600; margin-left: 3px; }
-  .b-red { background: #FCEBEB; color: #A32D2D; }
-  .b-yellow { background: #FAEEDA; color: #854F0B; }
-  .b-blue { background: #E6F1FB; color: #185FA5; }
+/* DASHBOARD */
+.progress-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:16px;padding:16px;margin-bottom:12px}
+.pc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.pc-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.pc-pct{font-size:22px;font-weight:800;color:#22c55e}
+.pc-bar-wrap{background:#f0f0f0;border-radius:8px;height:8px;margin-bottom:10px;overflow:hidden}
+.pc-bar{background:#22c55e;height:100%;border-radius:8px;transition:width .6s ease}
+.pc-nums{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.pc-nums span{font-weight:600;color:#111}
 
-  /* LIST */
-  .list { flex: 1; padding: 12px; overflow-y: auto; }
-  .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid #ebebeb; }
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-  .card-name { font-size: 15px; font-weight: 600; }
-  .card-phone { font-size: 13px; color: #888; margin-top: 2px; }
-  .pill { padding: 3px 9px; border-radius: 8px; font-size: 11px; font-weight: 600; }
-  .pill-red { background: #FCEBEB; color: #A32D2D; }
-  .pill-yellow { background: #FAEEDA; color: #854F0B; }
-  .pill-blue { background: #E6F1FB; color: #185FA5; }
-  .card-amount { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-  .amount-red { color: #A32D2D; }
-  .amount-yellow { color: #854F0B; }
-  .amount-blue { color: #185FA5; }
-  .orders { border-top: 1px solid #f0f0f0; padding-top: 8px; margin-bottom: 10px; }
-  .order-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #555; }
-  .call-btn { display: block; width: 100%; padding: 10px; text-align: center; background: #E6F1FB; color: #185FA5; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; }
-  .call-btn:active { opacity: 0.8; }
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;padding:13px}
+.sc-lbl{font-size:10px;color:#888;font-weight:600;margin-bottom:4px}
+.sc-val{font-size:17px;font-weight:800;color:#111}
+.sc-val.red{color:#ef4444}
+.sc-val.amber{color:#f59e0b}
+.sc-val.green{color:#22c55e}
 
-  /* LOADING / EMPTY */
-  .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; }
-  .spinner { width: 36px; height: 36px; border: 3px solid #e0e0e0; border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 14px; color: #888; }
-  .empty { text-align: center; padding: 50px 20px; color: #aaa; font-size: 14px; }
-  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+/* CLIENT ROWS */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.total-badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
+.tb-red{background:#fef2f2;color:#ef4444;border:1px solid #fecaca}
+.tb-amber{background:#fffbeb;color:#f59e0b;border:1px solid #fde68a}
+.tb-blue{background:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe}
+.tb-green{background:#f0fdf4;color:#22c55e;border:1px solid #bbf7d0}
+
+.client-row{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.cr-avatar{width:38px;height:38px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#666;flex-shrink:0;border:1px solid #e5e5e5}
+.cr-info{flex:1;min-width:0}
+.cr-name{font-size:13px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-phone{font-size:11px;color:#888;margin-top:2px}
+.cr-right{text-align:right;flex-shrink:0}
+.cr-amt{font-size:13px;font-weight:800}
+.cr-days{font-size:10px;color:#888;margin-top:2px}
+.call-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid #bbf7d0;background:#f0fdf4;text-decoration:none;transition:all .15s}
+.call-btn:active{transform:scale(.93)}
+
+.total-bar{background:#fff;border:1.5px solid #e5e5e5;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.tb-lbl{font-size:11px;color:#888;font-weight:600}
+.tb-val{font-size:15px;font-weight:800}
+
+.loading{text-align:center;padding:40px 16px;color:#bbb;font-size:13px}
+.spinner{width:28px;height:28px;border:2.5px solid #e5e5e5;border-top-color:#22c55e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 16px}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-txt{font-size:13px;color:#bbb}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen" class="screen active">
-  <div class="login-wrap">
-    <div class="logo-box">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-        <path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#185FA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <div class="login-title">Aros Market</div>
-    <div class="login-sub">Qarzdorlar paneli</div>
-    <div class="error-box" id="err-box"></div>
-    <input class="input-field" type="tel" id="phone-inp" placeholder="Telefon: +998901234567" />
-    <input class="input-field" type="password" id="pass-inp" placeholder="Parol" />
-    <button class="login-btn" onclick="doLogin()">Kirish</button>
+<div class="hdr">
+  <div class="hdr-avatar" id="hdrAvatar">?</div>
+  <div class="hdr-info">
+    <div class="hdr-name" id="hdrName">Yuklanmoqda...</div>
+    <div class="hdr-sub" id="hdrSub">AROS Market</div>
   </div>
+  <div class="aros">AROS</div>
 </div>
 
-<!-- MAIN -->
-<div id="main-screen" class="screen">
-  <div class="header">
-    <div class="header-top">
-      <div>
-        <div class="header-name" id="h-name">—</div>
-        <div class="header-wh" id="h-wh">—</div>
-      </div>
-      <button class="refresh-btn" onclick="loadData()">Yangilash</button>
-    </div>
-  </div>
-  <div class="summary">
-    <div class="sum-card">
-      <div class="sum-label">O'tgan</div>
-      <div class="sum-val red" id="s-overdue">—</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Bugun</div>
-      <div class="sum-val yellow" id="s-today">—</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Ertaga</div>
-      <div class="sum-val blue" id="s-tomorrow">—</div>
-    </div>
-  </div>
-  <div class="tabs">
-    <button class="tab active" id="tab-overdue" onclick="switchTab('overdue')">
-      O'tgan <span class="badge b-red" id="cnt-overdue">0</span>
-    </button>
-    <button class="tab" id="tab-today" onclick="switchTab('today')">
-      Bugun <span class="badge b-yellow" id="cnt-today">0</span>
-    </button>
-    <button class="tab" id="tab-tomorrow" onclick="switchTab('tomorrow')">
-      Ertaga <span class="badge b-blue" id="cnt-tomorrow">0</span>
-    </button>
-  </div>
-  <div class="list" id="list-area">
-    <div class="loading"><div class="spinner"></div><div class="loading-text">Yuklanmoqda...</div></div>
-  </div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('dashboard',this)"><span class="tab-ic">📊</span>Dashboard</div>
+  <div class="tab" onclick="showTab('bugun',this)"><span class="tab-ic">🔴</span>Bugun</div>
+  <div class="tab" onclick="showTab('ertaga',this)"><span class="tab-ic">🟡</span>Ertaga</div>
+  <div class="tab" onclick="showTab('otgan',this)"><span class="tab-ic">⚫</span>O'tgan</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div id="dashContent"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+</div>
+
+<!-- BUGUN -->
+<div id="page-bugun" class="page">
+  <div id="bugunContent"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<!-- ERTAGA -->
+<div id="page-ertaga" class="page">
+  <div id="ertagaContent"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<!-- O'TGAN -->
+<div id="page-otgan" class="page">
+  <div id="otganContent"><div class="loading"><div class="spinner"></div></div></div>
 </div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx1xWI2IQAogj33z_uBbl8P05zoDocLWCS21-Twi7NvosfU5hQ-rcwn-rHJZ37jrOJ1/exec';
-const API = 'https://api.mobilux.uz/api';
+const API_BASE = 'https://simle.app.n8n.cloud/webhook';
+const params = new URLSearchParams(window.location.search);
+const UID = params.get('uid') || '';
 
-let user = null;
-let data = { overdue: [], today: [], tomorrow: [] };
-let tab = 'overdue';
-
-function show(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+let userData = null;
+let debtData = { bugun: [], ertaga: [], otgan: [], summary: {} };
 
 function fmt(n) {
-  n = parseFloat(n) || 0;
-  if (n >= 1000000) return (n/1000000).toFixed(1) + ' mln';
-  if (n >= 1000) return Math.round(n/1000) + ' ming';
-  return Math.round(n).toLocaleString();
+  if (!n) return '0';
+  const num = Math.round(Number(n));
+  if (num >= 1000000) return (num/1000000).toFixed(1) + ' mln';
+  if (num >= 1000) return (num/1000).toFixed(0) + ' ming';
+  return num.toLocaleString('uz-UZ');
 }
 
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-function tomorrowStr() { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
-
-async function doLogin() {
-  const phone = document.getElementById('phone-inp').value.trim();
-  const pass = document.getElementById('pass-inp').value.trim();
-  const err = document.getElementById('err-box');
-  err.style.display = 'none';
-  if (!phone || !pass) { err.textContent = 'Telefon va parolni kiriting'; err.style.display = 'block'; return; }
-  try {
-    const r = await fetch(SHEET_URL + '?phone=' + encodeURIComponent(phone));
-    const d = await r.json();
-    if (!d.success) { err.textContent = "Foydalanuvchi topilmadi"; err.style.display = 'block'; return; }
-    if (d.password !== pass) { err.textContent = "Parol noto'g'ri"; err.style.display = 'block'; return; }
-    user = { phone: d.phone, password: d.password, warehouse_id: d.warehouse_id, name: d.name };
-    localStorage.setItem('aros_u', JSON.stringify(user));
-    initMain();
-  } catch(e) {
-    err.textContent = 'Xatolik. Internetni tekshiring.';
-    err.style.display = 'block';
-  }
+function fmtFull(n) {
+  return Math.round(Number(n)).toLocaleString('uz-UZ');
 }
 
-function initMain() {
-  document.getElementById('h-name').textContent = user.name || 'Hodim';
-  document.getElementById('h-wh').textContent = 'Filial ID: ' + user.warehouse_id;
-  show('main-screen');
-  loadData();
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+}
+
+function showTab(tab, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  el.classList.add('active');
 }
 
 async function loadData() {
-  const listEl = document.getElementById('list-area');
-  listEl.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">Yuklanmoqda...</div></div>';
-
-  try {
-    const creds = btoa(user.phone + ':' + user.password);
-    const today = todayStr();
-    const tmrw = tomorrowStr();
-
-    let debtors = [];
-    let page = 1;
-    while (true) {
-      const r = await fetch(`${API}/admin/v2/report/debtors-list/?is_excel=false&report_date=${today}&warehouse=${user.warehouse_id}&page_size=100&page=${page}`, {
-        headers: { 'Authorization': 'Basic ' + creds }
-      });
-      const d = await r.json();
-      const filtered = (d.results || []).filter(u => u.total_debt > 0);
-      debtors = debtors.concat(filtered);
-      if (!d.next || debtors.length >= 500) break;
-      page++;
-    }
-
-    const overdue = [], todays = [], tomorrows = [];
-
-    await Promise.all(debtors.slice(0, 150).map(async debtor => {
-      try {
-        const r = await fetch(`${API}/admin/wallet/v2/orders/${debtor.user_id}?page_size=50`, {
-          headers: { 'Authorization': 'Basic ' + creds }
-        });
-        const d = await r.json();
-        const unpaid = (d.results || []).filter(o => o.payment && o.payment.status === 'unpaid');
-        const dl = (o) => o.payment.deadline.split('T')[0];
-
-        const ov = unpaid.filter(o => dl(o) < today);
-        const td = unpaid.filter(o => dl(o) === today);
-        const tm = unpaid.filter(o => dl(o) === tmrw);
-
-        if (ov.length) overdue.push({ ...debtor, orders: ov });
-        if (td.length) todays.push({ ...debtor, orders: td });
-        if (tm.length) tomorrows.push({ ...debtor, orders: tm });
-      } catch(e) {}
-    }));
-
-    data = { overdue, today: todays, tomorrow: tomorrows };
-    updateSummary();
-    renderTab(tab);
-  } catch(e) {
-    listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Xatolik yuz berdi</div>';
-  }
-}
-
-function updateSummary() {
-  const sum = arr => arr.reduce((s, d) => s + d.orders.reduce((ss, o) => ss + parseFloat(o.payment.total_amount), 0), 0);
-  document.getElementById('s-overdue').textContent = fmt(sum(data.overdue));
-  document.getElementById('s-today').textContent = fmt(sum(data.today));
-  document.getElementById('s-tomorrow').textContent = fmt(sum(data.tomorrow));
-  document.getElementById('cnt-overdue').textContent = data.overdue.length;
-  document.getElementById('cnt-today').textContent = data.today.length;
-  document.getElementById('cnt-tomorrow').textContent = data.tomorrow.length;
-}
-
-function switchTab(t) {
-  tab = t;
-  ['overdue','today','tomorrow'].forEach(id => {
-    document.getElementById('tab-'+id).classList.toggle('active', id === t);
-  });
-  renderTab(t);
-}
-
-function renderTab(t) {
-  const arr = data[t];
-  const listEl = document.getElementById('list-area');
-  if (!arr || arr.length === 0) {
-    listEl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>Hech kim yo\'q</div>';
+  if (!UID) {
+    document.getElementById('hdrName').textContent = 'Xato: UID topilmadi';
     return;
   }
-  const pillCls = t==='overdue'?'pill-red':t==='today'?'pill-yellow':'pill-blue';
-  const pillTxt = t==='overdue'?"Muddati o'tgan":t==='today'?'Bugun tugaydi':'Ertaga tugaydi';
-  const amtCls = t==='overdue'?'amount-red':t==='today'?'amount-yellow':'amount-blue';
+  try {
+    const res = await fetch(`${API_BASE}/aros-stats?uid=${UID}`);
+    const data = await res.json();
+    const d = Array.isArray(data) ? data[0] : data;
+    userData = d.user || {};
+    debtData = d.debts || { bugun: [], ertaga: [], otgan: [], summary: {} };
+    renderHeader();
+    renderDashboard();
+    renderBugun();
+    renderErtaga();
+    renderOtgan();
+  } catch(e) {
+    document.getElementById('hdrName').textContent = 'Server xatosi';
+    document.getElementById('dashContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Ma\'lumot yuklanmadi</div></div>';
+  }
+}
 
-  listEl.innerHTML = arr.map(d => {
-    const total = d.orders.reduce((s,o) => s + parseFloat(o.payment.total_amount), 0);
-    const orderRows = d.orders.map(o => `
-      <div class="order-row">
-        <span>#${o.id}</span>
-        <span style="font-weight:600;">${fmt(o.payment.total_amount)} so'm</span>
-      </div>
-    `).join('');
-    return `
-      <div class="card">
-        <div class="card-top">
-          <div>
-            <div class="card-name">${d.first_name} ${d.last_name}</div>
-            <div class="card-phone">${d.username}</div>
-          </div>
-          <span class="pill ${pillCls}">${pillTxt}</span>
+function renderHeader() {
+  const ini = initials(userData.ism);
+  document.getElementById('hdrAvatar').textContent = ini;
+  document.getElementById('hdrName').textContent = userData.ism || 'Hodim';
+  document.getElementById('hdrSub').textContent = (userData.warehouse_name || 'AROS Market') + ' · ' + new Date().toLocaleDateString('uz-UZ', {month:'long', year:'numeric'});
+}
+
+function renderDashboard() {
+  const plan = Number(userData.oylik_plan) || 0;
+  const yigilgan = Number(debtData.summary?.yigilgan) || 0;
+  const pct = plan > 0 ? Math.min(100, Math.round(yigilgan/plan*100)) : 0;
+  const qoldi = Math.max(0, plan - yigilgan);
+  const bugunSumma = debtData.bugun.reduce((s,r)=>s+Number(r.summa||0),0);
+  const ertagaSumma = debtData.ertaga.reduce((s,r)=>s+Number(r.summa||0),0);
+  const otganSumma = debtData.otgan.reduce((s,r)=>s+Number(r.summa||0),0);
+
+  document.getElementById('dashContent').innerHTML = `
+    <div class="progress-card">
+      <div class="pc-header">
+        <div>
+          <div class="pc-label">Oylik plan</div>
+          <div style="font-size:18px;font-weight:800;color:#111;margin-top:2px">${fmt(plan)} so'm</div>
         </div>
-        <div class="card-amount ${amtCls}">${fmt(total)} so'm</div>
-        <div class="orders">${orderRows}</div>
-        <a class="call-btn" href="tel:${d.username}">Qo'ng'iroq qilish</a>
+        <div class="pc-pct">${pct}%</div>
       </div>
-    `;
-  }).join('');
+      <div class="pc-bar-wrap"><div class="pc-bar" style="width:${pct}%"></div></div>
+      <div class="pc-nums">
+        <div>Yig'ildi: <span>${fmt(yigilgan)}</span></div>
+        <div>Qoldi: <span>${fmt(qoldi)}</span></div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-lbl">Bugun kutiladi</div>
+        <div class="sc-val red">${fmt(bugunSumma)}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${debtData.bugun.length} ta mijoz</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Ertaga kutiladi</div>
+        <div class="sc-val amber">${fmt(ertagaSumma)}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${debtData.ertaga.length} ta mijoz</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Muddati o'tgan</div>
+        <div class="sc-val red">${fmt(otganSumma)}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${debtData.otgan.length} ta order</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Jami qarzdorlar</div>
+        <div class="sc-val">${debtData.summary?.jami_mijoz || 0} ta</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${userData.warehouse_name || ''}</div>
+      </div>
+    </div>
+  `;
 }
 
-// Auto login
-try {
-  const saved = localStorage.getItem('aros_u');
-  if (saved) { user = JSON.parse(saved); initMain(); }
-} catch(e) {}
-
-// Telegram WebApp setup
-if (window.Telegram && window.Telegram.WebApp) {
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
+function clientRow(r, amtColor, daysText) {
+  const ini = initials(r.ism);
+  const phone = r.telefon || '';
+  const tel = phone.replace(/\D/g,'');
+  return `
+    <div class="client-row">
+      <div class="cr-avatar">${ini}</div>
+      <div class="cr-info">
+        <div class="cr-name">${r.ism || 'Noma\'lum'}</div>
+        <div class="cr-phone">${phone ? '+'+tel.replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/,'$1 $2 $3 $4 $5') : '—'}</div>
+      </div>
+      <div class="cr-right">
+        <div class="cr-amt" style="color:${amtColor}">${fmtFull(r.summa)}</div>
+        <div class="cr-days">${daysText}</div>
+      </div>
+      ${phone ? `<a class="call-btn" href="tel:+${tel}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+      </a>` : ''}
+    </div>`;
 }
+
+function renderBugun() {
+  const list = debtData.bugun || [];
+  const total = list.reduce((s,r)=>s+Number(r.summa||0),0);
+  const el = document.getElementById('bugunContent');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-txt">Bugun to\'lanadigan qarz yo\'q</div></div>'; return; }
+  el.innerHTML = `
+    <div class="total-bar">
+      <div class="tb-lbl">Jami bugun</div>
+      <div class="tb-val" style="color:#ef4444">${fmtFull(total)} so'm</div>
+    </div>
+    <div class="section-hdr">
+      <div class="sec-title">Mijozlar</div>
+      <span class="total-badge tb-red">${list.length} ta</span>
+    </div>
+    ${list.map(r=>clientRow(r,'#ef4444','Bugun')).join('')}
+  `;
+}
+
+function renderErtaga() {
+  const list = debtData.ertaga || [];
+  const total = list.reduce((s,r)=>s+Number(r.summa||0),0);
+  const el = document.getElementById('ertagaContent');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">Ertaga to\'lanadigan qarz yo\'q</div></div>'; return; }
+  el.innerHTML = `
+    <div class="total-bar">
+      <div class="tb-lbl">Jami ertaga</div>
+      <div class="tb-val" style="color:#f59e0b">${fmtFull(total)} so'm</div>
+    </div>
+    <div class="section-hdr">
+      <div class="sec-title">Mijozlar</div>
+      <span class="total-badge tb-amber">${list.length} ta</span>
+    </div>
+    ${list.map(r=>clientRow(r,'#f59e0b','Ertaga')).join('')}
+  `;
+}
+
+function renderOtgan() {
+  const list = debtData.otgan || [];
+  const total = list.reduce((s,r)=>s+Number(r.summa||0),0);
+  const el = document.getElementById('otganContent');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div class="empty-txt">Muddati o\'tgan qarz yo\'q!</div></div>'; return; }
+  el.innerHTML = `
+    <div class="total-bar">
+      <div class="tb-lbl">Jami muddati o'tgan</div>
+      <div class="tb-val" style="color:#ef4444">${fmtFull(total)} so'm</div>
+    </div>
+    <div class="section-hdr">
+      <div class="sec-title">Orderlar</div>
+      <span class="total-badge tb-red">${list.length} ta</span>
+    </div>
+    ${list.map(r=>clientRow(r,'#ef4444', r.kun_otgan ? r.kun_otgan+' kun o\'tgan' : 'Muddati o\'tgan')).join('')}
+  `;
+}
+
+loadData();
 </script>
 </body>
 </html>
