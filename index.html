@@ -8,41 +8,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh;font-size:15px}
-
-/* HEADER */
 .hdr{background:#fff;border-bottom:1.5px solid #e5e5e5;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
 .av{width:36px;height:36px;border-radius:50%;background:#e8f5ec;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#22c55e;border:1.5px solid #22c55e;flex-shrink:0}
 .hi{flex:1}
 .hn{font-size:14px;font-weight:700;color:#111}
 .hs{font-size:11px;color:#888;margin-top:1px}
 .aros-badge{color:#22c55e;font-size:9px;font-weight:800;padding:3px 8px;border-radius:8px;border:1.5px solid #22c55e;letter-spacing:.8px}
-
-/* TABS */
 .tabs{display:flex;background:#fff;border-bottom:1.5px solid #e5e5e5}
-.tab{flex:1;padding:11px 4px 10px;text-align:center;font-size:10px;font-weight:700;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab{flex:1;padding:10px 4px 9px;text-align:center;font-size:10px;font-weight:700;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}
 .tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a}
-.tic{font-size:17px}
-
-/* PAGES */
+.tic{font-size:16px}
 .page{display:none;padding:14px;animation:fi .2s ease}
 .page.active{display:block}
 @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-
-/* TOTAL BAR */
+.progress-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:16px;padding:16px;margin-bottom:12px}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.pc-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.pc-plan{font-size:18px;font-weight:800;color:#111;margin-top:3px}
+.pc-pct{font-size:24px;font-weight:800;color:#22c55e}
+.pc-bar-wrap{background:#f0f0f0;border-radius:8px;height:8px;margin-bottom:10px;overflow:hidden}
+.pc-bar{background:#22c55e;height:100%;border-radius:8px;transition:width .8s ease}
+.pc-nums{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.pc-nums b{color:#111;font-weight:700}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;padding:13px}
+.sc-lbl{font-size:10px;color:#888;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.sc-val{font-size:18px;font-weight:800;color:#111}
+.sc-val.red{color:#ef4444}
+.sc-val.amber{color:#f59e0b}
+.sc-sub{font-size:10px;color:#bbb;margin-top:3px}
 .total-bar{background:#fff;border:1.5px solid #e5e5e5;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .tb-lbl{font-size:11px;color:#888;font-weight:600}
 .tb-val{font-size:15px;font-weight:800}
-
-/* SECTION HEADER */
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .sec-ttl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px}
 .badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
 .b-red{background:#fef2f2;color:#ef4444;border:1px solid #fecaca}
 .b-amber{background:#fffbeb;color:#f59e0b;border:1px solid #fde68a}
-
-/* CLIENT CARD */
-.client-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
-.client-card:hover{border-color:#d0d0d0}
+.client-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;margin-bottom:8px;overflow:hidden}
 .client-main{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
 .c-av{width:38px;height:38px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#666;flex-shrink:0;border:1px solid #e5e5e5}
 .c-info{flex:1;min-width:0}
@@ -53,16 +56,17 @@ body{font-family:'Inter',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:
 .c-sub{font-size:10px;color:#888;margin-top:2px}
 .call-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid #bbf7d0;background:#f0fdf4;text-decoration:none;transition:all .15s}
 .call-btn:active{transform:scale(.93)}
-.arr{color:#bbb;font-size:11px;flex-shrink:0;margin-left:2px;min-width:12px;text-align:center;transition:color .15s}
-
-/* ORDERS DROPDOWN */
+.arr{color:#bbb;font-size:11px;flex-shrink:0;margin-left:2px;min-width:14px;text-align:center}
 .orders-list{display:none;border-top:1.5px solid #f0f0f0;background:#fafafa}
-.order-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px 9px 62px;border-bottom:1px solid #f5f5f5}
+.order-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 10px 62px;border-bottom:1px solid #f5f5f5}
 .order-row:last-child{border-bottom:none}
-.o-lbl{font-size:12px;color:#888;font-weight:600}
-.o-amt{font-size:13px;font-weight:700}
-
-/* LOADING / EMPTY */
+.o-left{display:flex;flex-direction:column;gap:2px}
+.o-id{font-size:11px;color:#aaa;font-weight:500}
+.o-deadline{font-size:11px;font-weight:600}
+.o-days{font-size:10px;color:#ef4444;margin-top:1px}
+.o-amt{font-size:13px;font-weight:700;color:#ef4444}
+.orders-loading{padding:12px 14px 12px 62px;font-size:12px;color:#aaa;display:flex;align-items:center;gap:8px}
+.mini-spinner{width:14px;height:14px;border:2px solid #e5e5e5;border-top-color:#22c55e;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 .loading{text-align:center;padding:60px 16px;color:#bbb;font-size:13px}
 .spinner{width:30px;height:30px;border:2.5px solid #e5e5e5;border-top-color:#22c55e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -83,13 +87,17 @@ body{font-family:'Inter',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('otgan',this)"><span class="tic">⚫</span>O'tgan</div>
+  <div class="tab active" onclick="showTab('dash',this)"><span class="tic">📊</span>Dashboard</div>
+  <div class="tab" onclick="showTab('otgan',this)"><span class="tic">⚫</span>O'tgan</div>
   <div class="tab" onclick="showTab('bugun',this)"><span class="tic">🔴</span>Bugun</div>
   <div class="tab" onclick="showTab('ertaga',this)"><span class="tic">🟡</span>Ertaga</div>
 </div>
 
-<div id="page-otgan" class="page active">
+<div id="page-dash" class="page active">
   <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+</div>
+<div id="page-otgan" class="page">
+  <div class="loading"><div class="spinner"></div></div>
 </div>
 <div id="page-bugun" class="page">
   <div class="loading"><div class="spinner"></div></div>
@@ -101,6 +109,9 @@ body{font-family:'Inter',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:
 <script>
 var userData = {};
 var debtData = { bugun: [], ertaga: [], otgan: [], summary: {} };
+var ordersCache = {};
+var ORDERS_API = 'https://simle.app.n8n.cloud/webhook/aros-orders';
+var STATS_API = 'https://simle.app.n8n.cloud/webhook/aros-stats';
 
 function showTab(t, el) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -111,9 +122,9 @@ function showTab(t, el) {
 
 function fmt(n) {
   var num = Math.round(Number(n) || 0);
-  if (num >= 1000000000) return (num / 1000000000).toFixed(1) + ' mlrd';
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + ' mln';
-  if (num >= 1000) return (num / 1000).toFixed(0) + ' ming';
+  if (num >= 1000000000) return (num/1000000000).toFixed(1) + ' mlrd';
+  if (num >= 1000000) return (num/1000000).toFixed(1) + ' mln';
+  if (num >= 1000) return (num/1000).toFixed(0) + ' ming';
   return num.toLocaleString();
 }
 
@@ -126,107 +137,153 @@ function ini(name) {
   return name.split(' ').map(function(w) { return w[0] || ''; }).join('').substring(0, 2).toUpperCase();
 }
 
-function toggle(id) {
+function toggleOrders(id, userId) {
   var el = document.getElementById('ol-' + id);
   var ar = document.getElementById('ar-' + id);
   if (!el) return;
   var open = el.style.display !== 'none';
-  el.style.display = open ? 'none' : 'block';
-  if (ar) ar.textContent = open ? '▼' : '▲';
+  if (open) {
+    el.style.display = 'none';
+    if (ar) ar.textContent = '▼';
+    return;
+  }
+  if (ar) ar.textContent = '▲';
+  if (ordersCache[userId]) {
+    renderOrders(id, ordersCache[userId]);
+    el.style.display = 'block';
+    return;
+  }
+  el.innerHTML = '<div class="orders-loading"><div class="mini-spinner"></div>Yuklanmoqda...</div>';
+  el.style.display = 'block';
+  fetch(ORDERS_API + '?user_id=' + userId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var d = Array.isArray(data) ? data[0] : data;
+      var orders = d.orders || [];
+      ordersCache[userId] = orders;
+      renderOrders(id, orders);
+    })
+    .catch(function(e) {
+      el.innerHTML = '<div class="orders-loading" style="color:#ef4444">Xato: ' + e.message + '</div>';
+    });
 }
 
-function renderList(pageId, list, amtColor, orderAmtColor, emptyIcon, emptyText) {
+function renderOrders(id, orders) {
+  var el = document.getElementById('ol-' + id);
+  if (!el) return;
+  if (!orders.length) {
+    el.innerHTML = '<div class="orders-loading" style="color:#aaa">Order topilmadi</div>';
+    return;
+  }
+  var html = '';
+  orders.forEach(function(o) {
+    var deadlineColor = o.kun_otgan > 0 ? '#ef4444' : '#f59e0b';
+    var daysText = o.kun_otgan > 0 ? o.kun_otgan + ' kun o\'tgan' : 'Bugun/Ertaga';
+    html += '<div class="order-row">';
+    html += '<div class="o-left">';
+    html += '<div class="o-id">Order #' + o.order_id + ' · ' + (o.sana || '') + '</div>';
+    html += '<div class="o-deadline" style="color:' + deadlineColor + '">Deadline: ' + (o.deadline || '—') + '</div>';
+    html += '<div class="o-days">' + daysText + '</div>';
+    html += '</div>';
+    html += '<div class="o-amt">' + fmtFull(o.summa) + '</div>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderDashboard() {
+  var plan = Number(userData.oylik_plan) || 0;
+  var yigilgan = Number(debtData.summary && debtData.summary.yigilgan) || 0;
+  var pct = plan > 0 ? Math.min(100, Math.round(yigilgan / plan * 100)) : 0;
+  var qoldi = Math.max(0, plan - yigilgan);
+  var otganSum = debtData.otgan.reduce(function(s,r){return s+Number(r.summa||0);},0);
+  var bugunSum = debtData.bugun.reduce(function(s,r){return s+Number(r.summa||0);},0);
+  var ertagaSum = debtData.ertaga.reduce(function(s,r){return s+Number(r.summa||0);},0);
+  var jami = (debtData.summary && debtData.summary.jami_mjoz) || 0;
+
+  var html = '';
+  html += '<div class="progress-card">';
+  html += '<div class="pc-top"><div><div class="pc-label">Oylik plan</div>';
+  html += '<div class="pc-plan">' + fmt(plan) + ' so\'m</div></div>';
+  html += '<div class="pc-pct">' + pct + '%</div></div>';
+  html += '<div class="pc-bar-wrap"><div class="pc-bar" style="width:' + pct + '%"></div></div>';
+  html += '<div class="pc-nums"><span>Yig\'ildi: <b>' + fmt(yigilgan) + '</b></span><span>Qoldi: <b>' + fmt(qoldi) + '</b></span></div>';
+  html += '</div>';
+  html += '<div class="stats-grid">';
+  html += '<div class="stat-card"><div class="sc-lbl">Muddati o\'tgan</div><div class="sc-val red">' + fmt(otganSum) + '</div><div class="sc-sub">' + debtData.otgan.length + ' ta mijoz</div></div>';
+  html += '<div class="stat-card"><div class="sc-lbl">Bugun</div><div class="sc-val red">' + fmt(bugunSum) + '</div><div class="sc-sub">' + debtData.bugun.length + ' ta mijoz</div></div>';
+  html += '<div class="stat-card"><div class="sc-lbl">Ertaga</div><div class="sc-val amber">' + fmt(ertagaSum) + '</div><div class="sc-sub">' + debtData.ertaga.length + ' ta mijoz</div></div>';
+  html += '<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val">' + jami + '</div><div class="sc-sub">' + (userData.warehouse_name||'') + '</div></div>';
+  html += '</div>';
+  document.getElementById('page-dash').innerHTML = html;
+}
+
+function renderList(pageId, list, amtColor, emptyIcon, emptyText) {
   var el = document.getElementById(pageId);
   if (!list || !list.length) {
     el.innerHTML = '<div class="empty"><div class="ei">' + emptyIcon + '</div><div class="et">' + emptyText + '</div></div>';
     return;
   }
-  var total = list.reduce(function(s, r) { return s + Number(r.summa || 0); }, 0);
+  var total = list.reduce(function(s,r){return s+Number(r.summa||0);},0);
   var badgeClass = amtColor === '#f59e0b' ? 'b-amber' : 'b-red';
   var html = '';
-  html += '<div class="total-bar">';
-  html += '<div class="tb-lbl">Jami</div>';
-  html += '<div class="tb-val" style="color:' + amtColor + '">' + fmtFull(total) + ' so\'m</div>';
-  html += '</div>';
-  html += '<div class="sec-hdr">';
-  html += '<div class="sec-ttl">Mijozlar</div>';
-  html += '<span class="badge ' + badgeClass + '">' + list.length + ' ta</span>';
-  html += '</div>';
+  html += '<div class="total-bar"><div class="tb-lbl">Jami</div>';
+  html += '<div class="tb-val" style="color:' + amtColor + '">' + fmtFull(total) + ' so\'m</div></div>';
+  html += '<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
+  html += '<span class="badge ' + badgeClass + '">' + list.length + ' ta</span></div>';
 
   list.forEach(function(r, i) {
     var id = pageId + '-' + i;
     var tel = (r.telefon || '').replace(/\D/g, '');
-    var orders = r.orders || [];
-    var hasOrders = orders.length > 0;
-
     html += '<div class="client-card">';
-    html += '<div class="client-main" onclick="toggle(\'' + id + '\')">';
+    html += '<div class="client-main" onclick="toggleOrders(\'' + id + '\',' + r.user_id + ')">';
     html += '<div class="c-av">' + ini(r.ism) + '</div>';
-    html += '<div class="c-info">';
-    html += '<div class="c-name">' + (r.ism || 'Noma\'lum') + '</div>';
-    html += '<div class="c-phone">' + (tel ? '+' + tel : '—') + '</div>';
-    html += '</div>';
-    html += '<div class="c-right">';
-    html += '<div class="c-amt" style="color:' + amtColor + '">' + fmtFull(r.summa) + '</div>';
-    if (hasOrders) {
-      html += '<div class="c-sub">' + orders.length + ' interval</div>';
-    }
-    html += '</div>';
+    html += '<div class="c-info"><div class="c-name">' + (r.ism||'Noma\'lum') + '</div>';
+    html += '<div class="c-phone">' + (tel ? '+'+tel : '—') + '</div></div>';
+    html += '<div class="c-right"><div class="c-amt" style="color:' + amtColor + '">' + fmtFull(r.summa) + '</div>';
+    html += '<div class="c-sub">Bosing — orderlar</div></div>';
     if (tel) {
       html += '<a class="call-btn" href="tel:+' + tel + '" onclick="event.stopPropagation()">';
       html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>';
       html += '</a>';
     }
-    if (hasOrders) {
-      html += '<div class="arr" id="ar-' + id + '">▼</div>';
-    }
+    html += '<div class="arr" id="ar-' + id + '">▼</div>';
     html += '</div>';
-
-    if (hasOrders) {
-      html += '<div class="orders-list" id="ol-' + id + '">';
-      orders.forEach(function(o) {
-        html += '<div class="order-row">';
-        html += '<div class="o-lbl">' + o.label + '</div>';
-        html += '<div class="o-amt" style="color:' + orderAmtColor + '">' + fmtFull(o.summa) + ' so\'m</div>';
-        html += '</div>';
-      });
-      html += '</div>';
-    }
+    html += '<div class="orders-list" id="ol-' + id + '"></div>';
     html += '</div>';
   });
-
   el.innerHTML = html;
 }
 
 function render() {
   document.getElementById('av').textContent = ini(userData.ism);
   document.getElementById('hn').textContent = userData.ism || 'Hodim';
-  document.getElementById('hs').textContent = (userData.warehouse_name || 'AROS') + ' · ' + new Date().toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' });
-  renderList('page-otgan', debtData.otgan, '#ef4444', '#ef4444', '🎉', 'Muddati o\'tgan qarz yo\'q!');
-  renderList('page-bugun', debtData.bugun, '#ef4444', '#ef4444', '✅', 'Bugun to\'lanadigan qarz yo\'q');
-  renderList('page-ertaga', debtData.ertaga, '#f59e0b', '#f59e0b', '📅', 'Ertaga to\'lanadigan qarz yo\'q');
+  document.getElementById('hs').textContent = (userData.warehouse_name||'AROS') + ' · ' + new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+  renderDashboard();
+  renderList('page-otgan', debtData.otgan, '#ef4444', '🎉', 'Muddati o\'tgan qarz yo\'q!');
+  renderList('page-bugun', debtData.bugun, '#ef4444', '✅', 'Bugun to\'lanadigan qarz yo\'q');
+  renderList('page-ertaga', debtData.ertaga, '#f59e0b', '📅', 'Ertaga to\'lanadigan qarz yo\'q');
 }
 
 function load() {
   var uid = new URLSearchParams(window.location.search).get('uid') || '';
   if (!uid) {
     document.getElementById('hn').textContent = 'UID topilmadi';
-    document.getElementById('page-otgan').innerHTML = '<div class="empty"><div class="ei">⚠️</div><div class="et">URL da ?uid= yo\'q</div></div>';
+    document.getElementById('page-dash').innerHTML = '<div class="empty"><div class="ei">⚠️</div><div class="et">URL da ?uid= yo\'q</div></div>';
     return;
   }
-  fetch('https://simle.app.n8n.cloud/webhook/aros-stats?uid=' + uid)
+  fetch(STATS_API + '?uid=' + uid)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var d = Array.isArray(data) ? data[0] : data;
       if (!d || !d.user) throw new Error('Ma\'lumot bo\'sh');
       userData = d.user || {};
-      debtData = d.debts || { bugun: [], ertaga: [], otgan: [], summary: {} };
+      debtData = d.debts || { bugun:[], ertaga:[], otgan:[], summary:{} };
       render();
     })
     .catch(function(e) {
       document.getElementById('hn').textContent = 'Xato';
-      var errHtml = '<div class="empty"><div class="ei">⚠️</div><div class="et">' + e.message + '</div></div>';
-      document.getElementById('page-otgan').innerHTML = errHtml;
+      document.getElementById('page-dash').innerHTML = '<div class="empty"><div class="ei">⚠️</div><div class="et">' + e.message + '</div></div>';
     });
 }
 
