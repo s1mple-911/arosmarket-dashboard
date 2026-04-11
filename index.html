@@ -114,9 +114,6 @@ body{font-family:'Inter',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:
 </div>
 
 <script>
-const API_BASE = 'https://simle.app.n8n.cloud/webhook';
-const params = new URLSearchParams(window.location.search);
-const UID = params.get('uid') || '';
 
 let userData = null;
 let debtData = { bugun: [], ertaga: [], otgan: [], summary: {} };
@@ -146,29 +143,57 @@ function showTab(tab, el) {
 }
 
 async function loadData() {
-  if (!UID) {
-    document.getElementById('hdrName').textContent = 'Xato: UID topilmadi';
+  // UID ni URL dan ol
+  const urlParams = new URLSearchParams(window.location.search);
+  const uid = urlParams.get('uid') || urlParams.get('tgWebAppStartParam') || '';
+  
+  if (!uid) {
+    document.getElementById('hdrName').textContent = 'UID topilmadi';
+    document.getElementById('dashContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">URL da ?uid= parametri yo\'q</div></div>';
+    document.getElementById('otganContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">URL da ?uid= parametri yo\'q</div></div>';
     return;
   }
+
+  const apiUrl = 'https://simle.app.n8n.cloud/webhook/aros-stats?uid=' + uid;
+  
   try {
-    const res = await fetch(`${API_BASE}/aros-stats?uid=${UID}`);
+    const res = await fetch(apiUrl);
+    
+    if (!res.ok) {
+      throw new Error('HTTP ' + res.status + ': ' + res.statusText);
+    }
+    
     const raw = await res.text();
     let data;
-    try { data = JSON.parse(raw); } catch(pe) { throw new Error('JSON parse xato: ' + raw.substring(0,100)); }
+    try { 
+      data = JSON.parse(raw); 
+    } catch(pe) { 
+      throw new Error('JSON xato: ' + raw.substring(0, 100)); 
+    }
+    
     const d = Array.isArray(data) ? data[0] : data;
+    
+    if (!d || !d.user) {
+      throw new Error('Ma\'lumot bo\'sh qaytdi');
+    }
+    
     userData = d.user || {};
     debtData = d.debts || { bugun: [], ertaga: [], otgan: [], summary: {} };
+    
     renderHeader();
     renderDashboard();
     renderBugun();
     renderErtaga();
     renderOtgan();
+    
   } catch(e) {
-    document.getElementById('hdrName').textContent = 'Xato: ' + e.message;
-    document.getElementById('dashContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">' + e.message + '</div></div>';
-    document.getElementById('otganContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">' + e.message + '</div></div>';
+    document.getElementById('hdrName').textContent = 'Xato';
+    const errHtml = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">' + e.message + '</div></div>';
+    document.getElementById('dashContent').innerHTML = errHtml;
+    document.getElementById('otganContent').innerHTML = errHtml;
   }
 }
+
 
 function renderHeader() {
   const ini = initials(userData.ism);
