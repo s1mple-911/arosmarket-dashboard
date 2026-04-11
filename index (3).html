@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Statistika — AROS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh;font-size:15px}
+
+.hdr{background:#fff;border-bottom:1.5px solid #e5e5e5;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.hdr-avatar{width:36px;height:36px;border-radius:50%;background:#e8f5ec;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#22c55e;border:1.5px solid #22c55e;flex-shrink:0}
+.hdr-info{flex:1}
+.hdr-name{font-size:14px;font-weight:700;color:#111}
+.hdr-sub{font-size:11px;color:#888;margin-top:1px}
+.aros{color:#22c55e;font-size:9px;font-weight:800;padding:3px 8px;border-radius:8px;border:1.5px solid #22c55e;letter-spacing:.8px}
+
+.tabs{display:flex;background:#fff;border-bottom:1.5px solid #e5e5e5}
+.tab{flex:1;padding:11px 4px 10px;text-align:center;font-size:10px;font-weight:700;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a}
+.tab-ic{font-size:17px}
+
+.page{display:none;padding:14px;animation:fi .2s ease}
+.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* DASHBOARD */
+.progress-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:16px;padding:16px;margin-bottom:12px}
+.pc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.pc-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.pc-pct{font-size:22px;font-weight:800;color:#22c55e}
+.pc-bar-wrap{background:#f0f0f0;border-radius:8px;height:8px;margin-bottom:10px;overflow:hidden}
+.pc-bar{background:#22c55e;height:100%;border-radius:8px;transition:width .6s ease}
+.pc-nums{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.pc-nums span{font-weight:600;color:#111}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;padding:13px}
+.sc-lbl{font-size:10px;color:#888;font-weight:600;margin-bottom:4px}
+.sc-val{font-size:17px;font-weight:800;color:#111}
+.sc-val.red{color:#ef4444}
+.sc-val.amber{color:#f59e0b}
+.sc-val.green{color:#22c55e}
+
+/* CLIENT ROWS */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.total-badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
+.tb-red{background:#fef2f2;color:#ef4444;border:1px solid #fecaca}
+.tb-amber{background:#fffbeb;color:#f59e0b;border:1px solid #fde68a}
+.tb-blue{background:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe}
+.tb-green{background:#f0fdf4;color:#22c55e;border:1px solid #bbf7d0}
+
+.client-row{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.cr-avatar{width:38px;height:38px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#666;flex-shrink:0;border:1px solid #e5e5e5}
+.cr-info{flex:1;min-width:0}
+.cr-name{font-size:13px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-phone{font-size:11px;color:#888;margin-top:2px}
+.cr-right{text-align:right;flex-shrink:0}
+.cr-amt{font-size:13px;font-weight:800}
+.cr-days{font-size:10px;color:#888;margin-top:2px}
+.call-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid #bbf7d0;background:#f0fdf4;text-decoration:none;transition:all .15s}
+.call-btn:active{transform:scale(.93)}
+
+.total-bar{background:#fff;border:1.5px solid #e5e5e5;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.tb-lbl{font-size:11px;color:#888;font-weight:600}
+.tb-val{font-size:15px;font-weight:800}
+
+.loading{text-align:center;padding:40px 16px;color:#bbb;font-size:13px}
+.spinner{width:28px;height:28px;border:2.5px solid #e5e5e5;border-top-color:#22c55e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 16px}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-txt{font-size:13px;color:#bbb}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-avatar" id="hdrAvatar">?</div>
+  <div class="hdr-info">
+    <div class="hdr-name" id="hdrName">Yuklanmoqda...</div>
+    <div class="hdr-sub" id="hdrSub">AROS Market</div>
+  </div>
+  <div class="aros">AROS</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('dashboard',this)"><span class="tab-ic">📊</span>Dashboard</div>
+  <div class="tab" onclick="showTab('bugun',this)"><span class="tab-ic">🔴</span>Bugun</div>
+  <div class="tab" onclick="showTab('ertaga',this)"><span class="tab-ic">🟡</span>Ertaga</div>
+  <div class="tab" onclick="showTab('otgan',this)"><span class="tab-ic">⚫</span>O'tgan</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div id="dashContent"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+</div>
+
+<!-- BUGUN -->
+<div id="page-bugun" class="page">
+  <div id="bugunContent"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<!-- ERTAGA -->
+<div id="page-ertaga" class="page">
+  <div id="ertagaContent"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<!-- O'TGAN -->
+<div id="page-otgan" class="page">
+  <div id="otganContent"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<script>
+const API_BASE = 'https://simle.app.n8n.cloud/webhook';
+const params = new URLSearchParams(window.location.search);
+const UID = params.get('uid') || '';
+
+let userData = null;
+let debtData = { bugun: [], ertaga: [], otgan: [], summary: {} };
+
+function fmt(n) {
+  if (!n) return '0';
+  const num = Math.round(Number(n));
+  if (num >= 1000000) return (num/1000000).toFixed(1) + ' mln';
+  if (num >= 1000) return (num/1000).toFixed(0) + ' ming';
+  return num.toLocaleString('uz-UZ');
+}
+
+function fmtFull(n) {
+  return Math.round(Number(n)).toLocaleString('uz-UZ');
+}
+
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+}
+
+function showTab(tab, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  el.classList.add('active');
+}
+
+async function loadData() {
+  if (!UID) {
+    document.getElementById('hdrName').textContent = 'Xato: UID topilmadi';
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/aros-stats?uid=${UID}`);
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); } catch(pe) { throw new Error('JSON parse xato: ' + raw.substring(0,100)); }
+    const d = Array.isArray(data) ? data[0] : data;
+    userData = d.user || {};
+    debtData = d.debts || { bugun: [], ertaga: [], otgan: [], summary: {} };
+    renderHeader();
+    renderDashboard();
+    renderBugun();
+    renderErtaga();
+    renderOtgan();
+  } catch(e) {
+    document.getElementById('hdrName').textContent = 'Xato: ' + e.message;
+    document.getElementById('dashContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">' + e.message + '</div></div>';
+    document.getElementById('otganContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">' + e.message + '</div></div>';
+  }
+}
+
+function renderHeader() {
+  const ini = initials(userData.ism);
+  document.getElementById('hdrAvatar').textContent = ini;
+  document.getElementById('hdrName').textContent = userData.ism || 'Hodim';
+  document.getElementById('hdrSub').textContent = (userData.warehouse_name || 'AROS Market') + ' · ' + new Date().toLocaleDateString('uz-UZ', {month:'long', year:'numeric'});
+}
+
+function renderDashboard() {
+  const plan = Number(userData.oylik_plan) || 0;
+  const yigilgan = Number(debtData.summary?.yigilgan) || 0;
+  const pct = plan > 0 ? Math.min(100, Math.round(yigilgan/plan*100)) : 0;
+  const qoldi = Math.max(0, plan - yigilgan);
+  const bugunSumma = debtData.bugun.reduce((s,r)=>s+Number(r.summa||0),0);
+  const ertagaSumma = debtData.ertaga.reduce((s,r)=>s+Number(r.summa||0),0);
+  const otganSumma = debtData.otgan.reduce((s,r)=>s+Number(r.summa||0),0);
+
+  document.getElementById('dashContent').innerHTML = `
+    <div class="progress-card">
+      <div class="pc-header">
+        <div>
+          <div class="pc-label">Oylik plan</div>
+          <div style="font-size:18px;font-weight:800;color:#111;margin-top:2px">${fmt(plan)} so'm</div>
+        </div>
+        <div class="pc-pct">${pct}%</div>
+      </div>
+      <div class="pc-bar-wrap"><div class="pc-bar" style="width:${pct}%"></div></div>
+      <div class="pc-nums">
+        <div>Yig'ildi: <span>${fmt(yigilgan)}</span></div>
+        <div>Qoldi: <span>${fmt(qoldi)}</span></div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-lbl">Bugun kutiladi</div>
+        <div class="sc-val red">${fmt(bugunSumma)}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${debtData.bugun.length} ta mijoz</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Ertaga kutiladi</div>
+        <div class="sc-val amber">${fmt(ertagaSumma)}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${debtData.ertaga.length} ta mijoz</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Muddati o'tgan</div>
+        <div class="sc-val red">${fmt(otganSumma)}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${debtData.otgan.length} ta order</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Jami qarzdorlar</div>
+        <div class="sc-val">${debtData.summary?.jami_mijoz || 0} ta</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${userData.warehouse_name || ''}</div>
+      </div>
+    </div>
+  `;
+}
+
+function clientRow(r, amtColor, daysText) {
+  const ini = initials(r.ism);
+  const phone = r.telefon || '';
+  const tel = phone.replace(/\D/g,'');
+  return `
+    <div class="client-row">
+      <div class="cr-avatar">${ini}</div>
+      <div class="cr-info">
+        <div class="cr-name">${r.ism || 'Noma\'lum'}</div>
+        <div class="cr-phone">${phone ? '+'+tel.replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/,'$1 $2 $3 $4 $5') : '—'}</div>
+      </div>
+      <div class="cr-right">
+        <div class="cr-amt" style="color:${amtColor}">${fmtFull(r.summa)}</div>
+        <div class="cr-days">${daysText}</div>
+      </div>
+      ${phone ? `<a class="call-btn" href="tel:+${tel}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+      </a>` : ''}
+    </div>`;
+}
+
+function renderBugun() {
+  const list = debtData.bugun || [];
+  const total = list.reduce((s,r)=>s+Number(r.summa||0),0);
+  const el = document.getElementById('bugunContent');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-txt">Bugun to\'lanadigan qarz yo\'q</div></div>'; return; }
+  el.innerHTML = `
+    <div class="total-bar">
+      <div class="tb-lbl">Jami bugun</div>
+      <div class="tb-val" style="color:#ef4444">${fmtFull(total)} so'm</div>
+    </div>
+    <div class="section-hdr">
+      <div class="sec-title">Mijozlar</div>
+      <span class="total-badge tb-red">${list.length} ta</span>
+    </div>
+    ${list.map(r=>clientRow(r,'#ef4444','Bugun')).join('')}
+  `;
+}
+
+function renderErtaga() {
+  const list = debtData.ertaga || [];
+  const total = list.reduce((s,r)=>s+Number(r.summa||0),0);
+  const el = document.getElementById('ertagaContent');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">Ertaga to\'lanadigan qarz yo\'q</div></div>'; return; }
+  el.innerHTML = `
+    <div class="total-bar">
+      <div class="tb-lbl">Jami ertaga</div>
+      <div class="tb-val" style="color:#f59e0b">${fmtFull(total)} so'm</div>
+    </div>
+    <div class="section-hdr">
+      <div class="sec-title">Mijozlar</div>
+      <span class="total-badge tb-amber">${list.length} ta</span>
+    </div>
+    ${list.map(r=>clientRow(r,'#f59e0b','Ertaga')).join('')}
+  `;
+}
+
+function renderOtgan() {
+  const list = debtData.otgan || [];
+  const total = list.reduce((s,r)=>s+Number(r.summa||0),0);
+  const el = document.getElementById('otganContent');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div class="empty-txt">Muddati o'tgan qarz yo'q!</div></div>'; return; }
+  el.innerHTML = `
+    <div class="total-bar">
+      <div class="tb-lbl">Jami muddati o'tgan</div>
+      <div class="tb-val" style="color:#ef4444">${fmtFull(total)} so'm</div>
+    </div>
+    <div class="section-hdr">
+      <div class="sec-title">Mijozlar</div>
+      <span class="total-badge tb-red">${list.length} ta</span>
+    </div>
+    ${list.map((r,i) => debtorCard(r,i)).join('')}
+  `;
+}
+
+function debtorCard(r, i) {
+  const ini = initials(r.ism);
+  const tel = (r.telefon||'').replace(/\D/g,'');
+  const orders = r.orders || [];
+  return `
+    <div class="client-row" style="flex-direction:column;align-items:stretch;padding:0;overflow:hidden;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer" onclick="toggleOrders(${i})">
+        <div class="cr-avatar">${ini}</div>
+        <div class="cr-info">
+          <div class="cr-name">${r.ism||'Noma'lum'}</div>
+          <div class="cr-phone">${tel?'+'+tel:r.telefon||'—'}</div>
+        </div>
+        <div class="cr-right">
+          <div class="cr-amt" style="color:#ef4444">${fmtFull(r.summa)}</div>
+          <div class="cr-days" style="color:#ef4444">${orders.length} interval</div>
+        </div>
+        ${tel?`<a class="call-btn" href="tel:+${tel}" onclick="event.stopPropagation()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+        </a>`:''}
+        <div style="color:#bbb;font-size:11px;flex-shrink:0" id="arr-${i}">▼</div>
+      </div>
+      <div id="orders-${i}" style="display:none;border-top:1.5px solid #f0f0f0;background:#fafafa">
+        ${orders.map(o=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px 9px 56px;border-bottom:1px solid #f5f5f5">
+            <div style="font-size:12px;color:#888;font-weight:600">${o.label}</div>
+            <div style="font-size:13px;font-weight:700;color:#ef4444">${fmtFull(o.summa)} so'm</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function toggleOrders(i) {
+  const el = document.getElementById('orders-'+i);
+  const arr = document.getElementById('arr-'+i);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (arr) arr.textContent = open ? '▼' : '▲';
+}
+
+
