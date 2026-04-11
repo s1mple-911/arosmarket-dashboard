@@ -284,21 +284,56 @@ function renderOtgan() {
   const list = debtData.otgan || [];
   const total = list.reduce((s,r)=>s+Number(r.summa||0),0);
   const el = document.getElementById('otganContent');
-  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div class="empty-txt">Muddati o\'tgan qarz yo\'q!</div></div>'; return; }
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div class="empty-txt">Muddati o'tgan qarz yo'q!</div></div>'; return; }
   el.innerHTML = `
     <div class="total-bar">
       <div class="tb-lbl">Jami muddati o'tgan</div>
       <div class="tb-val" style="color:#ef4444">${fmtFull(total)} so'm</div>
     </div>
     <div class="section-hdr">
-      <div class="sec-title">Orderlar</div>
+      <div class="sec-title">Mijozlar</div>
       <span class="total-badge tb-red">${list.length} ta</span>
     </div>
-    ${list.map(r=>clientRow(r,'#ef4444', r.kun_otgan ? r.kun_otgan+' kun o\'tgan' : 'Muddati o\'tgan')).join('')}
+    ${list.map((r,i) => debtorCard(r,i)).join('')}
   `;
 }
 
-loadData();
-</script>
-</body>
-</html>
+function debtorCard(r, i) {
+  const ini = initials(r.ism);
+  const tel = (r.telefon||'').replace(/\D/g,'');
+  const orders = r.orders || [];
+  return `
+    <div class="client-row" style="flex-direction:column;align-items:stretch;padding:0;overflow:hidden;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer" onclick="toggleOrders(${i})">
+        <div class="cr-avatar">${ini}</div>
+        <div class="cr-info">
+          <div class="cr-name">${r.ism||'Noma'lum'}</div>
+          <div class="cr-phone">${tel?'+'+tel:r.telefon||'—'}</div>
+        </div>
+        <div class="cr-right">
+          <div class="cr-amt" style="color:#ef4444">${fmtFull(r.summa)}</div>
+          <div class="cr-days" style="color:#ef4444">${orders.length} interval</div>
+        </div>
+        ${tel?`<a class="call-btn" href="tel:+${tel}" onclick="event.stopPropagation()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+        </a>`:''}
+        <div style="color:#bbb;font-size:11px;flex-shrink:0" id="arr-${i}">▼</div>
+      </div>
+      <div id="orders-${i}" style="display:none;border-top:1.5px solid #f0f0f0;background:#fafafa">
+        ${orders.map(o=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px 9px 56px;border-bottom:1px solid #f5f5f5">
+            <div style="font-size:12px;color:#888;font-weight:600">${o.label}</div>
+            <div style="font-size:13px;font-weight:700;color:#ef4444">${fmtFull(o.summa)} so'm</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function toggleOrders(i) {
+  const el = document.getElementById('orders-'+i);
+  const arr = document.getElementById('arr-'+i);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (arr) arr.textContent = open ? '▼' : '▲';
+}
