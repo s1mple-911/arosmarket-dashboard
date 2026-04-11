@@ -152,7 +152,9 @@ async function loadData() {
   }
   try {
     const res = await fetch(`${API_BASE}/aros-stats?uid=${UID}`);
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); } catch(pe) { throw new Error('JSON parse xato: ' + raw.substring(0,100)); }
     const d = Array.isArray(data) ? data[0] : data;
     userData = d.user || {};
     debtData = d.debts || { bugun: [], ertaga: [], otgan: [], summary: {} };
@@ -162,8 +164,9 @@ async function loadData() {
     renderErtaga();
     renderOtgan();
   } catch(e) {
-    document.getElementById('hdrName').textContent = 'Server xatosi';
-    document.getElementById('dashContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Ma\'lumot yuklanmadi</div></div>';
+    document.getElementById('hdrName').textContent = 'Xato: ' + e.message;
+    document.getElementById('dashContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">' + e.message + '</div></div>';
+    document.getElementById('otganContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">' + e.message + '</div></div>';
   }
 }
 
