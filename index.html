@@ -368,22 +368,26 @@ function loadTab(tab){
 function proc(debtor, orders, tab, resMap){
   var filtered;
   if(tab==='otgan'){
-    // deadline o'tib ketgan: deadline < bugun
     filtered=orders.filter(function(o){return o.deadline && o.deadline<bugunStr;});
   } else if(tab==='bugun'){
-    // deadline aynan bugun
     filtered=orders.filter(function(o){return o.deadline===bugunStr;});
   } else {
-    // deadline aynan ertaga
     filtered=orders.filter(function(o){return o.deadline===ertagaStr;});
   }
   if(!filtered.length) return;
+
   var tot=filtered.reduce(function(s,o){return s+Number(o.summa||0);},0);
+  
+  // Hamyon balansini ayiramiz
+  var wallet=debtor.wallet_balance||0;
+  var net=Math.max(0, tot-wallet);
+  if(net===0) return; // hamyon to'liq qoplagan
+
   resMap[debtor.user_id]={
     ism:debtor.ism,
     telefon:debtor.telefon,
-    summa:tot,
-    wallet_balance:debtor.wallet_balance||0,
+    summa:net,
+    wallet_balance:wallet,
     user_id:debtor.user_id,
     orders:filtered
   };
