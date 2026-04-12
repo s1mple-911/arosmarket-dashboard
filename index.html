@@ -203,7 +203,7 @@ function ini(name){
 }
 
 // O'tgan - lazy load orders
-function toggleOrders(id,userId){
+function toggleOrders(id,userId,walletBalance){
   var el=document.getElementById('ol-'+id);
   var ar=document.getElementById('ar-'+id);
   if(!el) return;
@@ -214,19 +214,24 @@ function toggleOrders(id,userId){
     return;
   }
   if(ar){ar.textContent='▴';ar.classList.add('open');}
-  if(ordersCache[userId]){fillOrders(el,ordersCache[userId],'otgan');el.style.display='block';return;}
+  if(ordersCache[userId]!==undefined){
+    fillOrders(el,ordersCache[userId],'otgan',walletBalance);
+    el.style.display='block';
+    return;
+  }
   el.innerHTML='<div class="mini-spin-wrap"><div class="mini-spinner"></div>Yuklanmoqda...</div>';
   el.style.display='block';
   fetch(ORDERS_API+'?user_id='+userId)
     .then(function(r){return r.json();})
     .then(function(data){
       var d=Array.isArray(data)?data[0]:data;
-      // Faqat overdue orderlar
       var orders=(d.orders||[]).filter(function(o){return o.kun_otgan>0;});
       ordersCache[userId]=orders;
-      fillOrders(el,orders,'otgan');
+      fillOrders(el,orders,'otgan',walletBalance);
     })
-    .catch(function(e){el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';});
+    .catch(function(e){
+      el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';
+    });
 }
 
 // Bugun/Ertaga inline toggle
@@ -239,13 +244,23 @@ function toggleInline(id){
   if(ar){ar.textContent=open?'▾':'▴';open?ar.classList.remove('open'):ar.classList.add('open');}
 }
 
-function fillOrders(el,orders,type){
+function fillOrders(el,orders,type,walletBalance){
   if(!orders||!orders.length){
     el.innerHTML='<div class="mini-spin-wrap" style="color:var(--text3)">Order topilmadi</div>';
     return;
   }
   var color=type==='ertaga'?'var(--amber)':'var(--red)';
   var html='';
+  // Hamyon qatori - birinchi
+  if(walletBalance && walletBalance > 0){
+    html+='<div class="order-row" style="background:rgba(34,197,94,.06)">';
+    html+='<div class="o-left">';
+    html+='<div class="o-id" style="color:var(--green);font-weight:700">💰 Hamyon balansi</div>';
+    html+='<div class="o-deadline" style="color:var(--green)">Qarzdan ayiriladi</div>';
+    html+='</div>';
+    html+='<div class="o-amt" style="color:var(--green)">-'+fmtFull(walletBalance)+'</div>';
+    html+='</div>';
+  }
   orders.forEach(function(o){
     var dText=o.kun_otgan>0?(o.kun_otgan+' kun o\'tgan'):('Deadline: '+(o.deadline||'—'));
     html+='<div class="order-row">';
@@ -258,7 +273,6 @@ function fillOrders(el,orders,type){
   });
   el.innerHTML=html;
 }
-
 function callBtn(tel){
   if(!tel) return '';
   return '<a class="call-btn" href="tel:+'+tel+'" onclick="event.stopPropagation()">'+
@@ -268,7 +282,7 @@ function callBtn(tel){
 
 function buildCard(r,id,color,lazy,orders){
   var tel=(r.telefon||'').replace(/\D/g,'');
-  var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+')'):('toggleInline(\''+id+'\')');
+ var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+')'):('toggleInline(\''+id+'\')');
   var subTxt=lazy?'Bosib orders ko\'ring':(orders&&orders.length?orders.length+' ta order':'');
   var html='<div class="client-card">';
   html+='<div class="client-main" onclick="'+clickFn+'">';
