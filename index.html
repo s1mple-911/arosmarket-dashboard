@@ -215,7 +215,7 @@ function toggleOrders(id, userId, walletBalance) {
   }
   if(ar){ar.textContent='▴';ar.classList.add('open');}
   if(ordersCache[userId]!==undefined){
-    fillOrders(el, ordersCache[userId], 'otgan', walletBalance);
+    fillOrders(el, ordersCache[userId].filter(function(o){return o.kun_otgan>0;}), 'otgan', walletBalance);
     el.style.display='block';
     return;
   }
@@ -225,10 +225,9 @@ function toggleOrders(id, userId, walletBalance) {
     .then(function(r){return r.json();})
     .then(function(data){
       var d=Array.isArray(data)?data[0]:data;
-      // Barcha unpaid orderlar (kun_otgan >= 0)
       var orders=d.orders||[];
       ordersCache[userId]=orders;
-      fillOrders(el, orders, 'otgan', walletBalance);
+      fillOrders(el, orders.filter(function(o){return o.kun_otgan>0;}), 'otgan', walletBalance);
     })
     .catch(function(e){
       el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';
@@ -422,19 +421,19 @@ function loadBE(tab){
   });
 }
 
-function processOrders(debtor,orders,targetDate,resultMap,tab){
-  var filtered=orders.filter(function(o){
-    return o.deadline===targetDate && o.kun_otgan===0;
+function processOrders(debtor, orders, targetDate, resultMap, tab) {
+  var filtered = orders.filter(function(o) {
+    return o.deadline === targetDate && Number(o.kun_otgan) === 0;
   });
-  if(!filtered.length) return;
-  var userId=debtor.user_id;
-  var totalSumma=filtered.reduce(function(s,o){return s+Number(o.summa||0);},0);
-  resultMap[userId]={
-    ism:debtor.ism,
-    telefon:debtor.telefon,
-    summa:totalSumma,
-    user_id:userId,
-    orders:filtered
+  if (!filtered.length) return;
+  var userId = debtor.user_id;
+  var totalSumma = filtered.reduce(function(s,o){return s+Number(o.summa||0);}, 0);
+  resultMap[userId] = {
+    ism: debtor.ism,
+    telefon: debtor.telefon,
+    summa: totalSumma,
+    user_id: userId,
+    orders: filtered
   };
 }
 
