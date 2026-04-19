@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>AROS CEO</title>
+<title>AROS CEO dev</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap');
 :root{
@@ -250,16 +250,16 @@ function renderFromCache(){
   html+='</div></div>';
   html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
   var allData = new Array(filiallar.length);
+
   for(var i = 0; i < filiallar.length; i++){
-    allData[i] = filiallar[i];
-    html += '<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
+   allData[i] = filiallar[i];
+   html += '<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
   }
-  document.getElementById('main').innerHTML = html;
-  for(var i = 0; i < filiallar.length; i++){
-    renderCard(allData[i], i);
-  }
-  updateJami(allData);
+   document.getElementById('main').innerHTML = html;
+for(var i = 0; i < filiallar.length; i++){
+  renderCard(allData[i], i);
 }
+updateJami(allData);
 function filterFiliallar(filiallar){
   var wids = MANAGER_WAREHOUSES[curMgr];
   if(!wids) return filiallar;
@@ -353,6 +353,15 @@ function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
         tugallanmagan_buyurtma:0,tugallanmagan_savdo:0,tugallanmagan_savdo_son:0};
     }
     renderCard(allData[idx],idx);updateJami(allData);
+    // Hammasi yuklandi - cache saqlash
+    if(curMgr === 'all'){
+     var loaded = allData.filter(function(x){return x && x.foiz !== undefined;});
+     if(loaded.length === allData.length){
+       cachedAllData = { filiallar: allData.slice(), oyNomi: document.getElementById('hdr-sub').textContent.replace('CEO · ','') };
+       cachedOy = curOy;
+       cachedYil = curYil;
+  }
+}
   }).catch(function(){
     allData[idx]={filial:filialNomi,plan:plan,bajarildi:0,foiz:0,qoldi:plan,orders_summa:0,
       returns_summa:0,prognoz_foiz:0,bugun:1,oy_kunlari:30,muddati_utgan:0,
