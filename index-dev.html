@@ -616,7 +616,7 @@ function renderOchiq(confirmedOrders){
     html+='<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
     html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
     html+='<div class="c-av">'+ini(o.ism)+'</div>';
-    html+='<div style="flex:1;min-width:0"><div class="c-name">'+(o.ism||'Noma'lum')+'</div>';
+    html+='<div style="flex:1;min-width:0"><div class="c-name">'+(o.ism||"Noma'lum")+'</div>';
     html+='<div class="c-phone">Order #'+o.order_id+' - '+(o.sana||'')+'</div></div>';
     html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq</div></div>';
