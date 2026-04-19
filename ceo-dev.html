@@ -213,6 +213,9 @@ var MANAGER_WAREHOUSES = {
   sherdil:  [71,13,33,25,35,21,27]
 };
 var curMgr = 'all';
+var cachedAllData = null;
+var cachedOy = null;
+var cachedYil = null;
 
 function changeMgr(mgr, el){
   curMgr = mgr;
@@ -222,9 +225,41 @@ function changeMgr(mgr, el){
   });
   el.style.color = 'var(--green)';
   el.style.borderBottomColor = 'var(--green)';
-  load();
+  if(cachedAllData && cachedOy === curOy && cachedYil === curYil){
+    renderFromCache();
+  } else {
+    load();
+  }
 }
-
+function renderFromCache(){
+  var filiallar = filterFiliallar(cachedAllData.filiallar);
+  var oyNomi = cachedAllData.oyNomi;
+  document.getElementById('hdr-sub').textContent = 'CEO · ' + oyNomi;
+  var jPlan = 0;
+  for(var i = 0; i < filiallar.length; i++) jPlan += (filiallar[i].plan||0);
+  var html = '';
+  html+='<div class="jami-card" id="jami-block">';
+  html+='<div class="jami-label">Kompaniya jami · '+oyNomi+'</div>';
+  html+='<div class="jami-row"><div class="jami-summa">0</div><div class="jami-foiz">0%</div></div>';
+  html+='<div class="jami-bar-bg"><div class="jami-bar" style="width:0%"></div></div>';
+  html+='<div class="jami-nums"><span>Bajarildi: <b id="jami-baj">0</b></span><span>Plan: <b id="jami-plan">'+fmt(jPlan)+'</b></span></div>';
+  html+='<div class="jami-qarz">';
+  html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
+  html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
+  html+='<div class="jq-box"><div class="jq-lbl">Savdo oyna</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-savdo">0</div></div>';
+  html+='</div></div>';
+  html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
+  var allData = new Array(filiallar.length);
+  for(var i = 0; i < filiallar.length; i++){
+    allData[i] = filiallar[i];
+    html += '<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
+  }
+  document.getElementById('main').innerHTML = html;
+  for(var i = 0; i < filiallar.length; i++){
+    renderCard(allData[i], i);
+  }
+  updateJami(allData);
+}
 function filterFiliallar(filiallar){
   var wids = MANAGER_WAREHOUSES[curMgr];
   if(!wids) return filiallar;
@@ -574,6 +609,12 @@ function load(){
       if(d.error) throw new Error(d.error);
       if(!d.filiallar||!d.filiallar.length) throw new Error('Filiallar topilmadi');
       var filiallar=d.filiallar;
+      var filiallar = filterFiliallar(d.filiallar);
+      var oyNomi = OY[(d.oy_raqami||curOy)-1]+' '+(d.yil||curYil);
+     // Cache saqlaymiz
+      cachedAllData = { filiallar: d.filiallar, oyNomi: oyNomi };
+      cachedOy = curOy;
+      cachedYil = curYil;
       var oyNomi=OY[(d.oy_raqami||curOy)-1]+' '+(d.yil||curYil);
       document.getElementById('hdr-sub').textContent='CEO · '+oyNomi;
       var jPlan=0;
