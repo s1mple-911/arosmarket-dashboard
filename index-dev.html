@@ -509,118 +509,6 @@ function proc(debtor, orders, tab, resMap){
 }
 
 // =============================================
-// =============================================
-// loadOchiq - ochiq confirmed orderlar + savdo oyna
-// =============================================
-var ochiqCache = {}; // userId -> {confirmedOrders}
-var savdoOynaCache = null; // filial savdo oyna
-
-function loadOchiq(){
-  ochiqLoading = true;
-  document.getElementById('page-ochiq').innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-  
-  if(!allUsers.length){
-    ochiqLoaded=true;ochiqLoading=false;
-    document.getElementById('page-ochiq').innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="et">Ochiq order yo'q</div></div>';
-    return;
-  }
-
-  var warehouseId = userData.warehouse_id || null;
-  var allConfirmed = [];
-  var done = 0, total = allUsers.length;
-
-  allUsers.forEach(function(debtor){
-    var userId = debtor.user_id;
-    var url = ORDERS_API+'?user_id='+userId;
-    if(warehouseId) url += '&warehouse_id='+warehouseId;
-
-    fetch(url)
-      .then(function(r){return r.json();})
-      .then(function(data){
-        var d = Array.isArray(data)?data[0]:data;
-        var confirmed = d.confirmedOrders || [];
-        ordersCache[userId] = ordersCache[userId] || d.orders || [];
-        confirmed.forEach(function(o){
-          allConfirmed.push({
-            order_id: o.order_id,
-            ism: debtor.ism,
-            telefon: debtor.telefon,
-            summa: o.summa,
-            sana: o.sana,
-            user_id: userId
-          });
-        });
-        done++;
-        if(done >= total) renderOchiq(allConfirmed);
-      })
-      .catch(function(){
-        done++;
-        if(done >= total) renderOchiq(allConfirmed);
-      });
-  });
-}
-
-function renderOchiq(confirmedOrders){
-  ochiqLoaded=true;ochiqLoading=false;
-  var el = document.getElementById('page-ochiq');
-  var html = '';
-
-  // ===== SAVDO OYNA =====
-  if(filialData && (filialData.tugallanmagan_savdo_son||0) > 0){
-    var swItems = filialData.swItems || [];
-    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
-    html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Savdo oyna</div>';
-    html += '<a href="https://admin.aros.uz/sales-window/" style="font-size:11px;font-weight:700;color:var(--accent);text-decoration:none;padding:4px 10px;border:1px solid var(--accent-border);border-radius:8px;background:var(--accent-bg)">Barchasi →</a>';
-    html += '</div>';
-    // Jami summa
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:8px">';
-    html += '<div><div style="font-size:17px;font-weight:800;color:var(--amber)">'+fmt(filialData.tugallanmagan_savdo||0)+'</div>';
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(filialData.tugallanmagan_savdo_son||0)+' ta savdo</div></div>';
-    html += '<div style="font-size:11px;color:var(--text3)">so'm</div>';
-    html += '</div>';
-    html += '</div>';
-  }
-
-  // ===== OCHIQ ORDERLAR =====
-  if(!confirmedOrders.length){
-    if(!filialData || !filialData.tugallanmagan_savdo_son){
-      html += '<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="et">Ochiq order yo'q</div></div>';
-    }
-    el.innerHTML = html;
-    return;
-  }
-
-  var total = confirmedOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
-  html += '<div class="total-bar"><div class="tb-lbl">Jami ochiq orderlar</div>';
-  html += '<div class="tb-val" style="color:var(--accent)">'+fmtFull(total)+' so'm</div></div>';
-  html += '<div class="sec-hdr"><div class="sec-ttl">Orderlar</div>';
-  html += '<span class="badge" style="background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.25)">'+confirmedOrders.length+' ta</span></div>';
-
-  confirmedOrders.forEach(function(o){
-    var tel = (o.telefon||'').replace(/\D/g,'');
-    var adminUrl = 'https://admin.aros.uz/orders/'+o.order_id+'/';
-    html += '<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
-    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;display:flex;align-items:center;gap:10px;padding:12px 14px">';
-    html += '<div class="c-av">'+ini(o.ism)+'</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div class="c-name">'+(o.ism||'Noma'lum')+'</div>';
-    html += '<div class="c-phone">Order #'+o.order_id+' · '+(o.sana||'')+'</div>';
-    html += '</div>';
-    html += '<div style="text-align:right;flex-shrink:0">';
-    html += '<div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
-    html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq →</div>';
-    html += '</div>';
-    html += '</div></a>';
-  });
-
-  el.innerHTML = html;
-}
-
-// =============================================
-// load
-
-// =============================================
 // load - filialStats qo'shildi, qolgan ESKI
 // =============================================
 function load(){
@@ -659,6 +547,82 @@ function load(){
       document.getElementById('hn').textContent='Xato';
       document.getElementById('page-dash').innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="et">'+e.message+'</div></div>';
     });
+}
+
+// ===================== OCHIQ ORDERLAR =====================
+function loadOchiq(){
+  ochiqLoading=true;
+  var el=document.getElementById('page-ochiq');
+  el.innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+  if(!allUsers.length){
+    ochiqLoaded=true;ochiqLoading=false;
+    el.innerHTML='<div class="empty"><div class="et">Ochiq order yoq</div></div>';
+    return;
+  }
+  var wid=userData.warehouse_id||null;
+  var allConfirmed=[];
+  var done=0,total=allUsers.length;
+  allUsers.forEach(function(debtor){
+    var userId=debtor.user_id;
+    var url=ORDERS_API+'?user_id='+userId;
+    if(wid) url+='&warehouse_id='+wid;
+    fetch(url)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var d=Array.isArray(data)?data[0]:data;
+        ordersCache[userId]=ordersCache[userId]||d.orders||[];
+        var confirmed=d.confirmedOrders||[];
+        confirmed.forEach(function(o){
+          allConfirmed.push({order_id:o.order_id,ism:debtor.ism,telefon:debtor.telefon,summa:o.summa,sana:o.sana,user_id:userId});
+        });
+        done++;if(done>=total) renderOchiq(allConfirmed);
+      })
+      .catch(function(){done++;if(done>=total) renderOchiq(allConfirmed);});
+  });
+}
+
+function renderOchiq(confirmedOrders){
+  ochiqLoaded=true;ochiqLoading=false;
+  var el=document.getElementById('page-ochiq');
+  var html='';
+  // Savdo oyna
+  if(filialData&&(filialData.tugallanmagan_savdo_son||0)>0){
+    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Savdo oyna</div>';
+    html+='<a href="https://admin.aros.uz/sales-window/" style="font-size:11px;font-weight:700;color:var(--accent);text-decoration:none;padding:4px 10px;border:1px solid var(--accent-border);border-radius:8px;background:var(--accent-bg)">Barchasi</a>';
+    html+='</div>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px">';
+    html+='<div><div style="font-size:17px;font-weight:800;color:var(--amber)">'+fmt(filialData.tugallanmagan_savdo||0)+'</div>';
+    html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(filialData.tugallanmagan_savdo_son||0)+' ta savdo</div></div>';
+    html+='<div style="font-size:11px;color:var(--text3)">sum</div>';
+    html+='</div></div>';
+  }
+  if(!confirmedOrders.length){
+    if(!filialData||!filialData.tugallanmagan_savdo_son){
+      html+='<div class="empty"><div class="et">Ochiq order yoq</div></div>';
+    }
+    el.innerHTML=html;return;
+  }
+  var tot=confirmedOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+  html+='<div class="total-bar"><div class="tb-lbl">Jami ochiq orderlar</div>';
+  html+='<div class="tb-val" style="color:var(--accent)">'+fmtFull(tot)+' som</div></div>';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+  html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Orderlar</div>';
+  html+='<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.25)">'+confirmedOrders.length+' ta</span></div>';
+  confirmedOrders.forEach(function(o){
+    var tel=(o.telefon||'').replace(/\D/g,'');
+    var adminUrl='https://admin.aros.uz/orders/'+o.order_id+'/';
+    html+='<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
+    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
+    html+='<div class="c-av">'+ini(o.ism)+'</div>';
+    html+='<div style="flex:1;min-width:0"><div class="c-name">'+(o.ism||'Noma'lum')+'</div>';
+    html+='<div class="c-phone">Order #'+o.order_id+' - '+(o.sana||'')+'</div></div>';
+    html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
+    html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq</div></div>';
+    html+='</div></a>';
+  });
+  el.innerHTML=html;
 }
 
 var isDark=true;
