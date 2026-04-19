@@ -317,8 +317,10 @@ function openDetail(f){
   document.getElementById('det-panel').classList.add('open');
   // Ma'lumot yuklash
   fetch(STATS_API+'?uid='+uid+'&wid='+f.warehouse_id)
-    .then(function(r){return r.json();})
-    .then(function(raw){
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var raw=parseSafe(txt);
+      if(!raw) throw new Error('JSON parse xato');
       var d=Array.isArray(raw)?raw[0]:raw;
       detUsers=(d.debts&&d.debts.allUsers)||[];
       detSummary=(d.debts&&d.debts.summary)||{};
