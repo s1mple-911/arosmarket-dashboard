@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>AROS CEO </title>
+<title>AROS CEO [DEV]</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap');
 :root{
@@ -115,6 +115,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="hdr">
   <div class="hdr-logo">AROS</div>
+  <div class="dev-badge">DEV</div>
   <div class="hdr-info">
     <div class="hdr-title" id="hdr-title">CEO Dashboard</div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
@@ -124,8 +125,8 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div style="display:flex;background:var(--bg2);border-bottom:1px solid var(--border)">
   <div class="mgr-tab active" onclick="changeMgr('all',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Hammasi</div>
-  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek Ergashev</div>
-  <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil Saidov</div>
+  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek</div>
+  <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil</div>
 </div>
 
 <div class="filter-bar">
@@ -135,6 +136,36 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="page" id="main">
   <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+</div>
+
+<!-- DEADLINE MODAL -->
+<div id="dl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg2);border-radius:20px;padding:20px;width:100%;max-width:360px;border:1px solid var(--border)">
+    <div style="font-size:14px;font-weight:800;margin-bottom:4px" id="dl-ism"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Jami qarz: <span id="dl-summa" style="color:var(--red);font-weight:800"></span></div>
+    <input type="hidden" id="dl-user-id">
+    <input type="hidden" id="dl-total-summa">
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Deadline summasi</label>
+      <input type="number" id="dl-qarz-summa" placeholder="Summa (so'm)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:10px">
+      <input type="checkbox" id="dl-all" onchange="dlAllToggle(this)" style="width:18px;height:18px;cursor:pointer">
+      <label for="dl-all" style="font-size:13px;font-weight:600;cursor:pointer">Hammasi — barcha qarzga deadline</label>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Deadline sanasi</label>
+      <input type="date" id="dl-date" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Vaqt</label>
+      <input type="time" id="dl-time" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeDlModal()" style="flex:1;padding:12px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">Bekor</button>
+      <button onclick="saveDlModal()" style="flex:2;padding:12px;border-radius:12px;background:#ff4d6d;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer">⏰ Deadline qo'y</button>
+    </div>
+  </div>
 </div>
 
 <div class="det-panel" id="det-panel">
@@ -163,9 +194,13 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 var CEO_API    = 'https://n8n.arosmarket.com/webhook/aros-ceo-stats';
 var FILIAL_API = 'https://n8n.arosmarket.com/webhook/aros-filial-stats';
 var STATS_API  = 'https://n8n.arosmarket.com/webhook/aros-stats';
-var ORDERS_API = 'https://n8n.arosmarket.com/webhook/aros-orders';
-
+var ORDERS_API    = 'https://n8n.arosmarket.com/webhook/aros-orders';
+var DEADLINE_API  = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
+var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
+var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
+var CEO_IDS = ['1255605633']; // Deadline qo'ya oladigan CEO lar
+var isCeo   = CEO_IDS.includes(String(uid));
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
 var curOy = now.getMonth() + 1;
@@ -252,6 +287,27 @@ function renderFromCache(){
 }
 
 // ===================== OY SELECT =====================
+// ===================== COUNTDOWN TIMER =====================
+setInterval(function(){
+  var bars = document.querySelectorAll('[id^="dl-cnt-"]');
+  bars.forEach(function(el){
+    var userId = el.id.replace('dl-cnt-','');
+    var bar = document.getElementById('dl-bar-'+userId);
+    if(!bar) return;
+    var dlTime = new Date(bar.getAttribute('data-dl')).getTime();
+    var now = new Date().getTime();
+    var diff = dlTime - now;
+    var expired = diff < 0;
+    var abs = Math.abs(diff);
+    var days = Math.floor(abs/86400000);
+    var h = Math.floor((abs%86400000)/3600000);
+    var m = Math.floor((abs%3600000)/60000);
+    var s = Math.floor((abs%60000)/1000);
+    el.textContent = (expired?'⚠️ -':'')+(days>0?days+'k ':'')+h+'s '+m+'d '+s+'s';
+    bar.style.background = expired ? '#aa0022' : '#ff4d6d';
+  });
+}, 1000);
+
 function buildOyOptions(){
   var sel=document.getElementById('oy-select');
   sel.innerHTML='';
@@ -359,6 +415,7 @@ function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
 
 // ===================== DETAIL PANEL =====================
 var detFilial=null,detUsers=[],detSummary={},detOrders={};
+var detDeadlines={}; // user_id -> deadline obj
 var detOtgan=[],detBugun=[],detErtaga=[];
 
 function openDetail(f){
@@ -382,13 +439,103 @@ function openDetail(f){
       detUsers=(d.debts&&d.debts.allUsers)||[];
       detSummary=(d.debts&&d.debts.summary)||{};
       renderDetDash();
-      loadDetTab('otgan');
-      loadDetTab('bugun');
-      loadDetTab('ertaga');
+      loadDetDeadlines(function(){
+        loadDetTab('otgan');
+        loadDetTab('bugun');
+        loadDetTab('ertaga');
+      });
     })
     .catch(function(e){
       document.getElementById('det-dash').innerHTML='<div class="err-box">Xato: '+e.message+'</div>';
     });
+}
+
+// ===================== DEADLINES =====================
+function loadDetDeadlines(cb){
+  if(!detFilial) { if(cb) cb(); return; }
+  fetch(DEADLINE_API+'?warehouse_id='+detFilial.warehouse_id)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var d = Array.isArray(data)?data[0]:data;
+      var list = d.deadlines || [];
+      detDeadlines = {};
+      list.forEach(function(dl){ detDeadlines[String(dl.user_id)] = dl; });
+      if(cb) cb();
+    })
+    .catch(function(){ if(cb) cb(); });
+}
+
+function setDeadline(userId, ism, otganSumma){
+  if(!isCeo){ alert("Ruxsat yo'q"); return; }
+  document.getElementById('dl-ism').textContent = ism;
+  document.getElementById('dl-summa').textContent = fmtFull(otganSumma)+' so\'m';
+  document.getElementById('dl-user-id').value = userId;
+  document.getElementById('dl-total-summa').value = otganSumma;
+  document.getElementById('dl-qarz-summa').value = otganSumma;
+  document.getElementById('dl-qarz-summa').disabled = false;
+  document.getElementById('dl-all').checked = false;
+  document.getElementById('dl-modal').style.display = 'flex';
+}
+
+function dlAllToggle(cb){
+  var total = parseFloat(document.getElementById('dl-total-summa').value)||0;
+  if(cb.checked){
+    document.getElementById('dl-qarz-summa').value = total;
+    document.getElementById('dl-qarz-summa').disabled = true;
+  } else {
+    document.getElementById('dl-qarz-summa').value = '';
+    document.getElementById('dl-qarz-summa').disabled = false;
+  }
+}
+
+function closeDlModal(){
+  document.getElementById('dl-modal').style.display = 'none';
+}
+
+function saveDlModal(){
+  var userId = document.getElementById('dl-user-id').value;
+  var qarzSumma = parseFloat(document.getElementById('dl-qarz-summa').value)||0;
+  var dlAll = document.getElementById('dl-all').checked;
+  var dlDate = document.getElementById('dl-date').value;
+  var dlTime = document.getElementById('dl-time').value;
+  if(!dlDate||!dlTime){ alert("Sana va vaqtni kiriting"); return; }
+  var deadlineStr = dlDate+'T'+dlTime+':00';
+  var now = new Date(new Date().getTime()+5*60*60*1000).toISOString();
+  var debtor = detUsers.find(function(u){return String(u.user_id)===String(userId);});
+  var ism = debtor ? debtor.ism : '';
+  var body = {
+    mijoz: ism,
+    user_id: String(userId),
+    filial: detFilial.filial,
+    warehouse_id: String(detFilial.warehouse_id),
+    umumiy_qarz: String(debtor ? (debtor.otgan_summa||debtor.summa) : qarzSumma),
+    deadline_summa: dlAll ? String(debtor ? debtor.summa : qarzSumma) : String(qarzSumma),
+    quyilgan_deadline: deadlineStr,
+    qoygan_vaqt: now,
+    status: 'active',
+    ceo_id: String(uid)
+  };
+  // URL params sifatida yuborish - CORS preflight yo'q
+  var params = new URLSearchParams(body).toString();
+  fetch(DEADLINE_SET+'?'+params, { method:'GET' })
+    .then(function(r){ return r.text(); })
+    .then(function(){ 
+      closeDlModal();
+      detDeadlines[String(userId)] = body;
+      if(detOtgan.length) renderDetList('det-otgan',detOtgan,'var(--red)','b-red',"Muddati o'tgan qarz yo'q!",true);
+    })
+    .catch(function(e){ alert('Xato: '+e.message); });
+}
+
+function okDeadline(userId){
+  var body = { user_id: String(userId), warehouse_id: String(detFilial.warehouse_id) };
+  var okParams = new URLSearchParams(body).toString();
+  fetch(DEADLINE_OK+'?'+okParams, { method:'GET' })
+    .then(function(){
+      delete detDeadlines[String(userId)];
+      if(detOtgan.length) renderDetList('det-otgan',detOtgan,'var(--red)','b-red',"Muddati o'tgan qarz yo'q!",true);
+    })
+    .catch(function(e){ alert('Xato: '+e.message); });
 }
 
 function closeDetail(){
@@ -492,7 +639,7 @@ function procDet(debtor,orders,tab,resMap){
   var wallet=Number(debtor.wallet_balance)||0;
   var net=Math.max(0,tot-wallet);
   if(net===0) return;
-  resMap[debtor.user_id]={ism:debtor.ism,telefon:debtor.telefon,summa:net,wallet_balance:wallet,user_id:debtor.user_id,orders:filtered};
+  resMap[debtor.user_id]={ism:debtor.ism,telefon:debtor.telefon,summa:net,otgan_summa:debtor.otgan_summa||0,wallet_balance:wallet,user_id:debtor.user_id,orders:filtered,usertype:debtor.usertype||''};
 }
 
 function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
@@ -503,16 +650,43 @@ function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
   html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
   html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Mijozlar</div>';
   html+='<span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
+  // Deadline bor mijozlar birinchi
+  list = list.slice().sort(function(a,b){
+    var da = detDeadlines[String(a.user_id)] ? 1 : 0;
+    var db = detDeadlines[String(b.user_id)] ? 1 : 0;
+    return db - da;
+  });
   list.forEach(function(r,i){
     var tel=(r.telefon||'').replace(/\D/g,'');
     var id=pageId+'-'+i;
     var clickFn=lazy?('toggleDetOrd(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+')'):('toggleDetInline(\''+id+'\')');
-    html+='<div class="client-card">';
+    var dl = detDeadlines[String(r.user_id)];
+    var hasDl = dl && dl.quyilgan_deadline;
+    html+='<div class="client-card" style="'+(hasDl?'border-color:#ff4d6d;border-width:2px':'')+ '">';
+    // Deadline countdown banner
+    if(hasDl){
+      var dlMs = new Date(dl.quyilgan_deadline).getTime()-new Date().getTime();
+      var dlExpired = dlMs < 0;
+      var absDl = Math.abs(dlMs);
+      var dlDays = Math.floor(absDl/86400000);
+      var dlH = Math.floor((absDl%86400000)/3600000);
+      var dlM = Math.floor((absDl%3600000)/60000);
+      var dlS = Math.floor((absDl%60000)/1000);
+      var dlStr = (dlExpired?'⚠️ -':'')+(dlDays>0?dlDays+'k ':'')+dlH+'s '+dlM+'d '+dlS+'s';
+      html+='<div style="background:#ff4d6d;padding:5px 14px;display:flex;justify-content:space-between;align-items:center" id="dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">';
+      html+='<div style="font-size:10px;color:#fff;font-weight:700">⏰ DEADLINE: <span id="dl-cnt-'+r.user_id+'">'+dlStr+'</span></div>';
+      if(isCeo) html+='<button onclick="okDeadline('+r.user_id+')" style="background:#fff;color:#ff4d6d;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:800;cursor:pointer">OK ✓</button>';
+      html+='</div>';
+    }
     html+='<div class="client-main" onclick="'+clickFn+'">';
     html+='<div class="c-av">'+ini(r.ism)+'</div>';
-    html+='<div class="c-info"><div class="c-name">'+(r.ism||'Noma\'lum')+'</div><div class="c-phone">'+(tel?'+'+tel:'—')+'</div></div>';
-    html+='<div class="c-right"><div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div></div>';
+    var utag=r.usertype==='master'?'<span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(77,159,255,.15);color:#4d9fff;margin-left:4px">Master</span>':r.usertype==='business_partner'?'<span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(255,184,0,.15);color:#ffb800;margin-left:4px">BP</span>':'';
+    html+='<div class="c-info"><div class="c-name">'+(r.ism||"Noma'lum")+utag+'</div><div class="c-phone">'+(tel?'+'+tel:'—')+'</div></div>';
+    html+='<div class="c-right"><div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div>';
+    if(hasDl) html+='<div style="font-size:10px;color:#ff4d6d;margin-top:2px">'+fmtFull(dl.deadline_summa)+' so\'m</div>';
+    html+='</div>';
     if(tel) html+='<a class="call-btn" href="tel:+'+tel+'" onclick="event.stopPropagation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.95 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012.85 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg></a>';
+    if(isCeo&&lazy) html+='<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism+'\',' +(r.otgan_summa||r.summa)+')" style="margin-left:6px;background:rgba(255,184,0,.15);border:1px solid rgba(255,184,0,.4);border-radius:8px;padding:5px 10px;font-size:10px;font-weight:800;color:#ffb800;cursor:pointer;flex-shrink:0">⏰</button>';
     html+='<span class="arr" id="ar-'+id+'">▾</span>';
     html+='</div>';
     html+='<div class="orders-list" id="ol-'+id+'">';
