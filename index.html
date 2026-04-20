@@ -118,7 +118,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <div onclick="toggleTheme()" id="themeBtn" style="width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0">🌙</div>
-    <div class="aros-b">AROS</div>
+    <div class="aros-b" style="background:rgba(255,184,0,.15);color:#fbbf24;border-color:rgba(255,184,0,.3)"></div>
   </div>
 </div>
 
@@ -126,6 +126,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="tab active" onclick="showTab('dash',this)">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Dashboard
+  </div>
+  <div class="tab" onclick="showTab('ochiq',this)">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Ochiq
   </div>
   <div class="tab" onclick="showTab('otgan',this)">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
@@ -145,6 +149,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div id="page-otgan" class="page"><div class="loading"><div class="spinner"></div></div></div>
 <div id="page-bugun" class="page"><div class="loading"><div class="spinner"></div></div></div>
 <div id="page-ertaga" class="page"><div class="loading"><div class="spinner"></div></div></div>
+<div id="page-ochiq" class="page"><div class="loading"><div class="spinner"></div></div></div>
 
 <script>
 var STATS_API  = 'https://n8n.arosmarket.com/webhook/aros-stats';
@@ -156,8 +161,8 @@ var userData={}, summary={};
 var ordersCache={};
 var allUsers=[];
 var otganFinal=[], bugunFinal=[], ertagaFinal=[];
-var otganLoaded=false, bugunLoaded=false, ertagaLoaded=false;
-var otganLoading=false, bugunLoading=false, ertagaLoading=false;
+var otganLoaded=false, bugunLoaded=false, ertagaLoaded=false, ochiqLoaded=false;
+var otganLoading=false, bugunLoading=false, ertagaLoading=false, ochiqLoading=false;
 var filialData=null;
 
 var now=new Date(new Date().getTime()+5*60*60*1000);
@@ -172,6 +177,7 @@ function showTab(t,el){
   if(t==='otgan'&&!otganLoaded&&!otganLoading) loadTab('otgan');
   if(t==='bugun'&&!bugunLoaded&&!bugunLoading) loadTab('bugun');
   if(t==='ertaga'&&!ertagaLoaded&&!ertagaLoading) loadTab('ertaga');
+  if(t==='ochiq'&&!ochiqLoaded&&!ochiqLoading) loadOchiq();
 }
 
 function fmt(n){
@@ -205,7 +211,10 @@ function toggleOrders(id, userId, walletBalance){
   }
   el.innerHTML='<div class="mini-spin-wrap"><div class="mini-spinner"></div>Yuklanmoqda...</div>';
   el.classList.add('expanded');
-  fetch(ORDERS_API+'?user_id='+userId)
+  var _wid=userData.warehouse_id||null;
+  var _url=ORDERS_API+'?user_id='+userId;
+  if(_wid) _url+='&warehouse_id='+_wid;
+  fetch(_url)
     .then(function(r){return r.json();})
     .then(function(data){
       var d=Array.isArray(data)?data[0]:data;
@@ -321,7 +330,7 @@ function renderDash(){
   var yig=Number(summary.yigilgan)||0;
   var pct=plan>0?Math.min(100,Math.round(yig/plan*100)):0;
   var qoldi=Math.max(0,plan-yig);
-  var otS=otganFinal.reduce(function(s,r){return s+Number(r.summa||0);},0);
+  var otS=summary.muddati_utgan||otganFinal.reduce(function(s,r){return s+Number(r.summa||0);},0);
   var buS=bugunFinal.reduce(function(s,r){return s+Number(r.summa||0);},0);
   var erS=ertagaFinal.reduce(function(s,r){return s+Number(r.summa||0);},0);
   var jami=summary.jami_mjoz||0;
@@ -362,6 +371,22 @@ function renderDash(){
     html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px">';
     html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Prognoz</div>';
     html+='<div style="font-size:13px;font-weight:800;color:'+fprogColor+'">'+fprogFoiz+'%</div>';
+    html+='</div>';
+    html+='</div>';
+    // Tugallanmagan buyurtma / Savdo oyna
+    var confOrders = fd.confirmedOrders||[];
+    var confSumma = confOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    var confSon = confOrders.length;
+    html+='<div style="display:flex;gap:8px;margin-top:8px">';
+    html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px;cursor:pointer" onclick="showTab(\'ochiq\',document.querySelectorAll(\'.tab\')[1])">';
+    html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Ochiq buyurtma</div>';
+    html+='<div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(confSumma)+'</div>';
+    html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">'+confSon+' ta →</div>';
+    html+='</div>';
+    html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px">';
+    html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Savdo oyna</div>';
+    html+='<div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(fd.tugallanmagan_savdo||0)+'</div>';
+    html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(fd.tugallanmagan_savdo_son||0)+' ta</div>';
     html+='</div>';
     html+='</div>';
     // 100% uchun kuniga
@@ -441,7 +466,10 @@ function loadTab(tab){
     if(cached!==undefined){
       proc(debtor,cached,tab,resMap);check();return;
     }
-    fetch(ORDERS_API+'?user_id='+debtor.user_id)
+    var wid = userData.warehouse_id || null;
+    var fetchUrl = ORDERS_API+'?user_id='+debtor.user_id;
+    if(wid) fetchUrl += '&warehouse_id='+wid;
+    fetch(fetchUrl)
       .then(function(r){return r.json();})
       .then(function(d){
         var data=Array.isArray(d)?d[0]:d;
@@ -513,13 +541,99 @@ function load(){
       // Filial stats ham yuklaymiz, keyin render
       loadFilialStats(function(){
         renderDash();
+        // otganFinal yuklangach qayta render - muddati o'tgan to'g'ri chiqsin
+        loadTab('otgan', function(){
+          renderDash();
+        });
       });
-      loadTab('otgan');
     })
     .catch(function(e){
       document.getElementById('hn').textContent='Xato';
       document.getElementById('page-dash').innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="et">'+e.message+'</div></div>';
     });
+}
+
+// ===================== OCHIQ ORDERLAR =====================
+function loadOchiq(){
+  ochiqLoading=true;
+  var el=document.getElementById('page-ochiq');
+  el.innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+  // filialData dan confirmedOrders olish (server tomonidan tayyor)
+  if(filialData && filialData.confirmedOrders !== undefined){
+    renderOchiq(filialData.confirmedOrders||[]);
+    return;
+  }
+  // filialData hali yuklanmagan - kutamiz
+  var checkInterval = setInterval(function(){
+    if(filialData !== null){
+      clearInterval(checkInterval);
+      renderOchiq(filialData.confirmedOrders||[]);
+    }
+  }, 200);
+  // 5 sekunddan keyin timeout
+  setTimeout(function(){
+    clearInterval(checkInterval);
+    if(!ochiqLoaded){
+      ochiqLoaded=true;ochiqLoading=false;
+      el.innerHTML='<div class="empty"><div class="et">Ma\'lumot yuklanmadi</div></div>';
+    }
+  }, 5000);
+}
+
+function renderOchiq(confirmedOrders){
+  ochiqLoaded=true;ochiqLoading=false;
+  var el=document.getElementById('page-ochiq');
+  var html='';
+  // Savdo oyna
+  if(filialData&&(filialData.tugallanmagan_savdo_son||0)>0){
+    var swItems=filialData.swItems||[];
+    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
+    html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Savdo oyna ('+(filialData.tugallanmagan_savdo_son||0)+' ta)</div>';
+    if(swItems.length){
+      swItems.forEach(function(sw){
+        var swUrl='https://admin.aros.uz/orders/sales-window-list/'+sw.id;
+        html+='<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px">';
+        html+='<div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmtFull(sw.total_price)+'</div>';
+        html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(sw.sana||'')+'</div></div>';
+        html+='<div style="font-size:13px;color:var(--text3)">→</div>';
+        html+='</div></a>';
+      });
+    } else {
+      html+='<a href="https://admin.aros.uz/sales-window/" style="display:block;text-decoration:none;color:inherit">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px">';
+      html+='<div><div style="font-size:17px;font-weight:800;color:var(--amber)">'+fmt(filialData.tugallanmagan_savdo||0)+'</div>';
+      html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(filialData.tugallanmagan_savdo_son||0)+' ta savdo</div></div>';
+      html+='<div style="font-size:13px;color:var(--text3)">→</div>';
+      html+='</div></a>';
+    }
+    html+='</div>';
+  }
+  if(!confirmedOrders.length){
+    if(!filialData||!filialData.tugallanmagan_savdo_son){
+      html+='<div class="empty"><div class="et">Ochiq order yoq</div></div>';
+    }
+    el.innerHTML=html;return;
+  }
+  var tot=confirmedOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+  html+='<div class="total-bar"><div class="tb-lbl">Jami ochiq orderlar</div>';
+  html+='<div class="tb-val" style="color:var(--accent)">'+fmtFull(tot)+' som</div></div>';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+  html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Orderlar</div>';
+  html+='<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.25)">'+confirmedOrders.length+' ta</span></div>';
+  confirmedOrders.forEach(function(o){
+    var tel=(o.telefon||'').replace(/\D/g,'');
+    var adminUrl='https://admin.aros.uz/orders/'+o.order_id+'/';
+    html+='<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
+    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
+    html+='<div class="c-av">'+ini(o.ism)+'</div>';
+    html+='<div style="flex:1;min-width:0"><div class="c-name">'+(o.ism||"Noma'lum")+'</div>';
+    html+='<div class="c-phone">Order #'+o.order_id+' - '+(o.sana||'')+'</div></div>';
+    html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
+    html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq</div></div>';
+    html+='</div></a>';
+  });
+  el.innerHTML=html;
 }
 
 var isDark=true;
