@@ -557,31 +557,26 @@ function loadOchiq(){
   ochiqLoading=true;
   var el=document.getElementById('page-ochiq');
   el.innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-  if(!allUsers.length){
-    ochiqLoaded=true;ochiqLoading=false;
-    el.innerHTML='<div class="empty"><div class="et">Ochiq order yoq</div></div>';
+  // filialData dan confirmedOrders olish (server tomonidan tayyor)
+  if(filialData && filialData.confirmedOrders !== undefined){
+    renderOchiq(filialData.confirmedOrders||[]);
     return;
   }
-  var wid=userData.warehouse_id||null;
-  var allConfirmed=[];
-  var done=0,total=allUsers.length;
-  allUsers.forEach(function(debtor){
-    var userId=debtor.user_id;
-    var url=ORDERS_API+'?user_id='+userId;
-    if(wid) url+='&warehouse_id='+wid;
-    fetch(url)
-      .then(function(r){return r.json();})
-      .then(function(data){
-        var d=Array.isArray(data)?data[0]:data;
-        ordersCache[userId]=ordersCache[userId]||d.orders||[];
-        var confirmed=d.confirmedOrders||[];
-        confirmed.forEach(function(o){
-          allConfirmed.push({order_id:o.order_id,ism:debtor.ism,telefon:debtor.telefon,summa:o.summa,sana:o.sana,user_id:userId});
-        });
-        done++;if(done>=total) renderOchiq(allConfirmed);
-      })
-      .catch(function(){done++;if(done>=total) renderOchiq(allConfirmed);});
-  });
+  // filialData hali yuklanmagan - kutamiz
+  var checkInterval = setInterval(function(){
+    if(filialData !== null){
+      clearInterval(checkInterval);
+      renderOchiq(filialData.confirmedOrders||[]);
+    }
+  }, 200);
+  // 5 sekunddan keyin timeout
+  setTimeout(function(){
+    clearInterval(checkInterval);
+    if(!ochiqLoaded){
+      ochiqLoaded=true;ochiqLoading=false;
+      el.innerHTML='<div class="empty"><div class="et">Ma\'lumot yuklanmadi</div></div>';
+    }
+  }, 5000);
 }
 
 function renderOchiq(confirmedOrders){
