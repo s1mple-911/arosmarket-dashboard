@@ -299,10 +299,11 @@ setInterval(function(){
     var diff = dlTime - now;
     var expired = diff < 0;
     var abs = Math.abs(diff);
-    var h = Math.floor(abs/3600000);
+    var days = Math.floor(abs/86400000);
+    var h = Math.floor((abs%86400000)/3600000);
     var m = Math.floor((abs%3600000)/60000);
     var s = Math.floor((abs%60000)/1000);
-    el.textContent = (expired?'-':'')+h+'s '+m+'d '+s+'s';
+    el.textContent = (expired?'⚠️ -':'')+(days>0?days+'k ':'')+h+'s '+m+'d '+s+'s';
     bar.style.background = expired ? '#aa0022' : '#ff4d6d';
   });
 }, 1000);
@@ -512,12 +513,13 @@ function saveDlModal(){
     status: 'active',
     ceo_id: String(uid)
   };
-  fetch(DEADLINE_SET, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) })
+  // URL params sifatida yuborish - CORS preflight yo'q
+  var params = new URLSearchParams(body).toString();
+  fetch(DEADLINE_SET+'?'+params, { method:'GET' })
+    .then(function(r){ return r.text(); })
     .then(function(){ 
       closeDlModal();
-      // Cache yangilash
       detDeadlines[String(userId)] = body;
-      // Muddati o'tgan tabni qayta render
       if(detOtgan.length) renderDetList('det-otgan',detOtgan,'var(--red)','b-red',"Muddati o'tgan qarz yo'q!",true);
     })
     .catch(function(e){ alert('Xato: '+e.message); });
@@ -525,7 +527,8 @@ function saveDlModal(){
 
 function okDeadline(userId){
   var body = { user_id: String(userId), warehouse_id: String(detFilial.warehouse_id) };
-  fetch(DEADLINE_OK, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) })
+  var okParams = new URLSearchParams(body).toString();
+  fetch(DEADLINE_OK+'?'+okParams, { method:'GET' })
     .then(function(){
       delete detDeadlines[String(userId)];
       if(detOtgan.length) renderDetList('det-otgan',detOtgan,'var(--red)','b-red',"Muddati o'tgan qarz yo'q!",true);
@@ -663,8 +666,11 @@ function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
       var dlMs = new Date(dl.quyilgan_deadline).getTime()-(new Date().getTime()+5*60*60*1000);
       var dlExpired = dlMs < 0;
       var absDl = Math.abs(dlMs);
-      var dlH = Math.floor(absDl/3600000), dlM = Math.floor((absDl%3600000)/60000), dlS = Math.floor((absDl%60000)/1000);
-      var dlStr = (dlExpired?'-':'')+dlH+'s '+dlM+'d '+dlS+'s';
+      var dlDays = Math.floor(absDl/86400000);
+      var dlH = Math.floor((absDl%86400000)/3600000);
+      var dlM = Math.floor((absDl%3600000)/60000);
+      var dlS = Math.floor((absDl%60000)/1000);
+      var dlStr = (dlExpired?'⚠️ -':'')+(dlDays>0?dlDays+'k ':'')+dlH+'s '+dlM+'d '+dlS+'s';
       html+='<div style="background:#ff4d6d;padding:5px 14px;display:flex;justify-content:space-between;align-items:center" id="dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">';
       html+='<div style="font-size:10px;color:#fff;font-weight:700">⏰ DEADLINE: <span id="dl-cnt-'+r.user_id+'">'+dlStr+'</span></div>';
       if(isCeo) html+='<button onclick="okDeadline('+r.user_id+')" style="background:#fff;color:#ff4d6d;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:800;cursor:pointer">OK ✓</button>';
