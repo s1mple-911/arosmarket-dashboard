@@ -512,7 +512,7 @@ function saveDlModal(){
     status: 'active',
     ceo_id: String(uid)
   };
-  fetch(DEADLINE_SET, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+  fetch(DEADLINE_SET, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) })
     .then(function(){ 
       closeDlModal();
       // Cache yangilash
@@ -525,7 +525,7 @@ function saveDlModal(){
 
 function okDeadline(userId){
   var body = { user_id: String(userId), warehouse_id: String(detFilial.warehouse_id) };
-  fetch(DEADLINE_OK, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+  fetch(DEADLINE_OK, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) })
     .then(function(){
       delete detDeadlines[String(userId)];
       if(detOtgan.length) renderDetList('det-otgan',detOtgan,'var(--red)','b-red',"Muddati o'tgan qarz yo'q!",true);
