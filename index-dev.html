@@ -160,7 +160,7 @@ var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var userData={}, summary={};
 var ordersCache={};
 var allUsers=[]
-var pageDeadlines={};;
+var pageDeadlines={};
 var otganFinal=[], bugunFinal=[], ertagaFinal=[];
 var otganLoaded=false, bugunLoaded=false, ertagaLoaded=false, ochiqLoaded=false;
 var otganLoading=false, bugunLoading=false, ertagaLoading=false, ochiqLoading=false;
@@ -578,10 +578,7 @@ function load(){
       // Filial stats ham yuklaymiz, keyin render
       loadFilialStats(function(){
         renderDash();
-        // otganFinal yuklangach qayta render - muddati o'tgan to'g'ri chiqsin
-        loadTab('otgan', function(){
-          renderDash();
-        });
+        loadTab('otgan');
       });
     })
     .catch(function(e){
