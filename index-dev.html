@@ -157,6 +157,7 @@ var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
 var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
+var wid = new URLSearchParams(window.location.search).get('wid')||'';
 var userData={}, summary={};
 var ordersCache={};
 var allUsers=[]
@@ -565,7 +566,7 @@ function load(){
     document.getElementById('page-dash').innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="et">URL da ?uid= yo\'q</div></div>';
     return;
   }
-  fetch(STATS_API+'?uid='+uid)
+ fetch(STATS_API+'?uid='+uid+(wid?'&wid='+wid:''))
     .then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.text();
