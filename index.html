@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>AROS</title>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<title>AROS [DEV]</title>
 <style>
 :root{
   --bg:#0f0f1a;
@@ -152,14 +151,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div id="page-ochiq" class="page"><div class="loading"><div class="spinner"></div></div></div>
 
 <script>
-var STATS_API  = 'https://n8n.arosmarket.com/webhook/aros-stats';
-var ORDERS_API = 'https://n8n.arosmarket.com/webhook/aros-orders';
-var FILIAL_API = 'https://n8n.arosmarket.com/webhook/aros-filial-stats';
+var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
+var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
+var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
+var STATS_API    = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
+var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
+var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
+var wid = new URLSearchParams(window.location.search).get('wid')||'';
+var CEO_IDS = ['1255605633','6414297298','6234108181','1865951955','331245247'];
+var isCeo = CEO_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
-var allUsers=[];
+var allUsers=[]
+var pageDeadlines={};
 var otganFinal=[], bugunFinal=[], ertagaFinal=[];
 var otganLoaded=false, bugunLoaded=false, ertagaLoaded=false, ochiqLoaded=false;
 var otganLoading=false, bugunLoading=false, ertagaLoading=false, ochiqLoading=false;
@@ -193,6 +199,20 @@ function ini(name){
   return name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
 }
 
+// ===================== DEADLINE (READ-ONLY) =====================
+function loadPageDeadlines(warehouseId, cb){
+  fetch(DEADLINE_API+'?warehouse_id='+warehouseId)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var d=Array.isArray(data)?data[0]:data;
+      var list=d.deadlines||[];
+      pageDeadlines={};
+      list.forEach(function(dl){ pageDeadlines[String(dl.user_id)]=dl; });
+      if(cb) cb();
+    })
+    .catch(function(){ if(cb) cb(); });
+}
+
 function toggleOrders(id, userId, walletBalance){
   var el=document.getElementById('ol-'+id);
   var ar=document.getElementById('ar-'+id);
@@ -203,24 +223,28 @@ function toggleOrders(id, userId, walletBalance){
     if(ar){ar.textContent='▾';ar.classList.remove('open');}
     return;
   }
-  if(ar){ar.textContent='▴';ar.classList.add('open');}
-  if(ordersCache[userId]!==undefined){
-    fillOrders(el, ordersCache[userId].filter(function(o){return o.deadline<bugunStr;}), walletBalance);
-    el.classList.add('expanded');
-    return;
-  }
-  el.innerHTML='<div class="mini-spin-wrap"><div class="mini-spinner"></div>Yuklanmoqda...</div>';
   el.classList.add('expanded');
-  var _wid=userData.warehouse_id||null;
+  if(ar){ar.textContent='▴';ar.classList.add('open');}
+  // faqat strictly o'tgan: deadline strictly < bugunStr
+  function showOtgan(orders){
+    var otg=orders.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
+    fillOrders(el,otg,walletBalance);
+    var maxK=0;
+    otg.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
+    var kunEl=document.getElementById('kun-'+userId);
+    if(kunEl) kunEl.textContent=maxK>0?maxK+' kun':'';
+  }
+  if(ordersCache[userId]!==undefined){showOtgan(ordersCache[userId]);return;}
+  el.innerHTML='<div class="mini-spin-wrap"><div class="mini-spinner"></div>Yuklanmoqda...</div>';
+  var _wh=wid||userData.warehouse_id||null;
   var _url=ORDERS_API+'?user_id='+userId;
-  if(_wid) _url+='&warehouse_id='+_wid;
+  if(_wh) _url+='&warehouse_id='+_wh;
   fetch(_url)
     .then(function(r){return r.json();})
     .then(function(data){
       var d=Array.isArray(data)?data[0]:data;
-      var orders=d.orders||[];
-      ordersCache[userId]=orders;
-      fillOrders(el, orders.filter(function(o){return o.deadline<bugunStr;}), walletBalance);
+      ordersCache[userId]=d.orders||[];
+      showOtgan(ordersCache[userId]);
     })
     .catch(function(e){el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';});
 }
@@ -270,13 +294,42 @@ function buildCard(r,id,color,lazy,orders){
   var tel=(r.telefon||'').replace(/\D/g,'');
   var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+')'):('toggleInline(\''+id+'\')');
   var subTxt=lazy?'Bosib orders ko\'ring':(orders&&orders.length?orders.length+' ta order':'');
-  var html='<div class="client-card"><div class="client-main" onclick="'+clickFn+'">';
+  var dl=pageDeadlines[String(r.user_id)];
+  var hasDl=dl&&dl.quyilgan_deadline;
+  var cardBorder=hasDl?'border-color:#ff4d6d;border-width:2px':'';
+  var html='<div class="client-card" style="'+cardBorder+'">';
+  if(hasDl){
+    var dlMs=new Date(dl.quyilgan_deadline).getTime()-new Date().getTime();
+    var dlExp=dlMs<0;
+    var absMs=Math.abs(dlMs);
+    var dlDays=Math.floor(absMs/86400000);
+    var dlH=Math.floor((absMs%86400000)/3600000);
+    var dlM=Math.floor((absMs%3600000)/60000);
+    var dlS=Math.floor((absMs%60000)/1000);
+    var dlStr=(dlExp?'⚠️ -':'')+(dlDays>0?dlDays+'k ':'')+dlH+'s '+dlM+'d '+dlS+'s';
+    html+='<div style="background:'+(dlExp?'#aa0022':'#ff4d6d')+';padding:5px 14px;display:flex;justify-content:space-between;align-items:center" id="idx-dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">';
+    html+='<div style="font-size:10px;color:#fff;font-weight:700">⏰ DEADLINE: <span id="idx-dl-cnt-'+r.user_id+'">'+dlStr+'</span></div>';
+    html+='<div style="font-size:10px;color:rgba(255,255,255,.8)">'+fmtFull(dl.deadline_summa)+' so\'m</div>';
+    html+='</div>';
+  }
+  html+='<div class="client-main" onclick="'+clickFn+'">';
   html+='<div class="c-av">'+ini(r.ism)+'</div>';
-  html+='<div class="c-info"><div class="c-name">'+(r.ism||'Noma\'lum')+'</div>';
+  // usertype badge faqat otgan tab (lazy=true) uchun
+  var utag=lazy?(r.usertype==='master'?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(77,159,255,.15);color:#4d9fff;margin-left:4px">M</span>':r.usertype==='business_partner'?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(255,184,0,.15);color:#ffb800;margin-left:4px">BP</span>':''):'';
+  // Eng eski muddati o'tgan kunni hisoblash
+  var maxKun=r.max_kun||0;
+  if(!maxKun&&r.orders&&r.orders.length){
+    r.orders.forEach(function(o){if((o.kun_otgan||0)>maxKun)maxKun=o.kun_otgan||0;});
+  }
+  var kunTag=maxKun>0?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff4d6d;margin-left:4px">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff4d6d;margin-left:4px"></span>';
+  var uidTag='<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(120,120,120,.12);color:var(--text3);margin-left:4px">#'+r.user_id+'</span>';
+  html+='<div class="c-info"><div class="c-name">'+(r.ism||"Noma'lum")+utag+uidTag+kunTag+'</div>';
   html+='<div class="c-phone">'+(tel?'+'+tel:'—')+'</div></div>';
   html+='<div class="c-right"><div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div>';
   html+='<div class="c-sub">'+subTxt+'</div></div>';
   html+=callBtn(tel);
+  if(isCeo) html+='<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism+'\',' +(r.otgan_summa||r.summa)+')" style="background:rgba(255,184,0,.15);border:1px solid rgba(255,184,0,.4);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:800;color:#ffb800;cursor:pointer;margin-left:4px">⏰</button>';
+  if(isCeo&&hasDl) html+='<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.4);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:800;color:var(--green);cursor:pointer;margin-left:2px">✓</button>';
   html+='<span class="arr" id="ar-'+id+'">▾</span></div>';
   html+='<div class="orders-list" id="ol-'+id+'">';
   if(!lazy&&orders&&orders.length){
@@ -302,6 +355,17 @@ function renderList(pageId,list,color,badgeClass,emptyIcon,emptyText,lazy){
   html+='<div class="tb-val" style="color:'+color+'">'+fmtFull(total)+' so\'m</div></div>';
   html+='<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
   html+='<span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
+  // Sorting: deadline borlar birinchi, keyin otgan_summa/summa descending
+  list = list.slice().sort(function(a,b){
+    var aDl = pageDeadlines[String(a.user_id)] ? 1 : 0;
+    var bDl = pageDeadlines[String(b.user_id)] ? 1 : 0;
+    if(bDl !== aDl) return bDl - aDl;
+    // kun_otgan descending (eng ko'p o'tgan birinchi)
+    var aKun = a.max_kun||0;
+    var bKun = b.max_kun||0;
+    if(bKun !== aKun) return bKun - aKun;
+    return Number(b.summa||0) - Number(a.summa||0);
+  });
   list.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,color,lazy,r.orders||[]);});
   el.innerHTML=html;
 }
@@ -311,9 +375,9 @@ function renderList(pageId,list,color,badgeClass,emptyIcon,emptyText,lazy){
 // Eski kodga tegmadi - faqat qo'shildi
 // =============================================
 function loadFilialStats(cb){
-  var n=new Date(new Date().getTime()+5*60*60*1000);
-  var oy=n.getMonth()+1, yil=n.getFullYear();
-  fetch(FILIAL_API+'?uid='+uid+'&oy='+oy+'&yil='+yil)
+  var wid2 = wid || userData.warehouse_id || '';
+  if(!wid2){ filialData=null; if(cb) cb(); return; }
+  fetch(FILIAL_API+'?wid='+wid2)
     .then(function(r){return r.text();})
     .then(function(txt){
       try{var raw=JSON.parse(txt);filialData=Array.isArray(raw)?raw[0]:raw;}catch(e){filialData=null;}
@@ -330,7 +394,8 @@ function renderDash(){
   var yig=Number(summary.yigilgan)||0;
   var pct=plan>0?Math.min(100,Math.round(yig/plan*100)):0;
   var qoldi=Math.max(0,plan-yig);
-  var otS=summary.muddati_utgan||otganFinal.reduce(function(s,r){return s+Number(r.summa||0);},0);
+  // otganFinal yuklanib bo'lganda undan, aks holda summary dan
+  var otS=otganFinal.length>0?otganFinal.reduce(function(s,r){return s+Number(r.summa||0);},0):(otganLoaded?0:(summary.muddati_utgan||0));
   var buS=bugunFinal.reduce(function(s,r){return s+Number(r.summa||0);},0);
   var erS=ertagaFinal.reduce(function(s,r){return s+Number(r.summa||0);},0);
   var jami=summary.jami_mjoz||0;
@@ -416,6 +481,11 @@ function renderDash(){
   html+='<div class="stat-card"><div class="sc-lbl">Ertaga</div><div class="sc-val" style="color:var(--amber)">'+fmt(erS)+'</div><div class="sc-sub">'+ertagaFinal.length+' ta</div></div>';
   html+='<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val" style="color:var(--text)">'+jami+'</div><div class="sc-sub">'+(userData.warehouse_name||'')+'</div></div>';
   html+='</div>';
+  // So'nggi yangilanish vaqti
+  if(filialData && (filialData.updated_at_str||filialData.updated_at)){
+    var updStr=filialData.updated_at_str||(function(){var d=new Date(filialData.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})();
+    html += '<div style="text-align:center;font-size:10px;color:var(--text3);margin-top:8px;padding-bottom:4px">⏰ So\'nggi yangilanish: '+updStr+'</div>';
+  }
   document.getElementById('page-dash').innerHTML=html;
 }
 
@@ -446,9 +516,11 @@ function loadTab(tab){
     var final=Object.values(resMap);
     if(tab==='otgan'){
       otganLoaded=true;otganLoading=false;otganFinal=final;
-      renderList('page-otgan',final,'var(--red)','b-red',
+loadPageDeadlines(userData.warehouse_id||0, function(){
+              renderList('page-otgan',final,'var(--red)','b-red',
         '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
         'Muddati o\'tgan qarz yo\'q!',true);
+      });
     } else if(tab==='bugun'){
       bugunLoaded=true;bugunLoading=false;bugunFinal=final;
       renderList('page-bugun',final,'var(--red)','b-red',
@@ -462,22 +534,25 @@ function loadTab(tab){
   }
 
   allUsers.forEach(function(debtor){
+    // Cache bor bo'lsa - to'g'ridan ishlatamiz (otgan/bugun/ertaga barchasi)
     var cached=ordersCache[debtor.user_id];
     if(cached!==undefined){
       proc(debtor,cached,tab,resMap);check();return;
     }
-    var wid = userData.warehouse_id || null;
-    var fetchUrl = ORDERS_API+'?user_id='+debtor.user_id;
-    if(wid) fetchUrl += '&warehouse_id='+wid;
-    fetch(fetchUrl)
-      .then(function(r){return r.json();})
+    // Cache yo'q - API dan olish (otgan tab uchun ham!)
+    var _wh=wid||userData.warehouse_id||null;
+    var url=ORDERS_API+'?user_id='+debtor.user_id;
+    if(_wh) url+='&warehouse_id='+_wh;
+    fetch(url).then(function(r){return r.json();})
       .then(function(d){
         var data=Array.isArray(d)?d[0]:d;
-        var orders=data.orders||[];
-        ordersCache[debtor.user_id]=orders;
-        proc(debtor,orders,tab,resMap);check();
-      })
-      .catch(function(){check();});
+        ordersCache[debtor.user_id]=data.orders||[];
+        proc(debtor,data.orders||[],tab,resMap);check();
+      }).catch(function(){
+        // API xato - otgan_summa fallback
+        ordersCache[debtor.user_id]=null;
+        proc(debtor,null,tab,resMap);check();
+      });
   });
 }
 
@@ -485,30 +560,51 @@ function loadTab(tab){
 // proc - TUZATILDI: hamyon ayirish qo'shildi
 // =============================================
 function proc(debtor, orders, tab, resMap){
-  var filtered;
+  // Barcha tablar cache dan - orders API yo'q
   if(tab==='otgan'){
-    filtered=orders.filter(function(o){return o.deadline && o.deadline<bugunStr;});
-  } else if(tab==='bugun'){
-    filtered=orders.filter(function(o){return o.deadline===bugunStr;});
+    if(orders===null){
+      // Cache yo'q - otgan_summa ishlatamiz (bugun overlap bo'lishi mumkin)
+      var otganNet=Number(debtor.otgan_summa||0);
+      if(otganNet<=0) return;
+      resMap[debtor.user_id]={
+        ism:debtor.ism,telefon:debtor.telefon,summa:otganNet,
+        wallet_balance:Number(debtor.wallet_balance)||0,
+        user_id:debtor.user_id,orders:[],usertype:debtor.usertype||'',max_kun:0
+      };
+      return;
+    }
+    // Orders bor (cache) - strictly o'tgan (deadline < bugunStr!)
+    var otgOrders=orders.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
+    if(!otgOrders.length) return;
+    var tot=otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    var wallet=Number(debtor.wallet_balance)||0;
+    var net=Math.max(0,tot-wallet);
+    if(net<=0) return;
+    var maxK=0;
+    otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
+    resMap[debtor.user_id]={
+      ism:debtor.ism,telefon:debtor.telefon,summa:net,
+      wallet_balance:wallet,user_id:debtor.user_id,
+      orders:otgOrders,usertype:debtor.usertype||'',max_kun:maxK
+    };
+    return;
+  }
+  // Bugun va ertaga - orders cache da yo'q, API dan olish kerak
+  var filtered;
+  if(tab==='bugun'){
+    filtered=(orders||[]).filter(function(o){return o.deadline===bugunStr;});
   } else {
-    filtered=orders.filter(function(o){return o.deadline===ertagaStr;});
+    filtered=(orders||[]).filter(function(o){return o.deadline===ertagaStr;});
   }
   if(!filtered.length) return;
-
   var tot=filtered.reduce(function(s,o){return s+Number(o.summa||0);},0);
-
-  // Hamyon balansini ayiramiz (TUZATILDI)
   var wallet=Number(debtor.wallet_balance)||0;
   var net=Math.max(0, tot-wallet);
   if(net===0) return;
-
   resMap[debtor.user_id]={
-    ism:debtor.ism,
-    telefon:debtor.telefon,
-    summa:net,
-    wallet_balance:wallet,
-    user_id:debtor.user_id,
-    orders:filtered
+    ism:debtor.ism, telefon:debtor.telefon, summa:net,
+    wallet_balance:wallet, user_id:debtor.user_id,
+    orders:filtered, usertype:debtor.usertype||''
   };
 }
 
@@ -521,7 +617,7 @@ function load(){
     document.getElementById('page-dash').innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="et">URL da ?uid= yo\'q</div></div>';
     return;
   }
-  fetch(STATS_API+'?uid='+uid)
+  fetch(STATS_API+'?uid='+uid+(wid?'&wid='+wid:''))
     .then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.text();
@@ -541,10 +637,7 @@ function load(){
       // Filial stats ham yuklaymiz, keyin render
       loadFilialStats(function(){
         renderDash();
-        // otganFinal yuklangach qayta render - muddati o'tgan to'g'ri chiqsin
-        loadTab('otgan', function(){
-          renderDash();
-        });
+        loadTab('otgan');
       });
     })
     .catch(function(e){
@@ -650,6 +743,111 @@ function toggleTheme(){
   }catch(e){}
 })();
 load();
+
+function setDeadline(userId, ism, otganSumma){
+  if(!isCeo){ return; }
+  document.getElementById('dl-ism').textContent = ism;
+  document.getElementById('dl-summa').textContent = fmtFull(otganSumma)+' so\'m';
+  document.getElementById('dl-user-id').value = userId;
+  document.getElementById('dl-total-summa').value = otganSumma;
+  document.getElementById('dl-qarz-summa').value = otganSumma;
+  document.getElementById('dl-qarz-summa').disabled = false;
+  document.getElementById('dl-all').checked = false;
+  document.getElementById('dl-modal').style.display = 'flex';
+}
+
+function dlAllToggle(cb){
+  var total = parseFloat(document.getElementById('dl-total-summa').value)||0;
+  if(cb.checked){
+    document.getElementById('dl-qarz-summa').value = total;
+    document.getElementById('dl-qarz-summa').disabled = true;
+  } else {
+    document.getElementById('dl-qarz-summa').value = '';
+    document.getElementById('dl-qarz-summa').disabled = false;
+  }
+}
+
+function closeDlModal(){
+  document.getElementById('dl-modal').style.display = 'none';
+}
+
+function saveDlModal(){
+  var userId = document.getElementById('dl-user-id').value;
+  var qarzSumma = parseFloat(document.getElementById('dl-qarz-summa').value)||0;
+  var dlAll = document.getElementById('dl-all').checked;
+  var dlDate = document.getElementById('dl-date').value;
+  var dlTime = document.getElementById('dl-time').value;
+  if(!dlDate||!dlTime){ alert("Sana va vaqtni kiriting"); return; }
+  var deadlineStr = dlDate+'T'+dlTime+':00';
+  var now = new Date(new Date().getTime()+5*60*60*1000).toISOString();
+  var debtor = allUsers.find(function(u){return String(u.user_id)===String(userId);});
+  var ism = debtor ? debtor.ism : '';
+  var body = {
+    mijoz: ism,
+    user_id: String(userId),
+    filial: userData.warehouse_name||'',
+    warehouse_id: String(userData.warehouse_id||wid||''),
+    umumiy_qarz: String(debtor ? (debtor.otgan_summa||debtor.summa) : qarzSumma),
+    deadline_summa: dlAll ? String(debtor ? debtor.summa : qarzSumma) : String(qarzSumma),
+    quyilgan_deadline: deadlineStr,
+    qoygan_vaqt: now,
+    status: 'active',
+    ceo_id: String(uid)
+  };
+  var params = new URLSearchParams(body).toString();
+  fetch(DEADLINE_SET+'?'+params, { method:'GET' })
+    .then(function(r){ return r.text(); })
+    .then(function(){
+      closeDlModal();
+      pageDeadlines[String(userId)] = body;
+      // O'tgan tabni qayta render qilish
+      loadTab('otgan');
+    })
+    .catch(function(e){ alert('Xato: '+e.message); });
+}
+
+function okDeadline(userId){
+  var warehouseId = userData.warehouse_id||wid||'';
+  var body = { user_id: String(userId), warehouse_id: String(warehouseId) };
+  var okParams = new URLSearchParams(body).toString();
+  fetch(DEADLINE_OK+'?'+okParams, { method:'GET' })
+    .then(function(){
+      delete pageDeadlines[String(userId)];
+      loadTab('otgan');
+    })
+    .catch(function(e){ alert('Xato: '+e.message); });
+}
+
 </script>
+
+<!-- DEADLINE MODAL -->
+<div id="dl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg2);border-radius:20px;padding:20px;width:100%;max-width:360px;border:1px solid var(--border)">
+    <div style="font-size:14px;font-weight:800;margin-bottom:4px" id="dl-ism"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Jami qarz: <span id="dl-summa" style="color:var(--red);font-weight:800"></span></div>
+    <input type="hidden" id="dl-user-id">
+    <input type="hidden" id="dl-total-summa">
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Deadline summasi</label>
+      <input type="number" id="dl-qarz-summa" placeholder="Summa (so'm)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:10px">
+      <input type="checkbox" id="dl-all" onchange="dlAllToggle(this)" style="width:18px;height:18px;cursor:pointer">
+      <label for="dl-all" style="font-size:13px;font-weight:600;cursor:pointer">Hammasi — barcha qarzga deadline</label>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Deadline sanasi</label>
+      <input type="date" id="dl-date" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Vaqt</label>
+      <input type="time" id="dl-time" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeDlModal()" style="flex:1;padding:12px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">Bekor</button>
+      <button onclick="saveDlModal()" style="flex:2;padding:12px;border-radius:12px;background:#ff4d6d;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer">⏰ Deadline qo'y</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
