@@ -545,7 +545,7 @@ function proc(debtor, orders, tab, resMap){
     wallet_balance:wallet,
     user_id:debtor.user_id,
     orders:filtered,
-    usertype:debtor.usertype||''
+    usertype: d.user_type || d.usertype || ''
   };
 }
 
