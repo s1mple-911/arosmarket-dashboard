@@ -115,7 +115,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="hdr">
   <div class="hdr-logo">AROS</div>
-  <div class="dev-badge">DEV</div>
+
   <div class="hdr-info">
     <div class="hdr-title" id="hdr-title">CEO Dashboard</div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
@@ -431,7 +431,7 @@ var detDeadlines={}; // user_id -> deadline obj
 var detOtgan=[],detBugun=[],detErtaga=[];
 
 function openDetail(f){
-  var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index-dev.html?uid='+uid+'&wid='+f.warehouse_id;
+  var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index.html?uid='+uid+'&wid='+f.warehouse_id;
   console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
  
   if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
