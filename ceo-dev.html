@@ -433,7 +433,7 @@ var detOtgan=[],detBugun=[],detErtaga=[];
 function openDetail(f){
   var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index-dev.html?uid='+uid+'&wid='+f.warehouse_id;
   console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
-  alert('Ochilayotgan filial: '+f.warehouse_id+' - '+f.filial);
+ 
   if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
     window.Telegram.WebApp.openLink(indexUrl);
   } else {
