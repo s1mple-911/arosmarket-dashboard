@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>AROS CEO </title>
+<title>AROS CEO [DEV]</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap');
 :root{
@@ -115,6 +115,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="hdr">
   <div class="hdr-logo">AROS</div>
+
   <div class="hdr-info">
     <div class="hdr-title" id="hdr-title">CEO Dashboard</div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
@@ -124,8 +125,8 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div style="display:flex;background:var(--bg2);border-bottom:1px solid var(--border)">
   <div class="mgr-tab active" onclick="changeMgr('all',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Hammasi</div>
-  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek Ergashev</div>
-  <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil Saidov</div>
+  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek</div>
+  <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil</div>
 </div>
 
 <div class="filter-bar">
@@ -167,6 +168,17 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
+<!-- OCHIQ BUYURTMALAR MODAL -->
+<div id="det-ochiq-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:flex-end;justify-content:center">
+  <div style="background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-height:70vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 16px 0">
+      <div style="font-size:14px;font-weight:800">Ochiq buyurtmalar</div>
+      <button onclick="document.getElementById('det-ochiq-modal').style.display='none'" style="background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer">✕</button>
+    </div>
+    <div id="det-ochiq-content"></div>
+  </div>
+</div>
+
 <div class="det-panel" id="det-panel">
   <div class="det-hdr">
     <div class="det-back" onclick="closeDetail()">←</div>
@@ -190,15 +202,15 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <script>
-var CEO_API    = 'https://n8n.arosmarket.com/webhook/aros-ceo-stats';
-var FILIAL_API = 'https://n8n.arosmarket.com/webhook/aros-filial-stats';
-var STATS_API  = 'https://n8n.arosmarket.com/webhook/aros-stats';
-var ORDERS_API    = 'https://n8n.arosmarket.com/webhook/aros-orders';
-var DEADLINE_API  = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
+var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
+var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
+var STATS_API    = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
+var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
+var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
-var CEO_IDS = ['1255605633','1432724','1373701411']; // Deadline qo'ya oladigan CEO lar
+var CEO_IDS = ['1255605633']; // Deadline qo'ya oladigan CEO lar
 var isCeo   = CEO_IDS.includes(String(uid));
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
@@ -354,7 +366,10 @@ function renderCard(f,idx){
   var el=document.getElementById('fc-'+idx);if(!el)return;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
   var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
-  el.onclick=function(){openDetail(f);};
+  var _wid = String(f.warehouse_id||'');
+  var _filial = f.filial||'';
+  var _oy = f.oy||'';
+  el.onclick=(function(w,fn,o){return function(){openDetail({warehouse_id:w,filial:fn,oy:o});};}(_wid,_filial,_oy));
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
     '<div class="fc-oy">'+(f.oy||OY[curOy-1])+' · Plan: '+fmt(f.plan)+'</div></div>'+
@@ -367,35 +382,33 @@ function renderCard(f,idx){
     '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>'+
     '</div>'+
     '<div class="fc-mini" style="margin-top:0">'+
-    '<div class="fc-m"><div class="fc-m-lbl">Tugall. buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt(f.tugallanmagan_buyurtma||0)+'</div></div>'+
+    '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</span></div></div>'+
     '<div class="fc-m"><div class="fc-m-lbl">Savdo oyna</div><div class="fc-m-val" style="color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div></div>'+
     '<div class="fc-m"><div class="fc-m-lbl">Savdo soni</div><div class="fc-m-val" style="color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>'+
-    '</div>'+
-    '<div class="fc-qarz"><span class="fc-qarz-lbl">Muddati o\'tgan qarz</span>'+
+    '</div>'+    '<div class="fc-qarz"><span class="fc-qarz-lbl">Muddati o\'tgan qarz</span>'+
     '<span class="fc-qarz-val">'+fmt(f.muddati_utgan||0)+'</span></div>'+
     (foiz<100&&qolganKun>0&&f.qoldi>0?
       '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
-      :foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'');
+      :foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
+    ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
 }
 
 function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
-  var p1=fetch(FILIAL_API+'?uid='+uid+'&oy='+curOy+'&yil='+curYil+'&wid='+wid).then(function(r){return r.text();});
-  var p2=fetch(STATS_API+'?uid='+uid+'&wid='+wid).then(function(r){return r.text();});
-  Promise.all([p1,p2]).then(function(res){
-    var fd=parseSafe(res[0]),dd=parseSafe(res[1]);
-    var muddatiUtgan=0;
-    if(dd&&dd.debts&&dd.debts.summary) muddatiUtgan=dd.debts.summary.muddati_utgan||0;
+  fetch(FILIAL_API+'?wid='+wid).then(function(r){return r.text();}).then(function(txt){
+    var fd=parseSafe(txt);
     if(fd&&fd.plan!==undefined){
-      fd.filial=fd.filial||filialNomi;fd.muddati_utgan=muddatiUtgan;allData[idx]=fd;
+      fd.filial=fd.filial||filialNomi;
+      fd.warehouse_id=String(wid); // warehouse_id ni to'g'ri saqlash
+      fd.muddati_utgan=fd.summary?fd.summary.muddati_utgan:0;
+      allData[idx]=fd;
     } else {
-      allData[idx]={filial:filialNomi,warehouse_id:wid,oy:oy,plan:plan,orders_summa:0,returns_summa:0,
+      allData[idx]={filial:filialNomi,warehouse_id:String(wid),oy:oy,plan:plan,orders_summa:0,returns_summa:0,
         bajarildi:0,foiz:0,qoldi:plan,prognoz:0,prognoz_foiz:0,bugun:now.getDate(),
-        oy_kunlari:new Date(curYil,curOy,0).getDate(),muddati_utgan:muddatiUtgan,
-        tugallanmagan_buyurtma:0,tugallanmagan_savdo:0,tugallanmagan_savdo_son:0};
+        oy_kunlari:new Date(curYil,curOy,0).getDate(),muddati_utgan:0,
+        tugallanmagan_savdo:0,tugallanmagan_savdo_son:0};
     }
     renderCard(allData[idx],idx);
     updateJami(allData);
-    // Cache saqlash - barcha filiallar yuklanganda
     if(curMgr==='all'){
       var loaded=allData.filter(function(x){return x&&x.foiz!==undefined;});
       if(loaded.length===allData.length){
@@ -405,51 +418,29 @@ function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
       }
     }
   }).catch(function(){
-    allData[idx]={filial:filialNomi,plan:plan,bajarildi:0,foiz:0,qoldi:plan,orders_summa:0,
-      returns_summa:0,prognoz_foiz:0,bugun:1,oy_kunlari:30,muddati_utgan:0,
-      tugallanmagan_buyurtma:0,tugallanmagan_savdo:0,tugallanmagan_savdo_son:0};
+    allData[idx]={filial:filialNomi,warehouse_id:String(wid),plan:plan,bajarildi:0,foiz:0,qoldi:plan,
+      orders_summa:0,returns_summa:0,prognoz_foiz:0,bugun:1,oy_kunlari:30,muddati_utgan:0,
+      tugallanmagan_savdo:0,tugallanmagan_savdo_son:0};
     renderCard(allData[idx],idx);
   });
 }
 
 // ===================== DETAIL PANEL =====================
-var detFilial=null,detUsers=[],detSummary={},detOrders={};
+var detFilial=null,detUsers=[],detSummary={},detOrders={},detFilialCache=null;
 var detDeadlines={}; // user_id -> deadline obj
 var detOtgan=[],detBugun=[],detErtaga=[];
 
 function openDetail(f){
-  detFilial=f;detUsers=[];detSummary={};detOrders={};
-  detOtgan=[];detBugun=[];detErtaga=[];
-  document.getElementById('det-title').textContent=f.filial||'Filial';
-  document.getElementById('det-sub').textContent=(f.oy||'')+' · '+(f.warehouse_id||'');
-  document.querySelectorAll('.det-tab').forEach(function(t,i){t.classList.toggle('active',i===0);});
-  document.querySelectorAll('.det-page').forEach(function(p,i){p.classList.toggle('active',i===0);});
-  document.getElementById('det-dash').innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-  document.getElementById('det-otgan').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  document.getElementById('det-bugun').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  document.getElementById('det-ertaga').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  document.getElementById('det-panel').classList.add('open');
-  fetch(STATS_API+'?uid='+uid+'&wid='+f.warehouse_id)
-    .then(function(r){return r.text();})
-    .then(function(txt){
-      var raw=parseSafe(txt);
-      if(!raw) throw new Error('JSON parse xato');
-      var d=Array.isArray(raw)?raw[0]:raw;
-      detUsers=(d.debts&&d.debts.allUsers)||[];
-      detSummary=(d.debts&&d.debts.summary)||{};
-      renderDetDash();
-      loadDetDeadlines(function(){
-        loadDetTab('otgan');
-        loadDetTab('bugun');
-        loadDetTab('ertaga');
-      });
-    })
-    .catch(function(e){
-      document.getElementById('det-dash').innerHTML='<div class="err-box">Xato: '+e.message+'</div>';
-    });
+  var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index.html?uid='+uid+'&wid='+f.warehouse_id;
+  console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
+ 
+  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(indexUrl);
+  } else {
+    window.open(indexUrl,'_blank');
+  }
 }
 
-// ===================== DEADLINES =====================
 function loadDetDeadlines(cb){
   if(!detFilial) { if(cb) cb(); return; }
   fetch(DEADLINE_API+'?warehouse_id='+detFilial.warehouse_id)
@@ -568,7 +559,9 @@ function renderDetDash(){
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Prognoz</div><div style="font-size:13px;font-weight:800;color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>';
   html+='</div>';
   html+='<div style="display:flex;gap:8px">';
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Tugall. buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(f.tugallanmagan_buyurtma||0)+'</div></div>';
+  var dConfOrders = detFilialCache ? (detFilialCache.confirmedOrders||[]) : (f.confirmedOrders||[]);
+  var dConfSum = dConfOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px;cursor:pointer" onclick="showConfirmedModal()"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Ochiq buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(dConfSum)+'</div><div style="font-size:10px;color:var(--text3);margin-top:2px">'+dConfOrders.length+' ta →</div></div>';
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo oyna</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div></div>';
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo soni</div><div style="font-size:13px;font-weight:800;color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>';
   html+='</div>';
