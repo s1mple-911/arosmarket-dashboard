@@ -76,21 +76,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .b-amber{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
 .client-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:18px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
 .client-card.has-dl{border:1px solid #E24B4A}
-.client-main{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.client-main{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
 .c-av{width:42px;height:42px;border-radius:21px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0}
 .c-av-red{background:rgba(226,75,74,.15);color:#E24B4A}
 .c-av-blue{background:rgba(55,138,221,.15);color:#378ADD}
 .c-info{flex:1;min-width:0}
-.c-name{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
-.c-row2{display:flex;align-items:center;gap:4px;margin-top:5px;flex-wrap:nowrap;overflow:hidden}
+.c-name{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px;max-width:100%}
+.c-row2{display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap}
 .c-b{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0}
 .c-b-bp{background:rgba(186,117,23,.15);color:#BA7517}
 .c-b-m{background:rgba(55,138,221,.15);color:#185FA5}
 .c-b-id{background:var(--bg3);color:var(--text3)}
 .c-b-kun{background:rgba(226,75,74,.12);color:#E24B4A}
 .c-phone{font-size:11px;color:var(--text3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c-right{text-align:right;flex-shrink:0;margin-left:8px}
-.c-amt{font-size:15px;font-weight:700;white-space:nowrap}
+.c-right{text-align:right;flex-shrink:0;margin-left:8px;min-width:0}
+.c-amt{font-size:14px;font-weight:800;white-space:nowrap;flex-shrink:0}
 .c-sub{font-size:10px;color:var(--text3);margin-top:3px}
 .call-btn{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.1);text-decoration:none;transition:all .15s}
 .call-btn svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -328,12 +328,12 @@ function buildCard(r,id,color,lazy,orders){
     '</div>';
   }
   // Badges
-  var utag=lazy?(r.usertype==='master'?'<span class="c-b c-b-m">M</span>':r.usertype==='business_partner'?'<span class="c-b c-b-bp">BP</span>':''):'';
-  var maxKun=r.max_kun||0;
-  if(!maxKun&&r.orders&&r.orders.length){
+  var utag=r.usertype==='master'?'<span class="c-b c-b-m">M</span>':r.usertype==='business_partner'?'<span class="c-b c-b-bp">BP</span>':'';
+  var maxKun=lazy?(r.max_kun||0):0;
+  if(lazy&&!maxKun&&r.orders&&r.orders.length){
     r.orders.forEach(function(o){if((o.kun_otgan||0)>maxKun)maxKun=o.kun_otgan||0;});
   }
-  var kunTag=maxKun>0?'<span class="c-b c-b-kun">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" class="c-b c-b-kun"></span>';
+  var kunTag=lazy?(maxKun>0?'<span class="c-b c-b-kun">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" class="c-b c-b-kun"></span>'):'';
   var uidTag='<span class="c-b c-b-id">#'+r.user_id+'</span>';
   // Orders section
   var ordersHtml='<div class="orders-list" id="ol-'+id+'">';
@@ -355,12 +355,11 @@ function buildCard(r,id,color,lazy,orders){
       '<div class="'+avClass+'">'+ini(r.ism)+'</div>'+
       '<div class="c-info">'+
         '<div class="c-name">'+(r.ism||"Noma'lum")+'</div>'+
-        '<div class="c-row2">'+(utag?utag:'')+uidTag+kunTag+'</div>'+
+        '<div class="c-row2">'+
+          '<span class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</span>'+
+          (utag?utag:'')+uidTag+kunTag+
+        '</div>'+
         '<div class="c-phone">'+(tel?'+'+tel:'—')+'</div>'+
-      '</div>'+
-      '<div class="c-right">'+
-        '<div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div>'+
-        (lazy?'<div class="c-sub">▾ ko\'rish</div>':'')+
       '</div>'+
       callBtn(tel)+
       (isCeo?'<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism.replace(/\'/g,"\\'")+'\','+(r.otgan_summa||r.summa)+')" style="background:rgba(186,117,23,.15);border:0.5px solid rgba(186,117,23,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#BA7517;cursor:pointer;margin-left:4px">⏰</button>':'')+
@@ -469,6 +468,9 @@ function renderDash(){
     var confOrders = fd.confirmedOrders||[];
     var confSumma = confOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
     var confSon = confOrders.length;
+    var transfers = fd.transfers||[];
+    var trCreated = transfers.filter(function(t){return t.status==='created';});
+    var trOnWay = transfers.filter(function(t){return t.status==='on_way';});
     html+='<div style="display:flex;gap:8px;margin-top:8px">';
     html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px;cursor:pointer" onclick="showTab(\'ochiq\',document.querySelectorAll(\'.tab\')[1])">';
     html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Ochiq buyurtma</div>';
@@ -481,6 +483,17 @@ function renderDash(){
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(fd.tugallanmagan_savdo_son||0)+' ta</div>';
     html+='</div>';
     html+='</div>';
+    if(transfers.length>0){
+      html+='<div style="display:flex;gap:8px;margin-top:8px;cursor:pointer" onclick="showTransfersModal('+(JSON.stringify(transfers).replace(/'/g,"\\'")+',fd.filial||\'\')">';
+      html+='<div style="flex:1;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
+      html+='<div style="font-size:10px;color:#378ADD;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
+      html+='<div style="display:flex;gap:8px;align-items:center">';
+      if(trCreated.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCreated.length+' kutmoqda</span>';
+      if(trOnWay.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOnWay.length+' yo\'lda</span>';
+      html+='</div>';
+      html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
+      html+='</div></div>';
+    }
     // 100% uchun kuniga
     if(fqolganKun>0 && fd.qoldi>0 && ffoiz<100){
       var fkunlik=Math.round(fd.qoldi/fqolganKun);
@@ -845,6 +858,37 @@ function okDeadline(userId){
     .catch(function(e){ alert('Xato: '+e.message); });
 }
 
+
+function showTransfersModal(transfers, filialNomi){
+  var modal = document.getElementById('tr-modal');
+  var list = document.getElementById('tr-list');
+  var subtitle = document.getElementById('tr-subtitle');
+  subtitle.textContent = (filialNomi||'') + ' · ' + transfers.length + ' ta transfer';
+  var statusLabels = {created:'Kutmoqda', on_way:"Yo'lda"};
+  var statusColors = {created:'#378ADD', on_way:'#ff9f0a'};
+  var html = '';
+  transfers.forEach(function(t){
+    var color = statusColors[t.status]||'var(--text2)';
+    var label = statusLabels[t.status]||t.status;
+    var link = 'https://admin.aros.uz/products-actions/product-transfer/'+t.id;
+    html += '<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:10px">';
+    html += '<div style="background:var(--bg3);border-radius:14px;padding:14px;border:0.5px solid var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    html += '<span style="font-size:13px;font-weight:700">#'+t.id+'</span>';
+    html += '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;background:'+color+'20;color:'+color+'">'+label+'</span>';
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
+    html += '<div><div style="color:var(--text3);margin-bottom:2px">Kimdan</div><div style="font-weight:600;color:var(--text)">'+( t.from_warehouse||'—')+'</div></div>';
+    html += '<div><div style="color:var(--text3);margin-bottom:2px">Kimga</div><div style="font-weight:600;color:var(--text)">'+(t.to_warehouse||'—')+'</div></div>';
+    html += '<div><div style="color:var(--text3);margin-bottom:2px">Summa</div><div style="font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</div></div>';
+    html += '<div><div style="color:var(--text3);margin-bottom:2px">Ijrochi</div><div style="font-weight:600;color:var(--text)">'+(t.executor_name||'—')+'</div></div>';
+    html += '</div>';
+    html += '</div></a>';
+  });
+  list.innerHTML = html || '<div style="text-align:center;color:var(--text3);padding:20px">Transfer yo\'q</div>';
+  modal.style.display = 'flex';
+}
+
 </script>
 
 <!-- DEADLINE MODAL -->
@@ -874,6 +918,20 @@ function okDeadline(userId){
       <button onclick="closeDlModal()" style="flex:1;padding:12px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">Bekor</button>
       <button onclick="saveDlModal()" style="flex:2;padding:12px;border-radius:12px;background:#ff4d6d;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer">⏰ Deadline qo'y</button>
     </div>
+  </div>
+</div>
+
+<!-- TRANSFERS MODAL -->
+<div id="tr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:flex-end;justify-content:center">
+  <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-height:80vh;overflow-y:auto;border-top:1px solid var(--border)">
+    <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);padding-bottom:12px">
+      <div>
+        <div style="font-size:15px;font-weight:700">Ochiq transferlar</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="tr-subtitle"></div>
+      </div>
+      <button onclick="document.getElementById('tr-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
+    </div>
+    <div id="tr-list" style="padding:12px 16px 24px"></div>
   </div>
 </div>
 </body>
