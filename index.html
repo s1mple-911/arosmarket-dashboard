@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>AROS [DEV]</title>
+<title>AROS</title>
 <style>
 :root{
   --bg:#0f0f1a;
@@ -75,11 +75,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .b-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.25)}
 .b-amber{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
 .client-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
-.client-main{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
-.c-av{width:38px;height:38px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--text2);flex-shrink:0;border:1px solid var(--border)}
+.client-main{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.c-av{width:42px;height:42px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0;border:1px solid var(--border)}
 .c-info{flex:1;min-width:0}
-.c-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c-phone{font-size:11px;color:var(--text3);margin-top:2px}
+.c-name{font-size:14px;font-weight:700;color:var(--text)}
+.c-phone{font-size:11px;color:var(--text3);margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .c-right{text-align:right;flex-shrink:0}
 .c-amt{font-size:13px;font-weight:800}
 .c-sub{font-size:10px;color:var(--text3);margin-top:2px}
@@ -117,7 +117,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <div onclick="toggleTheme()" id="themeBtn" style="width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0">🌙</div>
-   
+    
   </div>
 </div>
 
@@ -160,7 +160,7 @@ var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
-var CEO_IDS = ['1255605633','1432724','1373701411'];
+var CEO_IDS = ['1255605633','6414297298','6234108181','1865951955','331245247'];
 var isCeo = CEO_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
@@ -315,16 +315,18 @@ function buildCard(r,id,color,lazy,orders){
   html+='<div class="client-main" onclick="'+clickFn+'">';
   html+='<div class="c-av">'+ini(r.ism)+'</div>';
   // usertype badge faqat otgan tab (lazy=true) uchun
-  var utag=lazy?(r.usertype==='master'?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(77,159,255,.15);color:#4d9fff;margin-left:4px">M</span>':r.usertype==='business_partner'?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(255,184,0,.15);color:#ffb800;margin-left:4px">BP</span>':''):'';
+  var utag=lazy?(r.usertype==='master'?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(77,159,255,.15);color:#4d9fff">M</span>':r.usertype==='business_partner'?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,184,0,.15);color:#ffb800">BP</span>':''):'';
   // Eng eski muddati o'tgan kunni hisoblash
   var maxKun=r.max_kun||0;
   if(!maxKun&&r.orders&&r.orders.length){
     r.orders.forEach(function(o){if((o.kun_otgan||0)>maxKun)maxKun=o.kun_otgan||0;});
   }
-  var kunTag=maxKun>0?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff4d6d;margin-left:4px">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff4d6d;margin-left:4px"></span>';
-  var uidTag='<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(120,120,120,.12);color:var(--text3);margin-left:4px">#'+r.user_id+'</span>';
-  html+='<div class="c-info"><div class="c-name">'+(r.ism||"Noma'lum")+utag+uidTag+kunTag+'</div>';
-  html+='<div class="c-phone">'+(tel?'+'+tel:'—')+'</div></div>';
+  var kunTag=maxKun>0?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,77,109,.15);color:#ff4d6d">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,77,109,.15);color:#ff4d6d"></span>';
+  var uidTag='<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;background:rgba(120,120,120,.12);color:var(--text3)">#'+r.user_id+'</span>';
+  html+='<div class="c-info">';
+  html+='<div class="c-name">'+(r.ism||"Noma'lum")+'</div>';
+  html+='<div class="c-phone">'+(utag?utag+' ':'')+uidTag+' '+kunTag+'<span style="color:var(--border);margin:0 3px">·</span><span>'+(tel?'+'+tel:'—')+'</span></div>';
+  html+='</div>';
   html+='<div class="c-right"><div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div>';
   html+='<div class="c-sub">'+subTxt+'</div></div>';
   html+=callBtn(tel);
