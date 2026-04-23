@@ -781,13 +781,17 @@ function fillDetOrd(el,orders,walletBalance){
 function load(){
   if(!uid){document.getElementById('main').innerHTML='<div class="err-box">URL da ?uid= topilmadi</div>';return;}
   document.getElementById('main').innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-  fetch(CEO_API+'?uid='+uid+'&oy='+curOy+'&yil='+curYil)
+  var ceoUrl=CEO_API+'?uid='+uid+'&oy='+curOy+'&yil='+curYil;
+  console.log('CEO fetch:', ceoUrl);
+  fetch(ceoUrl)
     .then(function(r){return r.text();})
     .then(function(txt){
+      console.log('CEO response:', txt.substring(0,200));
       var d=parseSafe(txt);
-      if(!d) throw new Error('Serverdan xato javob keldi');
+      console.log('CEO parsed:', d?'OK filiallar:'+(d.filiallar?d.filiallar.length:0):'NULL');
+      if(!d) throw new Error('Serverdan xato javob keldi: '+txt.substring(0,100));
       if(d.error) throw new Error(d.error);
-      if(!d.filiallar||!d.filiallar.length) throw new Error('Filiallar topilmadi');
+      if(!d.filiallar||!d.filiallar.length) throw new Error('Filiallar topilmadi (count:'+d.filiallar_count+')');
       var oyNomi=OY[(d.oy_raqami||curOy)-1]+' '+(d.yil||curYil);
       var filiallar=filterFiliallar(d.filiallar);
       document.getElementById('hdr-sub').textContent='CEO · '+oyNomi;
