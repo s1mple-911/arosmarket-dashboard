@@ -484,8 +484,10 @@ function renderDash(){
     html+='</div>';
     html+='</div>';
     if(transfers.length>0){
-      html+='<div style="display:flex;gap:8px;margin-top:8px;cursor:pointer" onclick="showTransfersModal('+(JSON.stringify(transfers).replace(/'/g,"\\'")+',fd.filial||\'\')">';
-      html+='<div style="flex:1;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
+      window._dashTransfers=transfers;
+      window._dashFilial=fd.filial||'';
+      html+='<div style="margin-top:8px;cursor:pointer" id="tr-dash-btn">';
+      html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
       html+='<div style="font-size:10px;color:#378ADD;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
       html+='<div style="display:flex;gap:8px;align-items:center">';
       if(trCreated.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCreated.length+' kutmoqda</span>';
@@ -527,6 +529,8 @@ function renderDash(){
     html += '<div style="text-align:center;font-size:10px;color:var(--text3);margin-top:8px;padding-bottom:4px">⏰ So\'nggi yangilanish: '+updStr+'</div>';
   }
   document.getElementById('page-dash').innerHTML=html;
+  var trBtn=document.getElementById('tr-dash-btn');
+  if(trBtn) trBtn.onclick=function(){showTransfersModal(window._dashTransfers,window._dashFilial);};
 }
 
 // =============================================

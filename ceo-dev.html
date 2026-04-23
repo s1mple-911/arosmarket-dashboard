@@ -391,6 +391,22 @@ function renderCard(f,idx){
       '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
       :foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
+  // Transfers badge - kartochkada
+  var trList=f.transfers||[];
+  if(trList.length>0){
+    var trC=trList.filter(function(t){return t.status==='created';}).length;
+    var trO=trList.filter(function(t){return t.status==='on_way';}).length;
+    var cardEl=document.getElementById('fc-'+idx);
+    if(cardEl){
+      var trDiv=document.createElement('div');
+      trDiv.style.cssText='margin:0 10px 10px;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center';
+      trDiv.innerHTML='<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
+        '<span style="font-size:11px;font-weight:700">'+(trC>0?'<span style="color:#378ADD">'+trC+' kutmoqda</span> ':'')+
+        (trO>0?'<span style="color:#ff9f0a">'+trO+' yo\'lda</span>':'')+'</span>';
+      (function(tl,fn){trDiv.onclick=function(e){e.stopPropagation();window._ceoTransfers=tl;window._ceoFilial=fn;showTransfersModal(tl,fn);};})(trList,f.filial||'');
+      cardEl.appendChild(trDiv);
+    }
+  }
 }
 
 function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
@@ -569,9 +585,7 @@ function renderDetDash(){
   if(trAll.length>0){
     var trCreated=trAll.filter(function(t){return t.status==='created';});
     var trOnWay=trAll.filter(function(t){return t.status==='on_way';});
-    var trJson=JSON.stringify(trAll).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    var trFilial=(f.filial||'').replace(/'/g,"\\'");
-    html+='<div style="margin-top:8px;cursor:pointer" onclick="showTransfersModal('+trJson+',\''+trFilial+'\')">';
+    html+='<div style="margin-top:8px;cursor:pointer" id="det-tr-btn">';
     html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
     html+='<div style="font-size:10px;color:#378ADD;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
     html+='<div style="display:flex;gap:8px;align-items:center">';
@@ -593,6 +607,12 @@ function renderDetDash(){
   html+='<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val">'+(detSummary.jami_mjoz||detUsers.length)+' ta</div><div class="sc-sub">'+f.filial+'</div></div>';
   html+='</div>';
   document.getElementById('det-dash').innerHTML=html;
+  var detTrBtn=document.getElementById('det-tr-btn');
+  if(detTrBtn){
+    var _tl=detFilialCache?(detFilialCache.transfers||[]):[];
+    var _fn=detFilial?detFilial.filial||'':'';
+    detTrBtn.onclick=function(){showTransfersModal(_tl,_fn);};
+  }
 }
 
 function loadDetTab(tab){
