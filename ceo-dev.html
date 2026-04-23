@@ -835,23 +835,50 @@ function showTransfersModal(transfers, filialNomi){
   subtitle.textContent=(filialNomi||'')+' · '+transfers.length+' ta transfer';
   var sLabels={created:'Kutmoqda',on_way:"Yo'lda"};
   var sColors={created:'#378ADD',on_way:'#ff9f0a'};
+  var nowStr=new Date().toISOString().split('T')[0];
   var html='';
   transfers.forEach(function(t){
     var color=sColors[t.status]||'var(--text2)';
     var label=sLabels[t.status]||t.status;
     var link='https://admin.aros.uz/products-actions/product-transfer/'+t.id;
+    var sana=t.status==='created'?t.created_date:t.send_date;
+    var sanaLabel=t.status==='created'?'Yaratilgan':'Yuborilgan';
+    var kun=t.kun_otgan||0;
+    var masulIsm=t.masul_ism||t.executor_name||'—';
+    var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
+    var masulWname=t.masul_warehouse_name||'';
     html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:10px">';
-    html+='<div style="background:var(--bg3);border-radius:14px;padding:14px;border:0.5px solid var(--border)">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
-    html+='<span style="font-size:13px;font-weight:700">#'+t.id+'</span>';
-    html+='<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;background:'+color+'20;color:'+color+'">'+label+'</span>';
+    html+='<div style="background:var(--bg3);border-radius:16px;padding:14px;border:0.5px solid var(--border)">';
+    // Header
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+    html+='<div style="display:flex;align-items:center;gap:8px">';
+    html+='<span style="font-size:14px;font-weight:700">#'+t.id+'</span>';
+    html+=(kun>0?'<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(255,77,109,.12);color:#ff4d6d">'+kun+' kun</span>':'');
     html+='</div>';
+    html+='<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;background:'+color+'20;color:'+color+'">'+label+'</span>';
+    html+='</div>';
+    // From → To
+    html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:12px">';
+    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:5px 8px;border-radius:8px;text-align:center">'+(t.from_warehouse||'—')+'</span>';
+    html+='<span style="color:var(--text3);flex-shrink:0">→</span>';
+    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:5px 8px;border-radius:8px;text-align:center">'+(t.to_warehouse||'—')+'</span>';
+    html+='</div>';
+    // Details grid
     html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
-    html+='<div><div style="color:var(--text3);margin-bottom:2px">Kimdan</div><div style="font-weight:600">'+(t.from_warehouse||'—')+'</div></div>';
-    html+='<div><div style="color:var(--text3);margin-bottom:2px">Kimga</div><div style="font-weight:600">'+(t.to_warehouse||'—')+'</div></div>';
-    html+='<div><div style="color:var(--text3);margin-bottom:2px">Summa</div><div style="font-weight:700">'+fmtFull(t.document_price)+'</div></div>';
-    html+='<div><div style="color:var(--text3);margin-bottom:2px">Ijrochi</div><div style="font-weight:600">'+(t.executor_name||'—')+'</div></div>';
-    html+='</div></div></a>';
+    html+='<div><div style="color:var(--text3);margin-bottom:2px">Summa</div><div style="font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</div></div>';
+    html+='<div><div style="color:var(--text3);margin-bottom:2px">'+sanaLabel+'</div><div style="font-weight:600;color:var(--text)">'+(sana||'—')+'</div></div>';
+    html+='</div>';
+    // Ma'sul shaxs
+    html+='<div style="margin-top:10px;padding:8px 10px;background:var(--bg2);border-radius:10px;display:flex;justify-content:space-between;align-items:center">';
+    html+='<div>';
+    html+='<div style="font-size:10px;color:var(--text3);margin-bottom:2px">Ma'sul shaxs · '+masulWname+'</div>';
+    html+='<div style="font-size:13px;font-weight:600">'+masulIsm+'</div>';
+    html+='</div>';
+    if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--green);text-decoration:none">📞 Qo'ng'iroq</a>';
+    html+='</div>';
+    // Comment
+    if(t.comment) html+='<div style="margin-top:8px;font-size:11px;color:var(--text3);font-style:italic">'+t.comment+'</div>';
+    html+='</div></a>';
   });
   list.innerHTML=html||'<div style="text-align:center;color:var(--text3);padding:20px">Transfer yo\'q</div>';
   modal.style.display='flex';
