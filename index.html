@@ -74,21 +74,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
 .b-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.25)}
 .b-amber{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
-.client-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
+.client-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:18px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
+.client-card.has-dl{border:1px solid #E24B4A}
 .client-main{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;-webkit-user-select:none;user-select:none}
-.c-av{width:42px;height:42px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0;border:1px solid var(--border)}
+.c-av{width:42px;height:42px;border-radius:21px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0}
+.c-av-red{background:rgba(226,75,74,.15);color:#E24B4A}
+.c-av-blue{background:rgba(55,138,221,.15);color:#378ADD}
 .c-info{flex:1;min-width:0}
-.c-name{font-size:14px;font-weight:700;color:var(--text)}
-.c-phone{font-size:11px;color:var(--text3);margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.c-right{text-align:right;flex-shrink:0}
-.c-amt{font-size:13px;font-weight:800}
-.c-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.c-name{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
+.c-row2{display:flex;align-items:center;gap:4px;margin-top:5px;flex-wrap:nowrap;overflow:hidden}
+.c-b{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+.c-b-bp{background:rgba(186,117,23,.15);color:#BA7517}
+.c-b-m{background:rgba(55,138,221,.15);color:#185FA5}
+.c-b-id{background:var(--bg3);color:var(--text3)}
+.c-b-kun{background:rgba(226,75,74,.12);color:#E24B4A}
+.c-phone{font-size:11px;color:var(--text3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-right{text-align:right;flex-shrink:0;margin-left:8px}
+.c-amt{font-size:15px;font-weight:700;white-space:nowrap}
+.c-sub{font-size:10px;color:var(--text3);margin-top:3px}
 .call-btn{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.1);text-decoration:none;transition:all .15s}
 .call-btn svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .call-btn:active{transform:scale(.93)}
 .arr{color:var(--text3);font-size:11px;flex-shrink:0;margin-left:4px;min-width:14px;text-align:center;transition:transform .2s}
 .arr.open{transform:rotate(180deg)}
-.orders-list{border-top:1px solid var(--border);background:var(--bg3);max-height:0;overflow:hidden;transition:max-height .5s ease}
+.orders-list{background:var(--bg3);max-height:0;overflow:hidden;transition:max-height .5s ease}
 .orders-list.expanded{max-height:2000px}
 .order-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 10px 62px;border-bottom:1px solid var(--border)}
 .order-row:last-child{border-bottom:none}
@@ -160,7 +169,7 @@ var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
-var CEO_IDS = ['1255605633','1373701411','1432724'];
+var CEO_IDS = ['1255605633','1432724','1373701411'];
 var isCeo = CEO_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
@@ -293,57 +302,73 @@ function callBtn(tel){
 function buildCard(r,id,color,lazy,orders){
   var tel=(r.telefon||'').replace(/\D/g,'');
   var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+')'):('toggleInline(\''+id+'\')');
-  var subTxt=lazy?'Bosib orders ko\'ring':(orders&&orders.length?orders.length+' ta order':'');
   var dl=pageDeadlines[String(r.user_id)];
   var hasDl=dl&&dl.quyilgan_deadline;
-  var cardBorder=hasDl?'border-color:#ff4d6d;border-width:2px':'';
-  var html='<div class="client-card" style="'+cardBorder+'">';
+  // Avatar rang
+  var avClass=hasDl?'c-av c-av-red':(r.usertype==='master'?'c-av c-av-blue':'c-av');
+  // Deadline banner
+  var dlHtml='';
   if(hasDl){
     var dlMs=new Date(dl.quyilgan_deadline).getTime()-new Date().getTime();
     var dlExp=dlMs<0;
     var absMs=Math.abs(dlMs);
     var dlDays=Math.floor(absMs/86400000);
     var dlH=Math.floor((absMs%86400000)/3600000);
-    var dlM=Math.floor((absMs%3600000)/60000);
-    var dlS=Math.floor((absMs%60000)/1000);
-    var dlStr=(dlExp?'⚠️ -':'')+(dlDays>0?dlDays+'k ':'')+dlH+'s '+dlM+'d '+dlS+'s';
-    html+='<div style="background:'+(dlExp?'#aa0022':'#ff4d6d')+';padding:5px 14px;display:flex;justify-content:space-between;align-items:center" id="idx-dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">';
-    html+='<div style="font-size:10px;color:#fff;font-weight:700">⏰ DEADLINE: <span id="idx-dl-cnt-'+r.user_id+'">'+dlStr+'</span></div>';
-    html+='<div style="font-size:10px;color:rgba(255,255,255,.8)">'+fmtFull(dl.deadline_summa)+' so\'m</div>';
-    html+='</div>';
+    var dlM2=Math.floor((absMs%3600000)/60000);
+    var dlStr=(dlExp?'- ':'')+(dlDays>0?dlDays+' kun ':'')+dlH+' soat '+dlM2+' daqiqa';
+    var dlBg=dlExp?'rgba(163,45,45,.15)':'rgba(226,75,74,.1)';
+    var dlBorder=dlExp?'#A32D2D':'#E24B4A';
+    var dlColor=dlExp?'#A32D2D':'#E24B4A';
+    dlHtml='<div style="background:'+dlBg+';padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid '+dlBorder+'20" id="idx-dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">'+
+      '<div style="display:flex;align-items:center;gap:6px">'+
+      '<div style="width:6px;height:6px;border-radius:3px;background:'+dlColor+'"></div>'+
+      '<span style="font-size:12px;font-weight:700;color:'+dlColor+'">DEADLINE: <span id="idx-dl-cnt-'+r.user_id+'">'+dlStr+'</span></span>'+
+      '</div>'+
+      '<span style="font-size:12px;font-weight:600;color:'+dlColor+'">'+fmtFull(dl.deadline_summa)+'</span>'+
+    '</div>';
   }
-  html+='<div class="client-main" onclick="'+clickFn+'">';
-  html+='<div class="c-av">'+ini(r.ism)+'</div>';
-  // usertype badge faqat otgan tab (lazy=true) uchun
-  var utag=lazy?(r.usertype==='master'?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(77,159,255,.15);color:#4d9fff">M</span>':r.usertype==='business_partner'?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,184,0,.15);color:#ffb800">BP</span>':''):'';
-  // Eng eski muddati o'tgan kunni hisoblash
-  var maxKun=r.max_kun||0;
-  if(!maxKun&&r.orders&&r.orders.length){
+  // Badges
+  var utag=r.usertype==='master'?'<span class="c-b c-b-m">M</span>':r.usertype==='business_partner'?'<span class="c-b c-b-bp">BP</span>':'';
+  var maxKun=lazy?(r.max_kun||0):0;
+  if(lazy&&!maxKun&&r.orders&&r.orders.length){
     r.orders.forEach(function(o){if((o.kun_otgan||0)>maxKun)maxKun=o.kun_otgan||0;});
   }
-  var kunTag=maxKun>0?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,77,109,.15);color:#ff4d6d">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,77,109,.15);color:#ff4d6d"></span>';
-  var uidTag='<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;background:rgba(120,120,120,.12);color:var(--text3)">#'+r.user_id+'</span>';
-  html+='<div class="c-info">';
-  html+='<div class="c-name">'+(r.ism||"Noma'lum")+'</div>';
-  html+='<div class="c-phone">'+(utag?utag+' ':'')+uidTag+' '+kunTag+'<span style="color:var(--border);margin:0 3px">·</span><span>'+(tel?'+'+tel:'—')+'</span></div>';
-  html+='</div>';
-  html+='<div class="c-right"><div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div>';
-  html+='<div class="c-sub">'+subTxt+'</div></div>';
-  html+=callBtn(tel);
-  if(isCeo) html+='<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism+'\',' +(r.otgan_summa||r.summa)+')" style="background:rgba(255,184,0,.15);border:1px solid rgba(255,184,0,.4);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:800;color:#ffb800;cursor:pointer;margin-left:4px">⏰</button>';
-  if(isCeo&&hasDl) html+='<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.4);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:800;color:var(--green);cursor:pointer;margin-left:2px">✓</button>';
-  html+='<span class="arr" id="ar-'+id+'">▾</span></div>';
-  html+='<div class="orders-list" id="ol-'+id+'">';
+  var kunTag=lazy?(maxKun>0?'<span class="c-b c-b-kun">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" class="c-b c-b-kun"></span>'):'';
+  var uidTag='<span class="c-b c-b-id">#'+r.user_id+'</span>';
+  // Orders section
+  var ordersHtml='<div class="orders-list" id="ol-'+id+'">';
   if(!lazy&&orders&&orders.length){
+    ordersHtml+='<div style="height:0.5px;background:var(--border);margin:0 16px"></div>';
+    ordersHtml+='<div style="padding:8px 16px 12px 70px">';
     orders.forEach(function(o){
-      html+='<div class="order-row"><div class="o-left">';
-      html+='<div class="o-id">Order #'+o.order_id+' · '+(o.sana||'')+'</div>';
-      html+='<div class="o-deadline" style="color:'+color+'">Deadline: '+(o.deadline||'—')+'</div></div>';
-      html+='<div class="o-amt" style="color:'+color+'">'+fmtFull(o.summa)+'</div></div>';
+      ordersHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border)">';
+      ordersHtml+='<div><div style="font-size:11px;color:var(--text3)">Order #'+o.order_id+' · '+(o.sana||'')+'</div>';
+      ordersHtml+='<div style="font-size:11px;font-weight:600;color:'+color+'">Deadline: '+(o.deadline||'—')+'</div></div>';
+      ordersHtml+='<div style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(o.summa)+'</div></div>';
     });
+    ordersHtml+='</div>';
   }
-  html+='</div></div>';
-  return html;
+  ordersHtml+='</div>';
+  return '<div class="client-card'+(hasDl?' has-dl':'')+'">'+
+    dlHtml+
+    '<div class="client-main" onclick="'+clickFn+'">'+
+      '<div class="'+avClass+'">'+ini(r.ism)+'</div>'+
+      '<div class="c-info">'+
+        '<div class="c-name">'+(r.ism||"Noma'lum")+'</div>'+
+        '<div class="c-row2">'+(utag?utag:'')+uidTag+kunTag+'</div>'+
+        '<div class="c-phone">'+(tel?'+'+tel:'—')+'</div>'+
+      '</div>'+
+      '<div class="c-right">'+
+        '<div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div>'+
+        (lazy?'<div class="c-sub">▾ ko\'rish</div>':'')+
+      '</div>'+
+      callBtn(tel)+
+      (isCeo?'<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism.replace(/\'/g,"\\'")+'\','+(r.otgan_summa||r.summa)+')" style="background:rgba(186,117,23,.15);border:0.5px solid rgba(186,117,23,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#BA7517;cursor:pointer;margin-left:4px">⏰</button>':'')+
+      (isCeo&&hasDl?'<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(59,109,17,.15);border:0.5px solid rgba(59,109,17,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#3B6D11;cursor:pointer;margin-left:3px">✓</button>':'')+
+      '<span class="arr" id="ar-'+id+'">▾</span>'+
+    '</div>'+
+    ordersHtml+
+  '</div>';
 }
 
 function renderList(pageId,list,color,badgeClass,emptyIcon,emptyText,lazy){
