@@ -166,6 +166,7 @@ var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var STATS_API    = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
 var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
 var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
+var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
@@ -411,6 +412,21 @@ function loadFilialStats(cb){
     })
     .catch(function(){filialData=null;if(cb) cb();});
 }
+// YANGI: Barcha filiallar ma'lumotini olish (Top-5 leaderboard uchun)
+var allFiliallar = [];
+function loadAllFiliallar(cb){
+  fetch(CEO_API+'?uid='+uid)
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      try{
+        var raw=JSON.parse(txt);
+        var d=Array.isArray(raw)?raw[0]:raw;
+        allFiliallar = (d && d.filiallar) ? d.filiallar : [];
+      }catch(e){ allFiliallar=[]; }
+      if(cb) cb();
+    })
+    .catch(function(){ allFiliallar=[]; if(cb) cb(); });
+}
 
 // =============================================
 // renderDash - eski kod + filial plan bloki qo'shildi
@@ -523,6 +539,60 @@ function renderDash(){
   html+='<div class="stat-card"><div class="sc-lbl">Ertaga</div><div class="sc-val" style="color:var(--amber)">'+fmt(erS)+'</div><div class="sc-sub">'+ertagaFinal.length+' ta</div></div>';
   html+='<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val" style="color:var(--text)">'+jami+'</div><div class="sc-sub">'+(userData.warehouse_name||'')+'</div></div>';
   html+='</div>';
+  // YANGI: Top-5 filiallar leaderboard (prognoz_foiz bo'yicha)
+  if(allFiliallar && allFiliallar.length>0){
+    var sorted = allFiliallar.slice().sort(function(a,b){return (b.prognoz_foiz||0)-(a.prognoz_foiz||0);});
+    var myWid = String(wid || userData.warehouse_id || '');
+    var myRank = 0;
+    for(var i=0;i<sorted.length;i++){ if(String(sorted[i].warehouse_id)===myWid){ myRank=i+1; break; } }
+    var top5 = sorted.slice(0,5);
+    var medals = {1:'🥇',2:'🥈',3:'🥉'};
+    html+='<div style="margin-top:14px;background:var(--bg2);border-radius:16px;padding:14px;border:0.5px solid var(--border)">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
+    html+='<span style="font-size:16px">🏆</span>';
+    html+='<div style="font-size:14px;font-weight:700;color:var(--text)">Top-5 Filiallar</div>';
+    html+='<span style="font-size:10px;color:var(--text3);margin-left:auto">prognoz foizi bo\'yicha</span>';
+    html+='</div>';
+    top5.forEach(function(f,idx){
+      var rank=idx+1;
+      var medal=medals[rank]||('<span style="font-size:13px;font-weight:700;color:var(--text3);width:20px;display:inline-block;text-align:center">'+rank+'</span>');
+      var isMe=String(f.warehouse_id)===myWid;
+      var rowBg=isMe?'rgba(55,138,221,.12)':'var(--bg3)';
+      var rowBorder=isMe?'1px solid rgba(55,138,221,.35)':'0.5px solid var(--border)';
+      var pfColor=(f.prognoz_foiz||0)>=100?'var(--green)':(f.prognoz_foiz||0)>=80?'var(--amber)':'var(--red)';
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:'+rowBg+';border-radius:12px;border:'+rowBorder+';margin-bottom:6px">';
+      html+='<div style="font-size:18px;width:24px;text-align:center">'+medal+'</div>';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(f.filial||'—')+(isMe?' · <span style="color:#378ADD;font-size:10px">SIZ</span>':'')+'</div>';
+      html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Plan: '+fmt(f.plan||0)+' · Bajardi: '+fmt(f.bajarildi||0)+'</div>';
+      html+='</div>';
+      html+='<div style="text-align:right">';
+      html+='<div style="font-size:14px;font-weight:800;color:'+pfColor+'">'+(f.prognoz_foiz||0)+'%</div>';
+      html+='<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">prognoz</div>';
+      html+='</div>';
+      html+='</div>';
+    });
+    // Motivatsion matn
+    if(myRank>0){
+      var total=sorted.length;
+      var motivBg, motivColor, motivText;
+      if(myRank===1){
+        motivBg='rgba(34,197,94,.12)';motivColor='var(--green)';
+        motivText='🎉 Tabriklaymiz! Siz '+myRank+'-o\'rindasiz. Birinchilikni saqlang!';
+      } else if(myRank<=3){
+        motivBg='rgba(251,191,36,.12)';motivColor='#fbbf24';
+        motivText='⭐ Ajoyib! Siz '+myRank+'-o\'rindasiz. Yana ozgina harakat — birinchi bo\'lish mumkin!';
+      } else if(myRank<=5){
+        motivBg='rgba(55,138,221,.12)';motivColor='#378ADD';
+        motivText='👍 Top-5 dasiz! Siz '+myRank+'-o\'rindasiz. Yuqoriroqqa chiqing!';
+      } else {
+        motivBg='rgba(255,159,10,.12)';motivColor='var(--amber)';
+        motivText='💪 Siz '+myRank+'-o\'rindasiz ('+total+' dan). Harakatni davom eting!';
+      }
+      html+='<div style="margin-top:8px;padding:10px 12px;background:'+motivBg+';border-radius:10px;font-size:12px;font-weight:600;color:'+motivColor+';text-align:center">'+motivText+'</div>';
+    }
+    html+='</div>';
+  }
   // So'nggi yangilanish vaqti
   if(filialData && (filialData.updated_at_str||filialData.updated_at)){
     var updStr=filialData.updated_at_str||(function(){var d=new Date(filialData.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})();
@@ -679,10 +749,11 @@ function load(){
       document.getElementById('hn').textContent=userData.ism||'Hodim';
       document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
       // Filial stats ham yuklaymiz, keyin render
-      loadFilialStats(function(){
-        renderDash();
-        loadTab('otgan');
-      });
+// Filial stats + barcha filiallar (leaderboard uchun) parallel yuklaymiz
+      var pending=2;
+      function maybeRender(){ pending--; if(pending===0){ renderDash(); loadTab('otgan'); } }
+      loadFilialStats(maybeRender);
+      loadAllFiliallar(maybeRender);
     })
     .catch(function(e){
       document.getElementById('hn').textContent='Xato';
