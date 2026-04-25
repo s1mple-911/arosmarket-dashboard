@@ -347,6 +347,14 @@ function buildCard(r,id,color,lazy,orders){
   if(!lazy&&orders&&orders.length){
     ordersHtml+='<div style="height:0.5px;background:var(--border);margin:0 16px"></div>';
     ordersHtml+='<div style="padding:8px 16px 12px 70px">';
+    // Hamyon balansi qatori (agar bor bo'lsa) — qarzdan ayiriladi deb ko'rsatish
+    var wallet=Number(r.wallet_balance)||0;
+    if(wallet>0){
+      ordersHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);background:rgba(34,197,94,.05);margin:0 -16px 0 -70px;padding-left:70px;padding-right:16px">';
+      ordersHtml+='<div><div style="font-size:11px;color:var(--green);font-weight:700">Hamyon balansi</div>';
+      ordersHtml+='<div style="font-size:10px;color:var(--green);opacity:.85">Qarzdan ayiriladi</div></div>';
+      ordersHtml+='<div style="font-size:12px;font-weight:700;color:var(--green)">'+fmtFull(wallet)+'</div></div>';
+    }
     orders.forEach(function(o){
       ordersHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border)">';
       ordersHtml+='<div><div style="font-size:11px;color:var(--text3)">Order #'+o.order_id+' · '+(o.sana||'')+'</div>';
@@ -702,41 +710,36 @@ function proc(debtor, orders, tab, resMap){
     }
     // Orders bor (cache) - strictly o'tgan (deadline < bugunStr!)
     var otgOrders=orders.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
-    // Agar deadline'li orders yo'q lekin API'dan otgan_summa bor (deadline yo'q lekin muddati o'tgan)
-    if(!otgOrders.length){
-      var otganNetFallback=Number(debtor.otgan_summa||0);
-      if(otganNetFallback<=0) return;
+    // Agar order-based o'tgan summasi bor:
+    if(otgOrders.length){
+      var tot=otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+      var wallet=Number(debtor.wallet_balance)||0;
+      var net=Math.max(0,tot-wallet);
+      if(net<=0) return;
+      var maxK=0;
+      otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
       resMap[debtor.user_id]={
-        ism:debtor.ism,telefon:debtor.telefon,summa:otganNetFallback,
-        wallet_balance:Number(debtor.wallet_balance)||0,
-        user_id:debtor.user_id,orders:[],usertype:debtor.usertype||'',max_kun:0
-      };
-      return;
-    }
-    var tot=otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
-    var wallet=Number(debtor.wallet_balance)||0;
-    var net=Math.max(0,tot-wallet);
-    if(net<=0){
-      // API otgan_summa fallback
-      var otganNetFb=Number(debtor.otgan_summa||0);
-      if(otganNetFb<=0) return;
-      resMap[debtor.user_id]={
-        ism:debtor.ism,telefon:debtor.telefon,summa:otganNetFb,
+        ism:debtor.ism,telefon:debtor.telefon,summa:net,
         wallet_balance:wallet,user_id:debtor.user_id,
-        orders:otgOrders,usertype:debtor.usertype||'',max_kun:0
+        orders:otgOrders,usertype:debtor.usertype||'',max_kun:maxK
       };
       return;
     }
-    var maxK=0;
-    otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
+    // Order-based o'tgan yo'q. API otgan_summa fallback FAQAT agar:
+    // - mijozda BUGUN va ERTAGA deadline'li orders YO'Q
+    // (aks holda u qarz "Bugun" yoki "Ertaga" da ko'rinadi)
+    var bugunOrErt=orders.filter(function(o){return o.deadline===bugunStr||o.deadline===ertagaStr;});
+    if(bugunOrErt.length>0) return; // Bugun/Ertaga da bor, "O'tgan" ga qo'shilmasin
+    var apiOtgan=Number(debtor.otgan_summa||0);
+    if(apiOtgan<=0) return;
     resMap[debtor.user_id]={
-      ism:debtor.ism,telefon:debtor.telefon,summa:net,
-      wallet_balance:wallet,user_id:debtor.user_id,
-      orders:otgOrders,usertype:debtor.usertype||'',max_kun:maxK
+      ism:debtor.ism,telefon:debtor.telefon,summa:apiOtgan,
+      wallet_balance:Number(debtor.wallet_balance)||0,
+      user_id:debtor.user_id,orders:[],usertype:debtor.usertype||'',max_kun:0
     };
     return;
   }
-  // Bugun va ertaga - orders cache da yo'q, API dan olish kerak
+  // Bugun va ertaga - cache da deadline bo'yicha
   var filtered;
   if(tab==='bugun'){
     filtered=(orders||[]).filter(function(o){return o.deadline===bugunStr;});
