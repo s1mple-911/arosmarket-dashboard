@@ -694,42 +694,47 @@ loadPageDeadlines(userData.warehouse_id||0, function(){
 // =============================================
 // proc - TUZATILDI: hamyon ayirish qo'shildi
 // =============================================
+// =============================================
+// PROC - Yagona barqaror mantiq
+// Asos: o.deadline maydoni
+// Har tab mustaqil, mijoz bir nechta tabda ko'rinishi mumkin
+// =============================================
 function proc(debtor, orders, tab, resMap){
   var ordList = Array.isArray(orders) ? orders : [];
   var wallet = Number(debtor.wallet_balance)||0;
   var apiOtgan = Number(debtor.otgan_summa||0);
   
   // ===== O'TGAN TAB =====
-  // Birinchi navbatda - orders ro'yxatidan deadline o'tganlarni olamiz
   if(tab==='otgan'){
+    // Order asosida (deadline o'tib ketgan)
     var otgOrders = ordList.filter(function(o){
       return o.deadline && o.deadline < bugunStr;
     });
-    if(otgOrders.length){
-      // Order asosida: faqat o'tgan deadline'li orderlar summasi
-      var totO = otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
-      var netO = Math.max(0, totO - wallet);
-      if(netO===0) return;
-      var maxK=0;
-      otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK) maxK=o.kun_otgan||0;});
-      resMap[debtor.user_id]={
-        ism:debtor.ism, telefon:debtor.telefon, summa:netO,
-        wallet_balance:wallet, user_id:debtor.user_id,
-        orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK
-      };
+    var orderSum = otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    
+    // O'tgan summa logika:
+    var rawOtgan;
+    if(otgOrders.length>0){
+      // Orderlar bor - max(orderSum, apiOtgan) - chunki API ko'pincha to'liqroq (interval qarzlarni hisobga oladi)
+      rawOtgan = Math.max(orderSum, apiOtgan);
+    } else if(ordList.length===0){
+      // Orderlar umuman yo'q - faqat apiOtgan ishlatamiz (Yunus holati: API qarzlarni boshqa joydan ham oladi)
+      rawOtgan = apiOtgan;
+    } else {
+      // Orderlar bor, lekin barcha kelajak deadline'li - "O'tgan" emas
       return;
     }
-    // Agar orders bo'sh VA mijozda bugun/ertaga/kelajak deadline yo'q, lekin apiOtgan>0 — fallback (Yunus holati)
-    var hasFutureDeadline = ordList.some(function(o){
-      return o.deadline && o.deadline >= bugunStr;
-    });
-    if(hasFutureDeadline) return; // Mijoz "Bugun" yoki "Ertaga" da ko'rinadi
-    if(apiOtgan<=0) return;
-    // Yunus holati: orderlar yo'q, lekin API muddati o'tgan deyapti
+    if(rawOtgan<=0) return;
+    
+    var netOtgan = Math.max(0, rawOtgan - wallet);
+    if(netOtgan<=0) return;
+    
+    var maxK=0;
+    otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK) maxK=o.kun_otgan||0;});
     resMap[debtor.user_id]={
-      ism:debtor.ism, telefon:debtor.telefon, summa:apiOtgan,
+      ism:debtor.ism, telefon:debtor.telefon, summa:netOtgan,
       wallet_balance:wallet, user_id:debtor.user_id,
-      orders:[], usertype:debtor.usertype||'', max_kun:0
+      orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK
     };
     return;
   }
