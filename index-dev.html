@@ -695,27 +695,18 @@ loadPageDeadlines(userData.warehouse_id||0, function(){
 // proc - TUZATILDI: hamyon ayirish qo'shildi
 // =============================================
 function proc(debtor, orders, tab, resMap){
-  // Barcha tablar cache dan
   if(tab==='otgan'){
-    // O'TGAN tab uchun ASOSIY MANBA: API otgan_summa.
-    // Agar otgan_summa > 0 — mijoz "O'tgan" da ko'rinadi (orders bor-yo'qligidan qat'iy nazar).
-    // Lekin agar bugun yoki ertaga deadline'li orders bor bo'lsa — bu qarz boshqa tabda ko'rinadi,
-    // shuning uchun bu mijozni umumiy summasi - bugun/ertaga summasi = otgan summasi.
+    if(debtor.user_id===9450) console.log('PROC 9450:', {otgan_summa:debtor.otgan_summa, orders:orders, ordersIsArr:Array.isArray(orders), ordersLen:orders?orders.length:'NULL'});
+    // O'TGAN tab: API otgan_summa > 0 bo'lsa, mijoz qo'shiladi
     var apiOtgan=Number(debtor.otgan_summa||0);
-    if(apiOtgan<=0) return;
+    if(apiOtgan<=0){ if(debtor.user_id===9450) console.log('9450 SKIP: apiOtgan<=0'); return; }
     var ordList=orders||[];
-    // Bugun + ertaga deadline'li orders summasi (ular boshqa tabda ko'rinadi)
-    var todayTomSum=ordList.filter(function(o){return o.deadline===bugunStr||o.deadline===ertagaStr;})
-      .reduce(function(s,o){return s+Number(o.summa||0);},0);
-    // Aniq o'tgan summa
-    var otganNet=Math.max(0, apiOtgan - todayTomSum);
-    if(otganNet<=0) return;
-    // Order based o'tgan list (eski, deadline o'tib ketgan)
+    // Order based o'tgan list (eski, deadline o'tib ketgan) - faqat ko'rsatish uchun
     var otgOrders=ordList.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
     var maxK=0;
     otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
     resMap[debtor.user_id]={
-      ism:debtor.ism,telefon:debtor.telefon,summa:otganNet,
+      ism:debtor.ism,telefon:debtor.telefon,summa:apiOtgan,
       wallet_balance:Number(debtor.wallet_balance)||0,
       user_id:debtor.user_id,orders:otgOrders,usertype:debtor.usertype||'',max_kun:maxK
     };
