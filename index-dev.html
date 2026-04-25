@@ -695,47 +695,29 @@ loadPageDeadlines(userData.warehouse_id||0, function(){
 // proc - TUZATILDI: hamyon ayirish qo'shildi
 // =============================================
 function proc(debtor, orders, tab, resMap){
-  // Barcha tablar cache dan - orders API yo'q
+  // Barcha tablar cache dan
   if(tab==='otgan'){
-    if(orders===null){
-      // Cache yo'q - otgan_summa ishlatamiz (bugun overlap bo'lishi mumkin)
-      var otganNet=Number(debtor.otgan_summa||0);
-      if(otganNet<=0) return;
-      resMap[debtor.user_id]={
-        ism:debtor.ism,telefon:debtor.telefon,summa:otganNet,
-        wallet_balance:Number(debtor.wallet_balance)||0,
-        user_id:debtor.user_id,orders:[],usertype:debtor.usertype||'',max_kun:0
-      };
-      return;
-    }
-    // Orders bor (cache) - strictly o'tgan (deadline < bugunStr!)
-    var otgOrders=orders.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
-    // Agar order-based o'tgan summasi bor:
-    if(otgOrders.length){
-      var tot=otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
-      var wallet=Number(debtor.wallet_balance)||0;
-      var net=Math.max(0,tot-wallet);
-      if(net<=0) return;
-      var maxK=0;
-      otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
-      resMap[debtor.user_id]={
-        ism:debtor.ism,telefon:debtor.telefon,summa:net,
-        wallet_balance:wallet,user_id:debtor.user_id,
-        orders:otgOrders,usertype:debtor.usertype||'',max_kun:maxK
-      };
-      return;
-    }
-    // Order-based o'tgan yo'q. API otgan_summa fallback FAQAT agar:
-    // - mijozda BUGUN va ERTAGA deadline'li orders YO'Q
-    // (aks holda u qarz "Bugun" yoki "Ertaga" da ko'rinadi)
-    var bugunOrErt=orders.filter(function(o){return o.deadline===bugunStr||o.deadline===ertagaStr;});
-    if(bugunOrErt.length>0) return; // Bugun/Ertaga da bor, "O'tgan" ga qo'shilmasin
+    // O'TGAN tab uchun ASOSIY MANBA: API otgan_summa.
+    // Agar otgan_summa > 0 — mijoz "O'tgan" da ko'rinadi (orders bor-yo'qligidan qat'iy nazar).
+    // Lekin agar bugun yoki ertaga deadline'li orders bor bo'lsa — bu qarz boshqa tabda ko'rinadi,
+    // shuning uchun bu mijozni umumiy summasi - bugun/ertaga summasi = otgan summasi.
     var apiOtgan=Number(debtor.otgan_summa||0);
     if(apiOtgan<=0) return;
+    var ordList=orders||[];
+    // Bugun + ertaga deadline'li orders summasi (ular boshqa tabda ko'rinadi)
+    var todayTomSum=ordList.filter(function(o){return o.deadline===bugunStr||o.deadline===ertagaStr;})
+      .reduce(function(s,o){return s+Number(o.summa||0);},0);
+    // Aniq o'tgan summa
+    var otganNet=Math.max(0, apiOtgan - todayTomSum);
+    if(otganNet<=0) return;
+    // Order based o'tgan list (eski, deadline o'tib ketgan)
+    var otgOrders=ordList.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
+    var maxK=0;
+    otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
     resMap[debtor.user_id]={
-      ism:debtor.ism,telefon:debtor.telefon,summa:apiOtgan,
+      ism:debtor.ism,telefon:debtor.telefon,summa:otganNet,
       wallet_balance:Number(debtor.wallet_balance)||0,
-      user_id:debtor.user_id,orders:[],usertype:debtor.usertype||'',max_kun:0
+      user_id:debtor.user_id,orders:otgOrders,usertype:debtor.usertype||'',max_kun:maxK
     };
     return;
   }

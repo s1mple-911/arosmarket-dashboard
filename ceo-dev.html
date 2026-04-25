@@ -374,12 +374,25 @@ function renderCard(f,idx){
   var _wid = String(f.warehouse_id||'');
   var _filial = f.filial||'';
   var _oy = f.oy||'';
-  el.onclick=(function(w,fn,o){return function(){openDetail({warehouse_id:w,filial:fn,oy:o});};}(_wid,_filial,_oy));
+  el.onclick=(function(w,fn,o,oyR,yilR){return function(e){
+    // Agar kalendar iconga bosilgan bo'lsa, openCalendar chaqiramiz va to'xtaymiz
+    var t=e&&e.target;
+    while(t&&t!==el){
+      if(t.getAttribute&&t.getAttribute('data-cal-icon')==='1'){
+        e.stopPropagation();
+        e.preventDefault();
+        openCalendar(w,fn,oyR,yilR);
+        return false;
+      }
+      t=t.parentNode;
+    }
+    openDetail({warehouse_id:w,filial:fn,oy:o});
+  };}(_wid,_filial,_oy,(f.oy_raqami||curOy),(f.yil||curYil)));
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
     '<div class="fc-oy">'+(f.oy||OY[curOy-1])+' · Plan: '+fmt(f.plan)+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px">'+
-    '<div onclick="event.stopPropagation();event.preventDefault();openCalendar(\''+_wid+'\',\''+_filial.replace(/\'/g,"\\\\'")+'\',\''+(f.oy_raqami||curOy)+'\',\''+(f.yil||curYil)+'\');return false;" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
+    '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
     '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div></div></div>'+
     '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
     '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'+
