@@ -700,10 +700,15 @@ function proc(debtor, orders, tab, resMap){
   var apiOtgan = Number(debtor.otgan_summa||0);
   
   // ===== O'TGAN TAB =====
-  // Manba: API otgan_summa (debtors-list endpointidan)
   if(tab==='otgan'){
     if(apiOtgan<=0) return;
-    // Order list (ko'rsatish uchun) - faqat deadline o'tgan
+    // Mijozda bugun yoki kelajak deadline'li orderlar bor-yo'qligini tekshirish
+    // Agar mijozda bugun/ertaga/kelajakdagi deadline'li order bor bo'lsa, u qarz haqiqiy "O'tgan" emas — uni "Bugun"/"Ertaga" tabga qoldiramiz
+    var hasFutureDeadline = ordList.some(function(o){
+      return o.deadline && o.deadline >= bugunStr;
+    });
+    if(hasFutureDeadline) return; // Mijoz "Bugun" yoki "Ertaga" da ko'rinadi
+    // Faqat deadline o'tib ketgan orderlar list
     var otgOrders = ordList.filter(function(o){
       return o.deadline && o.deadline < bugunStr;
     });
@@ -718,7 +723,6 @@ function proc(debtor, orders, tab, resMap){
   }
   
   // ===== BUGUN TAB =====
-  // Faqat deadline === bugunStr
   if(tab==='bugun'){
     var bugunOrders = ordList.filter(function(o){
       return o.deadline === bugunStr;
@@ -736,7 +740,6 @@ function proc(debtor, orders, tab, resMap){
   }
   
   // ===== ERTAGA TAB =====
-  // Faqat deadline === ertagaStr
   if(tab==='ertaga'){
     var ertagaOrders = ordList.filter(function(o){
       return o.deadline === ertagaStr;
