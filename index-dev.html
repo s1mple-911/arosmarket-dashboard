@@ -243,9 +243,7 @@ function toggleOrders(id, userId, walletBalance){
   if(ar){ar.textContent='▴';ar.classList.add('open');}
   // faqat strictly o'tgan: deadline strictly < bugunStr
   function showOtgan(orders){
-    var otg=orders.filter(function(o){
-      return o.tab==='otgan' || (o.deadline && o.deadline < bugunStr);
-    });
+    var otg=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
     fillOrders(el,otg,walletBalance);
     var maxK=0;
     otg.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
@@ -697,23 +695,17 @@ loadPageDeadlines(userData.warehouse_id||0, function(){
 // proc - TUZATILDI: hamyon ayirish qo'shildi
 // =============================================
 function proc(debtor, orders, tab, resMap){
-  // Debug Yunus 9450 (vaqtinchalik)
-  var DBG = (debtor.user_id===9450);
-  if(DBG) console.log('=== PROC 9450 ===', {tab:tab, otgan_summa:debtor.otgan_summa, summa:debtor.summa, wallet:debtor.wallet_balance, ordersIsNull:orders===null, ordersLen:Array.isArray(orders)?orders.length:'NA'});
-  
   var ordList = Array.isArray(orders) ? orders : [];
   var wallet = Number(debtor.wallet_balance)||0;
   var apiOtgan = Number(debtor.otgan_summa||0);
-  var apiSumma = Number(debtor.summa||0);
   
   // ===== O'TGAN TAB =====
+  // Manba: API otgan_summa (debtors-list endpointidan)
   if(tab==='otgan'){
-    // Asosiy manba: API otgan_summa (debtors-list endpointidan keladi)
-    // Bu summada barcha eski qarzlar bor (jumladan ORDERS_API qaytarmagan ham)
-    if(apiOtgan<=0){ if(DBG) console.log('9450 SKIP otgan: apiOtgan<=0'); return; }
-    // Order list (ko'rsatish uchun) - tab='otgan' yoki deadline o'tgan
+    if(apiOtgan<=0) return;
+    // Order list (ko'rsatish uchun) - faqat deadline o'tgan
     var otgOrders = ordList.filter(function(o){
-      return o.tab==='otgan' || (o.deadline && o.deadline < bugunStr);
+      return o.deadline && o.deadline < bugunStr;
     });
     var maxK=0;
     otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK) maxK=o.kun_otgan||0;});
@@ -722,34 +714,44 @@ function proc(debtor, orders, tab, resMap){
       wallet_balance:wallet, user_id:debtor.user_id,
       orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK
     };
-    if(DBG) console.log('9450 ADDED to otgan: summa='+apiOtgan);
     return;
   }
   
-  // ===== BUGUN / ERTAGA TAB =====
-  // Faqat haqiqiy bugun/ertaga deadline orderlar (tab='otgan' bo'lganlar chiqarib tashlanadi)
-  var targetDeadline = (tab==='bugun') ? bugunStr : ertagaStr;
-  var targetTabName = tab; // 'bugun' yoki 'ertaga'
+  // ===== BUGUN TAB =====
+  // Faqat deadline === bugunStr
+  if(tab==='bugun'){
+    var bugunOrders = ordList.filter(function(o){
+      return o.deadline === bugunStr;
+    });
+    if(!bugunOrders.length) return;
+    var totB = bugunOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    var netB = Math.max(0, totB - wallet);
+    if(netB===0) return;
+    resMap[debtor.user_id]={
+      ism:debtor.ism, telefon:debtor.telefon, summa:netB,
+      wallet_balance:wallet, user_id:debtor.user_id,
+      orders:bugunOrders, usertype:debtor.usertype||''
+    };
+    return;
+  }
   
-  var filtered = ordList.filter(function(o){
-    // Tab='otgan' bo'lganlarni bu yerda ko'rsatmaymiz
-    if(o.tab==='otgan') return false;
-    // Bugun yoki ertaga deadline'liklarni qabul qilamiz
-    return o.tab===targetTabName || o.deadline===targetDeadline;
-  });
-  
-  if(!filtered.length){ if(DBG) console.log('9450 SKIP '+tab+': no matching orders'); return; }
-  
-  var tot = filtered.reduce(function(s,o){return s+Number(o.summa||0);},0);
-  var net = Math.max(0, tot - wallet);
-  if(net===0){ if(DBG) console.log('9450 SKIP '+tab+': net=0 after wallet'); return; }
-  
-  resMap[debtor.user_id]={
-    ism:debtor.ism, telefon:debtor.telefon, summa:net,
-    wallet_balance:wallet, user_id:debtor.user_id,
-    orders:filtered, usertype:debtor.usertype||''
-  };
-  if(DBG) console.log('9450 ADDED to '+tab+': summa='+net);
+  // ===== ERTAGA TAB =====
+  // Faqat deadline === ertagaStr
+  if(tab==='ertaga'){
+    var ertagaOrders = ordList.filter(function(o){
+      return o.deadline === ertagaStr;
+    });
+    if(!ertagaOrders.length) return;
+    var totE = ertagaOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    var netE = Math.max(0, totE - wallet);
+    if(netE===0) return;
+    resMap[debtor.user_id]={
+      ism:debtor.ism, telefon:debtor.telefon, summa:netE,
+      wallet_balance:wallet, user_id:debtor.user_id,
+      orders:ertagaOrders, usertype:debtor.usertype||''
+    };
+    return;
+  }
 }
 
 // =============================================
