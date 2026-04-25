@@ -700,24 +700,36 @@ function proc(debtor, orders, tab, resMap){
   var apiOtgan = Number(debtor.otgan_summa||0);
   
   // ===== O'TGAN TAB =====
+  // Birinchi navbatda - orders ro'yxatidan deadline o'tganlarni olamiz
   if(tab==='otgan'){
-    if(apiOtgan<=0) return;
-    // Mijozda bugun yoki kelajak deadline'li orderlar bor-yo'qligini tekshirish
-    // Agar mijozda bugun/ertaga/kelajakdagi deadline'li order bor bo'lsa, u qarz haqiqiy "O'tgan" emas — uni "Bugun"/"Ertaga" tabga qoldiramiz
+    var otgOrders = ordList.filter(function(o){
+      return o.deadline && o.deadline < bugunStr;
+    });
+    if(otgOrders.length){
+      // Order asosida: faqat o'tgan deadline'li orderlar summasi
+      var totO = otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+      var netO = Math.max(0, totO - wallet);
+      if(netO===0) return;
+      var maxK=0;
+      otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK) maxK=o.kun_otgan||0;});
+      resMap[debtor.user_id]={
+        ism:debtor.ism, telefon:debtor.telefon, summa:netO,
+        wallet_balance:wallet, user_id:debtor.user_id,
+        orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK
+      };
+      return;
+    }
+    // Agar orders bo'sh VA mijozda bugun/ertaga/kelajak deadline yo'q, lekin apiOtgan>0 — fallback (Yunus holati)
     var hasFutureDeadline = ordList.some(function(o){
       return o.deadline && o.deadline >= bugunStr;
     });
     if(hasFutureDeadline) return; // Mijoz "Bugun" yoki "Ertaga" da ko'rinadi
-    // Faqat deadline o'tib ketgan orderlar list
-    var otgOrders = ordList.filter(function(o){
-      return o.deadline && o.deadline < bugunStr;
-    });
-    var maxK=0;
-    otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK) maxK=o.kun_otgan||0;});
+    if(apiOtgan<=0) return;
+    // Yunus holati: orderlar yo'q, lekin API muddati o'tgan deyapti
     resMap[debtor.user_id]={
       ism:debtor.ism, telefon:debtor.telefon, summa:apiOtgan,
       wallet_balance:wallet, user_id:debtor.user_id,
-      orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK
+      orders:[], usertype:debtor.usertype||'', max_kun:0
     };
     return;
   }
