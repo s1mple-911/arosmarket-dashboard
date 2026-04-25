@@ -215,7 +215,7 @@ var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
-var CEO_IDS = ['1255605633','1432724','1373701411','331245247','8236030365']; // Deadline qo'ya oladigan CEO lar
+var CEO_IDS = ['1255605633','1432724','1373701411']; // Deadline qo'ya oladigan CEO lar
 var isCeo   = CEO_IDS.includes(String(uid));
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
@@ -467,7 +467,7 @@ var detDeadlines={}; // user_id -> deadline obj
 var detOtgan=[],detBugun=[],detErtaga=[];
 
 function openDetail(f){
-  var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index-dev.html?uid='+uid+'&wid='+f.warehouse_id;
+  var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index.html?uid='+uid+'&wid='+f.warehouse_id;
   console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
   alert('Ochilayotgan filial: '+f.warehouse_id+' - '+f.filial);
   if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
