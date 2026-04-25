@@ -110,6 +110,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .loading{text-align:center;padding:60px 16px;color:var(--text3);font-size:13px}
 .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes brdAmber{0%,100%{border-color:rgba(255,159,10,0.3)}50%{border-color:rgba(255,159,10,0.85)}}
+@keyframes brdBlue{0%,100%{border-color:rgba(55,138,221,0.3)}50%{border-color:rgba(55,138,221,0.85)}}
+.tr-onway{animation:brdAmber 2s ease-in-out infinite}
+.tr-created{animation:brdBlue 2s ease-in-out infinite}
 .empty{text-align:center;padding:60px 16px}
 .empty-icon{width:48px;height:48px;margin:0 auto 14px;opacity:.3}
 .empty-icon svg{width:100%;height:100%;stroke:var(--text2);fill:none;stroke-width:1.5}
@@ -167,6 +171,8 @@ var STATS_API    = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
 var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
 var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
+var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
+var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
@@ -237,7 +243,7 @@ function toggleOrders(id, userId, walletBalance){
   if(ar){ar.textContent='▴';ar.classList.add('open');}
   // faqat strictly o'tgan: deadline strictly < bugunStr
   function showOtgan(orders){
-    var otg=orders.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
+    var otg=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
     fillOrders(el,otg,walletBalance);
     var maxK=0;
     otg.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
@@ -341,6 +347,14 @@ function buildCard(r,id,color,lazy,orders){
   if(!lazy&&orders&&orders.length){
     ordersHtml+='<div style="height:0.5px;background:var(--border);margin:0 16px"></div>';
     ordersHtml+='<div style="padding:8px 16px 12px 70px">';
+    // Hamyon balansi qatori (agar bor bo'lsa) — qarzdan ayiriladi deb ko'rsatish
+    var wallet=Number(r.wallet_balance)||0;
+    if(wallet>0){
+      ordersHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);background:rgba(34,197,94,.05);margin:0 -16px 0 -70px;padding-left:70px;padding-right:16px">';
+      ordersHtml+='<div><div style="font-size:11px;color:var(--green);font-weight:700">Hamyon balansi</div>';
+      ordersHtml+='<div style="font-size:10px;color:var(--green);opacity:.85">Qarzdan ayiriladi</div></div>';
+      ordersHtml+='<div style="font-size:12px;font-weight:700;color:var(--green)">'+fmtFull(wallet)+'</div></div>';
+    }
     orders.forEach(function(o){
       ordersHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border)">';
       ordersHtml+='<div><div style="font-size:11px;color:var(--text3)">Order #'+o.order_id+' · '+(o.sana||'')+'</div>';
@@ -412,6 +426,7 @@ function loadFilialStats(cb){
     })
     .catch(function(){filialData=null;if(cb) cb();});
 }
+
 // YANGI: Barcha filiallar ma'lumotini olish (Top-5 leaderboard uchun)
 var allFiliallar = [];
 function loadAllFiliallar(cb){
@@ -458,7 +473,10 @@ function renderDash(){
     html+='<div class="pc-top">';
     html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+'</div>';
     html+='<div class="pc-plan">'+fmt(fd.plan)+' so\'m</div></div>';
+    html+='<div style="display:flex;align-items:center;gap:10px">';
+    html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||(new Date().getMonth()+1))+'\',\''+(fd.yil||new Date().getFullYear())+'\')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
     html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'%</div>';
+    html+='</div>';
     html+='</div>';
     html+='<div class="pc-bar-bg"><div class="pc-bar" style="width:'+fbarW+'%;background:'+fbarColor+'"></div></div>';
     html+='<div class="pc-nums">';
@@ -539,6 +557,7 @@ function renderDash(){
   html+='<div class="stat-card"><div class="sc-lbl">Ertaga</div><div class="sc-val" style="color:var(--amber)">'+fmt(erS)+'</div><div class="sc-sub">'+ertagaFinal.length+' ta</div></div>';
   html+='<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val" style="color:var(--text)">'+jami+'</div><div class="sc-sub">'+(userData.warehouse_name||'')+'</div></div>';
   html+='</div>';
+
   // YANGI: Top-5 filiallar leaderboard (prognoz_foiz bo'yicha)
   if(allFiliallar && allFiliallar.length>0){
     var sorted = allFiliallar.slice().sort(function(a,b){return (b.prognoz_foiz||0)-(a.prognoz_foiz||0);});
@@ -564,7 +583,9 @@ function renderDash(){
       html+='<div style="font-size:18px;width:24px;text-align:center">'+medal+'</div>';
       html+='<div style="flex:1;min-width:0">';
       html+='<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(f.filial||'—')+(isMe?' · <span style="color:#378ADD;font-size:10px">SIZ</span>':'')+'</div>';
-      html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Plan: '+fmt(f.plan||0)+' · Bajardi: '+fmt(f.bajarildi||0)+'</div>';
+      var hozFoiz = f.foiz||0;
+      var hozColor = hozFoiz>=100?'var(--green)':hozFoiz>=70?'var(--amber)':'var(--red)';
+      html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Hozirgi: <span style="color:'+hozColor+';font-weight:700">'+hozFoiz+'%</span></div>';
       html+='</div>';
       html+='<div style="text-align:right">';
       html+='<div style="font-size:14px;font-weight:800;color:'+pfColor+'">'+(f.prognoz_foiz||0)+'%</div>';
@@ -673,53 +694,84 @@ loadPageDeadlines(userData.warehouse_id||0, function(){
 // =============================================
 // proc - TUZATILDI: hamyon ayirish qo'shildi
 // =============================================
+// =============================================
+// PROC - Yagona barqaror mantiq
+// Asos: o.deadline maydoni
+// Har tab mustaqil, mijoz bir nechta tabda ko'rinishi mumkin
+// =============================================
 function proc(debtor, orders, tab, resMap){
-  // Barcha tablar cache dan - orders API yo'q
+  var ordList = Array.isArray(orders) ? orders : [];
+  var wallet = Number(debtor.wallet_balance)||0;
+  var apiOtgan = Number(debtor.otgan_summa||0);
+  
+  // ===== O'TGAN TAB =====
   if(tab==='otgan'){
-    if(orders===null){
-      // Cache yo'q - otgan_summa ishlatamiz (bugun overlap bo'lishi mumkin)
-      var otganNet=Number(debtor.otgan_summa||0);
-      if(otganNet<=0) return;
-      resMap[debtor.user_id]={
-        ism:debtor.ism,telefon:debtor.telefon,summa:otganNet,
-        wallet_balance:Number(debtor.wallet_balance)||0,
-        user_id:debtor.user_id,orders:[],usertype:debtor.usertype||'',max_kun:0
-      };
+    // Order asosida (deadline o'tib ketgan)
+    var otgOrders = ordList.filter(function(o){
+      return o.deadline && o.deadline < bugunStr;
+    });
+    var orderSum = otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    
+    // O'tgan summa logika:
+    var rawOtgan;
+    if(otgOrders.length>0){
+      // Orderlar bor - max(orderSum, apiOtgan) - chunki API ko'pincha to'liqroq (interval qarzlarni hisobga oladi)
+      rawOtgan = Math.max(orderSum, apiOtgan);
+    } else if(ordList.length===0){
+      // Orderlar umuman yo'q - faqat apiOtgan ishlatamiz (Yunus holati: API qarzlarni boshqa joydan ham oladi)
+      rawOtgan = apiOtgan;
+    } else {
+      // Orderlar bor, lekin barcha kelajak deadline'li - "O'tgan" emas
       return;
     }
-    // Orders bor (cache) - strictly o'tgan (deadline < bugunStr!)
-    var otgOrders=orders.filter(function(o){return o.deadline&&o.deadline<bugunStr;});
-    if(!otgOrders.length) return;
-    var tot=otgOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
-    var wallet=Number(debtor.wallet_balance)||0;
-    var net=Math.max(0,tot-wallet);
-    if(net<=0) return;
+    if(rawOtgan<=0) return;
+    
+    var netOtgan = Math.max(0, rawOtgan - wallet);
+    if(netOtgan<=0) return;
+    
     var maxK=0;
-    otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
+    otgOrders.forEach(function(o){if((o.kun_otgan||0)>maxK) maxK=o.kun_otgan||0;});
     resMap[debtor.user_id]={
-      ism:debtor.ism,telefon:debtor.telefon,summa:net,
-      wallet_balance:wallet,user_id:debtor.user_id,
-      orders:otgOrders,usertype:debtor.usertype||'',max_kun:maxK
+      ism:debtor.ism, telefon:debtor.telefon, summa:netOtgan,
+      wallet_balance:wallet, user_id:debtor.user_id,
+      orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK
     };
     return;
   }
-  // Bugun va ertaga - orders cache da yo'q, API dan olish kerak
-  var filtered;
+  
+  // ===== BUGUN TAB =====
   if(tab==='bugun'){
-    filtered=(orders||[]).filter(function(o){return o.deadline===bugunStr;});
-  } else {
-    filtered=(orders||[]).filter(function(o){return o.deadline===ertagaStr;});
+    var bugunOrders = ordList.filter(function(o){
+      return o.deadline === bugunStr;
+    });
+    if(!bugunOrders.length) return;
+    var totB = bugunOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    var netB = Math.max(0, totB - wallet);
+    if(netB===0) return;
+    resMap[debtor.user_id]={
+      ism:debtor.ism, telefon:debtor.telefon, summa:netB,
+      wallet_balance:wallet, user_id:debtor.user_id,
+      orders:bugunOrders, usertype:debtor.usertype||''
+    };
+    return;
   }
-  if(!filtered.length) return;
-  var tot=filtered.reduce(function(s,o){return s+Number(o.summa||0);},0);
-  var wallet=Number(debtor.wallet_balance)||0;
-  var net=Math.max(0, tot-wallet);
-  if(net===0) return;
-  resMap[debtor.user_id]={
-    ism:debtor.ism, telefon:debtor.telefon, summa:net,
-    wallet_balance:wallet, user_id:debtor.user_id,
-    orders:filtered, usertype:debtor.usertype||''
-  };
+  
+  // ===== ERTAGA TAB =====
+  if(tab==='ertaga'){
+    var ertagaOrders = ordList.filter(function(o){
+      return o.deadline === ertagaStr;
+    });
+    if(!ertagaOrders.length) return;
+    var totE = ertagaOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
+    var netE = Math.max(0, totE - wallet);
+    if(netE===0) return;
+    resMap[debtor.user_id]={
+      ism:debtor.ism, telefon:debtor.telefon, summa:netE,
+      wallet_balance:wallet, user_id:debtor.user_id,
+      orders:ertagaOrders, usertype:debtor.usertype||''
+    };
+    return;
+  }
 }
 
 // =============================================
@@ -748,8 +800,7 @@ function load(){
       document.getElementById('av').textContent=ini(userData.ism);
       document.getElementById('hn').textContent=userData.ism||'Hodim';
       document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
-      // Filial stats ham yuklaymiz, keyin render
-// Filial stats + barcha filiallar (leaderboard uchun) parallel yuklaymiz
+      // Filial stats + barcha filiallar (leaderboard uchun) parallel yuklaymiz
       var pending=2;
       function maybeRender(){ pending--; if(pending===0){ renderDash(); loadTab('otgan'); } }
       loadFilialStats(maybeRender);
@@ -934,54 +985,180 @@ function okDeadline(userId){
 }
 
 
-function showTransfersModal(transfers, filialNomi){
-  var modal = document.getElementById('tr-modal');
-  var list = document.getElementById('tr-list');
-  var subtitle = document.getElementById('tr-subtitle');
-  subtitle.textContent = (filialNomi||'') + ' · ' + transfers.length + ' ta transfer';
-  var sLabels = {created:'Yaratilgan', on_way:"Yo'lda"};
-  var sColors = {created:'#378ADD', on_way:'#ff9f0a'};
-  var html = '';
-  transfers.forEach(function(t){
-    var color = sColors[t.status]||'var(--text2)';
-    var label = sLabels[t.status]||t.status;
-    var link = 'https://admin.aros.uz/products-actions/product-transfer/'+t.id;
-    var sana = t.status==='created' ? t.created_date : t.send_date;
-    var sanaLabel = t.status==='created' ? 'Yaratilgan' : 'Yuborilgan';
-    var kun = t.kun_otgan||0;
-    var masulIsm = t.masul_ism || t.executor_name || '—';
-    var masulTel = (t.masul_telefon||'').replace(/\D/g,'');
-    var masulWname = t.masul_warehouse_name||'';
-    html += '<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:10px">';
-    html += '<div style="background:var(--bg3);border-radius:16px;padding:14px;border:0.5px solid var(--border)">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-    html += '<div style="display:flex;align-items:center;gap:8px">';
-    html += '<span style="font-size:14px;font-weight:700">#'+t.id+'</span>';
-    html += (kun>0?'<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(255,77,109,.12);color:#ff4d6d">'+kun+' kun</span>':'');
-    html += '</div>';
-    html += '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;background:'+color+'20;color:'+color+'">'+label+'</span>';
-    html += '</div>';
-    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:12px">';
-    html += '<span style="font-weight:600;flex:1;background:var(--bg2);padding:5px 8px;border-radius:8px;text-align:center">'+(t.from_warehouse||'—')+'</span>';
-    html += '<span style="color:var(--text3);flex-shrink:0">→</span>';
-    html += '<span style="font-weight:600;flex:1;background:var(--bg2);padding:5px 8px;border-radius:8px;text-align:center">'+(t.to_warehouse||'—')+'</span>';
-    html += '</div>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
-    html += '<div><div style="color:var(--text3);margin-bottom:2px">Summa</div><div style="font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</div></div>';
-    html += '<div><div style="color:var(--text3);margin-bottom:2px">'+sanaLabel+'</div><div style="font-weight:600;color:var(--text)">'+(sana||'—')+'</div></div>';
-    html += '</div>';
-    html += '<div style="margin-top:10px;padding:8px 10px;background:var(--bg2);border-radius:10px;display:flex;justify-content:space-between;align-items:center">';
-    html += '<div>';
-    html += '<div style="font-size:10px;color:var(--text3);margin-bottom:2px">Ma\'sul shaxs · '+masulWname+'</div>';
-    html += '<div style="font-size:13px;font-weight:600">'+masulIsm+'</div>';
-    html += '</div>';
-    if(masulTel) html += '<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--green);text-decoration:none">📞 Qo\'ng\'iroq</a>';
-    html += '</div>';
-    if(t.comment) html += '<div style="margin-top:8px;font-size:11px;color:var(--text3);font-style:italic">'+t.comment+'</div>';
-    html += '</div></a>';
-  });
-  list.innerHTML = html || '<div style="text-align:center;color:var(--text3);padding:20px">Transfer yo\'q</div>';
+// ===================== CALENDAR =====================
+function openCalendar(wid, filialNomi, oy, yil){
+  var modal = document.getElementById('cal-modal');
+  var title = document.getElementById('cal-title');
+  var subtitle = document.getElementById('cal-subtitle');
+  var body = document.getElementById('cal-body');
+  title.textContent = '📅 ' + (filialNomi||'Kalendar');
+  subtitle.textContent = (OY[parseInt(oy)-1]||'') + ' ' + yil;
+  body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
   modal.style.display = 'flex';
+  fetch(CALENDAR_API+'?wid='+wid+'&oy='+oy+'&yil='+yil)
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(!d || !d.days){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Ma\'lumot yuklanmadi</div>'; return; }
+      renderCalendar(d);
+    })
+    .catch(function(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
+}
+
+function renderCalendar(d){
+  var body = document.getElementById('cal-body');
+  var days = d.days||[];
+  var oy = d.oy, yil = d.yil;
+  var oyKunlari = d.oy_kunlari || 30;
+  var kunlikPlan = d.kunlik_plan || 0;
+  // Oy boshi qaysi kunga to'g'ri kelishini hisoblaymiz (0=yakshanba, 1=dushanba)
+  var firstDay = new Date(yil, oy-1, 1).getDay();
+  // Dushanba 1, Yakshanba 7 qilib qayta tartiblaymiz
+  var offset = firstDay === 0 ? 6 : firstDay - 1;
+  // Har kun uchun data map
+  var dayMap = {};
+  days.forEach(function(day){ dayMap[day.kun] = day; });
+  // Kunlik plan + jami info
+  var totalBaj = days.reduce(function(s,x){return s+(x.bajarilgan||0);},0);
+  var totalTush = days.reduce(function(s,x){return s+(x.tushum||0);},0);
+  var totalRet = days.reduce(function(s,x){return s+(x.qaytarilgan||0);},0);
+  var greenCount = days.filter(function(x){return x.status==='green';}).length;
+  var amberCount = days.filter(function(x){return x.status==='amber';}).length;
+  var redCount = days.filter(function(x){return x.status==='red';}).length;
+
+  var html = '';
+  // Info panel
+  html += '<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:14px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
+  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kunlik plan</div><div style="font-weight:700;color:var(--text)">'+fmt(kunlikPlan)+'</div></div>';
+  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Jami bajarilgan</div><div style="font-weight:700;color:var(--green)">'+fmt(totalBaj)+'</div></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+  html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--green)">'+greenCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">YAXSHI</div></div>';
+  html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--amber)">'+amberCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">O\'RTACHA</div></div>';
+  html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--red)">'+redCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">PAST</div></div>';
+  html += '</div></div>';
+  // Kalendar grid - hafta nomlari
+  var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">';
+  haftaKunlari.forEach(function(h){
+    html += '<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:600;padding:4px 0">'+h+'</div>';
+  });
+  html += '</div>';
+  // Kalendar grid - kunlar
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="cal-grid">';
+  // Boshidagi bo'sh kataklar
+  for(var i=0;i<offset;i++){ html += '<div></div>'; }
+  // Kunlar
+  for(var k=1;k<=oyKunlari;k++){
+    var dayData = dayMap[k];
+    if(dayData){
+      var bg, txtColor;
+      if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
+      else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
+      else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
+      html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+'">'+k+'</div>';
+      html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px">'+(dayData.foiz||0)+'%</div>';
+      html += '</div>';
+    } else {
+      // Kelajak kun
+      html += '<div style="aspect-ratio:1;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
+    }
+  }
+  html += '</div>';
+  // Legend
+  html += '<div style="display:flex;justify-content:center;gap:16px;margin-top:14px;font-size:10px;color:var(--text3)">';
+  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(34,197,94,.4)"></div>100%+</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(251,191,36,.4)"></div>70-99%</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(255,77,109,.4)"></div>&lt;70%</div>';
+  html += '</div>';
+  // Kun detail placeholder
+  html += '<div id="cal-day-detail" style="margin-top:14px"></div>';
+
+  body.innerHTML = html;
+  // Day data ni global saqlaymiz
+  window._calDays = dayMap;
+  window._calKunlikPlan = kunlikPlan;
+}
+
+function showDayDetail(kun){
+  var d = (window._calDays||{})[kun];
+  var kp = window._calKunlikPlan || 0;
+  var el = document.getElementById('cal-day-detail');
+  if(!d || !el) return;
+  var color = d.status==='green'?'var(--green)':d.status==='amber'?'#fbbf24':'#ff4d6d';
+  var html = '<div style="background:var(--bg3);border-radius:14px;padding:14px;border:1px solid '+color+'40">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+  html += '<div style="font-size:14px;font-weight:700">'+kun+'-kun · '+d.sana+'</div>';
+  html += '<div style="font-size:15px;font-weight:800;color:'+color+'">'+(d.foiz||0)+'%</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
+  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Tushum</div><div style="font-weight:700;color:var(--green)">'+fmt(d.tushum||0)+'</div></div>';
+  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Qaytarilgan</div><div style="font-weight:700;color:var(--red)">-'+fmt(d.qaytarilgan||0)+'</div></div>';
+  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Bajarilgan</div><div style="font-weight:700;color:'+color+'">'+fmt(d.bajarilgan||0)+'</div></div>';
+  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Kunlik plan</div><div style="font-weight:700;color:var(--text2)">'+fmt(kp)+'</div></div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+
+function showTransfersModal(transfers, filialNomi){
+  var modal=document.getElementById('tr-modal');
+  var list=document.getElementById('tr-list');
+  var subtitle=document.getElementById('tr-subtitle');
+  var sorted=(transfers||[]).slice().sort(function(a,b){
+    if(a.status!==b.status){
+      if(a.status==='on_way') return -1;
+      if(b.status==='on_way') return 1;
+      return 0;
+    }
+    return (b.kun_otgan||0)-(a.kun_otgan||0);
+  });
+  subtitle.textContent=(filialNomi||'')+' · '+sorted.length+' ta';
+  var sLabels={created:'Yaratilgan',on_way:"Yo'lda"};
+  var sColors={created:'#378ADD',on_way:'#ff9f0a'};
+  var html='';
+  sorted.forEach(function(t){
+    var color=sColors[t.status]||'var(--text2)';
+    var label=sLabels[t.status]||t.status;
+    var pulseClass=t.status==='on_way'?'tr-onway':'tr-created';
+    var link='https://admin.aros.uz/products-actions/product-transfer/'+t.id;
+    var sana=t.status==='created'?t.created_date:t.send_date;
+    var sanaLabel=t.status==='created'?'Yaratilgan':'Yuborilgan';
+    var kun=t.kun_otgan||0;
+    var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
+    html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
+    html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html+='<div style="display:flex;align-items:center;gap:5px">';
+    html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
+    html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
+    html+='</div>';
+    html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:10px">';
+    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.from_warehouse||'—')+'</span>';
+    html+='<span style="color:var(--text3);flex-shrink:0;font-size:9px">→</span>';
+    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.to_warehouse||'—')+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Summa</span>';
+    html+='<div style="display:flex;align-items:center;gap:6px">';
+    html+='<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</span>';
+    if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:2px 7px;font-size:10px;text-decoration:none;flex-shrink:0">📞</a>';
+    html+='</div>';
+    html+='</div>';
+    if(t.comment) html+='<div style="margin-bottom:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--text3);font-style:italic">💬 '+t.comment+'</div>';
+    html+='<div style="padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
+    html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+sanaLabel+'</span>';
+    html+='<span style="font-size:10px;font-weight:600;color:var(--text2)">'+(sana||'—')+'</span>';
+    html+='</div>';
+    html+='</div></a>';
+  });
+  list.innerHTML=html||'<div style="text-align:center;color:var(--text3);padding:20px">Transfer yo\'q</div>';
+  modal.style.display='flex';
 }
 
 </script>
@@ -1027,6 +1204,19 @@ function showTransfersModal(transfers, filialNomi){
       <button onclick="document.getElementById('tr-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
     </div>
     <div id="tr-list" style="padding:12px 16px 24px"></div>
+  </div>
+</div>
+
+<div id="cal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:flex-end;justify-content:center">
+  <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-height:85vh;overflow-y:auto;border-top:1px solid var(--border)">
+    <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);padding-bottom:12px;z-index:10">
+      <div>
+        <div style="font-size:15px;font-weight:700" id="cal-title">Kalendar</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="cal-subtitle"></div>
+      </div>
+      <button onclick="document.getElementById('cal-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
+    </div>
+    <div id="cal-body" style="padding:12px 16px 24px"></div>
   </div>
 </div>
 </body>
