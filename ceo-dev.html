@@ -131,11 +131,16 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   <div class="mgr-tab active" onclick="changeMgr('all',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Hammasi</div>
   <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek</div>
   <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil</div>
-  <div class="mgr-tab" onclick="changeMgr('franshiza',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Franshiza</div>
 </div>
 
-<div class="filter-bar">
+<div class="filter-bar" style="gap:8px">
   <select id="oy-select" onchange="changeOy(this.value)"></select>
+  <select id="profil-select" onchange="changeProfil(this.value)" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px;font-family:inherit;cursor:pointer">
+    <option value="all">Hammasi</option>
+    <option value="Zapchast">Zapchast</option>
+    <option value="Aksessuar">Aksessuar</option>
+    <option value="Franshiza">Franshiza</option>
+  </select>
   <div class="refresh-btn" onclick="load()">🔄</div>
 </div>
 
@@ -245,10 +250,10 @@ function parseSafe(txt){
 var MANAGER_WAREHOUSES = {
   all:       null,
   giyosbek:  [61,23,15,5,1,37,17,29],
-  sherdil:   [71,13,33,25,35,21,27],
-  franshiza: [65,67,69]
+  sherdil:   [71,13,33,25,35,21,27]
 };
 var curMgr = 'all';
+var curProfil = 'all'; // 'all' | 'Zapchast' | 'Aksessuar' | 'Franshiza'
 var cachedAllData = null;
 var cachedOy = null;
 var cachedYil = null;
@@ -268,12 +273,32 @@ function changeMgr(mgr, el){
   }
 }
 
+function changeProfil(profil){
+  curProfil = profil;
+  if(cachedAllData && cachedOy === curOy && cachedYil === curYil){
+    renderFromCache();
+  } else {
+    load();
+  }
+}
+
 function filterFiliallar(filiallar){
   var wids = MANAGER_WAREHOUSES[curMgr];
-  if(!wids) return filiallar;
-  return filiallar.filter(function(f){
-    return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
-  });
+  var result = filiallar;
+  // Manager filter
+  if(wids){
+    result = result.filter(function(f){
+      return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
+    });
+  }
+  // Profil filter
+  if(curProfil && curProfil !== 'all'){
+    result = result.filter(function(f){
+      var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
+      return p === curProfil;
+    });
+  }
+  return result;
 }
 
 function renderFromCache(){
@@ -402,10 +427,15 @@ function renderCard(f,idx){
     }
     openDetail({warehouse_id:w,filial:fn,oy:o});
   };}(_wid,_filial,_oy,(f.oy_raqami||curOy),(f.yil||curYil)));
-  var isFr = f.is_franchise === true;
+  var profil = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
+  var isFr = profil === 'Franshiza';
+  var isAks = profil === 'Aksessuar';
+  var profBadge = '';
+  if(isFr) profBadge = ' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>';
+  else if(isAks) profBadge = ' · <span style="color:#06b6d4;font-weight:700">AKSESSUAR</span>';
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
-    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+(isFr?' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>':' · Plan: '+fmt(f.plan))+'</div></div>'+
+    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+(isFr?profBadge:profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan))+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px">'+
     '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
     (isFr
@@ -495,9 +525,13 @@ var detDeadlines={}; // user_id -> deadline obj
 var detOtgan=[],detBugun=[],detErtaga=[];
 
 function openDetail(f){
-  var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index-dev.html?uid='+uid+'&wid='+f.warehouse_id;
+  // Hozirgi sahifa nomini olib (ceo.html yoki ceo-dev.html), tegishli index'ga yo'naltirish
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var indexFile = isDev ? 'index-dev.html' : 'index.html';
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var indexUrl = basePath + indexFile + '?uid=' + uid + '&wid=' + f.warehouse_id;
   console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
-  alert('Ochilayotgan filial: '+f.warehouse_id+' - '+f.filial);
   if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
     window.Telegram.WebApp.openLink(indexUrl);
   } else {
