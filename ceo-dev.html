@@ -137,7 +137,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   <select id="oy-select" onchange="changeOy(this.value)"></select>
   <select id="profil-select" onchange="changeProfil(this.value)" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px;font-family:inherit;cursor:pointer">
     <option value="all">Hammasi</option>
-    <option value="Zapchast">Zapchast</option>
+    <option value="Zapchast" selected>Zapchast</option>
     <option value="Aksessuar">Aksessuar</option>
     <option value="Franshiza">Franshiza</option>
   </select>
@@ -253,7 +253,7 @@ var MANAGER_WAREHOUSES = {
   sherdil:   [71,13,33,25,35,21,27]
 };
 var curMgr = 'all';
-var curProfil = 'all'; // 'all' | 'Zapchast' | 'Aksessuar' | 'Franshiza'
+var curProfil = 'Zapchast'; // default 'Zapchast' | 'all' | 'Zapchast' | 'Aksessuar' | 'Franshiza'
 var cachedAllData = null;
 var cachedOy = null;
 var cachedYil = null;
@@ -316,6 +316,16 @@ function renderFromCache(){
   html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
   html+='<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz (oy oxirigacha)</div><div style="font-size:14px;font-weight:800;margin-top:2px"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600">so\'m</span></div></div>';
   html+='<div style="text-align:right"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px">0%</div></div>';
+  html+='</div>';
+  // QARZ LIMIT PROGRESS BAR (jami)
+  html+='<div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  html+='<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Umumiy qarz limit</span>';
+  html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2)">0 / 0 · 0%</span>';
+  html+='</div>';
+  html+='<div style="background:var(--bg2);border-radius:6px;height:6px;overflow:hidden">';
+  html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
+  html+='</div>';
   html+='</div>';
   html+='<div class="jami-qarz">';
   html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
@@ -380,11 +390,14 @@ function changeOy(val){
 function updateJami(filialData){
   var el=document.getElementById('jami-block');if(!el)return;
   var jPlan=0,jBaj=0,jQarz=0,jTugB=0,jTugS=0,jPrognoz=0;
+  var jQarzLimit=0,jQarzFakt=0;
   for(var i=0;i<filialData.length;i++){
     var f=filialData[i];if(!f)continue;
     jPlan+=(f.plan||0);jBaj+=(f.bajarildi||0);jQarz+=(f.muddati_utgan||0);
     jTugB+=(f.tugallanmagan_buyurtma||0);jTugS+=(f.tugallanmagan_savdo||0);
     jPrognoz+=(f.prognoz||0);
+    jQarzLimit+=(parseFloat(f.qarz_limit)||0);
+    jQarzFakt+=(parseFloat(f.qarz_fakt)||0);
   }
   var jFoiz=jPlan>0?Math.round(jBaj/jPlan*100):0;
   var jPrognozFoiz=jPlan>0?Math.round(jPrognoz/jPlan*100):0;
@@ -400,6 +413,17 @@ function updateJami(filialData){
   if(pfEl){
     pfEl.textContent=jPrognozFoiz+'%';
     pfEl.style.color = jPrognozFoiz>=100?'var(--green)':jPrognozFoiz>=80?'var(--amber)':'var(--red)';
+  }
+  // Qarz limit progress
+  var qInfo=el.querySelector('#jami-qarz-info');
+  var qBar=el.querySelector('#jami-qarz-bar');
+  if(qInfo && qBar){
+    var qFoiz=jQarzLimit>0?Math.round(jQarzFakt/jQarzLimit*100):0;
+    var qColor=qFoiz<=80?'var(--green)':qFoiz<=100?'var(--amber)':'var(--red)';
+    qInfo.textContent=fmt(jQarzFakt)+' / '+fmt(jQarzLimit)+' · '+qFoiz+'%';
+    qInfo.style.color=qColor;
+    qBar.style.width=Math.min(100,qFoiz)+'%';
+    qBar.style.background=qColor;
   }
   var a=el.querySelector('#jami-tug-buyurtma');var b=el.querySelector('#jami-tug-savdo');
   if(a)a.textContent=fmt(jTugB);if(b)b.textContent=fmt(jTugS);
@@ -433,6 +457,52 @@ function renderCard(f,idx){
   var profBadge = '';
   if(isFr) profBadge = ' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>';
   else if(isAks) profBadge = ' · <span style="color:#06b6d4;font-weight:700">AKSESSUAR</span>';
+
+  // Qarz limit progress bar HTML (har profil uchun)
+  function buildQarzLimitBar() {
+    var qLimit = parseFloat(f.qarz_limit)||0;
+    var qFakt = parseFloat(f.qarz_fakt)||0;
+    if(qLimit<=0 && qFakt<=0) return '';
+    var qFoiz = qLimit > 0 ? Math.round(qFakt/qLimit*100) : 0;
+    var qBarW = Math.min(100, qFoiz);
+    var qColor = qFoiz<=80 ? 'var(--green)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+    var qLabelColor = qFoiz<=80 ? 'var(--text2)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+    var html = '<div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:10px;border:0.5px solid var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
+    html += '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Qarz limit</span>';
+    html += '<span style="font-size:11px;font-weight:700;color:'+qLabelColor+'">'+fmt(qFakt)+' / '+fmt(qLimit)+' \u00b7 '+qFoiz+'%</span>';
+    html += '</div>';
+    html += '<div style="background:var(--bg2);border-radius:6px;height:5px;overflow:hidden">';
+    html += '<div style="height:100%;width:'+qBarW+'%;background:'+qColor+';transition:width 1s ease;border-radius:6px"></div>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  if(isAks){
+    // AKSESSUAR — sodda kartochka: faqat plan + bajardi + foiz + qarz limit
+    el.innerHTML=
+      '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
+      '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+' \u00b7 Plan: '+fmt(f.plan)+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
+      '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'+
+      '</div></div>'+
+      '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
+      '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'+
+      '<div class="fc-mini">'+
+      '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>'+
+      '<div class="fc-m"><div class="fc-m-lbl">Prognoz summa</div><div class="fc-m-val" style="color:#06b6d4">'+fmt(f.prognoz||0)+'</div></div>'+
+      '</div>'+
+      buildQarzLimitBar()+
+      (foiz<100&&qolganKun>0&&f.qoldi>0?
+        '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
+        :foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
+      ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
+    // Aksessuar uchun transferlar yo'q
+    return;
+  }
+
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
     '<div class="fc-oy">'+(f.oy||OY[curOy-1])+(isFr?profBadge:profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan))+'</div></div>'+
@@ -465,25 +535,7 @@ function renderCard(f,idx){
     '<div class="fc-m"><div class="fc-m-lbl">Savdo soni</div><div class="fc-m-val" style="color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>'+
     '</div>'+    '<div class="fc-qarz"><span class="fc-qarz-lbl">Muddati o\'tgan qarz</span>'+
     '<span class="fc-qarz-val">'+fmt(f.muddati_utgan||0)+'</span></div>'+
-    (function(){
-      var qLimit = parseFloat(f.qarz_limit)||0;
-      var qFakt = parseFloat(f.qarz_fakt)||0;
-      if(qLimit<=0 && qFakt<=0) return '';
-      var qFoiz = qLimit > 0 ? Math.round(qFakt/qLimit*100) : 0;
-      var qBarW = Math.min(100, qFoiz);
-      var qColor = qFoiz<=80 ? 'var(--green)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
-      var qLabelColor = qFoiz<=80 ? 'var(--text2)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
-      var html = '<div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:10px;border:0.5px solid var(--border)">';
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
-      html += '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Qarz limit</span>';
-      html += '<span style="font-size:11px;font-weight:700;color:'+qLabelColor+'">'+fmt(qFakt)+' / '+fmt(qLimit)+' · '+qFoiz+'%</span>';
-      html += '</div>';
-      html += '<div style="background:var(--bg2);border-radius:6px;height:5px;overflow:hidden">';
-      html += '<div style="height:100%;width:'+qBarW+'%;background:'+qColor+';transition:width 1s ease;border-radius:6px"></div>';
-      html += '</div>';
-      html += '</div>';
-      return html;
-    })()+
+    buildQarzLimitBar()+
     (!isFr && foiz<100&&qolganKun>0&&f.qoldi>0?
       '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
       :!isFr && foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
