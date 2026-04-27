@@ -465,6 +465,25 @@ function renderCard(f,idx){
     '<div class="fc-m"><div class="fc-m-lbl">Savdo soni</div><div class="fc-m-val" style="color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>'+
     '</div>'+    '<div class="fc-qarz"><span class="fc-qarz-lbl">Muddati o\'tgan qarz</span>'+
     '<span class="fc-qarz-val">'+fmt(f.muddati_utgan||0)+'</span></div>'+
+    (function(){
+      var qLimit = parseFloat(f.qarz_limit)||0;
+      var qFakt = parseFloat(f.qarz_fakt)||0;
+      if(qLimit<=0 && qFakt<=0) return '';
+      var qFoiz = qLimit > 0 ? Math.round(qFakt/qLimit*100) : 0;
+      var qBarW = Math.min(100, qFoiz);
+      var qColor = qFoiz<=80 ? 'var(--green)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+      var qLabelColor = qFoiz<=80 ? 'var(--text2)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+      var html = '<div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:10px;border:0.5px solid var(--border)">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
+      html += '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Qarz limit</span>';
+      html += '<span style="font-size:11px;font-weight:700;color:'+qLabelColor+'">'+fmt(qFakt)+' / '+fmt(qLimit)+' · '+qFoiz+'%</span>';
+      html += '</div>';
+      html += '<div style="background:var(--bg2);border-radius:6px;height:5px;overflow:hidden">';
+      html += '<div style="height:100%;width:'+qBarW+'%;background:'+qColor+';transition:width 1s ease;border-radius:6px"></div>';
+      html += '</div>';
+      html += '</div>';
+      return html;
+    })()+
     (!isFr && foiz<100&&qolganKun>0&&f.qoldi>0?
       '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
       :!isFr && foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
