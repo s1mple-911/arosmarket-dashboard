@@ -956,6 +956,19 @@ function load(){
       html+='<div class="jami-row"><div class="jami-summa">0</div><div class="jami-foiz">0%</div></div>';
       html+='<div class="jami-bar-bg"><div class="jami-bar" style="width:0%"></div></div>';
       html+='<div class="jami-nums"><span>Bajarildi: <b id="jami-baj">0</b></span><span>Plan: <b id="jami-plan">'+fmt(jPlan)+'</b></span></div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+      html+='<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz (oy oxirigacha)</div><div style="font-size:14px;font-weight:800;margin-top:2px"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600">so\'m</span></div></div>';
+      html+='<div style="text-align:right"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px">0%</div></div>';
+      html+='</div>';
+      html+='<div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+      html+='<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Umumiy qarz limit</span>';
+      html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2)">0 / 0 · 0%</span>';
+      html+='</div>';
+      html+='<div style="background:var(--bg2);border-radius:6px;height:6px;overflow:hidden">';
+      html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
+      html+='</div>';
+      html+='</div>';
       html+='<div class="jami-qarz">';
       html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
       html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
@@ -965,7 +978,21 @@ function load(){
       var allData=new Array(filiallar.length);
       for(var i=0;i<filiallar.length;i++) html+='<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
       document.getElementById('main').innerHTML=html;
-      for(var i=0;i<filiallar.length;i++) fetchFilial(filiallar[i].warehouse_id,filiallar[i].filial,filiallar[i].plan,filiallar[i].oy,i,allData);
+      // Filiallar bo'lmasa - bo'sh xabar
+      if(filiallar.length===0){
+        document.getElementById('main').innerHTML+='<div style="padding:30px;text-align:center;color:var(--text3);font-size:14px">Bu filtrda filial topilmadi</div>';
+        return;
+      }
+      // Render avval: list dagi cache qiymatlardan, keyin har filial uchun yangilash
+      for(var i=0;i<filiallar.length;i++){
+        allData[i]=filiallar[i];
+        renderCard(allData[i],i);
+      }
+      updateJami(allData);
+      // Cache uchun ham saqlaymiz (allData CEO API'dan keldi - bu cachedAllData ham bo'la oladi)
+      cachedAllData=d.filiallar.slice();
+      cachedOy=curOy;
+      cachedYil=curYil;
     })
     .catch(function(e){document.getElementById('main').innerHTML='<div class="err-box">⚠️ '+e.message+'</div>';});
 }
