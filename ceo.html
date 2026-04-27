@@ -133,8 +133,14 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil</div>
 </div>
 
-<div class="filter-bar">
+<div class="filter-bar" style="gap:8px">
   <select id="oy-select" onchange="changeOy(this.value)"></select>
+  <select id="profil-select" onchange="changeProfil(this.value)" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px;font-family:inherit;cursor:pointer">
+    <option value="all">Hammasi</option>
+    <option value="Zapchast" selected>Zapchast</option>
+    <option value="Aksessuar">Aksessuar</option>
+    <option value="Franshiza">Franshiza</option>
+  </select>
   <div class="refresh-btn" onclick="load()">🔄</div>
 </div>
 
@@ -215,7 +221,7 @@ var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
-var CEO_IDS = ['1255605633','1432724','1373701411']; // Deadline qo'ya oladigan CEO lar
+var CEO_IDS = ['1255605633']; // Deadline qo'ya oladigan CEO lar
 var isCeo   = CEO_IDS.includes(String(uid));
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
@@ -242,11 +248,12 @@ function parseSafe(txt){
 
 // ===================== MANAGER + CACHE =====================
 var MANAGER_WAREHOUSES = {
-  all:      null,
-  giyosbek: [61,23,15,5,1,37,17,29,19],
-  sherdil:  [71,13,33,25,35,21,27]
+  all:       null,
+  giyosbek:  [61,23,15,5,1,37,17,29],
+  sherdil:   [71,13,33,25,35,21,27,100,101,102,103,104]
 };
 var curMgr = 'all';
+var curProfil = 'Zapchast'; // default 'Zapchast' | 'all' | 'Zapchast' | 'Aksessuar' | 'Franshiza'
 var cachedAllData = null;
 var cachedOy = null;
 var cachedYil = null;
@@ -266,12 +273,32 @@ function changeMgr(mgr, el){
   }
 }
 
+function changeProfil(profil){
+  curProfil = profil;
+  if(cachedAllData && cachedOy === curOy && cachedYil === curYil){
+    renderFromCache();
+  } else {
+    load();
+  }
+}
+
 function filterFiliallar(filiallar){
   var wids = MANAGER_WAREHOUSES[curMgr];
-  if(!wids) return filiallar;
-  return filiallar.filter(function(f){
-    return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
-  });
+  var result = filiallar;
+  // Manager filter
+  if(wids){
+    result = result.filter(function(f){
+      return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
+    });
+  }
+  // Profil filter
+  if(curProfil && curProfil !== 'all'){
+    result = result.filter(function(f){
+      var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
+      return p === curProfil;
+    });
+  }
+  return result;
 }
 
 function renderFromCache(){
@@ -286,6 +313,20 @@ function renderFromCache(){
   html+='<div class="jami-row"><div class="jami-summa">0</div><div class="jami-foiz">0%</div></div>';
   html+='<div class="jami-bar-bg"><div class="jami-bar" style="width:0%"></div></div>';
   html+='<div class="jami-nums"><span>Bajarildi: <b id="jami-baj">0</b></span><span>Plan: <b id="jami-plan">'+fmt(jPlan)+'</b></span></div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+  html+='<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz (oy oxirigacha)</div><div style="font-size:14px;font-weight:800;margin-top:2px"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600">so\'m</span></div></div>';
+  html+='<div style="text-align:right"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px">0%</div></div>';
+  html+='</div>';
+  // QARZ LIMIT PROGRESS BAR (jami)
+  html+='<div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  html+='<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Umumiy qarz limit</span>';
+  html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2)">0 / 0 · 0%</span>';
+  html+='</div>';
+  html+='<div style="background:var(--bg2);border-radius:6px;height:6px;overflow:hidden">';
+  html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
+  html+='</div>';
+  html+='</div>';
   html+='<div class="jami-qarz">';
   html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
   html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
@@ -348,13 +389,18 @@ function changeOy(val){
 // ===================== JAMI UPDATE =====================
 function updateJami(filialData){
   var el=document.getElementById('jami-block');if(!el)return;
-  var jPlan=0,jBaj=0,jQarz=0,jTugB=0,jTugS=0;
+  var jPlan=0,jBaj=0,jQarz=0,jTugB=0,jTugS=0,jPrognoz=0;
+  var jQarzLimit=0,jQarzFakt=0;
   for(var i=0;i<filialData.length;i++){
     var f=filialData[i];if(!f)continue;
     jPlan+=(f.plan||0);jBaj+=(f.bajarildi||0);jQarz+=(f.muddati_utgan||0);
     jTugB+=(f.tugallanmagan_buyurtma||0);jTugS+=(f.tugallanmagan_savdo||0);
+    jPrognoz+=(f.prognoz||0);
+    jQarzLimit+=(parseFloat(f.qarz_limit)||0);
+    jQarzFakt+=(parseFloat(f.qarz_fakt)||0);
   }
   var jFoiz=jPlan>0?Math.round(jBaj/jPlan*100):0;
+  var jPrognozFoiz=jPlan>0?Math.round(jPrognoz/jPlan*100):0;
   el.querySelector('.jami-summa').textContent=fmt(jBaj);
   el.querySelector('.jami-foiz').textContent=jFoiz+'%';
   el.querySelector('.jami-bar').style.width=Math.min(100,jFoiz)+'%';
@@ -362,6 +408,23 @@ function updateJami(filialData){
   el.querySelector('#jami-baj').textContent=fmt(jBaj);
   el.querySelector('#jami-plan').textContent=fmt(jPlan);
   el.querySelector('#jami-qarz').textContent=fmt(jQarz);
+  var pEl=el.querySelector('#jami-prognoz');if(pEl)pEl.textContent=fmt(jPrognoz);
+  var pfEl=el.querySelector('#jami-prognoz-foiz');
+  if(pfEl){
+    pfEl.textContent=jPrognozFoiz+'%';
+    pfEl.style.color = jPrognozFoiz>=100?'var(--green)':jPrognozFoiz>=80?'var(--amber)':'var(--red)';
+  }
+  // Qarz limit progress
+  var qInfo=el.querySelector('#jami-qarz-info');
+  var qBar=el.querySelector('#jami-qarz-bar');
+  if(qInfo && qBar){
+    var qFoiz=jQarzLimit>0?Math.round(jQarzFakt/jQarzLimit*100):0;
+    var qColor=qFoiz<=80?'var(--green)':qFoiz<=100?'var(--amber)':'var(--red)';
+    qInfo.textContent=fmt(jQarzFakt)+' / '+fmt(jQarzLimit)+' · '+qFoiz+'%';
+    qInfo.style.color=qColor;
+    qBar.style.width=Math.min(100,qFoiz)+'%';
+    qBar.style.background=qColor;
+  }
   var a=el.querySelector('#jami-tug-buyurtma');var b=el.querySelector('#jami-tug-savdo');
   if(a)a.textContent=fmt(jTugB);if(b)b.textContent=fmt(jTugS);
 }
@@ -388,18 +451,83 @@ function renderCard(f,idx){
     }
     openDetail({warehouse_id:w,filial:fn,oy:o});
   };}(_wid,_filial,_oy,(f.oy_raqami||curOy),(f.yil||curYil)));
+  var profil = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
+  var isFr = profil === 'Franshiza';
+  var isAks = profil === 'Aksessuar';
+  var profBadge = '';
+  if(isFr) profBadge = ' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>';
+  else if(isAks) profBadge = ' · <span style="color:#06b6d4;font-weight:700">AKSESSUAR</span>';
+
+  // Qarz limit progress bar HTML (har profil uchun)
+  function buildQarzLimitBar() {
+    var qLimit = parseFloat(f.qarz_limit)||0;
+    var qFakt = parseFloat(f.qarz_fakt)||0;
+    if(qLimit<=0 && qFakt<=0) return '';
+    var qFoiz = qLimit > 0 ? Math.round(qFakt/qLimit*100) : 0;
+    var qBarW = Math.min(100, qFoiz);
+    var qColor = qFoiz<=80 ? 'var(--green)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+    var qLabelColor = qFoiz<=80 ? 'var(--text2)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+    var html = '<div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:10px;border:0.5px solid var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
+    html += '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Qarz limit</span>';
+    html += '<span style="font-size:11px;font-weight:700;color:'+qLabelColor+'">'+fmt(qFakt)+' / '+fmt(qLimit)+' \u00b7 '+qFoiz+'%</span>';
+    html += '</div>';
+    html += '<div style="background:var(--bg2);border-radius:6px;height:5px;overflow:hidden">';
+    html += '<div style="height:100%;width:'+qBarW+'%;background:'+qColor+';transition:width 1s ease;border-radius:6px"></div>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  if(isAks){
+    // AKSESSUAR — sodda kartochka: faqat plan + bajardi + foiz + qarz limit
+    el.innerHTML=
+      '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
+      '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+' \u00b7 Plan: '+fmt(f.plan)+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
+      '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'+
+      '</div></div>'+
+      '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
+      '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'+
+      '<div class="fc-mini">'+
+      '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>'+
+      '<div class="fc-m"><div class="fc-m-lbl">Prognoz summa</div><div class="fc-m-val" style="color:#06b6d4">'+fmt(f.prognoz||0)+'</div></div>'+
+      '</div>'+
+      buildQarzLimitBar()+
+      (foiz<100&&qolganKun>0&&f.qoldi>0?
+        '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
+        :foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
+      ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
+    // Aksessuar uchun transferlar yo'q
+    return;
+  }
+
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
-    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+' · Plan: '+fmt(f.plan)+'</div></div>'+
+    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+(isFr?profBadge:profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan))+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px">'+
     '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
-    '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div></div></div>'+
-    '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
-    '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'+
+    (isFr
+      ? '<div style="text-align:right"><div style="font-size:16px;font-weight:800;color:#a855f7;line-height:1">'+fmt(f.bajarildi)+'</div><div style="font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.3px;margin-top:2px">BAJARDI</div></div>'
+      : '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'
+    )+
+    '</div></div>'+
+    (isFr
+      ? '<div style="height:2px;background:linear-gradient(90deg,#a855f7,rgba(168,85,247,.2));border-radius:2px;margin:8px 0"></div>'
+      : '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'
+    )+
+    (isFr
+      ? '<div class="fc-nums" style="justify-content:center"><span style="color:var(--text3);font-size:11px">📋 Adminkadan tortib ishla</span></div>'
+      : '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'
+    )+
     '<div class="fc-mini">'+
     '<div class="fc-m"><div class="fc-m-lbl">Tushum</div><div class="fc-m-val" style="color:var(--green)">'+fmt(f.orders_summa)+'</div></div>'+
     '<div class="fc-m"><div class="fc-m-lbl">Qaytarilgan</div><div class="fc-m-val" style="color:var(--red)">-'+fmt(f.returns_summa)+'</div></div>'+
-    '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>'+
+    (isFr
+      ? '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:#a855f7;font-size:12px">'+fmt(f.prognoz||0)+'</div></div>'
+      : '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>'
+    )+
     '</div>'+
     '<div class="fc-mini" style="margin-top:0">'+
     '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</span></div></div>'+
@@ -407,9 +535,10 @@ function renderCard(f,idx){
     '<div class="fc-m"><div class="fc-m-lbl">Savdo soni</div><div class="fc-m-val" style="color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>'+
     '</div>'+    '<div class="fc-qarz"><span class="fc-qarz-lbl">Muddati o\'tgan qarz</span>'+
     '<span class="fc-qarz-val">'+fmt(f.muddati_utgan||0)+'</span></div>'+
-    (foiz<100&&qolganKun>0&&f.qoldi>0?
+    buildQarzLimitBar()+
+    (!isFr && foiz<100&&qolganKun>0&&f.qoldi>0?
       '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
-      :foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
+      :!isFr && foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
   // Transfers badge - kartochkada (innerHTML ga qo'shamiz)
   var trList=f.transfers||[];
@@ -467,9 +596,13 @@ var detDeadlines={}; // user_id -> deadline obj
 var detOtgan=[],detBugun=[],detErtaga=[];
 
 function openDetail(f){
-  var indexUrl='https://s1mple-911.github.io/arosmarket-dashboard/index.html?uid='+uid+'&wid='+f.warehouse_id;
+  // Hozirgi sahifa nomini olib (ceo.html yoki ceo-dev.html), tegishli index'ga yo'naltirish
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var indexFile = isDev ? 'index-dev.html' : 'index.html';
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var indexUrl = basePath + indexFile + '?uid=' + uid + '&wid=' + f.warehouse_id;
   console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
-  alert('Ochilayotgan filial: '+f.warehouse_id+' - '+f.filial);
   if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
     window.Telegram.WebApp.openLink(indexUrl);
   } else {
@@ -823,6 +956,19 @@ function load(){
       html+='<div class="jami-row"><div class="jami-summa">0</div><div class="jami-foiz">0%</div></div>';
       html+='<div class="jami-bar-bg"><div class="jami-bar" style="width:0%"></div></div>';
       html+='<div class="jami-nums"><span>Bajarildi: <b id="jami-baj">0</b></span><span>Plan: <b id="jami-plan">'+fmt(jPlan)+'</b></span></div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+      html+='<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz (oy oxirigacha)</div><div style="font-size:14px;font-weight:800;margin-top:2px"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600">so\'m</span></div></div>';
+      html+='<div style="text-align:right"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px">0%</div></div>';
+      html+='</div>';
+      html+='<div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+      html+='<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Umumiy qarz limit</span>';
+      html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2)">0 / 0 · 0%</span>';
+      html+='</div>';
+      html+='<div style="background:var(--bg2);border-radius:6px;height:6px;overflow:hidden">';
+      html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
+      html+='</div>';
+      html+='</div>';
       html+='<div class="jami-qarz">';
       html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
       html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
@@ -832,7 +978,21 @@ function load(){
       var allData=new Array(filiallar.length);
       for(var i=0;i<filiallar.length;i++) html+='<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
       document.getElementById('main').innerHTML=html;
-      for(var i=0;i<filiallar.length;i++) fetchFilial(filiallar[i].warehouse_id,filiallar[i].filial,filiallar[i].plan,filiallar[i].oy,i,allData);
+      // Filiallar bo'lmasa - bo'sh xabar
+      if(filiallar.length===0){
+        document.getElementById('main').innerHTML+='<div style="padding:30px;text-align:center;color:var(--text3);font-size:14px">Bu filtrda filial topilmadi</div>';
+        return;
+      }
+      // Render avval: list dagi cache qiymatlardan, keyin har filial uchun yangilash
+      for(var i=0;i<filiallar.length;i++){
+        allData[i]=filiallar[i];
+        renderCard(allData[i],i);
+      }
+      updateJami(allData);
+      // Cache uchun ham saqlaymiz (allData CEO API'dan keldi - bu cachedAllData ham bo'la oladi)
+      cachedAllData=d.filiallar.slice();
+      cachedOy=curOy;
+      cachedYil=curYil;
     })
     .catch(function(e){document.getElementById('main').innerHTML='<div class="err-box">⚠️ '+e.message+'</div>';});
 }
