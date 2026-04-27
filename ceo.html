@@ -260,6 +260,11 @@ var cachedYil = null;
 
 function changeMgr(mgr, el){
   curMgr = mgr;
+  if(mgr !== 'all'){
+    curProfil = 'all';
+    var sel = document.getElementById('profil-select');
+    if(sel) sel.value = 'all';
+  }
   document.querySelectorAll('.mgr-tab').forEach(function(t){
     t.style.color = 'var(--text3)';
     t.style.borderBottomColor = 'transparent';
@@ -291,8 +296,9 @@ function filterFiliallar(filiallar){
       return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
     });
   }
-  // Profil filter
-  if(curProfil && curProfil !== 'all'){
+  // Profil filter — faqat 'all' tab tanlangan bo'lsa ishlaydi
+  // Manager tab (giyosbek/sherdil) tanlangan bo'lsa, profil filterni e'tiborga olmaymiz
+  if(curProfil && curProfil !== 'all' && curMgr === 'all'){
     result = result.filter(function(f){
       var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
       return p === curProfil;
