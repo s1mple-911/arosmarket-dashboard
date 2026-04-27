@@ -460,6 +460,16 @@ function renderCard(f,idx){
   var profil = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
   var isFr = profil === 'Franshiza';
   var isAks = profil === 'Aksessuar';
+  // Profil bo'yicha border rangi
+  if(isFr){
+    el.style.borderLeft = '3px solid #a855f7';
+  } else if(isAks){
+    el.style.borderLeft = '3px solid #06b6d4';
+  } else {
+    // Zapchast - foiz bo'yicha rang
+    var brColor = foiz>=80?'#22c55e':foiz>=50?'#fbbf24':'#ef4444';
+    el.style.borderLeft = '3px solid '+brColor;
+  }
   var profBadge = '';
   if(isFr) profBadge = ' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>';
   else if(isAks) profBadge = ' · <span style="color:#06b6d4;font-weight:700">AKSESSUAR</span>';
