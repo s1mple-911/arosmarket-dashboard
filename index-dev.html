@@ -956,9 +956,14 @@ function renderOchiq(confirmedOrders){
         var kun = sw._kun || 0;
         var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
         var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
+        var custName = sw.customer || '';
+        var clientIdBadge = sw.client_id ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD;margin-left:6px">ID '+sw.client_id+'</span>' : '';
         html+='<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
-        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px">';
         html+='<div style="flex:1;min-width:0">';
+        if(custName){
+          html+='<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:13px;font-weight:700;color:var(--text)">'+custName+'</div>'+clientIdBadge+'</div>';
+        }
         html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
         html+='<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
         html+='</div>';
