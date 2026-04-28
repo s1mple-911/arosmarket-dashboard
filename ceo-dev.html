@@ -221,7 +221,7 @@ var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
-var CEO_IDS = ['1255605633']; // Deadline qo'ya oladigan CEO lar
+var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247']; // Deadline qo'ya oladigan CEO lar
 var isCeo   = CEO_IDS.includes(String(uid));
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
@@ -450,6 +450,15 @@ function renderCard(f,idx){
   var profil = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
   var isFr = profil === 'Franshiza';
   var isAks = profil === 'Aksessuar';
+  // Profil bo'yicha border rangi
+  if(isFr){
+    el.style.borderLeft = '3px solid #a855f7';
+  } else if(isAks){
+    el.style.borderLeft = '3px solid #06b6d4';
+  } else {
+    var brColor = foiz>=80?'#22c55e':foiz>=50?'#fbbf24':'#ef4444';
+    el.style.borderLeft = '3px solid '+brColor;
+  }
   var profBadge = '';
   if(isFr) profBadge = ' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>';
   else if(isAks) profBadge = ' · <span style="color:#06b6d4;font-weight:700">AKSESSUAR</span>';
