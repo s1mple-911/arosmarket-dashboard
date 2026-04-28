@@ -114,6 +114,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 @keyframes brdBlue{0%,100%{border-color:rgba(55,138,221,0.3)}50%{border-color:rgba(55,138,221,0.85)}}
 .tr-onway{animation:brdAmber 2s ease-in-out infinite}
 .tr-created{animation:brdBlue 2s ease-in-out infinite}
+/* Swipe to upload */
+.swipe-wrapper{position:relative;overflow:hidden}
+.swipe-action{position:absolute;right:0;top:0;bottom:0;width:90px;background:linear-gradient(90deg,#3B6D11,#5a9c1f);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:10px;font-weight:700;cursor:pointer;z-index:1}
+.swipe-action span{display:block;font-size:18px;margin-bottom:2px}
+.swipe-content{position:relative;z-index:2;background:var(--bg2);transition:transform .25s ease}
+.swipe-content.swiped{transform:translateX(-90px)}
+/* Recording row */
+.rec-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(55,138,221,.06);border-radius:8px;margin-bottom:6px;gap:8px}
+.rec-row audio{flex:1;height:32px;max-width:200px}
+.rec-name{font-size:11px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .empty{text-align:center;padding:60px 16px}
 .empty-icon{width:48px;height:48px;margin:0 auto 14px;opacity:.3}
 .empty-icon svg{width:100%;height:100%;stroke:var(--text2);fill:none;stroke-width:1.5}
@@ -173,6 +183,9 @@ var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
 var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
 var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions';
+var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
+var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
+var recordingsCache = {}; // user_id -> recordings list
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
@@ -240,6 +253,8 @@ function toggleOrders(id, userId, walletBalance, userName){
   }
   el.classList.add('expanded');
   if(ar){ar.textContent='▴';ar.classList.add('open');}
+  // Yozuvlarni ham yuklaymiz
+  loadRecordings(userId);
   // faqat strictly o'tgan: deadline strictly < bugunStr
   function showOtgan(orders){
     var otg=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
@@ -264,7 +279,7 @@ function toggleOrders(id, userId, walletBalance, userName){
     .catch(function(e){el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';});
 }
 
-function toggleInline(id){
+function toggleInline(id, userId){
   var el=document.getElementById('ol-'+id);
   var ar=document.getElementById('ar-'+id);
   if(!el) return;
@@ -275,6 +290,7 @@ function toggleInline(id){
   } else {
     el.classList.add('expanded');
     if(ar){ar.textContent='▴';ar.classList.add('open');}
+    if(userId) loadRecordings(userId);
   }
 }
 
@@ -308,7 +324,7 @@ function callBtn(tel){
 function buildCard(r,id,color,lazy,orders){
   var tel=(r.telefon||'').replace(/\D/g,'');
   var safeName=(r.ism||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+',\''+safeName+'\')'):('toggleInline(\''+id+'\')');
+  var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+',\''+safeName+'\')'):('toggleInline(\''+id+'\','+r.user_id+')');
   var dl=pageDeadlines[String(r.user_id)];
   var hasDl=dl&&dl.quyilgan_deadline;
   // Avatar rang
@@ -364,12 +380,16 @@ function buildCard(r,id,color,lazy,orders){
     ordersHtml+='</div>';
   }
   ordersHtml+='</div>';
-  return '<div class="client-card'+(hasDl?' has-dl':'')+'">'+
+  var swipeId='sw-'+id;
+  var safeFilial=(filialData&&filialData.filial?filialData.filial:'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return '<div class="client-card swipe-wrapper'+(hasDl?' has-dl':'')+'" id="'+swipeId+'">'+
+    '<div class="swipe-action" onclick="event.stopPropagation();uploadRec('+r.user_id+',\''+safeName+'\',\''+safeFilial+'\')"><span>📎</span>Yuklash</div>'+
+    '<div class="swipe-content" data-uid="'+r.user_id+'" data-swipe-id="'+swipeId+'">'+
     dlHtml+
     '<div class="client-main" onclick="'+clickFn+'">'+
       '<div class="'+avClass+'">'+ini(r.ism)+'</div>'+
       '<div class="c-info">'+
-        '<div class="c-name">'+(r.ism||"Noma'lum")+'</div>'+
+        '<div class="c-name">'+(r.ism||"Noma\'lum")+'</div>'+
         '<div class="c-row2">'+
           '<span class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</span>'+
           (utag?utag:'')+uidTag+kunTag+
@@ -382,6 +402,8 @@ function buildCard(r,id,color,lazy,orders){
       '<span class="arr" id="ar-'+id+'">▾</span>'+
     '</div>'+
     ordersHtml+
+    '<div class="rec-list" id="rec-'+r.user_id+'"></div>'+
+    '</div>'+
   '</div>';
 }
 
@@ -1110,6 +1132,146 @@ function okDeadline(userId){
 
 
 // ===================== WALLET TRANSACTIONS =====================
+// ===================== RECORDINGS =====================
+function uploadRec(userId, ism, filial){
+  // Hidden file input yarataylik
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'audio/*,image/*,application/pdf,video/*';
+  input.style.display = 'none';
+  input.onchange = function(){
+    if(!input.files || !input.files.length) return;
+    var file = input.files[0];
+    doUploadRec(userId, ism, filial, file);
+  };
+  document.body.appendChild(input);
+  input.click();
+  setTimeout(function(){ document.body.removeChild(input); }, 1000);
+}
+
+function doUploadRec(userId, ism, filial, file){
+  // Toast / progress
+  var toast = document.createElement('div');
+  toast.id = 'rec-toast';
+  toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:700;color:var(--text);z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+  toast.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid var(--bg3);border-top-color:#3B6D11;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle"></span>Yuklanmoqda...';
+  document.body.appendChild(toast);
+
+  var fd = new FormData();
+  fd.append('file', file, file.name);
+  fd.append('user_id', String(userId));
+  fd.append('ism', ism||'');
+  fd.append('filial', filial||(filialData&&filialData.filial)||'');
+  fd.append('file_name', file.name);
+
+  fetch(REC_UPLOAD_API, { method: 'POST', body: fd })
+    .then(function(r){ return r.text(); })
+    .then(function(txt){
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      toast.innerHTML = (d && d.ok) ? '✅ Muvaffaqiyatli yuklandi' : '❌ Xato: '+(d&&d.error||'noma\'lum');
+      toast.style.color = (d && d.ok) ? 'var(--green)' : 'var(--red)';
+      setTimeout(function(){ toast.remove(); }, 2500);
+      // Cache tozalaymiz va kartochka ochiq bo'lsa qayta yuklaymiz
+      delete recordingsCache[userId];
+      var recEl = document.getElementById('rec-'+userId);
+      if(recEl && recEl.innerHTML){
+        loadRecordings(userId);
+      }
+    })
+    .catch(function(e){
+      toast.innerHTML = '❌ Tarmoq xatosi';
+      toast.style.color = 'var(--red)';
+      setTimeout(function(){ toast.remove(); }, 2500);
+    });
+}
+
+function loadRecordings(userId){
+  var el = document.getElementById('rec-'+userId);
+  if(!el) return;
+  if(recordingsCache[userId] !== undefined){
+    renderRecordings(userId, recordingsCache[userId]);
+    return;
+  }
+  el.innerHTML = '<div style="padding:6px 12px;font-size:11px;color:var(--text3)">Yozuvlar yuklanmoqda...</div>';
+  fetch(REC_LIST_API+'?user_id='+userId)
+    .then(function(r){ return r.text(); })
+    .then(function(txt){
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      var recs = (d && d.recordings) || [];
+      recordingsCache[userId] = recs;
+      renderRecordings(userId, recs);
+    })
+    .catch(function(){
+      recordingsCache[userId] = [];
+      renderRecordings(userId, []);
+    });
+}
+
+function renderRecordings(userId, recs){
+  var el = document.getElementById('rec-'+userId);
+  if(!el) return;
+  if(!recs || !recs.length){ el.innerHTML = ''; return; }
+  var html = '<div style="padding:8px 16px 10px 70px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;font-weight:700">🎵 Yozuvlar ('+recs.length+' ta)</div>';
+  recs.forEach(function(rec){
+    var isAudio = (rec.mime_type||'').indexOf('audio') === 0;
+    var isImage = (rec.mime_type||'').indexOf('image') === 0;
+    html += '<div class="rec-row">';
+    if(isAudio){
+      html += '<audio controls preload="none" src="'+rec.download_link+'"></audio>';
+    } else if(isImage){
+      html += '<a href="'+rec.web_view_link+'" target="_blank" style="text-decoration:none"><img src="'+rec.preview_link+'" style="width:32px;height:32px;border-radius:6px;object-fit:cover" onerror="this.style.display=\'none\'"></a>';
+      html += '<div class="rec-name">📷 '+rec.name+'</div>';
+    } else {
+      html += '<div class="rec-name">📄 '+rec.name+'</div>';
+    }
+    html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗</a>';
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// Swipe handler — touch yoki mouse bilan
+(function(){
+  var startX=0, currentEl=null, startScrollLeft=0;
+  document.addEventListener('touchstart', function(e){
+    var swipeContent = e.target.closest('.swipe-content');
+    if(!swipeContent) return;
+    startX = e.touches[0].clientX;
+    currentEl = swipeContent;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e){
+    if(!currentEl) return;
+    var diff = e.touches[0].clientX - startX;
+    if(diff < -10){
+      // Suriladi (chap tomon)
+      // Boshqa swiped'larni yopish
+      document.querySelectorAll('.swipe-content.swiped').forEach(function(el){
+        if(el !== currentEl) el.classList.remove('swiped');
+      });
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', function(e){
+    if(!currentEl) return;
+    var endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
+    var diff = endX - startX;
+    if(diff < -50){
+      currentEl.classList.add('swiped');
+    } else if(diff > 50){
+      currentEl.classList.remove('swiped');
+    }
+    currentEl = null;
+  });
+  // Sahifa boshqa joyiga bosilsa, hammasini yopish
+  document.addEventListener('click', function(e){
+    if(e.target.closest('.swipe-action')) return;
+    if(e.target.closest('.swipe-content')) return;
+    document.querySelectorAll('.swipe-content.swiped').forEach(function(el){
+      el.classList.remove('swiped');
+    });
+  });
+})();
+
 function showWalletTxModal(userId, userName, currentBalance){
   var modal = document.getElementById('wtx-modal');
   var title = document.getElementById('wtx-title');
