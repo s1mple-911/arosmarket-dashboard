@@ -231,13 +231,7 @@ var bugunStr = now.toISOString().split('T')[0];
 var ertagaStr = new Date(now.getTime()+86400000).toISOString().split('T')[0];
 
 // ===================== HELPERS =====================
-function fmt(n){
-  var v=Math.round(Number(n)||0);
-  if(v>=1e9) return (v/1e9).toFixed(2)+' mlrd';
-  if(v>=1e6) return (v/1e6).toFixed(1)+' mln';
-  if(v>=1e3) return (v/1e3).toFixed(0)+' ming';
-  return v.toLocaleString();
-}
+
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
 function ini(n){if(!n)return '?';return n.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();}
 function fColor(f){return f>=80?'var(--green)':f>=50?'var(--amber)':'var(--red)';}
