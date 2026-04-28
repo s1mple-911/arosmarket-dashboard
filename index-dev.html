@@ -1215,17 +1215,30 @@ function renderRecordings(userId, recs){
   recs.forEach(function(rec){
     var isAudio = (rec.mime_type||'').indexOf('audio') === 0;
     var isImage = (rec.mime_type||'').indexOf('image') === 0;
-    html += '<div class="rec-row">';
-    if(isAudio){
-      html += '<audio controls preload="none" src="'+rec.download_link+'"></audio>';
+    var isVideo = (rec.mime_type||'').indexOf('video') === 0;
+    var driveEmbed = 'https://drive.google.com/file/d/'+rec.id+'/preview';
+    if(isAudio || isVideo){
+      // Drive embed iframe — audio/video o'ynatish uchun (CORS muammosini chetlab o'tadi)
+      html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">';
+      html += '<div style="font-size:11px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(isAudio?'🎵 ':'🎬 ')+rec.name+'</div>';
+      html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Drive</a>';
+      html += '</div>';
+      html += '<iframe src="'+driveEmbed+'" style="width:100%;height:'+(isAudio?'60':'200')+'px;border:none;border-radius:6px" allow="autoplay" allowfullscreen></iframe>';
+      html += '</div>';
     } else if(isImage){
-      html += '<a href="'+rec.web_view_link+'" target="_blank" style="text-decoration:none"><img src="'+rec.preview_link+'" style="width:32px;height:32px;border-radius:6px;object-fit:cover" onerror="this.style.display=\'none\'"></a>';
+      html += '<div class="rec-row">';
+      html += '<a href="'+rec.web_view_link+'" target="_blank" style="text-decoration:none"><img src="https://drive.google.com/thumbnail?id='+rec.id+'&sz=w64" style="width:32px;height:32px;border-radius:6px;object-fit:cover" onerror="this.style.display=\'none\'"></a>';
       html += '<div class="rec-name">📷 '+rec.name+'</div>';
+      html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗</a>';
+      html += '</div>';
     } else {
+      // PDF va boshqa — link va embed
+      html += '<div class="rec-row">';
       html += '<div class="rec-name">📄 '+rec.name+'</div>';
+      html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Ochish</a>';
+      html += '</div>';
     }
-    html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗</a>';
-    html += '</div>';
   });
   html += '</div>';
   el.innerHTML = html;
