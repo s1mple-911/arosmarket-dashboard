@@ -260,11 +260,6 @@ var cachedYil = null;
 
 function changeMgr(mgr, el){
   curMgr = mgr;
-  if(mgr !== 'all'){
-    curProfil = 'all';
-    var sel = document.getElementById('profil-select');
-    if(sel) sel.value = 'all';
-  }
   document.querySelectorAll('.mgr-tab').forEach(function(t){
     t.style.color = 'var(--text3)';
     t.style.borderBottomColor = 'transparent';
@@ -296,9 +291,8 @@ function filterFiliallar(filiallar){
       return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
     });
   }
-  // Profil filter — faqat 'all' tab tanlangan bo'lsa ishlaydi
-  // Manager tab (giyosbek/sherdil) tanlangan bo'lsa, profil filterni e'tiborga olmaymiz
-  if(curProfil && curProfil !== 'all' && curMgr === 'all'){
+  // Profil filter
+  if(curProfil && curProfil !== 'all'){
     result = result.filter(function(f){
       var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
       return p === curProfil;
@@ -1021,17 +1015,31 @@ load();
 
 function showConfirmedModal(){
   if(!detFilialCache) return;
-  var orders=detFilialCache.confirmedOrders||[];
+  var orders=(detFilialCache.confirmedOrders||[]).slice();
   if(!orders.length){alert("Ochiq buyurtma yo'q");return;}
+  // kun_otgan hisoblash va descending sort
+  var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
+  var bugunStr = nowUZB.toISOString().split('T')[0];
+  function kunHisob(dateStr) {
+    if (!dateStr) return 0;
+    var d = new Date(dateStr.split('T')[0]);
+    var today = new Date(bugunStr);
+    return Math.floor((today - d) / 86400000);
+  }
+  orders.forEach(function(o){ o._kun = kunHisob(o.sana); });
+  orders.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
   var html='<div style="padding:16px">';
   html+='<div style="font-size:14px;font-weight:800;margin-bottom:12px">Ochiq buyurtmalar ('+orders.length+' ta)</div>';
   orders.forEach(function(o){
     var url='https://admin.aros.uz/orders/'+o.order_id+'/';
+    var kun = o._kun || 0;
+    var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:6px">'+kun+' kun</span>' : '';
     html+='<a href="'+url+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:8px">';
     html+='<div style="background:var(--bg3);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">';
-    html+='<div><div style="font-size:13px;font-weight:700">'+(o.ism||"Noma'lum")+'</div>';
-    html+='<div style="font-size:11px;color:var(--text3)">Order #'+o.order_id+' · '+(o.sana||'')+'</div></div>';
-    html+='<div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+' so\'m</div>';
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:700">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
+    html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">Order #'+o.order_id+' · '+(o.sana||'')+'</div></div>';
+    html+='<div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;margin-left:8px">'+fmtFull(o.summa)+' so\'m</div>';
     html+='</div></a>';
   });
   html+='</div>';
