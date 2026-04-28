@@ -202,13 +202,6 @@ function showTab(t,el){
   if(t==='ochiq'&&!ochiqLoaded&&!ochiqLoading) loadOchiq();
 }
 
-function fmt(n){
-  var num=Math.round(Number(n)||0);
-  if(num>=1000000000) return (num/1e9).toFixed(1)+' mlrd';
-  if(num>=1000000) return (num/1e6).toFixed(1)+' mln';
-  if(num>=1000) return (num/1e3).toFixed(0)+' ming';
-  return num.toLocaleString();
-}
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
 function ini(name){
   if(!name) return '?';
