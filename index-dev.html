@@ -176,7 +176,7 @@ var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
-var CEO_IDS = ['1255605633','6414297298','6234108181','1865951955','331245247'];
+var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
 var isCeo = CEO_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
@@ -1000,7 +1000,7 @@ function renderOchiq(confirmedOrders){
     html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
     html+='<div class="c-av">'+ini(o.ism)+'</div>';
     html+='<div style="flex:1;min-width:0">';
-    html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
+    html+='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+(o.client_id?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD">ID '+o.client_id+'</span>':'')+kunBadge+'</div>';
     html+='<div class="c-phone">Order #'+o.order_id+' · '+dtStr+'</div></div>';
     html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq</div></div>';
