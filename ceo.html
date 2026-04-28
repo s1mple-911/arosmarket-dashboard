@@ -221,7 +221,7 @@ var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
-var CEO_IDS = ['1255605633', '8236030365' , '1432724' , '1373701411' , '331245247' ]; // Deadline qo'ya oladigan CEO lar
+var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247']; // Deadline qo'ya oladigan CEO lar
 var isCeo   = CEO_IDS.includes(String(uid));
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
@@ -232,11 +232,7 @@ var ertagaStr = new Date(now.getTime()+86400000).toISOString().split('T')[0];
 
 // ===================== HELPERS =====================
 function fmt(n){
-  var v=Math.round(Number(n)||0);
-  if(v>=1e9) return (v/1e9).toFixed(2)+' mlrd';
-  if(v>=1e6) return (v/1e6).toFixed(1)+' mln';
-  if(v>=1e3) return (v/1e3).toFixed(0)+' ming';
-  return v.toLocaleString();
+  return Math.round(Number(n)||0).toLocaleString('uz-UZ');
 }
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
 function ini(n){if(!n)return '?';return n.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();}
@@ -260,11 +256,6 @@ var cachedYil = null;
 
 function changeMgr(mgr, el){
   curMgr = mgr;
-  if(mgr !== 'all'){
-    curProfil = 'all';
-    var sel = document.getElementById('profil-select');
-    if(sel) sel.value = 'all';
-  }
   document.querySelectorAll('.mgr-tab').forEach(function(t){
     t.style.color = 'var(--text3)';
     t.style.borderBottomColor = 'transparent';
@@ -296,9 +287,8 @@ function filterFiliallar(filiallar){
       return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
     });
   }
-  // Profil filter — faqat 'all' tab tanlangan bo'lsa ishlaydi
-  // Manager tab (giyosbek/sherdil) tanlangan bo'lsa, profil filterni e'tiborga olmaymiz
-  if(curProfil && curProfil !== 'all' && curMgr === 'all'){
+  // Profil filter
+  if(curProfil && curProfil !== 'all'){
     result = result.filter(function(f){
       var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
       return p === curProfil;
@@ -466,7 +456,6 @@ function renderCard(f,idx){
   } else if(isAks){
     el.style.borderLeft = '3px solid #06b6d4';
   } else {
-    // Zapchast - foiz bo'yicha rang
     var brColor = foiz>=80?'#22c55e':foiz>=50?'#fbbf24':'#ef4444';
     el.style.borderLeft = '3px solid '+brColor;
   }
@@ -557,7 +546,14 @@ function renderCard(f,idx){
       :!isFr && foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
   // Transfers badge - kartochkada (innerHTML ga qo'shamiz)
-  var trList=f.transfers||[];
+  var allTrList=f.transfers||[];
+  var fWid = String(f.warehouse_id || '');
+  // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
+  var trList=allTrList.filter(function(t){
+    if(t.status==='created') return String(t.from_warehouse_id||'')===fWid;
+    if(t.status==='on_way') return String(t.to_warehouse_id||'')===fWid;
+    return true;
+  });
   var trHtmlBlock='';
   if(trList.length>0){
     var trC=trList.filter(function(t){return t.status==='created';}).length;
@@ -750,7 +746,14 @@ function renderDetDash(){
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo oyna</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div></div>';
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo soni</div><div style="font-size:13px;font-weight:800;color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>';
   html+='</div>';
-  var trAll=detFilialCache?(detFilialCache.transfers||[]):[];
+  var allTrAll=detFilialCache?(detFilialCache.transfers||[]):[];
+  var detWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : String(f.warehouse_id || '');
+  // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
+  var trAll=allTrAll.filter(function(t){
+    if(t.status==='created') return String(t.from_warehouse_id||'')===detWid;
+    if(t.status==='on_way') return String(t.to_warehouse_id||'')===detWid;
+    return true;
+  });
   if(trAll.length>0){
     var trCreated=trAll.filter(function(t){return t.status==='created';});
     var trOnWay=trAll.filter(function(t){return t.status==='on_way';});
@@ -778,7 +781,13 @@ function renderDetDash(){
   document.getElementById('det-dash').innerHTML=html;
   var detTrBtn=document.getElementById('det-tr-btn');
   if(detTrBtn){
-    var _tl=detFilialCache?(detFilialCache.transfers||[]):[];
+    var _tlAll=detFilialCache?(detFilialCache.transfers||[]):[];
+    var _tlWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : '';
+    var _tl=_tlAll.filter(function(t){
+      if(t.status==='created') return String(t.from_warehouse_id||'')===_tlWid;
+      if(t.status==='on_way') return String(t.to_warehouse_id||'')===_tlWid;
+      return true;
+    });
     var _fn=detFilial?detFilial.filial||'':'';
     detTrBtn.onclick=function(){showTransfersModal(_tl,_fn);};
   }
@@ -1031,17 +1040,46 @@ load();
 
 function showConfirmedModal(){
   if(!detFilialCache) return;
-  var orders=detFilialCache.confirmedOrders||[];
+  var orders=(detFilialCache.confirmedOrders||[]).slice();
   if(!orders.length){alert("Ochiq buyurtma yo'q");return;}
+  var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
+  var bugunStr = nowUZB.toISOString().split('T')[0];
+  function kunHisob(dateStr) {
+    if (!dateStr) return 0;
+    var d = new Date(dateStr.split('T')[0]);
+    var today = new Date(bugunStr);
+    return Math.floor((today - d) / 86400000);
+  }
+  function fmtDateTime(dt) {
+    if (!dt) return '';
+    var s = String(dt);
+    var datePart = s.split('T')[0];
+    var timePart = '';
+    if (s.indexOf('T') !== -1) {
+      var t = s.split('T')[1];
+      timePart = t.substring(0,5);
+    }
+    var parts = datePart.split('-');
+    if (parts.length === 3) {
+      return parts[2]+'.'+parts[1]+'.'+parts[0]+(timePart ? ' '+timePart : '');
+    }
+    return s;
+  }
+  orders.forEach(function(o){ o._kun = kunHisob(o.created_datetime || o.sana); });
+  orders.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
   var html='<div style="padding:16px">';
   html+='<div style="font-size:14px;font-weight:800;margin-bottom:12px">Ochiq buyurtmalar ('+orders.length+' ta)</div>';
   orders.forEach(function(o){
     var url='https://admin.aros.uz/orders/'+o.order_id+'/';
+    var kun = o._kun || 0;
+    var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:6px">'+kun+' kun</span>' : '';
+    var dtStr = fmtDateTime(o.created_datetime || o.sana);
     html+='<a href="'+url+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:8px">';
     html+='<div style="background:var(--bg3);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">';
-    html+='<div><div style="font-size:13px;font-weight:700">'+(o.ism||"Noma'lum")+'</div>';
-    html+='<div style="font-size:11px;color:var(--text3)">Order #'+o.order_id+' · '+(o.sana||'')+'</div></div>';
-    html+='<div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+' so\'m</div>';
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:700">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
+    html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">Order #'+o.order_id+' · '+dtStr+'</div></div>';
+    html+='<div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;margin-left:8px">'+fmtFull(o.summa)+' so\'m</div>';
     html+='</div></a>';
   });
   html+='</div>';
