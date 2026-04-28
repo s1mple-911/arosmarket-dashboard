@@ -178,7 +178,9 @@ var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
 var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
+var OK_IDS = ['1255605633']; // ✓ tasdiqlash huquqi (faqat deadline qo'yish emas, ok ham bosa olish)
 var isCeo = CEO_IDS.includes(String(uid));
+var isOk = OK_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
 var allUsers=[]
@@ -376,7 +378,7 @@ function buildCard(r,id,color,lazy,orders){
       '</div>'+
       callBtn(tel)+
       (isCeo?'<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism.replace(/\'/g,"\\'")+'\','+(r.otgan_summa||r.summa)+')" style="background:rgba(186,117,23,.15);border:0.5px solid rgba(186,117,23,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#BA7517;cursor:pointer;margin-left:4px">⏰</button>':'')+
-      (isCeo&&hasDl?'<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(59,109,17,.15);border:0.5px solid rgba(59,109,17,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#3B6D11;cursor:pointer;margin-left:3px">✓</button>':'')+
+      (isOk&&hasDl?'<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(59,109,17,.15);border:0.5px solid rgba(59,109,17,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#3B6D11;cursor:pointer;margin-left:3px">✓</button>':'')+
       '<span class="arr" id="ar-'+id+'">▾</span>'+
     '</div>'+
     ordersHtml+
@@ -1094,6 +1096,7 @@ function saveDlModal(){
 }
 
 function okDeadline(userId){
+  if(!isOk){ return; }
   var warehouseId = userData.warehouse_id||wid||'';
   var body = { user_id: String(userId), warehouse_id: String(warehouseId) };
   var okParams = new URLSearchParams(body).toString();
