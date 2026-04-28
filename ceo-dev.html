@@ -537,7 +537,14 @@ function renderCard(f,idx){
       :!isFr && foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
   // Transfers badge - kartochkada (innerHTML ga qo'shamiz)
-  var trList=f.transfers||[];
+  var allTrList=f.transfers||[];
+  var fWid = String(f.warehouse_id || '');
+  // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
+  var trList=allTrList.filter(function(t){
+    if(t.status==='created') return String(t.from_warehouse_id||'')===fWid;
+    if(t.status==='on_way') return String(t.to_warehouse_id||'')===fWid;
+    return true;
+  });
   var trHtmlBlock='';
   if(trList.length>0){
     var trC=trList.filter(function(t){return t.status==='created';}).length;
@@ -730,7 +737,14 @@ function renderDetDash(){
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo oyna</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div></div>';
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo soni</div><div style="font-size:13px;font-weight:800;color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>';
   html+='</div>';
-  var trAll=detFilialCache?(detFilialCache.transfers||[]):[];
+  var allTrAll=detFilialCache?(detFilialCache.transfers||[]):[];
+  var detWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : String(f.warehouse_id || '');
+  // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
+  var trAll=allTrAll.filter(function(t){
+    if(t.status==='created') return String(t.from_warehouse_id||'')===detWid;
+    if(t.status==='on_way') return String(t.to_warehouse_id||'')===detWid;
+    return true;
+  });
   if(trAll.length>0){
     var trCreated=trAll.filter(function(t){return t.status==='created';});
     var trOnWay=trAll.filter(function(t){return t.status==='on_way';});
@@ -758,7 +772,13 @@ function renderDetDash(){
   document.getElementById('det-dash').innerHTML=html;
   var detTrBtn=document.getElementById('det-tr-btn');
   if(detTrBtn){
-    var _tl=detFilialCache?(detFilialCache.transfers||[]):[];
+    var _tlAll=detFilialCache?(detFilialCache.transfers||[]):[];
+    var _tlWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : '';
+    var _tl=_tlAll.filter(function(t){
+      if(t.status==='created') return String(t.from_warehouse_id||'')===_tlWid;
+      if(t.status==='on_way') return String(t.to_warehouse_id||'')===_tlWid;
+      return true;
+    });
     var _fn=detFilial?detFilial.filial||'':'';
     detTrBtn.onclick=function(){showTransfersModal(_tl,_fn);};
   }
@@ -1013,7 +1033,6 @@ function showConfirmedModal(){
   if(!detFilialCache) return;
   var orders=(detFilialCache.confirmedOrders||[]).slice();
   if(!orders.length){alert("Ochiq buyurtma yo'q");return;}
-  // kun_otgan hisoblash va descending sort
   var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
   var bugunStr = nowUZB.toISOString().split('T')[0];
   function kunHisob(dateStr) {
@@ -1022,7 +1041,22 @@ function showConfirmedModal(){
     var today = new Date(bugunStr);
     return Math.floor((today - d) / 86400000);
   }
-  orders.forEach(function(o){ o._kun = kunHisob(o.sana); });
+  function fmtDateTime(dt) {
+    if (!dt) return '';
+    var s = String(dt);
+    var datePart = s.split('T')[0];
+    var timePart = '';
+    if (s.indexOf('T') !== -1) {
+      var t = s.split('T')[1];
+      timePart = t.substring(0,5);
+    }
+    var parts = datePart.split('-');
+    if (parts.length === 3) {
+      return parts[2]+'.'+parts[1]+'.'+parts[0]+(timePart ? ' '+timePart : '');
+    }
+    return s;
+  }
+  orders.forEach(function(o){ o._kun = kunHisob(o.created_datetime || o.sana); });
   orders.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
   var html='<div style="padding:16px">';
   html+='<div style="font-size:14px;font-weight:800;margin-bottom:12px">Ochiq buyurtmalar ('+orders.length+' ta)</div>';
@@ -1030,11 +1064,12 @@ function showConfirmedModal(){
     var url='https://admin.aros.uz/orders/'+o.order_id+'/';
     var kun = o._kun || 0;
     var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:6px">'+kun+' kun</span>' : '';
+    var dtStr = fmtDateTime(o.created_datetime || o.sana);
     html+='<a href="'+url+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:8px">';
     html+='<div style="background:var(--bg3);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">';
     html+='<div style="flex:1;min-width:0">';
     html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:700">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
-    html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">Order #'+o.order_id+' · '+(o.sana||'')+'</div></div>';
+    html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">Order #'+o.order_id+' · '+dtStr+'</div></div>';
     html+='<div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;margin-left:8px">'+fmtFull(o.summa)+' so\'m</div>';
     html+='</div></a>';
   });
