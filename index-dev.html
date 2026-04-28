@@ -124,6 +124,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .rec-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(55,138,221,.06);border-radius:8px;margin-bottom:6px;gap:8px}
 .rec-row audio{flex:1;height:32px;max-width:200px}
 .rec-name{font-size:11px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-list{max-height:0;overflow:hidden;transition:max-height .5s ease;background:var(--bg3)}
+.rec-list.expanded{max-height:3000px}
 .empty{text-align:center;padding:60px 16px}
 .empty-icon{width:48px;height:48px;margin:0 auto 14px;opacity:.3}
 .empty-icon svg{width:100%;height:100%;stroke:var(--text2);fill:none;stroke-width:1.5}
@@ -244,14 +246,17 @@ function loadPageDeadlines(warehouseId, cb){
 function toggleOrders(id, userId, walletBalance, userName){
   var el=document.getElementById('ol-'+id);
   var ar=document.getElementById('ar-'+id);
+  var recEl=document.getElementById('rec-'+userId);
   if(!el) return;
   var open=el.classList.contains('expanded');
   if(open){
     el.classList.remove('expanded');
+    if(recEl) recEl.classList.remove('expanded');
     if(ar){ar.textContent='▾';ar.classList.remove('open');}
     return;
   }
   el.classList.add('expanded');
+  if(recEl) recEl.classList.add('expanded');
   if(ar){ar.textContent='▴';ar.classList.add('open');}
   // Yozuvlarni ham yuklaymiz
   loadRecordings(userId);
@@ -282,13 +287,16 @@ function toggleOrders(id, userId, walletBalance, userName){
 function toggleInline(id, userId){
   var el=document.getElementById('ol-'+id);
   var ar=document.getElementById('ar-'+id);
+  var recEl = userId ? document.getElementById('rec-'+userId) : null;
   if(!el) return;
   var open=el.classList.contains('expanded');
   if(open){
     el.classList.remove('expanded');
+    if(recEl) recEl.classList.remove('expanded');
     if(ar){ar.textContent='▾';ar.classList.remove('open');}
   } else {
     el.classList.add('expanded');
+    if(recEl) recEl.classList.add('expanded');
     if(ar){ar.textContent='▴';ar.classList.add('open');}
     if(userId) loadRecordings(userId);
   }
@@ -379,8 +387,6 @@ function buildCard(r,id,color,lazy,orders){
     });
     ordersHtml+='</div>';
   }
-  // Yozuvlar ro'yxati — orders-list ichida (expand/collapse bilan birga)
-  ordersHtml+='<div class="rec-list" id="rec-'+r.user_id+'"></div>';
   ordersHtml+='</div>';
   var swipeId='sw-'+id;
   var safeFilial=(filialData&&filialData.filial?filialData.filial:'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -404,6 +410,7 @@ function buildCard(r,id,color,lazy,orders){
       '<span class="arr" id="ar-'+id+'">▾</span>'+
     '</div>'+
     ordersHtml+
+    '<div class="rec-list" id="rec-'+r.user_id+'" data-orders-id="'+id+'"></div>'+
     '</div>'+
   '</div>';
 }
@@ -1212,20 +1219,30 @@ function renderRecordings(userId, recs){
   var el = document.getElementById('rec-'+userId);
   if(!el) return;
   if(!recs || !recs.length){ el.innerHTML = ''; return; }
+  // Fayl nomidan sana parse qilish (Ism_ID_Filial_YYYY-MM-DD_HHMMSS.ext)
+  function parseUploadDate(name){
+    if(!name) return '';
+    var m = name.match(/_(\d{4}-\d{2}-\d{2})_(\d{2})(\d{2})(\d{2})/);
+    if(!m) return '';
+    var dt = m[1].split('-');
+    return dt[2]+'.'+dt[1]+'.'+dt[0]+' '+m[2]+':'+m[3];
+  }
   var html = '<div style="padding:8px 16px 10px 70px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;font-weight:700">🎵 Yozuvlar ('+recs.length+' ta)</div>';
   recs.forEach(function(rec){
     var isAudio = (rec.mime_type||'').indexOf('audio') === 0;
     var isImage = (rec.mime_type||'').indexOf('image') === 0;
     var isVideo = (rec.mime_type||'').indexOf('video') === 0;
     var streamUrl = rec.stream_link || ('https://n8n.arosmarket.com/webhook/aros-recording-stream?file_id='+rec.id);
+    var uploadDate = parseUploadDate(rec.name);
+    var dateLine = uploadDate ? '<div style="font-size:10px;color:var(--text3);margin-top:3px">📅 '+uploadDate+'</div>' : '';
     if(isAudio){
-      // Native HTML5 audio orqali n8n stream proxy
       html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">';
       html += '<div style="font-size:11px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🎵 '+rec.name+'</div>';
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Drive</a>';
       html += '</div>';
       html += '<audio controls preload="metadata" src="'+streamUrl+'" style="width:100%;height:36px"></audio>';
+      html += dateLine;
       html += '</div>';
     } else if(isVideo){
       html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px">';
@@ -1234,16 +1251,23 @@ function renderRecordings(userId, recs){
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Drive</a>';
       html += '</div>';
       html += '<video controls preload="metadata" src="'+streamUrl+'" style="width:100%;max-height:200px;border-radius:6px"></video>';
+      html += dateLine;
       html += '</div>';
     } else if(isImage){
-      html += '<div class="rec-row">';
-      html += '<a href="'+rec.web_view_link+'" target="_blank" style="text-decoration:none"><img src="'+streamUrl+'" style="width:32px;height:32px;border-radius:6px;object-fit:cover" onerror="this.style.display=\'none\'"></a>';
+      html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px;display:flex;align-items:center;gap:8px">';
+      html += '<a href="'+rec.web_view_link+'" target="_blank" style="text-decoration:none;flex-shrink:0"><img src="'+streamUrl+'" style="width:40px;height:40px;border-radius:6px;object-fit:cover"></a>';
+      html += '<div style="flex:1;min-width:0">';
       html += '<div class="rec-name">📷 '+rec.name+'</div>';
+      if(uploadDate) html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">📅 '+uploadDate+'</div>';
+      html += '</div>';
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗</a>';
       html += '</div>';
     } else {
-      html += '<div class="rec-row">';
+      html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">';
+      html += '<div style="flex:1;min-width:0">';
       html += '<div class="rec-name">📄 '+rec.name+'</div>';
+      if(uploadDate) html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">📅 '+uploadDate+'</div>';
+      html += '</div>';
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Ochish</a>';
       html += '</div>';
     }
