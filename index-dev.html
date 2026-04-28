@@ -566,7 +566,14 @@ function renderDash(){
     var confOrders = fd.confirmedOrders||[];
     var confSumma = confOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
     var confSon = confOrders.length;
-    var transfers = fd.transfers||[];
+    var allTransfers = fd.transfers||[];
+    var fdWid = String(fd.warehouse_id || wid || '');
+    // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
+    var transfers = allTransfers.filter(function(t){
+      if(t.status==='created') return String(t.from_warehouse_id||'')===fdWid;
+      if(t.status==='on_way') return String(t.to_warehouse_id||'')===fdWid;
+      return true;
+    });
     var trCreated = transfers.filter(function(t){return t.status==='created';});
     var trOnWay = transfers.filter(function(t){return t.status==='on_way';});
     html+='<div style="display:flex;gap:8px;margin-top:8px">';
@@ -910,18 +917,33 @@ function renderOchiq(confirmedOrders){
   ochiqLoaded=true;ochiqLoading=false;
   var el=document.getElementById('page-ochiq');
   var html='';
-  // Bugun sanasi (kun farq hisoblash uchun)
+  // kun farq hisoblash
   function kunHisob(dateStr) {
     if (!dateStr) return 0;
     var d = new Date(dateStr.split('T')[0]);
     var today = new Date(bugunStr);
     return Math.floor((today - d) / 86400000);
   }
-  // Savdo oyna - sortlangan + kun_otgan bilan
+  // datetime'dan formatlangan sana + soat (DD.MM.YYYY HH:MM)
+  function fmtDateTime(dt) {
+    if (!dt) return '';
+    var s = String(dt);
+    var datePart = s.split('T')[0];
+    var timePart = '';
+    if (s.indexOf('T') !== -1) {
+      var t = s.split('T')[1];
+      timePart = t.substring(0,5); // HH:MM
+    }
+    var parts = datePart.split('-');
+    if (parts.length === 3) {
+      return parts[2]+'.'+parts[1]+'.'+parts[0]+(timePart ? ' '+timePart : '');
+    }
+    return s;
+  }
+  // Savdo oyna - sortlangan + kun_otgan + sana + soat
   if(filialData&&(filialData.tugallanmagan_savdo_son||0)>0){
     var swItems=(filialData.swItems||[]).slice();
-    // Har itemga kun_otgan qo'shamiz va sortlaymiz (descending - eng eski tepada)
-    swItems.forEach(function(sw){ sw._kun = kunHisob(sw.sana); });
+    swItems.forEach(function(sw){ sw._kun = kunHisob(sw.created_datetime || sw.sana); });
     swItems.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
     
     html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
@@ -931,11 +953,12 @@ function renderOchiq(confirmedOrders){
         var swUrl='https://admin.aros.uz/orders/sales-window-list/'+sw.id;
         var kun = sw._kun || 0;
         var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
+        var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
         html+='<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
         html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px">';
         html+='<div style="flex:1;min-width:0">';
-        html+='<div style="display:flex;align-items:center"><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
-        html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">📅 '+(sw.sana||'')+'</div>';
+        html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
+        html+='<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
         html+='</div>';
         html+='<div style="font-size:13px;color:var(--text3);flex-shrink:0;margin-left:8px">→</div>';
         html+='</div></a>';
@@ -956,9 +979,9 @@ function renderOchiq(confirmedOrders){
     }
     el.innerHTML=html;return;
   }
-  // Confirmed orders: sortlash (descending kun_otgan) va kun_otgan badge
+  // Confirmed orders: sort + kun + soat
   var sortedOrders = confirmedOrders.slice();
-  sortedOrders.forEach(function(o){ o._kun = kunHisob(o.sana); });
+  sortedOrders.forEach(function(o){ o._kun = kunHisob(o.created_datetime || o.sana); });
   sortedOrders.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
   
   var tot=sortedOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
@@ -972,12 +995,13 @@ function renderOchiq(confirmedOrders){
     var adminUrl='https://admin.aros.uz/orders/'+o.order_id+'/';
     var kun = o._kun || 0;
     var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:6px">'+kun+' kun</span>' : '';
+    var dtStr = fmtDateTime(o.created_datetime || o.sana);
     html+='<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
     html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
     html+='<div class="c-av">'+ini(o.ism)+'</div>';
     html+='<div style="flex:1;min-width:0">';
-    html+='<div style="display:flex;align-items:center"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
-    html+='<div class="c-phone">Order #'+o.order_id+' · '+(o.sana||'')+'</div></div>';
+    html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
+    html+='<div class="c-phone">Order #'+o.order_id+' · '+dtStr+'</div></div>';
     html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq</div></div>';
     html+='</div></a>';
