@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Hodim Ko'rsatkich</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0f0f1a;
+  --bg2:#1a1a2e;
+  --bg3:#252540;
+  --border:rgba(255,255,255,.06);
+  --text:#fff;
+  --text2:#c5c5d6;
+  --text3:#7e7e95;
+  --green:#22c55e;
+  --amber:#fbbf24;
+  --red:#ef4444;
+  --blue:#378ADD;
+  --purple:#a855f7;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f5f5f5;
+    --bg2:#ffffff;
+    --bg3:#f0f0f0;
+    --border:rgba(0,0,0,.08);
+    --text:#1a1a2e;
+    --text2:#3a3a52;
+    --text3:#7a7a8e;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;padding-bottom:30px}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.hdr-back{width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:var(--text)}
+.hdr-info{flex:1}
+.hdr-title{font-size:15px;font-weight:700}
+.hdr-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.filter-bar{padding:12px 16px;background:var(--bg);display:flex;gap:8px;align-items:center}
+.filter-bar select{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px;font-family:inherit;cursor:pointer}
+.refresh-btn{background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;margin-left:auto}
+.main{padding:0 16px}
+.hodim-card{background:linear-gradient(135deg,rgba(55,138,221,.1),rgba(168,85,247,.06));border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px}
+.hodim-name{font-size:18px;font-weight:800;margin-bottom:4px}
+.hodim-lavozim{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat-box{background:var(--bg3);border-radius:12px;padding:12px}
+.stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.stat-val{font-size:18px;font-weight:800}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.section-hdr{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;display:flex;align-items:center;justify-content:space-between}
+.sec-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(55,138,221,.15);color:var(--blue);border:1px solid rgba(55,138,221,.25)}
+.mijoz-row{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.mijoz-info{flex:1;min-width:0}
+.mijoz-nomi{font-size:13px;font-weight:700}
+.mijoz-tel{font-size:11px;color:var(--text3);margin-top:2px}
+.mijoz-sikl{flex-shrink:0;background:var(--bg3);border-radius:8px;padding:4px 8px;font-size:10px;font-weight:700;color:var(--text2)}
+.mijoz-aktiv{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3)}
+.mijoz-aktiv .mijoz-sikl{background:rgba(34,197,94,.2);color:var(--green)}
+.empty{text-align:center;padding:40px 16px;color:var(--text3)}
+.empty-ic{font-size:36px;margin-bottom:10px;opacity:.5}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid var(--bg3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-wrap{padding:60px 16px;text-align:center;color:var(--text3)}
+.tab-switch{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.tab-switch .tw-btn{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:none;font-family:inherit}
+.tab-switch .tw-btn.active{background:var(--bg3);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <button class="hdr-back" onclick="goBack()">←</button>
+  <div class="hdr-info">
+    <div class="hdr-title" id="hdr-title">Mening ko'rsatkichim</div>
+    <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <select id="oy-select" onchange="changeOy(this.value)"></select>
+  <select id="yil-select" onchange="changeYil(this.value)"></select>
+  <div class="refresh-btn" onclick="load()">🔄</div>
+</div>
+
+<div class="main" id="main">
+  <div class="loading-wrap"><div class="spin"></div><div style="margin-top:8px">Yuklanmoqda...</div></div>
+</div>
+
+<script>
+var HODIM_API = 'https://n8n.arosmarket.com/webhook/aros-hodim-stats';
+var STATS_API = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
+var uid = new URLSearchParams(window.location.search).get('uid') || '';
+var wid = new URLSearchParams(window.location.search).get('wid') || '';
+var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+var now = new Date(new Date().getTime() + 5*60*60*1000);
+var curOy = now.getUTCMonth() + 1;
+var curYil = now.getUTCFullYear();
+var userIsm = '';
+var userLavozim = '';
+var oylikPlan = 0;
+var curView = 'aktiv'; // 'aktiv' | 'jami'
+
+function fmt(n){ return Math.round(Number(n)||0).toLocaleString('uz-UZ'); }
+function ini(name){ if(!name) return '?'; return name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase(); }
+
+function goBack(){
+  var indexPage = window.location.pathname.indexOf('-dev')!==-1 ? 'index-dev.html' : 'index.html';
+  var url = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + indexPage + '?uid=' + uid + (wid?'&wid='+wid:'');
+  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
+function setupOySelect(){
+  var sel = document.getElementById('oy-select');
+  sel.innerHTML = '';
+  for(var i=1;i<=12;i++){
+    var o = document.createElement('option');
+    o.value = i;
+    o.textContent = OY[i-1];
+    if(i===curOy) o.selected = true;
+    sel.appendChild(o);
+  }
+  var ysel = document.getElementById('yil-select');
+  ysel.innerHTML = '';
+  for(var y=curYil-1;y<=curYil+1;y++){
+    var o = document.createElement('option');
+    o.value = y;
+    o.textContent = y;
+    if(y===curYil) o.selected = true;
+    ysel.appendChild(o);
+  }
+}
+
+function changeOy(v){ curOy = parseInt(v); load(); }
+function changeYil(v){ curYil = parseInt(v); load(); }
+
+function loadUserInfo(){
+  return fetch(STATS_API+'?uid='+uid+(wid?'&wid='+wid:''))
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      try{
+        var raw = JSON.parse(txt);
+        var d = Array.isArray(raw) ? raw[0] : raw;
+        if(d && d.user){
+          userIsm = d.user.ism || 'Hodim';
+          userLavozim = d.user.status || '';
+          oylikPlan = parseInt(d.user.oylik_plan) || 0;
+          document.getElementById('hdr-title').textContent = userIsm;
+          document.getElementById('hdr-sub').textContent = (d.user.warehouse_name || '') + (userLavozim?' · '+userLavozim:'');
+        }
+      }catch(e){}
+    })
+    .catch(function(){});
+}
+
+function load(){
+  var main = document.getElementById('main');
+  main.innerHTML = '<div class="loading-wrap"><div class="spin"></div><div style="margin-top:8px">Yuklanmoqda...</div></div>';
+  
+  if(!userIsm){
+    loadUserInfo().then(function(){ loadHodimData(); });
+  } else {
+    loadHodimData();
+  }
+}
+
+function loadHodimData(){
+  var main = document.getElementById('main');
+  // uid bo'yicha qidiramiz, ism backup
+  fetch(HODIM_API+'?uid='+encodeURIComponent(uid)+'&ism='+encodeURIComponent(userIsm)+'&oy='+curOy+'&yil='+curYil)
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d;
+      try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(!d){ main.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div>Ma\'lumot yuklanmadi</div>'; return; }
+      // Ism agar javobda kelsa, yangilab olamiz
+      if(d.ism && d.ism !== userIsm){
+        userIsm = d.ism;
+        document.getElementById('hdr-title').textContent = userIsm;
+      }
+      renderHodim(d);
+    })
+    .catch(function(e){
+      main.innerHTML = '<div class="empty"><div class="empty-ic">❌</div>Xato: '+e.message+'</div>';
+    });
+}
+
+function renderHodim(d){
+  var main = document.getElementById('main');
+  var jami = d.jami_summa || 0;
+  var planFoiz = oylikPlan > 0 ? Math.round(jami / oylikPlan * 100) : 0;
+  var planColor = planFoiz >= 80 ? 'var(--green)' : planFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+  
+  var html = '';
+  
+  // Hodim card
+  html += '<div class="hodim-card">';
+  html += '<div class="hodim-name">'+(d.ism||userIsm)+'</div>';
+  html += '<div class="hodim-lavozim">'+(userLavozim||'Hodim')+' · '+OY[d.oy-1]+' '+d.yil+'</div>';
+  
+  // Plan progress (agar plan bor bo'lsa)
+  if(oylikPlan > 0){
+    var barW = Math.min(100, planFoiz);
+    html += '<div style="margin-top:14px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Oylik plan</span>';
+    html += '<span style="font-size:13px;font-weight:800;color:'+planColor+'">'+planFoiz+'%</span>';
+    html += '</div>';
+    html += '<div style="background:var(--bg3);border-radius:6px;height:8px;overflow:hidden">';
+    html += '<div style="height:100%;width:'+barW+'%;background:'+planColor+';transition:width 1s ease;border-radius:6px"></div>';
+    html += '</div>';
+    html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:5px">';
+    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(jami)+'</b></span>';
+    html += '<span>Plan: <b style="color:var(--text)">'+fmt(oylikPlan)+'</b></span>';
+    html += '</div>';
+    html += '</div>';
+  }
+  
+  // Stats grid
+  html += '<div class="stats-grid">';
+  html += '<div class="stat-box"><div class="stat-lbl">Jami savdo</div><div class="stat-val" style="color:var(--green)">'+fmt(jami)+'</div><div class="stat-sub">so\'m</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Buyurtmalar</div><div class="stat-val" style="color:var(--blue)">'+(d.buyurtma_soni||0)+'</div><div class="stat-sub">ta</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Aktiv mijozlar</div><div class="stat-val" style="color:var(--amber)">'+(d.mijozlar_soni||0)+'</div><div class="stat-sub">shu oyda xarid qilgan</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Jami mijozlar</div><div class="stat-val" style="color:var(--purple)">'+(d.mijozlar_jami_soni||0)+'</div><div class="stat-sub">biriktirilgan</div></div>';
+  html += '</div>';
+  
+  html += '</div>';
+  
+  // Tab switch
+  html += '<div class="tab-switch">';
+  html += '<button class="tw-btn '+(curView==='aktiv'?'active':'')+'" onclick="switchView(\'aktiv\')">Aktiv mijozlar ('+(d.mijozlar_soni||0)+')</button>';
+  html += '<button class="tw-btn '+(curView==='jami'?'active':'')+'" onclick="switchView(\'jami\')">Jami mijozlar ('+(d.mijozlar_jami_soni||0)+')</button>';
+  html += '</div>';
+  
+  // Mijozlar ro'yxati
+  html += '<div id="mijozlar-list">';
+  
+  if(curView === 'aktiv'){
+    var aktivList = d.mijozlar_aktiv || [];
+    if(!aktivList.length){
+      html += '<div class="empty"><div class="empty-ic">📊</div>Bu oyda hech kim xarid qilmagan</div>';
+    } else {
+      // Aktiv mijozlar - faqat ismlar (savdolardan)
+      var jamiSet = {};
+      (d.mijozlar_jami||[]).forEach(function(m){ jamiSet[m.mijoz_nomi] = m; });
+      
+      aktivList.forEach(function(name){
+        var m = jamiSet[name] || { mijoz_nomi: name, telefon: '', sikl: 0 };
+        html += '<div class="mijoz-row mijoz-aktiv">';
+        html += '<div class="mijoz-info">';
+        html += '<div class="mijoz-nomi">✅ '+m.mijoz_nomi+'</div>';
+        if(m.telefon) html += '<div class="mijoz-tel">+'+m.telefon+'</div>';
+        html += '</div>';
+        if(m.sikl) html += '<div class="mijoz-sikl">Sikl: '+m.sikl+'</div>';
+        html += '</div>';
+      });
+    }
+  } else {
+    // Jami mijozlar
+    var jamiList = d.mijozlar_jami || [];
+    var aktivSet = {};
+    (d.mijozlar_aktiv||[]).forEach(function(name){ aktivSet[name] = true; });
+    
+    if(!jamiList.length){
+      html += '<div class="empty"><div class="empty-ic">👥</div>Hech qanday mijoz biriktirilmagan</div>';
+    } else {
+      // Aktivlar oldin
+      jamiList.sort(function(a,b){
+        var aActive = aktivSet[a.mijoz_nomi] ? 1 : 0;
+        var bActive = aktivSet[b.mijoz_nomi] ? 1 : 0;
+        if(aActive !== bActive) return bActive - aActive;
+        return (b.sikl||0) - (a.sikl||0);
+      });
+      
+      jamiList.forEach(function(m){
+        var isActive = aktivSet[m.mijoz_nomi];
+        html += '<div class="mijoz-row '+(isActive?'mijoz-aktiv':'')+'">';
+        html += '<div class="mijoz-info">';
+        html += '<div class="mijoz-nomi">'+(isActive?'✅ ':'')+m.mijoz_nomi+'</div>';
+        if(m.telefon) html += '<div class="mijoz-tel">+'+m.telefon+'</div>';
+        html += '</div>';
+        if(m.sikl) html += '<div class="mijoz-sikl">Sikl: '+m.sikl+'</div>';
+        html += '</div>';
+      });
+    }
+  }
+  
+  html += '</div>';
+  
+  // Updated at
+  if(d.updated_at){
+    var dt = String(d.updated_at).split('.')[0].replace('T', ' ');
+    html += '<div style="text-align:center;font-size:10px;color:var(--text3);margin-top:14px">🕐 Yangilangan: '+dt+'</div>';
+  }
+  
+  main.innerHTML = html;
+}
+
+function switchView(v){
+  curView = v;
+  load();
+}
+
+// Init
+setupOySelect();
+load();
+</script>
+</body>
+</html>
