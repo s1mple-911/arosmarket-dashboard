@@ -666,18 +666,27 @@ function renderDash(){
   html+='<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val" style="color:var(--text)">'+jami+'</div><div class="sc-sub">'+(userData.warehouse_name||'')+'</div></div>';
   html+='</div>';
 
-  // YANGI: Top-5 filiallar leaderboard (prognoz_foiz bo'yicha)
+  // YANGI: Top-5 filiallar leaderboard (prognoz_foiz bo'yicha) — profil bo'yicha filtrlangan
   if(allFiliallar && allFiliallar.length>0){
-    var sorted = allFiliallar.slice().sort(function(a,b){return (b.prognoz_foiz||0)-(a.prognoz_foiz||0);});
+    // Foydalanuvchining profil'ini aniqlash (filialData dan)
+    var myProfil = (filialData && filialData.profil) ? filialData.profil : (filialData && filialData.is_franchise ? 'Franshiza' : 'Zapchast');
+    // Faqat shu profilli filiallarni olamiz
+    var profileFiliallar = allFiliallar.filter(function(f){
+      var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
+      return p === myProfil;
+    });
+    var sorted = profileFiliallar.slice().sort(function(a,b){return (b.prognoz_foiz||0)-(a.prognoz_foiz||0);});
     var myWid = String(wid || userData.warehouse_id || '');
     var myRank = 0;
     for(var i=0;i<sorted.length;i++){ if(String(sorted[i].warehouse_id)===myWid){ myRank=i+1; break; } }
     var top5 = sorted.slice(0,5);
     var medals = {1:'🥇',2:'🥈',3:'🥉'};
+    var profileLabel = myProfil === 'Franshiza' ? 'FRANSHIZA' : myProfil === 'Aksessuar' ? 'AKSESSUAR' : 'ZAPCHAST';
+    var profileColor = myProfil === 'Franshiza' ? '#a855f7' : myProfil === 'Aksessuar' ? '#06b6d4' : '#22c55e';
     html+='<div style="margin-top:14px;background:var(--bg2);border-radius:16px;padding:14px;border:0.5px solid var(--border)">';
     html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
     html+='<span style="font-size:16px">🏆</span>';
-    html+='<div style="font-size:14px;font-weight:700;color:var(--text)">Top-5 Filiallar</div>';
+    html+='<div style="font-size:14px;font-weight:700;color:var(--text)">Top-5 <span style="color:'+profileColor+';font-size:11px">'+profileLabel+'</span></div>';
     html+='<span style="font-size:10px;color:var(--text3);margin-left:auto">prognoz foizi bo\'yicha</span>';
     html+='</div>';
     top5.forEach(function(f,idx){
