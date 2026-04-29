@@ -129,8 +129,8 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div style="display:flex;background:var(--bg2);border-bottom:1px solid var(--border)">
   <div class="mgr-tab active" onclick="changeMgr('all',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Hammasi</div>
-  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek</div>
-  <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil</div>
+  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek Ergashev</div>
+  <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil Saidov</div>
 </div>
 
 <div class="filter-bar" style="gap:8px">
@@ -245,8 +245,8 @@ function parseSafe(txt){
 // ===================== MANAGER + CACHE =====================
 var MANAGER_WAREHOUSES = {
   all:       null,
-  giyosbek:  [61,23,15,5,1,37,17,29],
-  sherdil:   [71,13,33,25,35,21,27,100,101,102,103,104]
+  giyosbek:  [61,23,15,5,1,37,17,29,103],
+  sherdil:   [71,13,33,25,35,21,27,100,101,102,104]
 };
 var curMgr = 'all';
 var curProfil = 'Zapchast'; // default 'Zapchast' | 'all' | 'Zapchast' | 'Aksessuar' | 'Franshiza'
@@ -523,7 +523,7 @@ function renderCard(f,idx){
       : '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'
     )+
     (isFr
-      ? '<div class="fc-nums" style="justify-content:center"><span style="color:var(--text3);font-size:11px">📋 Adminkadan tortib ishla</span></div>'
+      ? '<div class="fc-nums" style="justify-content:center"><span style="color:var(--text3);font-size:11px"></span></div>'
       : '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'
     )+
     '<div class="fc-mini">'+
