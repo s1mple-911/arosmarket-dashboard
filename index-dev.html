@@ -141,6 +141,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="hs" id="hs">AROS Market</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <div onclick="goToHodim()" id="hodimBtn" style="width:30px;height:30px;border-radius:50%;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0" title="Mening ko'rsatkichim">👤</div>
     <div onclick="toggleTheme()" id="themeBtn" style="width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0">🌙</div>
     
   </div>
@@ -1058,6 +1059,19 @@ function renderOchiq(confirmedOrders){
 }
 
 var isDark=true;
+function goToHodim(){
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var hodimFile = isDev ? 'hodim-dev.html' : 'hodim.html';
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var url = basePath + hodimFile + '?uid=' + uid + (wid?'&wid='+wid:'');
+  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
 function toggleTheme(){
   isDark=!isDark;
   document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
