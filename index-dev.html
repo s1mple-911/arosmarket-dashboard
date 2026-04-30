@@ -479,7 +479,8 @@ function loadAllFiliallar(cb){
 // =============================================
 function renderDash(){
   var plan=Number(userData.oylik_plan)||0;
-  var yig=Number(summary.yigilgan)||0;
+  // BUGFIX: bajarildi ishlatamiz (yigilgan emas - bu hamyon balansi edi)
+  var yig=Number((filialData && filialData.bajarildi) || (userData && userData.bajarildi) || summary.yigilgan || 0);
   var pct=plan>0?Math.min(100,Math.round(yig/plan*100)):0;
   var qoldi=Math.max(0,plan-yig);
   // otganFinal yuklanib bo'lganda undan, aks holda summary dan
@@ -656,7 +657,7 @@ function renderDash(){
     html+='<div class="pc-top"><div><div class="pc-lbl">Oylik plan</div><div class="pc-plan">'+fmt(plan)+' so\'m</div></div>';
     html+='<div class="pc-pct">'+pct+'%</div></div>';
     html+='<div class="pc-bar-bg"><div class="pc-bar" style="width:'+pct+'%"></div></div>';
-    html+='<div class="pc-nums"><span>Yig\'ildi: <b>'+fmt(yig)+'</b></span><span>Qoldi: <b>'+fmt(qoldi)+'</b></span></div></div>';
+    html+='<div class="pc-nums"><span>Bajarildi: <b>'+fmt(yig)+'</b></span><span>Qoldi: <b>'+fmt(qoldi)+'</b></span></div></div>';
   }
 
   // ESKI: stats-grid (o'zgartirilmagan)
