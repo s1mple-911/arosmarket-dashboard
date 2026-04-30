@@ -207,8 +207,8 @@ var otganLoading=false, bugunLoading=false, ertagaLoading=false, ochiqLoading=fa
 var filialData=null;
 
 var now=new Date(new Date().getTime()+5*60*60*1000);
-var bugunStr=now.toISOString().split('T')[0];
-var ertagaStr=new Date(now.getTime()+86400000).toISOString().split('T')[0];
+var bugunStr=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0')+'-'+String(now.getUTCDate()).padStart(2,'0');
+var _ert=new Date(now.getTime()+86400000); var ertagaStr=_ert.getUTCFullYear()+'-'+String(_ert.getUTCMonth()+1).padStart(2,'0')+'-'+String(_ert.getUTCDate()).padStart(2,'0');
 
 function showTab(t,el){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
