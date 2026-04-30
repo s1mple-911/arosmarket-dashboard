@@ -141,6 +141,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="hs" id="hs">AROS Market</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <div onclick="goToHodim()" id="hodimBtn" style="width:30px;height:30px;border-radius:50%;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0" title="Mening ko'rsatkichim">👤</div>
     <div onclick="toggleTheme()" id="themeBtn" style="width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0">🌙</div>
     
   </div>
@@ -206,8 +207,8 @@ var otganLoading=false, bugunLoading=false, ertagaLoading=false, ochiqLoading=fa
 var filialData=null;
 
 var now=new Date(new Date().getTime()+5*60*60*1000);
-var bugunStr=now.toISOString().split('T')[0];
-var ertagaStr=new Date(now.getTime()+86400000).toISOString().split('T')[0];
+var bugunStr=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0')+'-'+String(now.getUTCDate()).padStart(2,'0');
+var _ert=new Date(now.getTime()+86400000); var ertagaStr=_ert.getUTCFullYear()+'-'+String(_ert.getUTCMonth()+1).padStart(2,'0')+'-'+String(_ert.getUTCDate()).padStart(2,'0');
 
 function showTab(t,el){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -478,7 +479,8 @@ function loadAllFiliallar(cb){
 // =============================================
 function renderDash(){
   var plan=Number(userData.oylik_plan)||0;
-  var yig=Number(summary.yigilgan)||0;
+  // BUGFIX: bajarildi ishlatamiz (yigilgan emas - bu hamyon balansi edi)
+  var yig=Number((filialData && filialData.bajarildi) || (userData && userData.bajarildi) || summary.yigilgan || 0);
   var pct=plan>0?Math.min(100,Math.round(yig/plan*100)):0;
   var qoldi=Math.max(0,plan-yig);
   // otganFinal yuklanib bo'lganda undan, aks holda summary dan
@@ -655,7 +657,7 @@ function renderDash(){
     html+='<div class="pc-top"><div><div class="pc-lbl">Oylik plan</div><div class="pc-plan">'+fmt(plan)+' so\'m</div></div>';
     html+='<div class="pc-pct">'+pct+'%</div></div>';
     html+='<div class="pc-bar-bg"><div class="pc-bar" style="width:'+pct+'%"></div></div>';
-    html+='<div class="pc-nums"><span>Yig\'ildi: <b>'+fmt(yig)+'</b></span><span>Qoldi: <b>'+fmt(qoldi)+'</b></span></div></div>';
+    html+='<div class="pc-nums"><span>Bajarildi: <b>'+fmt(yig)+'</b></span><span>Qoldi: <b>'+fmt(qoldi)+'</b></span></div></div>';
   }
 
   // ESKI: stats-grid (o'zgartirilmagan)
@@ -666,18 +668,27 @@ function renderDash(){
   html+='<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val" style="color:var(--text)">'+jami+'</div><div class="sc-sub">'+(userData.warehouse_name||'')+'</div></div>';
   html+='</div>';
 
-  // YANGI: Top-5 filiallar leaderboard (prognoz_foiz bo'yicha)
+  // YANGI: Top-5 filiallar leaderboard (prognoz_foiz bo'yicha) — profil bo'yicha filtrlangan
   if(allFiliallar && allFiliallar.length>0){
-    var sorted = allFiliallar.slice().sort(function(a,b){return (b.prognoz_foiz||0)-(a.prognoz_foiz||0);});
+    // Foydalanuvchining profil'ini aniqlash (filialData dan)
+    var myProfil = (filialData && filialData.profil) ? filialData.profil : (filialData && filialData.is_franchise ? 'Franshiza' : 'Zapchast');
+    // Faqat shu profilli filiallarni olamiz
+    var profileFiliallar = allFiliallar.filter(function(f){
+      var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
+      return p === myProfil;
+    });
+    var sorted = profileFiliallar.slice().sort(function(a,b){return (b.prognoz_foiz||0)-(a.prognoz_foiz||0);});
     var myWid = String(wid || userData.warehouse_id || '');
     var myRank = 0;
     for(var i=0;i<sorted.length;i++){ if(String(sorted[i].warehouse_id)===myWid){ myRank=i+1; break; } }
     var top5 = sorted.slice(0,5);
     var medals = {1:'🥇',2:'🥈',3:'🥉'};
+    var profileLabel = myProfil === 'Franshiza' ? 'FRANSHIZA' : myProfil === 'Aksessuar' ? 'AKSESSUAR' : 'ZAPCHAST';
+    var profileColor = myProfil === 'Franshiza' ? '#a855f7' : myProfil === 'Aksessuar' ? '#06b6d4' : '#22c55e';
     html+='<div style="margin-top:14px;background:var(--bg2);border-radius:16px;padding:14px;border:0.5px solid var(--border)">';
     html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
     html+='<span style="font-size:16px">🏆</span>';
-    html+='<div style="font-size:14px;font-weight:700;color:var(--text)">Top-5 Filiallar</div>';
+    html+='<div style="font-size:14px;font-weight:700;color:var(--text)">Top-5 <span style="color:'+profileColor+';font-size:11px">'+profileLabel+'</span></div>';
     html+='<span style="font-size:10px;color:var(--text3);margin-left:auto">prognoz foizi bo\'yicha</span>';
     html+='</div>';
     top5.forEach(function(f,idx){
@@ -1049,6 +1060,19 @@ function renderOchiq(confirmedOrders){
 }
 
 var isDark=true;
+function goToHodim(){
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var hodimFile = isDev ? 'hodim-dev.html' : 'hodim.html';
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var url = basePath + hodimFile + '?uid=' + uid + (wid?'&wid='+wid:'');
+  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
 function toggleTheme(){
   isDark=!isDark;
   document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
