@@ -225,10 +225,10 @@ var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247']
 var isCeo   = CEO_IDS.includes(String(uid));
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
-var curOy = now.getMonth() + 1;
-var curYil = now.getFullYear();
-var bugunStr = now.toISOString().split('T')[0];
-var ertagaStr = new Date(now.getTime()+86400000).toISOString().split('T')[0];
+var curOy = now.getUTCMonth() + 1;
+var curYil = now.getUTCFullYear();
+var bugunStr = now.getUTCFullYear() + '-' + String(now.getUTCMonth()+1).padStart(2,'0') + '-' + String(now.getUTCDate()).padStart(2,'0');
+var _ert = new Date(now.getTime()+86400000); var ertagaStr = _ert.getUTCFullYear() + '-' + String(_ert.getUTCMonth()+1).padStart(2,'0') + '-' + String(_ert.getUTCDate()).padStart(2,'0');
 
 // ===================== HELPERS =====================
 function fmt(n){
