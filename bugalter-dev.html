@@ -510,7 +510,7 @@ function render() {
         </div>
         <div class="alert-value-big">${overdueCount}</div>
         ${overdueCount > 0 
-          ? `<div class="alert-amount-line">${overdueAmount > 0 ? fmtShort(overdueAmount)+' so\\'m' : '—'}</div>
+          ? `<div class="alert-amount-line">${overdueAmount > 0 ? fmtShort(overdueAmount)+" so'm" : '—'}</div>
              <div class="alert-detail">filial · 2+ kun</div>`
           : '<div class="alert-detail">filial · OK</div>'}
       </div>
@@ -524,7 +524,7 @@ function render() {
         ${onWayCount > 0 
           ? `<div class="alert-amount-line">${fmtShort(onWayAmount)} so'm</div>
              <div class="alert-detail">transfer</div>`
-          : '<div class="alert-detail">transfer · yo\\'q</div>'}
+          : `<div class="alert-detail">transfer · yo'q</div>`}
       </div>
       
       <div class="alert-card ${totalUnsentCount > 0 ? 'amber' : 'green'}">
