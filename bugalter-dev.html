@@ -10,12 +10,8 @@
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --bg-primary:#f5f5f7;
-    --bg-card:#ffffff;
-    --bg-secondary:#f0f0f3;
-    --text-primary:#1d1d1f;
-    --text-secondary:#6e6e73;
-    --text-tertiary:#a1a1a6;
+    --bg-primary:#f5f5f7; --bg-card:#ffffff; --bg-secondary:#f0f0f3;
+    --text-primary:#1d1d1f; --text-secondary:#6e6e73; --text-tertiary:#a1a1a6;
     --border:rgba(0,0,0,0.06);
     --hero-bg:linear-gradient(180deg,#1c1c1e 0%,#2c2c2e 100%);
     --red:#ef4444; --red-bg:#fef2f2; --red-text:#7f1d1d;
@@ -26,29 +22,18 @@
     --purple:#8b5cf6; --purple-bg:#f5f3ff; --purple-text:#5b21b6;
     --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
     --shadow-md:0 4px 12px rgba(0,0,0,0.06);
-    --shadow-lg:0 12px 40px rgba(0,0,0,0.18);
   }
   @media (prefers-color-scheme:dark){
     :root{
-      --bg-primary:#000;
-      --bg-card:#1c1c1e;
-      --bg-secondary:#2c2c2e;
-      --text-primary:#f5f5f7;
-      --text-secondary:#a1a1a6;
-      --text-tertiary:#6e6e73;
+      --bg-primary:#000; --bg-card:#1c1c1e; --bg-secondary:#2c2c2e;
+      --text-primary:#f5f5f7; --text-secondary:#a1a1a6; --text-tertiary:#6e6e73;
       --border:rgba(255,255,255,0.08);
-      --red-bg:rgba(239,68,68,0.15);
-      --red-text:#fca5a5;
-      --amber-bg:rgba(245,158,11,0.15);
-      --amber-text:#fcd34d;
-      --green-bg:rgba(34,197,94,0.15);
-      --green-text:#86efac;
-      --gray-bg:rgba(156,163,175,0.15);
-      --gray-text:#d1d5db;
-      --blue-bg:rgba(59,130,246,0.15);
-      --blue-text:#93c5fd;
-      --purple-bg:rgba(139,92,246,0.15);
-      --purple-text:#c4b5fd;
+      --red-bg:rgba(239,68,68,0.15); --red-text:#fca5a5;
+      --amber-bg:rgba(245,158,11,0.15); --amber-text:#fcd34d;
+      --green-bg:rgba(34,197,94,0.15); --green-text:#86efac;
+      --gray-bg:rgba(156,163,175,0.15); --gray-text:#d1d5db;
+      --blue-bg:rgba(59,130,246,0.15); --blue-text:#93c5fd;
+      --purple-bg:rgba(139,92,246,0.15); --purple-text:#c4b5fd;
     }
   }
   html,body{
@@ -90,35 +75,34 @@
   .hero-stat-label{font-size:10px;color:#7e7e95;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px}
   .hero-stat-value{font-size:14px;font-weight:600;letter-spacing:-0.2px}
   
-  .alerts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-  .alert-card{border-radius:14px;padding:14px;box-shadow:var(--shadow-sm)}
+  .alerts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+  .alert-card{border-radius:14px;padding:12px;box-shadow:var(--shadow-sm)}
   .alert-card.red{background:var(--red-bg)}
   .alert-card.amber{background:var(--amber-bg)}
   .alert-card.green{background:var(--green-bg)}
   .alert-card.purple{background:var(--purple-bg)}
-  .alert-header{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-  .alert-dot{width:8px;height:8px;border-radius:50%}
+  .alert-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .alert-dot{width:7px;height:7px;border-radius:50%}
   .alert-card.red .alert-dot{background:var(--red)}
   .alert-card.amber .alert-dot{background:var(--amber)}
   .alert-card.green .alert-dot{background:var(--green)}
   .alert-card.purple .alert-dot{background:var(--purple)}
-  .alert-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+  .alert-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
   .alert-card.red .alert-label{color:var(--red-text)}
   .alert-card.amber .alert-label{color:var(--amber-text)}
   .alert-card.green .alert-label{color:var(--green-text)}
   .alert-card.purple .alert-label{color:var(--purple-text)}
-  .alert-value{font-size:26px;font-weight:600;line-height:1;letter-spacing:-0.5px}
-  .alert-value .total{font-size:13px;font-weight:400;color:var(--text-secondary)}
-  .alert-card.red .alert-value{color:var(--red-text)}
-  .alert-card.amber .alert-value{color:var(--amber-text)}
-  .alert-card.green .alert-value{color:var(--green-text)}
-  .alert-card.purple .alert-value{color:var(--purple-text)}
-  .alert-sub{font-size:11px;margin-top:6px}
-  .alert-sub-amount{font-size:13px;font-weight:600;margin-top:4px}
-  .alert-card.red .alert-sub,.alert-card.red .alert-sub-amount{color:var(--red-text)}
-  .alert-card.amber .alert-sub,.alert-card.amber .alert-sub-amount{color:var(--amber-text)}
-  .alert-card.green .alert-sub,.alert-card.green .alert-sub-amount{color:var(--green-text)}
-  .alert-card.purple .alert-sub,.alert-card.purple .alert-sub-amount{color:var(--purple-text)}
+  .alert-value-big{font-size:22px;font-weight:600;line-height:1;letter-spacing:-0.5px}
+  .alert-card.red .alert-value-big{color:var(--red-text)}
+  .alert-card.amber .alert-value-big{color:var(--amber-text)}
+  .alert-card.green .alert-value-big{color:var(--green-text)}
+  .alert-card.purple .alert-value-big{color:var(--purple-text)}
+  .alert-amount-line{font-size:11px;font-weight:600;margin-top:5px}
+  .alert-card.red .alert-amount-line{color:var(--red-text)}
+  .alert-card.amber .alert-amount-line{color:var(--amber-text)}
+  .alert-card.green .alert-amount-line{color:var(--green-text)}
+  .alert-card.purple .alert-amount-line{color:var(--purple-text)}
+  .alert-detail{font-size:10px;margin-top:3px;opacity:0.75}
   
   .tabbar{display:flex;gap:4px;background:var(--bg-secondary);border-radius:11px;padding:3px;margin-bottom:14px}
   .tab{
@@ -138,55 +122,64 @@
   .section-title .count{
     background:var(--bg-secondary);
     padding:2px 7px;border-radius:8px;
-    font-size:11px;font-weight:600;
-    color:var(--text-secondary);
+    font-size:11px;font-weight:600;color:var(--text-secondary);
   }
   
   .list{display:flex;flex-direction:column;gap:8px}
   
-  /* Transfer card (yo'lda) */
+  /* Transfer card */
   .transfer-card{
-    background:var(--bg-card);
+    background:var(--purple-bg);
     border:0.5px solid var(--purple);
-    border-radius:14px;padding:12px 14px;
-    display:flex;flex-direction:column;gap:8px;
+    border-radius:14px;padding:13px 14px;
+    display:flex;flex-direction:column;gap:10px;
   }
-  .transfer-row{display:flex;align-items:center;gap:10px}
+  .transfer-header{
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .transfer-id{
+    font-size:11px;color:var(--purple-text);
+    background:var(--purple);color:white;
+    padding:2px 8px;border-radius:6px;font-weight:600;
+    letter-spacing:0.3px;
+  }
+  .days-pill{
+    background:var(--purple);color:white;
+    padding:3px 8px;border-radius:7px;
+    font-size:10px;font-weight:700;letter-spacing:0.3px;
+  }
   .transfer-flow{
-    display:flex;align-items:center;gap:8px;flex:1;min-width:0;
+    display:flex;align-items:center;gap:8px;
   }
   .transfer-from{
-    font-size:14px;font-weight:600;letter-spacing:-0.2px;
+    font-size:15px;font-weight:600;letter-spacing:-0.2px;
+    color:var(--text-primary);
     flex:1;min-width:0;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .transfer-arrow{color:var(--purple);flex-shrink:0;display:flex;align-items:center}
-  .transfer-arrow svg{width:14px;height:14px}
+  .transfer-arrow svg{width:16px;height:16px}
   .transfer-to{
     font-size:13px;color:var(--purple-text);font-weight:600;
-    flex:1;min-width:0;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    flex-shrink:0;
   }
-  .transfer-amount{
-    font-size:16px;font-weight:600;letter-spacing:-0.3px;
-    color:var(--purple-text);text-align:right;flex-shrink:0;
+  .transfer-bottom{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    padding-top:8px;border-top:0.5px dashed rgba(139,92,246,0.3);
   }
-  .transfer-amount-unit{font-size:11px;color:var(--text-tertiary);margin-top:1px;font-weight:400}
   .transfer-meta{
-    display:flex;align-items:center;gap:8px;
-    padding-top:6px;border-top:0.5px dashed var(--border);
+    display:flex;flex-direction:column;gap:3px;
     font-size:11px;color:var(--text-secondary);
   }
-  .transfer-meta-item{display:flex;align-items:center;gap:3px}
-  .transfer-meta-item svg{width:12px;height:12px}
-  .days-pill{
-    background:var(--purple);color:white;
-    padding:2px 7px;border-radius:7px;
-    font-size:10px;font-weight:700;letter-spacing:0.3px;
-    margin-left:auto;
+  .transfer-meta-row{display:flex;align-items:center;gap:5px}
+  .transfer-meta-row svg{width:11px;height:11px;flex-shrink:0}
+  .transfer-amount{
+    font-size:18px;font-weight:700;letter-spacing:-0.3px;
+    color:var(--purple-text);text-align:right;
   }
+  .transfer-amount-unit{font-size:10px;color:var(--text-tertiary);font-weight:400;margin-top:1px}
   
-  /* Filial card */
+  /* Filial */
   .filial-card{
     background:var(--bg-card);border:0.5px solid var(--border);
     border-radius:14px;padding:12px 14px;
@@ -221,7 +214,6 @@
   .filial-amount{text-align:right}
   .filial-amount-value{font-size:14px;font-weight:600;letter-spacing:-0.2px}
   .filial-amount-unit{font-size:11px;color:var(--text-tertiary);margin-top:2px}
-  .filial-card.status-overdue .filial-amount-value{color:var(--red-text)}
   
   .days-badge{
     display:inline-block;background:var(--red);color:white;
@@ -246,7 +238,7 @@
   }
   .unsent-icon svg{width:16px;height:16px}
   .unsent-label{font-size:11px;color:var(--amber-text);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px}
-  .unsent-amount{font-size:14px;font-weight:700;color:var(--amber-text);letter-spacing:-0.2px;margin-top:1px}
+  .unsent-amount{font-size:14px;font-weight:700;color:var(--amber-text);letter-spacing:-0.2px}
   
   /* Kassa */
   .kassa-card{
@@ -394,9 +386,10 @@
 <div class="container" id="content">
   <div class="state">
     <div class="skeleton" style="width:100%;height:120px;margin-bottom:12px"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-bottom:14px">
-      <div class="skeleton" style="height:90px"></div>
-      <div class="skeleton" style="height:90px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-bottom:14px">
+      <div class="skeleton" style="height:80px"></div>
+      <div class="skeleton" style="height:80px"></div>
+      <div class="skeleton" style="height:80px"></div>
     </div>
     <div class="skeleton-card" style="width:100%"></div>
     <div class="skeleton-card" style="width:100%"></div>
@@ -447,10 +440,27 @@ const STATUS_LABELS = {
 async function loadDashboard() {
   setHeader();
   try {
-    const r = await fetch(`${API_BASE}/aros-bugalter-dashboard?uid=${UID}`);
+    const r = await fetch(`${API_BASE}/aros-bugalter-dashboard?uid=${UID}&_=${Date.now()}`);
     const data = await r.json();
     if (data.error === 'unauthorized') { renderError('🚫 Sizga ruxsat yo\'q', 'Telegram ID buxgalter ro\'yxatida emas.'); return; }
     if (!data.kassalar) { renderError('⚠️ Ma\'lumot yo\'q', 'Backend hali ma\'lumot tayyorlamagan.'); return; }
+    
+    // ⭐ Backward-compat: agar transfers_on_way yo'q bo'lsa
+    if (!data.transfers_on_way) data.transfers_on_way = [];
+    
+    // ⭐ Junatilmagan filiallar count'ni o'zimiz hisoblaymiz (backup)
+    if (data.stats.total_unsent_count === undefined || data.stats.total_unsent_count === null) {
+      data.stats.total_unsent_count = (data.filiallar || []).filter(f => f.unsent_count_days > 0 && f.unsent_total_amount > 0).length;
+    }
+    
+    // ⭐ on_way ham backup
+    if (data.stats.on_way_count === undefined || data.stats.on_way_count === null) {
+      data.stats.on_way_count = data.transfers_on_way.length;
+    }
+    if (data.stats.on_way_total_amount === undefined || data.stats.on_way_total_amount === null) {
+      data.stats.on_way_total_amount = data.transfers_on_way.reduce((s, t) => s + (parseFloat(t.total_amount) || 0), 0);
+    }
+    
     dataCache = data;
     render();
   } catch(e) { console.error(e); renderError('❌ Xato', 'Internet yoki server muammosi.'); }
@@ -490,32 +500,43 @@ function render() {
   const onWayCount = d.stats.on_way_count || 0;
   const onWayAmount = d.stats.on_way_total_amount || 0;
   
-  // Yangi: 3 ta alert kartichka
+  // 3 ta alert kartichka — yangi format
   const alertsHTML = `
-    <div class="alerts" style="grid-template-columns:1fr 1fr 1fr;gap:8px">
-      <div class="alert-card ${overdueCount > 0 ? 'red' : 'green'}" style="padding:12px">
+    <div class="alerts">
+      <div class="alert-card ${overdueCount > 0 ? 'red' : 'green'}">
         <div class="alert-header">
           <div class="alert-dot"></div>
-          <div class="alert-label" style="font-size:10px">${overdueCount > 0 ? 'Yopilmagan' : 'Yopilgan'}</div>
+          <div class="alert-label">Yopilmagan</div>
         </div>
-        <div class="alert-value" style="font-size:22px">${overdueCount}</div>
-        ${overdueCount > 0 ? `<div class="alert-sub-amount" style="font-size:11px">${fmtShort(overdueAmount)}</div>` : '<div class="alert-sub" style="font-size:10px">Filial</div>'}
+        <div class="alert-value-big">${overdueCount}</div>
+        ${overdueCount > 0 
+          ? `<div class="alert-amount-line">${overdueAmount > 0 ? fmtShort(overdueAmount)+' so\\'m' : '—'}</div>
+             <div class="alert-detail">filial · 2+ kun</div>`
+          : '<div class="alert-detail">filial · OK</div>'}
       </div>
-      <div class="alert-card ${onWayCount > 0 ? 'purple' : 'green'}" style="padding:12px">
+      
+      <div class="alert-card ${onWayCount > 0 ? 'purple' : 'green'}">
         <div class="alert-header">
           <div class="alert-dot"></div>
-          <div class="alert-label" style="font-size:10px">Yo'lda</div>
+          <div class="alert-label">Yo'lda</div>
         </div>
-        <div class="alert-value" style="font-size:22px">${onWayCount}</div>
-        ${onWayCount > 0 ? `<div class="alert-sub-amount" style="font-size:11px">${fmtShort(onWayAmount)}</div>` : '<div class="alert-sub" style="font-size:10px">Transfer</div>'}
+        <div class="alert-value-big">${onWayCount}</div>
+        ${onWayCount > 0 
+          ? `<div class="alert-amount-line">${fmtShort(onWayAmount)} so'm</div>
+             <div class="alert-detail">transfer</div>`
+          : '<div class="alert-detail">transfer · yo\\'q</div>'}
       </div>
-      <div class="alert-card ${totalUnsent > 0 ? 'amber' : 'green'}" style="padding:12px">
+      
+      <div class="alert-card ${totalUnsentCount > 0 ? 'amber' : 'green'}">
         <div class="alert-header">
           <div class="alert-dot"></div>
-          <div class="alert-label" style="font-size:10px">Junatilmagan</div>
+          <div class="alert-label">Junatilmagan</div>
         </div>
-        <div class="alert-value" style="font-size:14px;line-height:1.2;margin-top:4px">${fmtShort(totalUnsent)}</div>
-        <div class="alert-sub" style="font-size:10px">${totalUnsentCount} filial</div>
+        <div class="alert-value-big">${totalUnsentCount}</div>
+        ${totalUnsentCount > 0 
+          ? `<div class="alert-amount-line">${fmtShort(totalUnsent)} so'm</div>
+             <div class="alert-detail">filial</div>`
+          : '<div class="alert-detail">filial · OK</div>'}
       </div>
     </div>
   `;
@@ -566,34 +587,42 @@ function renderFiliallarTab(d) {
   const inactive = d.filiallar.filter(f => f.status === 'inactive');
   const withUnsent = d.filiallar.filter(f => f.unsent_count_days > 0 && f.unsent_total_amount > 0);
   
-  const renderTransferCard = t => `
-    <div class="transfer-card">
-      <div class="transfer-row">
+  const renderTransferCard = t => {
+    const sentDate = t.sent_at ? `${fmtDate(t.sent_at)} · ${fmtTime(t.sent_at)}` : '';
+    const days = parseInt(t.days_waiting) || 0;
+    const amount = parseFloat(t.total_amount) || 0;
+    return `
+      <div class="transfer-card">
+        <div class="transfer-header">
+          <div class="transfer-id">#${t.id}</div>
+          ${days >= 1 ? `<div class="days-pill">${days} kun</div>` : ''}
+        </div>
         <div class="transfer-flow">
-          <div class="transfer-from">${t.sender_title}</div>
+          <div class="transfer-from">${t.sender_title || '—'}</div>
           <div class="transfer-arrow">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </div>
-          <div class="transfer-to">${t.receiver_title.replace(' Kassa','')}</div>
+          <div class="transfer-to">${(t.receiver_title || '').replace(' Kassa','')}</div>
         </div>
-        <div>
-          <div class="transfer-amount">${fmtShort(t.total_amount)}</div>
-          <div class="transfer-amount-unit">so'm</div>
+        <div class="transfer-bottom">
+          <div class="transfer-meta">
+            <div class="transfer-meta-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+              ${sentDate}
+            </div>
+            <div class="transfer-meta-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              ${t.items_count || 0} ta dokument
+            </div>
+          </div>
+          <div>
+            <div class="transfer-amount">${amount > 0 ? fmtShort(amount) : '—'}</div>
+            <div class="transfer-amount-unit">so'm</div>
+          </div>
         </div>
       </div>
-      <div class="transfer-meta">
-        <div class="transfer-meta-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-          ${fmtDate(t.sent_at)} ${fmtTime(t.sent_at)}
-        </div>
-        <div class="transfer-meta-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          ${t.items_count} dokument
-        </div>
-        ${t.days_waiting >= 1 ? `<div class="days-pill">${t.days_waiting} kun</div>` : ''}
-      </div>
-    </div>
-  `;
+    `;
+  };
   
   const renderFilialCard = f => {
     const statusLabel = STATUS_LABELS[f.status] || '';
@@ -622,9 +651,9 @@ function renderFiliallarTab(d) {
     <div class="unsent-card-only" data-unsent-id="${f.id}">
       <div class="unsent-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2v6m0 0l-3-3m3 3l3-3"/>
-          <path d="M3 14h4l2 4h6l2-4h4"/>
-          <path d="M3 14v5a2 2 0 002 2h14a2 2 0 002-2v-5"/>
+          <rect x="2" y="6" width="20" height="12" rx="2"/>
+          <circle cx="12" cy="12" r="2"/>
+          <path d="M6 12h.01M18 12h.01"/>
         </svg>
       </div>
       <div class="filial-info">
@@ -632,7 +661,7 @@ function renderFiliallarTab(d) {
         <div class="unsent-label">${f.unsent_count_days} kunlik · jo'natilmagan</div>
       </div>
       <div class="filial-amount">
-        <div class="unsent-amount" style="font-size:14px">${fmtShort(f.unsent_total_amount)}</div>
+        <div class="unsent-amount">${fmtShort(f.unsent_total_amount)}</div>
         <div class="filial-amount-unit">so'm</div>
       </div>
     </div>
@@ -640,7 +669,7 @@ function renderFiliallarTab(d) {
   
   let html = '';
   
-  // ⭐ 1. YO'LDA TRANSFERLAR (eng tepada)
+  // ⭐ 1. YO'LDA TRANSFERLAR (eng tepada — birinchi navb)
   if (transfers.length > 0) {
     html += `<div class="section-title" style="color:var(--purple)">⏳ Yo'lda transferlar <span class="count">${transfers.length}</span></div>`;
     html += '<div class="list">' + transfers.map(renderTransferCard).join('') + '</div>';
@@ -658,7 +687,7 @@ function renderFiliallarTab(d) {
     html += '<div class="list">' + overdue.map(renderFilialCard).join('') + '</div>';
   }
   if (pending.length > 0) {
-    html += `<div class="section-title" style="color:var(--amber)">⏳ Yo\'lda (kassada) <span class="count">${pending.length}</span></div>`;
+    html += `<div class="section-title" style="color:var(--amber)">⏳ Smena ochiq + transfer <span class="count">${pending.length}</span></div>`;
     html += '<div class="list">' + pending.map(renderFilialCard).join('') + '</div>';
   }
   if (openToday.length > 0) {
@@ -771,7 +800,6 @@ function openUnsentModal(filialId) {
 
 function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
 
-// HISTORY
 function renderHistoryTab() {
   const kassalar = dataCache.kassalar || [];
   const todayStr = new Date().toISOString().split('T')[0];
@@ -809,7 +837,7 @@ async function loadHistory() {
   if (!result) return;
   result.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div>';
   try {
-    const r = await fetch(`${API_BASE}/aros-bugalter-history?cachier_id=${historyKassaId}&date=${historyDate}&uid=${UID}`);
+    const r = await fetch(`${API_BASE}/aros-bugalter-history?cachier_id=${historyKassaId}&date=${historyDate}&uid=${UID}&_=${Date.now()}`);
     const data = await r.json();
     if (data.error) { result.innerHTML = '<div class="empty-section">⚠ Xato: ' + data.error + '</div>'; return; }
     historyData = data;
