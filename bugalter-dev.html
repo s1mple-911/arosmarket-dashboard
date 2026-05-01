@@ -592,7 +592,7 @@ function renderFiliallarTab(d) {
     const days = parseInt(t.days_waiting) || 0;
     const amount = parseFloat(t.total_amount) || 0;
     return `
-      <div class="transfer-card">
+      <div class="transfer-card" data-transfer-id="${t.id}" style="cursor:pointer">
         <div class="transfer-header">
           <div class="transfer-id">#${t.id}</div>
           ${days >= 1 ? `<div class="days-pill">${days} kun</div>` : ''}
@@ -714,6 +714,9 @@ function attachListeners() {
   document.querySelectorAll('.unsent-card-only').forEach(card => {
     card.addEventListener('click', () => openUnsentModal(card.dataset.unsentId));
   });
+  document.querySelectorAll('.transfer-card').forEach(card => {
+    card.addEventListener('click', () => openTransferModal(card.dataset.transferId));
+  });
   document.querySelectorAll('.kassa-pill').forEach(p => {
     p.addEventListener('click', () => {
       historyKassaId = parseInt(p.dataset.kassaId);
@@ -799,6 +802,176 @@ function openUnsentModal(filialId) {
 }
 
 function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
+
+async function openTransferModal(transferId) {
+  if (!transferId) return;
+  
+  // Loading state
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-body" style="padding:60px 20px;text-align:center;color:var(--text-secondary)">
+          <div class="skeleton" style="width:80%;height:18px;margin:0 auto 12px"></div>
+          <div class="skeleton" style="width:60%;height:14px;margin:0 auto"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') closeModal(); });
+  
+  try {
+    const r = await fetch(`${API_BASE}/aros-bugalter-transfer?id=${transferId}&uid=${UID}&_=${Date.now()}`);
+    const t = await r.json();
+    
+    if (t.error) {
+      document.getElementById('modalRoot').innerHTML = `
+        <div class="modal-backdrop" id="modalBackdrop">
+          <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-body" style="padding:60px 20px;text-align:center">
+              <div style="font-size:36px;margin-bottom:10px">⚠️</div>
+              <div style="color:var(--text-secondary)">Ma'lumotni olib bo'lmadi</div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') closeModal(); });
+      return;
+    }
+    
+    renderTransferModal(t);
+  } catch(e) {
+    console.error(e);
+    closeModal();
+  }
+}
+
+function renderTransferModal(t) {
+  const totals = t.totals || {};
+  const docs = t.documents || [];
+  
+  const totalsHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px">
+      ${totals.cash > 0 ? `
+        <div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.3px;font-weight:500">Naqd</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px">${fmtShort(totals.cash)}</div>
+        </div>
+      ` : ''}
+      ${totals.click > 0 ? `
+        <div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.3px;font-weight:500">Click</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px">${fmtShort(totals.click)}</div>
+        </div>
+      ` : ''}
+      ${totals.payme > 0 ? `
+        <div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.3px;font-weight:500">Payme</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px">${fmtShort(totals.payme)}</div>
+        </div>
+      ` : ''}
+      ${totals.dollar_usd > 0 ? `
+        <div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.3px;font-weight:500">Dollar</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px">$${fmt(totals.dollar_usd)}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  
+  const docsHTML = docs.map(d => {
+    const stoppedTime = d.stopped_at ? `${fmtDate(d.stopped_at)} · ${fmtTime(d.stopped_at)}` : '—';
+    
+    // Har payment turi
+    const paymentRows = [];
+    if (d.seller_cash > 0) paymentRows.push({ label: 'Naqd', value: fmtShort(d.seller_cash) + " so'm" });
+    if (d.seller_click > 0) paymentRows.push({ label: 'Click', value: fmtShort(d.seller_click) + " so'm" });
+    if (d.seller_payme > 0) paymentRows.push({ label: 'Payme', value: fmtShort(d.seller_payme) + " so'm" });
+    if (d.seller_dollar > 0) paymentRows.push({ label: 'Dollar', value: '$' + fmt(d.seller_dollar) });
+    
+    const paymentsHTML = paymentRows.length > 0 ? `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+        ${paymentRows.map(p => `
+          <div style="background:var(--bg-secondary);padding:4px 8px;border-radius:6px;font-size:11px">
+            <span style="color:var(--text-secondary);font-weight:500">${p.label}:</span>
+            <span style="font-weight:600;margin-left:3px">${p.value}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
+    
+    return `
+      <div class="doc-item" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;align-items:center;gap:12px;width:100%">
+          <div class="doc-day-badge" style="background:var(--purple-bg)">
+            <div class="doc-day-num" style="color:var(--purple-text)">#${d.document_id}</div>
+            <div class="doc-day-label" style="color:var(--purple-text)">DOC</div>
+          </div>
+          <div class="doc-info">
+            <div class="doc-date">Yopilgan: ${stoppedTime}</div>
+            <div class="doc-id">item #${d.item_id}${d.note ? ' · ' + d.note : ''}</div>
+          </div>
+          <div class="doc-amount">
+            <div class="doc-amount-val">${fmtShort(d.plan_to_cachier)}</div>
+            <div class="doc-amount-unit">so'm</div>
+          </div>
+        </div>
+        ${paymentsHTML}
+      </div>
+    `;
+  }).join('');
+  
+  const sentInfo = t.sent_at ? `${fmtDate(t.sent_at)} · ${fmtTime(t.sent_at)}` : '—';
+  
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+              <span style="background:var(--purple);color:white;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600">#${t.id}</span>
+              ${t.days_waiting >= 1 ? `<span class="days-pill">${t.days_waiting} kun</span>` : ''}
+            </div>
+            <div class="modal-title">${t.sender_title}</div>
+            <div class="modal-subtitle">→ ${(t.receiver_title || '').replace(' Kassa','')} kassasiga</div>
+          </div>
+          <button class="modal-close" id="modalClose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div style="background:var(--purple-bg);border-radius:12px;padding:14px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+              <div>
+                <div style="font-size:11px;color:var(--purple-text);font-weight:500;text-transform:uppercase;letter-spacing:0.4px">Jami</div>
+                <div style="font-size:22px;font-weight:700;color:var(--purple-text);letter-spacing:-0.4px;margin-top:2px">${fmtShort(t.total_amount)} <span style="font-size:13px;font-weight:400">so'm</span></div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:11px;color:var(--purple-text);font-weight:500;text-transform:uppercase;letter-spacing:0.4px">Yuborilgan</div>
+                <div style="font-size:13px;font-weight:600;color:var(--purple-text);margin-top:2px">${sentInfo}</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--purple-text);opacity:0.8;padding-top:10px;border-top:0.5px dashed rgba(139,92,246,0.3)">
+              ${t.items_count} ta dokument · Holat: <b>${t.status === 'sent' ? 'Kutilmoqda' : t.status}</b>
+            </div>
+          </div>
+          
+          ${(totals.cash > 0 || totals.click > 0 || totals.payme > 0 || totals.dollar_usd > 0) ? `
+            <div style="font-size:11px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">To'lov turlari bo'yicha</div>
+            ${totalsHTML}
+          ` : ''}
+          
+          <div style="font-size:11px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">Dokumentlar</div>
+          ${docsHTML || '<div class="empty-section">Dokument topilmadi</div>'}
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') closeModal(); });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+}
 
 function renderHistoryTab() {
   const kassalar = dataCache.kassalar || [];
