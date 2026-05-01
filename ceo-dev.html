@@ -26,6 +26,16 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 .hdr-title{font-size:13px;font-weight:800}
 .hdr-sub{font-size:10px;color:var(--text2);margin-top:1px}
 .theme-btn{width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.bug-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#8b5cf6,#6366f1);
+  border:none;display:none;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;color:#fff;
+  box-shadow:0 2px 8px rgba(139,92,246,0.4);
+  transition:transform .15s ease, box-shadow .15s ease;
+  flex-shrink:0;
+}
+.bug-btn:active{transform:scale(0.92);box-shadow:0 1px 4px rgba(139,92,246,0.3)}
 .filter-bar{padding:12px 16px 0;display:flex;gap:8px}
 .filter-bar select{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;appearance:none;-webkit-appearance:none;font-family:'Manrope',sans-serif;font-weight:600}
 .refresh-btn{width:38px;height:38px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
@@ -124,6 +134,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
     <div class="hdr-title" id="hdr-title">CEO Dashboard</div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
   </div>
+  <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
   <div class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</div>
 </div>
 
@@ -223,6 +234,32 @@ var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
 var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247']; // Deadline qo'ya oladigan CEO lar
 var isCeo   = CEO_IDS.includes(String(uid));
+
+// ===================== BUXGALTER SWITCH =====================
+var BUGALTER_IDS = ['1255605633']; // Buxgalter sahifasiga o'ta oladigan ID'lar
+var canSeeBugalter = BUGALTER_IDS.includes(String(uid));
+
+function goBugalter(){
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var bugalterFile = isDev ? 'bugalter-dev.html' : 'bugalter.html';
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var bugalterUrl = basePath + bugalterFile + '?uid=' + uid;
+  if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(bugalterUrl);
+  } else {
+    window.location.href = bugalterUrl;
+  }
+}
+
+// Tugmani ko'rsatish (faqat ruxsat bor bo'lsa)
+(function(){
+  var btn = document.getElementById('bugBtn');
+  if(btn && canSeeBugalter){
+    btn.style.display = 'flex';
+  }
+})();
+
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 var now = new Date(new Date().getTime() + 5*60*60*1000);
 var curOy = now.getUTCMonth() + 1;
