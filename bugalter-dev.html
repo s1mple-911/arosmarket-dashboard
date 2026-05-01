@@ -25,6 +25,7 @@
     --blue:#3b82f6; --blue-bg:#eff6ff; --blue-text:#1e3a8a;
     --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
     --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+    --shadow-lg:0 12px 40px rgba(0,0,0,0.18);
   }
   @media (prefers-color-scheme:dark){
     :root{
@@ -131,6 +132,9 @@
   
   .list{display:flex;flex-direction:column;gap:8px}
   
+  /* Filial wrapper — card + unsent */
+  .filial-wrap{display:flex;flex-direction:column}
+  
   .filial-card{
     background:var(--bg-card);border:0.5px solid var(--border);
     border-radius:14px;padding:12px 14px;
@@ -138,6 +142,7 @@
     cursor:pointer;transition:transform 0.15s ease;
   }
   .filial-card:active{transform:scale(0.98)}
+  .filial-card.has-unsent{border-radius:14px 14px 0 0;border-bottom:none}
   .filial-card.status-overdue{border-color:var(--red);border-width:1px}
   .filial-card.status-pending{border-color:var(--amber)}
   .filial-card.status-closed_done{border-color:var(--green)}
@@ -177,6 +182,36 @@
     border-radius:8px;letter-spacing:0.3px;
   }
   
+  /* Unsent strip */
+  .unsent-strip{
+    background:var(--bg-card);
+    border:0.5px solid var(--border);
+    border-top:0.5px dashed var(--border);
+    border-radius:0 0 14px 14px;
+    padding:10px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .unsent-strip:active{background:var(--bg-secondary)}
+  .filial-card.status-overdue + .unsent-strip{border-color:var(--red);border-top-color:rgba(239,68,68,0.2)}
+  .filial-card.status-pending + .unsent-strip{border-color:var(--amber);border-top-color:rgba(245,158,11,0.2)}
+  
+  .unsent-left{display:flex;align-items:center;gap:8px}
+  .unsent-icon{
+    width:24px;height:24px;border-radius:6px;
+    background:var(--amber-bg);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .unsent-icon svg{width:13px;height:13px;color:var(--amber-text)}
+  .unsent-text{display:flex;flex-direction:column}
+  .unsent-label{font-size:11px;color:var(--text-secondary);font-weight:500}
+  .unsent-amount{font-size:13px;font-weight:600;color:var(--text-primary);letter-spacing:-0.2px;margin-top:1px}
+  .unsent-arrow{color:var(--text-tertiary)}
+  .unsent-arrow svg{width:14px;height:14px}
+  
+  /* Kassa card */
   .kassa-card{
     background:var(--bg-card);border-radius:16px;
     padding:16px;margin-bottom:10px;
@@ -192,6 +227,77 @@
   .kassa-mini-label{font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.3px;font-weight:500}
   .kassa-mini-value{font-size:13px;font-weight:500;letter-spacing:-0.2px}
   
+  /* History */
+  .history-controls{
+    display:flex;flex-direction:column;gap:10px;
+    margin-bottom:14px;
+  }
+  .kassa-selector{
+    display:flex;gap:6px;background:var(--bg-secondary);
+    padding:3px;border-radius:11px;
+  }
+  .kassa-pill{
+    flex:1;padding:10px;border:none;background:transparent;
+    border-radius:8px;font-size:13px;font-weight:500;
+    color:var(--text-secondary);cursor:pointer;
+    font-family:inherit;transition:all 0.2s ease;
+  }
+  .kassa-pill.active{background:var(--bg-card);color:var(--text-primary);box-shadow:0 1px 2px rgba(0,0,0,0.05);font-weight:600}
+  
+  .date-input-wrap{
+    display:flex;align-items:center;gap:8px;
+    background:var(--bg-card);
+    border:0.5px solid var(--border);
+    border-radius:11px;padding:10px 14px;
+  }
+  .date-input-wrap svg{width:16px;height:16px;color:var(--text-secondary)}
+  .date-input{
+    flex:1;border:none;background:transparent;
+    font-size:14px;font-family:inherit;
+    color:var(--text-primary);
+    outline:none;
+  }
+  .date-quick{
+    display:flex;gap:6px;flex-wrap:wrap;
+  }
+  .date-quick-btn{
+    padding:6px 12px;background:var(--bg-secondary);
+    border:none;border-radius:8px;
+    font-size:12px;font-weight:500;
+    color:var(--text-secondary);cursor:pointer;
+    font-family:inherit;
+  }
+  .date-quick-btn.active{background:var(--text-primary);color:var(--bg-card)}
+  
+  .history-summary{
+    background:var(--bg-card);
+    border:0.5px solid var(--border);
+    border-radius:14px;padding:14px;
+    margin-bottom:12px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .history-summary-label{font-size:12px;color:var(--text-secondary);font-weight:500;text-transform:uppercase;letter-spacing:0.3px}
+  .history-summary-value{font-size:18px;font-weight:600;letter-spacing:-0.3px;margin-top:2px}
+  .history-summary-count{font-size:13px;color:var(--text-tertiary);margin-top:2px}
+  
+  .history-item{
+    background:var(--bg-card);
+    border:0.5px solid var(--border);
+    border-radius:12px;padding:12px 14px;
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:8px;
+  }
+  .history-time{
+    width:40px;text-align:center;flex-shrink:0;
+  }
+  .history-time-h{font-size:13px;font-weight:600;color:var(--green)}
+  .history-time-d{font-size:10px;color:var(--text-tertiary);margin-top:1px}
+  .history-info{flex:1;min-width:0}
+  .history-from{font-size:13px;font-weight:600;letter-spacing:-0.1px}
+  .history-meta{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+  .history-amount{font-size:14px;font-weight:600;letter-spacing:-0.2px;color:var(--green)}
+  
+  /* States */
   .state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
   .state-emoji{font-size:48px;margin-bottom:12px;opacity:0.5}
   .state-text{font-size:14px;color:var(--text-secondary);margin-bottom:14px}
@@ -206,6 +312,72 @@
   
   .updated-line{text-align:center;font-size:11px;color:var(--text-tertiary);padding:14px 0 4px}
   .empty-section{text-align:center;padding:30px 20px;color:var(--text-tertiary);font-size:13px}
+  
+  /* Modal */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    z-index:100;display:flex;align-items:flex-end;
+    animation:fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal-sheet{
+    width:100%;background:var(--bg-primary);
+    border-radius:20px 20px 0 0;
+    max-height:85vh;overflow-y:auto;
+    animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal-handle{
+    width:36px;height:5px;background:var(--text-tertiary);
+    border-radius:3px;margin:8px auto 4px;opacity:0.4;
+  }
+  .modal-header{
+    padding:12px 16px 14px;
+    border-bottom:0.5px solid var(--border);
+    display:flex;align-items:flex-start;justify-content:space-between;
+  }
+  .modal-title{font-size:17px;font-weight:600;letter-spacing:-0.3px}
+  .modal-subtitle{font-size:13px;color:var(--text-secondary);margin-top:2px}
+  .modal-close{
+    background:var(--bg-secondary);border:none;
+    width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--text-secondary);
+    flex-shrink:0;
+  }
+  .modal-close svg{width:14px;height:14px}
+  .modal-body{padding:14px 16px}
+  
+  .doc-item{
+    background:var(--bg-card);
+    border:0.5px solid var(--border);
+    border-radius:12px;padding:12px 14px;
+    margin-bottom:8px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .doc-day-badge{
+    flex-shrink:0;width:42px;text-align:center;
+    background:var(--bg-secondary);
+    border-radius:8px;padding:6px 0;
+  }
+  .doc-day-num{font-size:16px;font-weight:700;letter-spacing:-0.3px;line-height:1}
+  .doc-day-label{font-size:9px;color:var(--text-secondary);text-transform:uppercase;margin-top:2px;letter-spacing:0.4px}
+  .doc-info{flex:1;min-width:0}
+  .doc-date{font-size:13px;font-weight:600;letter-spacing:-0.1px}
+  .doc-id{font-size:11px;color:var(--text-tertiary);margin-top:1px}
+  .doc-amount{text-align:right}
+  .doc-amount-val{font-size:14px;font-weight:600;letter-spacing:-0.2px}
+  .doc-amount-unit{font-size:10px;color:var(--text-tertiary);margin-top:1px}
+  
+  .modal-summary{
+    background:var(--amber-bg);border-radius:12px;
+    padding:14px;margin-bottom:14px;
+    display:flex;justify-content:space-between;
+  }
+  .modal-summary-block{display:flex;flex-direction:column;gap:2px}
+  .modal-summary-label{font-size:11px;color:var(--amber-text);font-weight:500;text-transform:uppercase;letter-spacing:0.4px}
+  .modal-summary-value{font-size:18px;font-weight:600;color:var(--amber-text);letter-spacing:-0.3px}
 </style>
 </head>
 <body>
@@ -232,6 +404,8 @@
   </div>
 </div>
 
+<div id="modalRoot"></div>
+
 <script>
 const API_BASE = 'https://n8n.arosmarket.com/webhook';
 const tg = window.Telegram?.WebApp;
@@ -242,6 +416,11 @@ const UID = urlParams.get('uid') || tg?.initDataUnsafe?.user?.id?.toString() || 
 
 let currentTab = 'filiallar';
 let dataCache = null;
+
+// History state
+let historyKassaId = 18;  // default Toshkent
+let historyDate = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })(); // kecha
+let historyData = null;
 
 const fmt = n => {
   const num = Math.round(Number(n) || 0);
@@ -266,6 +445,16 @@ function fmtDate(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+function fmtDateShort(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`;
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
 }
 
 const STATUS_LABELS = {
@@ -328,6 +517,7 @@ function render() {
   
   const overdueCount = d.stats.overdue_count || 0;
   const overdueAmount = d.stats.overdue_total_amount || 0;
+  const totalUnsent = d.stats.total_unsent_amount || 0;
   const pendingCount = d.stats.pending_transfers || 0;
   
   const alertsHTML = `
@@ -342,13 +532,13 @@ function render() {
           ? `<div class="alert-sub-amount">${fmtShort(overdueAmount)} so'm</div>` 
           : '<div class="alert-sub">Filial</div>'}
       </div>
-      <div class="alert-card ${pendingCount > 0 ? 'amber' : 'green'}">
+      <div class="alert-card ${totalUnsent > 0 ? 'amber' : 'green'}">
         <div class="alert-header">
           <div class="alert-dot"></div>
-          <div class="alert-label">${pendingCount > 0 ? 'Yo\'lda' : 'Yo\'lda yo\'q'}</div>
+          <div class="alert-label">${totalUnsent > 0 ? 'Filiallarda' : 'Filiallarda'}</div>
         </div>
-        <div class="alert-value">${pendingCount}</div>
-        <div class="alert-sub">Transfer</div>
+        <div class="alert-value" style="font-size:18px;line-height:1.2;margin-top:4px">${fmtShort(totalUnsent)}<span style="font-size:11px;font-weight:400;margin-left:3px">so'm</span></div>
+        <div class="alert-sub">Jo'natilmagan</div>
       </div>
     </div>
   `;
@@ -381,19 +571,42 @@ function render() {
         statusLine = `${statusLabel} · ${fmtDate(f.current_open_opened_at)}`;
       }
       
-      return `
-        <div class="filial-card status-${f.status}" data-id="${f.id}">
-          <div class="filial-badge">${f.id}</div>
-          <div class="filial-info">
-            <div class="filial-name">${f.title}</div>
-            <div class="filial-status">${statusLine}</div>
-          </div>
-          <div class="filial-amount">
-            <div class="filial-amount-value">${showAmount && amount > 0 ? fmtShort(amount) : '—'}</div>
-            <div class="filial-amount-unit">${showAmount && amount > 0 ? "so'm" : ""}</div>
-          </div>
-        </div>
-      `;
+      const hasUnsent = f.unsent_count_days > 0 && f.unsent_total_amount > 0;
+      
+      let html = `
+        <div class="filial-wrap">
+          <div class="filial-card status-${f.status} ${hasUnsent ? 'has-unsent' : ''}" data-id="${f.id}">
+            <div class="filial-badge">${f.id}</div>
+            <div class="filial-info">
+              <div class="filial-name">${f.title}</div>
+              <div class="filial-status">${statusLine}</div>
+            </div>
+            <div class="filial-amount">
+              <div class="filial-amount-value">${showAmount && amount > 0 ? fmtShort(amount) : '—'}</div>
+              <div class="filial-amount-unit">${showAmount && amount > 0 ? "so'm" : ""}</div>
+            </div>
+          </div>`;
+      
+      if (hasUnsent) {
+        html += `
+          <div class="unsent-strip" data-unsent-id="${f.id}">
+            <div class="unsent-left">
+              <div class="unsent-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="unsent-text">
+                <div class="unsent-label">${f.unsent_count_days} kunlik · jo'natilmagan</div>
+                <div class="unsent-amount">${fmtShort(f.unsent_total_amount)} so'm</div>
+              </div>
+            </div>
+            <div class="unsent-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>`;
+      }
+      
+      html += '</div>';
+      return html;
     };
     
     let html = '';
@@ -417,9 +630,7 @@ function render() {
       html += '<div class="section-title">Faol emas</div>';
       html += '<div class="list">' + inactive.map(renderFilial).join('') + '</div>';
     }
-    if (!html) {
-      html = '<div class="empty-section">Filial topilmadi</div>';
-    }
+    if (!html) html = '<div class="empty-section">Filial topilmadi</div>';
     listHTML = html;
     
   } else if (currentTab === 'kassalar') {
@@ -436,10 +647,7 @@ function render() {
       </div>
     `).join('');
   } else {
-    listHTML = `<div class="state">
-      <div class="state-emoji">📜</div>
-      <div class="state-text"><b>Tarix tab</b><br>Bu yerda transferlar tarixi ko'rinadi<br>(Keyingi qismda qo'shamiz)</div>
-    </div>`;
+    listHTML = renderHistoryTab();
   }
   
   const updatedAt = d.stats.updated_at ? new Date(d.stats.updated_at) : null;
@@ -451,6 +659,14 @@ function render() {
   
   document.getElementById('content').innerHTML = heroHTML + alertsHTML + tabBarHTML + listHTML + updatedHTML;
   
+  attachListeners();
+  
+  if (currentTab === 'tarix') {
+    loadHistory();
+  }
+}
+
+function attachListeners() {
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => {
       currentTab = t.dataset.tab;
@@ -464,11 +680,211 @@ function render() {
     });
   });
   
+  document.querySelectorAll('.unsent-strip').forEach(strip => {
+    strip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openUnsentModal(strip.dataset.unsentId);
+    });
+  });
+  
   document.querySelectorAll('.kassa-card').forEach(card => {
     card.addEventListener('click', () => {
       console.log('Kassa clicked:', card.dataset.kassaId);
     });
   });
+  
+  // History controls
+  document.querySelectorAll('.kassa-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      historyKassaId = parseInt(p.dataset.kassaId);
+      loadHistory();
+    });
+  });
+  
+  const dateInput = document.getElementById('historyDateInput');
+  if (dateInput) {
+    dateInput.addEventListener('change', (e) => {
+      historyDate = e.target.value;
+      loadHistory();
+    });
+  }
+  
+  document.querySelectorAll('.date-quick-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const offset = parseInt(b.dataset.offset);
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      historyDate = d.toISOString().split('T')[0];
+      loadHistory();
+    });
+  });
+}
+
+function openUnsentModal(filialId) {
+  const f = dataCache.filiallar.find(x => x.id == filialId);
+  if (!f || !f.unsent_documents || f.unsent_documents.length === 0) return;
+  
+  const docs = f.unsent_documents;
+  
+  const docsHTML = docs.map(doc => `
+    <div class="doc-item">
+      <div class="doc-day-badge">
+        <div class="doc-day-num">${doc.days_old}</div>
+        <div class="doc-day-label">kun</div>
+      </div>
+      <div class="doc-info">
+        <div class="doc-date">${fmtDate(doc.opened_at)}</div>
+        <div class="doc-id">#${doc.id} · ${fmtTime(doc.opened_at)}</div>
+      </div>
+      <div class="doc-amount">
+        <div class="doc-amount-val">${fmtShort(doc.plan_to_cachier)}</div>
+        <div class="doc-amount-unit">so'm</div>
+      </div>
+    </div>
+  `).join('');
+  
+  const modalHTML = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">${f.title}</div>
+            <div class="modal-subtitle">Jo'natilmagan documentlar</div>
+          </div>
+          <button class="modal-close" id="modalClose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-summary">
+            <div class="modal-summary-block">
+              <div class="modal-summary-label">Kunlar</div>
+              <div class="modal-summary-value">${f.unsent_count_days}</div>
+            </div>
+            <div class="modal-summary-block" style="text-align:right">
+              <div class="modal-summary-label">Jami</div>
+              <div class="modal-summary-value">${fmtShort(f.unsent_total_amount)} so'm</div>
+            </div>
+          </div>
+          ${docsHTML}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('modalRoot').innerHTML = modalHTML;
+  
+  document.getElementById('modalBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'modalBackdrop') closeModal();
+  });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+}
+
+function closeModal() {
+  document.getElementById('modalRoot').innerHTML = '';
+}
+
+// ============================================================
+// HISTORY TAB
+// ============================================================
+function renderHistoryTab() {
+  const kassalar = dataCache.kassalar || [];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const yesterdayStr = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })();
+  const dayBeforeStr = (() => { const d = new Date(); d.setDate(d.getDate() - 2); return d.toISOString().split('T')[0]; })();
+  
+  return `
+    <div class="history-controls">
+      <div class="kassa-selector">
+        ${kassalar.map(k => `
+          <button class="kassa-pill ${k.id === historyKassaId ? 'active' : ''}" data-kassa-id="${k.id}">
+            ${k.title.replace(' Kassa','')}
+          </button>
+        `).join('')}
+      </div>
+      <div class="date-input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <input type="date" class="date-input" id="historyDateInput" value="${historyDate}" max="${todayStr}">
+      </div>
+      <div class="date-quick">
+        <button class="date-quick-btn ${historyDate === todayStr ? 'active' : ''}" data-offset="0">Bugun</button>
+        <button class="date-quick-btn ${historyDate === yesterdayStr ? 'active' : ''}" data-offset="-1">Kecha</button>
+        <button class="date-quick-btn ${historyDate === dayBeforeStr ? 'active' : ''}" data-offset="-2">Indinga</button>
+      </div>
+    </div>
+    <div id="historyResult">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+  `;
+}
+
+async function loadHistory() {
+  const result = document.getElementById('historyResult');
+  if (!result) return;
+  
+  result.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div>';
+  
+  try {
+    const r = await fetch(`${API_BASE}/aros-bugalter-history?cachier_id=${historyKassaId}&date=${historyDate}&uid=${UID}`);
+    const data = await r.json();
+    
+    if (data.error) {
+      result.innerHTML = '<div class="empty-section">⚠ Xato: ' + data.error + '</div>';
+      return;
+    }
+    
+    historyData = data;
+    renderHistoryResult();
+  } catch(e) {
+    console.error(e);
+    result.innerHTML = '<div class="empty-section">❌ Yuklab bo\'lmadi</div>';
+  }
+}
+
+function renderHistoryResult() {
+  const result = document.getElementById('historyResult');
+  if (!result) return;
+  
+  const d = historyData;
+  
+  if (!d.documents || d.documents.length === 0) {
+    result.innerHTML = `
+      <div class="empty-section" style="padding:48px 20px">
+        <div style="font-size:36px;margin-bottom:10px;opacity:0.4">📭</div>
+        <div>Bu kunda hech narsa qabul qilinmagan</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const summaryHTML = `
+    <div class="history-summary">
+      <div>
+        <div class="history-summary-label">Jami qabul qilingan</div>
+        <div class="history-summary-value">${fmtShort(d.total_amount)} so'm</div>
+        <div class="history-summary-count">${d.documents_count} ta document</div>
+      </div>
+    </div>
+  `;
+  
+  const itemsHTML = d.documents.map(doc => `
+    <div class="history-item">
+      <div class="history-time">
+        <div class="history-time-h">${fmtTime(doc.closed_at)}</div>
+        <div class="history-time-d">${fmtDateShort(doc.closed_at)}</div>
+      </div>
+      <div class="history-info">
+        <div class="history-from">${doc.cachier_title}</div>
+        <div class="history-meta">#${doc.id} · ochilgan ${fmtDate(doc.opened_at)}</div>
+      </div>
+      <div class="history-amount">+${fmtShort(doc.seller_total)}</div>
+    </div>
+  `).join('');
+  
+  result.innerHTML = summaryHTML + itemsHTML;
 }
 
 document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
