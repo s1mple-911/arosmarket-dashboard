@@ -686,7 +686,6 @@ function renderFiliallarTab(d) {
     html += `<div class="section-title" style="color:var(--red)">⚠ Yopilmagan <span class="count">${overdue.length}</span></div>`;
     html += '<div class="list">' + overdue.map(renderFilialCard).join('') + '</div>';
   }
-
   if (openToday.length > 0) {
     html += `<div class="section-title">Bugun ochiq <span class="count">${openToday.length}</span></div>`;
     html += '<div class="list">' + openToday.map(renderFilialCard).join('') + '</div>';
