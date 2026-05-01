@@ -23,6 +23,7 @@
     --green:#22c55e; --green-bg:#f0fdf4; --green-text:#14532d;
     --gray:#9ca3af; --gray-bg:#f3f4f6; --gray-text:#374151;
     --blue:#3b82f6; --blue-bg:#eff6ff; --blue-text:#1e3a8a;
+    --purple:#8b5cf6; --purple-bg:#f5f3ff; --purple-text:#5b21b6;
     --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
     --shadow-md:0 4px 12px rgba(0,0,0,0.06);
     --shadow-lg:0 12px 40px rgba(0,0,0,0.18);
@@ -46,14 +47,14 @@
       --gray-text:#d1d5db;
       --blue-bg:rgba(59,130,246,0.15);
       --blue-text:#93c5fd;
+      --purple-bg:rgba(139,92,246,0.15);
+      --purple-text:#c4b5fd;
     }
   }
   html,body{
-    background:var(--bg-primary);
-    color:var(--text-primary);
+    background:var(--bg-primary);color:var(--text-primary);
     font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;
-    -webkit-font-smoothing:antialiased;
-    font-size:15px;line-height:1.4;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.4;overflow-x:hidden;
   }
   body{padding-bottom:env(safe-area-inset-bottom)}
   
@@ -69,8 +70,7 @@
     width:36px;height:36px;border-radius:50%;
     background:var(--bg-secondary);border:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
-    color:var(--text-primary);
-    transition:transform 0.15s ease,opacity 0.15s ease;
+    color:var(--text-primary);transition:transform 0.15s ease,opacity 0.15s ease;
   }
   .icon-btn:active{transform:scale(0.92);opacity:0.8}
   .icon-btn svg{width:18px;height:18px}
@@ -95,25 +95,30 @@
   .alert-card.red{background:var(--red-bg)}
   .alert-card.amber{background:var(--amber-bg)}
   .alert-card.green{background:var(--green-bg)}
+  .alert-card.purple{background:var(--purple-bg)}
   .alert-header{display:flex;align-items:center;gap:6px;margin-bottom:8px}
   .alert-dot{width:8px;height:8px;border-radius:50%}
   .alert-card.red .alert-dot{background:var(--red)}
   .alert-card.amber .alert-dot{background:var(--amber)}
   .alert-card.green .alert-dot{background:var(--green)}
+  .alert-card.purple .alert-dot{background:var(--purple)}
   .alert-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
   .alert-card.red .alert-label{color:var(--red-text)}
   .alert-card.amber .alert-label{color:var(--amber-text)}
   .alert-card.green .alert-label{color:var(--green-text)}
+  .alert-card.purple .alert-label{color:var(--purple-text)}
   .alert-value{font-size:26px;font-weight:600;line-height:1;letter-spacing:-0.5px}
   .alert-value .total{font-size:13px;font-weight:400;color:var(--text-secondary)}
   .alert-card.red .alert-value{color:var(--red-text)}
   .alert-card.amber .alert-value{color:var(--amber-text)}
   .alert-card.green .alert-value{color:var(--green-text)}
+  .alert-card.purple .alert-value{color:var(--purple-text)}
   .alert-sub{font-size:11px;margin-top:6px}
   .alert-sub-amount{font-size:13px;font-weight:600;margin-top:4px}
   .alert-card.red .alert-sub,.alert-card.red .alert-sub-amount{color:var(--red-text)}
   .alert-card.amber .alert-sub,.alert-card.amber .alert-sub-amount{color:var(--amber-text)}
   .alert-card.green .alert-sub,.alert-card.green .alert-sub-amount{color:var(--green-text)}
+  .alert-card.purple .alert-sub,.alert-card.purple .alert-sub-amount{color:var(--purple-text)}
   
   .tabbar{display:flex;gap:4px;background:var(--bg-secondary);border-radius:11px;padding:3px;margin-bottom:14px}
   .tab{
@@ -128,12 +133,60 @@
   .section-title{
     font-size:13px;font-weight:600;color:var(--text-secondary);
     text-transform:uppercase;letter-spacing:0.4px;margin:14px 0 8px 4px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .section-title .count{
+    background:var(--bg-secondary);
+    padding:2px 7px;border-radius:8px;
+    font-size:11px;font-weight:600;
+    color:var(--text-secondary);
   }
   
   .list{display:flex;flex-direction:column;gap:8px}
   
-  .filial-wrap{display:flex;flex-direction:column}
+  /* Transfer card (yo'lda) */
+  .transfer-card{
+    background:var(--bg-card);
+    border:0.5px solid var(--purple);
+    border-radius:14px;padding:12px 14px;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .transfer-row{display:flex;align-items:center;gap:10px}
+  .transfer-flow{
+    display:flex;align-items:center;gap:8px;flex:1;min-width:0;
+  }
+  .transfer-from{
+    font-size:14px;font-weight:600;letter-spacing:-0.2px;
+    flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .transfer-arrow{color:var(--purple);flex-shrink:0;display:flex;align-items:center}
+  .transfer-arrow svg{width:14px;height:14px}
+  .transfer-to{
+    font-size:13px;color:var(--purple-text);font-weight:600;
+    flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .transfer-amount{
+    font-size:16px;font-weight:600;letter-spacing:-0.3px;
+    color:var(--purple-text);text-align:right;flex-shrink:0;
+  }
+  .transfer-amount-unit{font-size:11px;color:var(--text-tertiary);margin-top:1px;font-weight:400}
+  .transfer-meta{
+    display:flex;align-items:center;gap:8px;
+    padding-top:6px;border-top:0.5px dashed var(--border);
+    font-size:11px;color:var(--text-secondary);
+  }
+  .transfer-meta-item{display:flex;align-items:center;gap:3px}
+  .transfer-meta-item svg{width:12px;height:12px}
+  .days-pill{
+    background:var(--purple);color:white;
+    padding:2px 7px;border-radius:7px;
+    font-size:10px;font-weight:700;letter-spacing:0.3px;
+    margin-left:auto;
+  }
   
+  /* Filial card */
   .filial-card{
     background:var(--bg-card);border:0.5px solid var(--border);
     border-radius:14px;padding:12px 14px;
@@ -141,7 +194,6 @@
     cursor:pointer;transition:transform 0.15s ease;
   }
   .filial-card:active{transform:scale(0.98)}
-  .filial-card.has-unsent{border-radius:14px 14px 0 0;border-bottom:none}
   .filial-card.status-overdue{border-color:var(--red);border-width:1px}
   .filial-card.status-pending{border-color:var(--amber)}
   .filial-card.status-closed_done{border-color:var(--green)}
@@ -158,11 +210,7 @@
   .status-inactive .filial-badge{background:var(--gray-bg);color:var(--gray-text)}
   
   .filial-info{flex:1;min-width:0}
-  .filial-name{
-    font-size:14px;font-weight:600;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    letter-spacing:-0.2px;
-  }
+  .filial-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px}
   .filial-status{font-size:11px;font-weight:500;margin-top:2px;display:flex;align-items:center;gap:4px}
   .filial-card.status-overdue .filial-status{color:var(--red)}
   .filial-card.status-pending .filial-status{color:var(--amber)}
@@ -181,34 +229,7 @@
     border-radius:8px;letter-spacing:0.3px;
   }
   
-  /* Unsent strip */
-  .unsent-strip{
-    background:var(--amber-bg);
-    border:0.5px solid var(--amber);
-    border-top:0.5px dashed rgba(245,158,11,0.3);
-    border-radius:0 0 14px 14px;
-    padding:10px 14px;
-    display:flex;align-items:center;justify-content:space-between;
-    cursor:pointer;
-    transition:opacity 0.15s ease;
-  }
-  .unsent-strip:active{opacity:0.7}
-  
-  .unsent-left{display:flex;align-items:center;gap:8px}
-  .unsent-icon{
-    width:26px;height:26px;border-radius:7px;
-    background:var(--amber);
-    display:flex;align-items:center;justify-content:center;
-    flex-shrink:0;color:white;
-  }
-  .unsent-icon svg{width:14px;height:14px}
-  .unsent-text{display:flex;flex-direction:column}
-  .unsent-label{font-size:11px;color:var(--amber-text);font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
-  .unsent-amount{font-size:14px;font-weight:700;color:var(--amber-text);letter-spacing:-0.2px;margin-top:1px}
-  .unsent-arrow{color:var(--amber-text);opacity:0.6}
-  .unsent-arrow svg{width:14px;height:14px}
-  
-  /* Standalone unsent card (filiyal status'siz) */
+  /* Junatilmagan card */
   .unsent-card-only{
     background:var(--amber-bg);
     border:0.5px solid var(--amber);
@@ -217,8 +238,17 @@
     cursor:pointer;transition:opacity 0.15s ease;
   }
   .unsent-card-only:active{opacity:0.7}
+  .unsent-icon{
+    width:36px;height:36px;border-radius:10px;
+    background:var(--amber);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;color:white;
+  }
+  .unsent-icon svg{width:16px;height:16px}
+  .unsent-label{font-size:11px;color:var(--amber-text);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px}
+  .unsent-amount{font-size:14px;font-weight:700;color:var(--amber-text);letter-spacing:-0.2px;margin-top:1px}
   
-  /* Kassa card */
+  /* Kassa */
   .kassa-card{
     background:var(--bg-card);border-radius:16px;
     padding:16px;margin-bottom:10px;
@@ -235,14 +265,8 @@
   .kassa-mini-value{font-size:13px;font-weight:500;letter-spacing:-0.2px}
   
   /* History */
-  .history-controls{
-    display:flex;flex-direction:column;gap:10px;
-    margin-bottom:14px;
-  }
-  .kassa-selector{
-    display:flex;gap:6px;background:var(--bg-secondary);
-    padding:3px;border-radius:11px;
-  }
+  .history-controls{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+  .kassa-selector{display:flex;gap:6px;background:var(--bg-secondary);padding:3px;border-radius:11px}
   .kassa-pill{
     flex:1;padding:10px;border:none;background:transparent;
     border-radius:8px;font-size:13px;font-weight:500;
@@ -253,49 +277,34 @@
   
   .date-input-wrap{
     display:flex;align-items:center;gap:8px;
-    background:var(--bg-card);
-    border:0.5px solid var(--border);
+    background:var(--bg-card);border:0.5px solid var(--border);
     border-radius:11px;padding:10px 14px;
   }
   .date-input-wrap svg{width:16px;height:16px;color:var(--text-secondary)}
-  .date-input{
-    flex:1;border:none;background:transparent;
-    font-size:14px;font-family:inherit;
-    color:var(--text-primary);
-    outline:none;
-  }
-  .date-quick{
-    display:flex;gap:6px;flex-wrap:wrap;
-  }
+  .date-input{flex:1;border:none;background:transparent;font-size:14px;font-family:inherit;color:var(--text-primary);outline:none}
+  .date-quick{display:flex;gap:6px;flex-wrap:wrap}
   .date-quick-btn{
     padding:6px 12px;background:var(--bg-secondary);
     border:none;border-radius:8px;
     font-size:12px;font-weight:500;
-    color:var(--text-secondary);cursor:pointer;
-    font-family:inherit;
+    color:var(--text-secondary);cursor:pointer;font-family:inherit;
   }
   .date-quick-btn.active{background:var(--text-primary);color:var(--bg-card)}
   
   .history-summary{
-    background:var(--bg-card);
-    border:0.5px solid var(--border);
-    border-radius:14px;padding:14px;
-    margin-bottom:12px;
+    background:var(--bg-card);border:0.5px solid var(--border);
+    border-radius:14px;padding:14px;margin-bottom:12px;
   }
   .history-summary-label{font-size:12px;color:var(--text-secondary);font-weight:500;text-transform:uppercase;letter-spacing:0.3px}
   .history-summary-value{font-size:18px;font-weight:600;letter-spacing:-0.3px;margin-top:2px}
   .history-summary-count{font-size:13px;color:var(--text-tertiary);margin-top:2px}
   
   .history-item{
-    background:var(--bg-card);
-    border:0.5px solid var(--border);
+    background:var(--bg-card);border:0.5px solid var(--border);
     border-radius:12px;padding:12px 14px;
-    display:flex;align-items:center;gap:12px;
-    margin-bottom:8px;
+    display:flex;align-items:center;gap:12px;margin-bottom:8px;
   }
-  .history-time{
-    width:46px;text-align:center;flex-shrink:0;
-  }
+  .history-time{width:46px;text-align:center;flex-shrink:0}
   .history-time-h{font-size:13px;font-weight:600;color:var(--green)}
   .history-time-d{font-size:10px;color:var(--text-tertiary);margin-top:1px}
   .history-info{flex:1;min-width:0}
@@ -333,39 +342,25 @@
     padding-bottom:env(safe-area-inset-bottom);
   }
   @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  .modal-handle{
-    width:36px;height:5px;background:var(--text-tertiary);
-    border-radius:3px;margin:8px auto 4px;opacity:0.4;
-  }
-  .modal-header{
-    padding:12px 16px 14px;
-    border-bottom:0.5px solid var(--border);
-    display:flex;align-items:flex-start;justify-content:space-between;
-  }
+  .modal-handle{width:36px;height:5px;background:var(--text-tertiary);border-radius:3px;margin:8px auto 4px;opacity:0.4}
+  .modal-header{padding:12px 16px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between}
   .modal-title{font-size:17px;font-weight:600;letter-spacing:-0.3px}
   .modal-subtitle{font-size:13px;color:var(--text-secondary);margin-top:2px}
   .modal-close{
     background:var(--bg-secondary);border:none;
     width:30px;height:30px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
-    cursor:pointer;color:var(--text-secondary);
-    flex-shrink:0;
+    cursor:pointer;color:var(--text-secondary);flex-shrink:0;
   }
   .modal-close svg{width:14px;height:14px}
   .modal-body{padding:14px 16px}
   
   .doc-item{
-    background:var(--bg-card);
-    border:0.5px solid var(--border);
-    border-radius:12px;padding:12px 14px;
-    margin-bottom:8px;
+    background:var(--bg-card);border:0.5px solid var(--border);
+    border-radius:12px;padding:12px 14px;margin-bottom:8px;
     display:flex;align-items:center;gap:12px;
   }
-  .doc-day-badge{
-    flex-shrink:0;width:46px;text-align:center;
-    background:var(--amber-bg);
-    border-radius:8px;padding:6px 0;
-  }
+  .doc-day-badge{flex-shrink:0;width:46px;text-align:center;background:var(--amber-bg);border-radius:8px;padding:6px 0}
   .doc-day-num{font-size:16px;font-weight:700;letter-spacing:-0.3px;line-height:1;color:var(--amber-text)}
   .doc-day-label{font-size:9px;color:var(--amber-text);text-transform:uppercase;margin-top:2px;letter-spacing:0.4px;font-weight:600;opacity:0.8}
   .doc-info{flex:1;min-width:0}
@@ -376,9 +371,8 @@
   .doc-amount-unit{font-size:10px;color:var(--text-tertiary);margin-top:1px}
   
   .modal-summary{
-    background:var(--amber-bg);border-radius:12px;
-    padding:14px;margin-bottom:14px;
-    display:flex;justify-content:space-between;
+    background:var(--amber-bg);border-radius:12px;padding:14px;
+    margin-bottom:14px;display:flex;justify-content:space-between;
   }
   .modal-summary-block{display:flex;flex-direction:column;gap:2px}
   .modal-summary-label{font-size:11px;color:var(--amber-text);font-weight:500;text-transform:uppercase;letter-spacing:0.4px}
@@ -426,10 +420,7 @@ let historyKassaId = 18;
 let historyDate = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })();
 let historyData = null;
 
-const fmt = n => {
-  const num = Math.round(Number(n) || 0);
-  return num.toLocaleString('en-US').replaceAll(',', ' ');
-};
+const fmt = n => { const num = Math.round(Number(n) || 0); return num.toLocaleString('en-US').replaceAll(',', ' '); };
 const fmtShort = n => {
   const num = Number(n) || 0;
   if (num >= 1e9) return (num/1e9).toFixed(2) + ' mlrd';
@@ -444,29 +435,13 @@ function setHeader() {
   const d = new Date();
   document.getElementById('dateText').textContent = `${d.getDate()} ${months[d.getMonth()]}, ${ru2uz[d.getDay()]}`;
 }
-
-function fmtDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return `${d.getDate()} ${months[d.getMonth()]}`;
-}
-function fmtDateShort(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return `${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`;
-}
-function fmtTime(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-}
+function fmtDate(iso) { if (!iso) return ''; const d = new Date(iso); return `${d.getDate()} ${months[d.getMonth()]}`; }
+function fmtDateShort(iso) { if (!iso) return ''; const d = new Date(iso); return `${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`; }
+function fmtTime(iso) { if (!iso) return ''; const d = new Date(iso); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
 
 const STATUS_LABELS = {
-  overdue: 'Yopilmagan',
-  pending: 'Yo\'lda',
-  open_today: 'Bugun ochiq',
-  closed_done: 'Yopilgan',
-  inactive: 'Faol emas'
+  overdue: 'Yopilmagan', pending: 'Yo\'lda', open_today: 'Bugun ochiq',
+  closed_done: 'Yopilgan', inactive: 'Faol emas'
 };
 
 async function loadDashboard() {
@@ -474,22 +449,11 @@ async function loadDashboard() {
   try {
     const r = await fetch(`${API_BASE}/aros-bugalter-dashboard?uid=${UID}`);
     const data = await r.json();
-    
-    if (data.error === 'unauthorized') {
-      renderError('🚫 Sizga ruxsat yo\'q', 'Telegram ID buxgalter ro\'yxatida emas.');
-      return;
-    }
-    if (!data.kassalar) {
-      renderError('⚠️ Ma\'lumot yo\'q', 'Backend hali ma\'lumot tayyorlamagan.');
-      return;
-    }
-    
+    if (data.error === 'unauthorized') { renderError('🚫 Sizga ruxsat yo\'q', 'Telegram ID buxgalter ro\'yxatida emas.'); return; }
+    if (!data.kassalar) { renderError('⚠️ Ma\'lumot yo\'q', 'Backend hali ma\'lumot tayyorlamagan.'); return; }
     dataCache = data;
     render();
-  } catch(e) {
-    console.error(e);
-    renderError('❌ Xato', 'Internet yoki server muammosi.');
-  }
+  } catch(e) { console.error(e); renderError('❌ Xato', 'Internet yoki server muammosi.'); }
 }
 
 function renderError(title, msg) {
@@ -523,26 +487,35 @@ function render() {
   const overdueAmount = d.stats.overdue_total_amount || 0;
   const totalUnsent = d.stats.total_unsent_amount || 0;
   const totalUnsentCount = d.stats.total_unsent_count || 0;
+  const onWayCount = d.stats.on_way_count || 0;
+  const onWayAmount = d.stats.on_way_total_amount || 0;
   
+  // Yangi: 3 ta alert kartichka
   const alertsHTML = `
-    <div class="alerts">
-      <div class="alert-card ${overdueCount > 0 ? 'red' : 'green'}">
+    <div class="alerts" style="grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="alert-card ${overdueCount > 0 ? 'red' : 'green'}" style="padding:12px">
         <div class="alert-header">
           <div class="alert-dot"></div>
-          <div class="alert-label">${overdueCount > 0 ? 'Yopilmagan' : 'Hammasi joyida'}</div>
+          <div class="alert-label" style="font-size:10px">${overdueCount > 0 ? 'Yopilmagan' : 'Yopilgan'}</div>
         </div>
-        <div class="alert-value">${overdueCount} <span class="total">/ ${d.stats.total_filials}</span></div>
-        ${overdueCount > 0 
-          ? `<div class="alert-sub-amount">${fmtShort(overdueAmount)} so'm</div>` 
-          : '<div class="alert-sub">Filial</div>'}
+        <div class="alert-value" style="font-size:22px">${overdueCount}</div>
+        ${overdueCount > 0 ? `<div class="alert-sub-amount" style="font-size:11px">${fmtShort(overdueAmount)}</div>` : '<div class="alert-sub" style="font-size:10px">Filial</div>'}
       </div>
-      <div class="alert-card ${totalUnsent > 0 ? 'amber' : 'green'}">
+      <div class="alert-card ${onWayCount > 0 ? 'purple' : 'green'}" style="padding:12px">
         <div class="alert-header">
           <div class="alert-dot"></div>
-          <div class="alert-label">${totalUnsent > 0 ? 'Jo\'natilmagan' : 'Hamma jo\'natilgan'}</div>
+          <div class="alert-label" style="font-size:10px">Yo'lda</div>
         </div>
-        <div class="alert-value" style="font-size:18px;line-height:1.2;margin-top:4px">${fmtShort(totalUnsent)}<span style="font-size:11px;font-weight:400;margin-left:3px">so'm</span></div>
-        <div class="alert-sub">${totalUnsentCount} ta filial</div>
+        <div class="alert-value" style="font-size:22px">${onWayCount}</div>
+        ${onWayCount > 0 ? `<div class="alert-sub-amount" style="font-size:11px">${fmtShort(onWayAmount)}</div>` : '<div class="alert-sub" style="font-size:10px">Transfer</div>'}
+      </div>
+      <div class="alert-card ${totalUnsent > 0 ? 'amber' : 'green'}" style="padding:12px">
+        <div class="alert-header">
+          <div class="alert-dot"></div>
+          <div class="alert-label" style="font-size:10px">Junatilmagan</div>
+        </div>
+        <div class="alert-value" style="font-size:14px;line-height:1.2;margin-top:4px">${fmtShort(totalUnsent)}</div>
+        <div class="alert-sub" style="font-size:10px">${totalUnsentCount} filial</div>
       </div>
     </div>
   `;
@@ -576,42 +549,59 @@ function render() {
   }
   
   const updatedAt = d.stats.updated_at ? new Date(d.stats.updated_at) : null;
-  const updatedHTML = updatedAt ? `
-    <div class="updated-line">
-      Yangilandi: ${updatedAt.toLocaleTimeString('uz', {hour:'2-digit',minute:'2-digit'})}
-    </div>
-  ` : '';
+  const updatedHTML = updatedAt ? `<div class="updated-line">Yangilandi: ${updatedAt.toLocaleTimeString('uz', {hour:'2-digit',minute:'2-digit'})}</div>` : '';
   
   document.getElementById('content').innerHTML = heroHTML + alertsHTML + tabBarHTML + listHTML + updatedHTML;
   
   attachListeners();
-  
-  if (currentTab === 'tarix') {
-    loadHistory();
-  }
+  if (currentTab === 'tarix') loadHistory();
 }
 
 function renderFiliallarTab(d) {
+  const transfers = d.transfers_on_way || [];
   const overdue = d.filiallar.filter(f => f.status === 'overdue');
   const pending = d.filiallar.filter(f => f.status === 'pending');
   const openToday = d.filiallar.filter(f => f.status === 'open_today');
   const closedDone = d.filiallar.filter(f => f.status === 'closed_done');
   const inactive = d.filiallar.filter(f => f.status === 'inactive');
-  
-  // Junatilmagan pul bor filiallar (alohida section)
   const withUnsent = d.filiallar.filter(f => f.unsent_count_days > 0 && f.unsent_total_amount > 0);
+  
+  const renderTransferCard = t => `
+    <div class="transfer-card">
+      <div class="transfer-row">
+        <div class="transfer-flow">
+          <div class="transfer-from">${t.sender_title}</div>
+          <div class="transfer-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </div>
+          <div class="transfer-to">${t.receiver_title.replace(' Kassa','')}</div>
+        </div>
+        <div>
+          <div class="transfer-amount">${fmtShort(t.total_amount)}</div>
+          <div class="transfer-amount-unit">so'm</div>
+        </div>
+      </div>
+      <div class="transfer-meta">
+        <div class="transfer-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+          ${fmtDate(t.sent_at)} ${fmtTime(t.sent_at)}
+        </div>
+        <div class="transfer-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ${t.items_count} dokument
+        </div>
+        ${t.days_waiting >= 1 ? `<div class="days-pill">${t.days_waiting} kun</div>` : ''}
+      </div>
+    </div>
+  `;
   
   const renderFilialCard = f => {
     const statusLabel = STATUS_LABELS[f.status] || '';
     const showAmount = f.status === 'overdue' || f.status === 'pending' || f.status === 'open_today';
     const amount = f.current_open_amount || 0;
-    
     let statusLine = statusLabel;
-    if (f.status === 'overdue') {
-      statusLine = `${statusLabel} <span class="days-badge">${f.current_open_days} kun</span>`;
-    } else if (f.status === 'open_today' && f.current_open_opened_at) {
-      statusLine = `${statusLabel} · ${fmtDate(f.current_open_opened_at)}`;
-    }
+    if (f.status === 'overdue') statusLine = `${statusLabel} <span class="days-badge">${f.current_open_days} kun</span>`;
+    else if (f.status === 'open_today' && f.current_open_opened_at) statusLine = `${statusLabel} · ${fmtDate(f.current_open_opened_at)}`;
     
     return `
       <div class="filial-card status-${f.status}" data-id="${f.id}">
@@ -628,7 +618,6 @@ function renderFiliallarTab(d) {
     `;
   };
   
-  // Junatilmagan kartichka (alohida)
   const renderUnsentCard = f => `
     <div class="unsent-card-only" data-unsent-id="${f.id}">
       <div class="unsent-icon">
@@ -640,7 +629,7 @@ function renderFiliallarTab(d) {
       </div>
       <div class="filial-info">
         <div class="filial-name">${f.title}</div>
-        <div class="unsent-label" style="margin-top:2px">${f.unsent_count_days} kunlik · jo'natilmagan</div>
+        <div class="unsent-label">${f.unsent_count_days} kunlik · jo'natilmagan</div>
       </div>
       <div class="filial-amount">
         <div class="unsent-amount" style="font-size:14px">${fmtShort(f.unsent_total_amount)}</div>
@@ -651,30 +640,37 @@ function renderFiliallarTab(d) {
   
   let html = '';
   
-  // ⭐ Junatilmagan pul - eng yuqorida alohida section
+  // ⭐ 1. YO'LDA TRANSFERLAR (eng tepada)
+  if (transfers.length > 0) {
+    html += `<div class="section-title" style="color:var(--purple)">⏳ Yo'lda transferlar <span class="count">${transfers.length}</span></div>`;
+    html += '<div class="list">' + transfers.map(renderTransferCard).join('') + '</div>';
+  }
+  
+  // 2. JUNATILMAGAN
   if (withUnsent.length > 0) {
-    html += '<div class="section-title" style="color:var(--amber)">💰 Filialda turgan pul (' + withUnsent.length + ')</div>';
+    html += `<div class="section-title" style="color:var(--amber)">💰 Filialda turgan pul <span class="count">${withUnsent.length}</span></div>`;
     html += '<div class="list">' + withUnsent.map(renderUnsentCard).join('') + '</div>';
   }
   
+  // 3. YOPILMAGAN (2+ kun)
   if (overdue.length > 0) {
-    html += '<div class="section-title" style="color:var(--red)">⚠ Yopilmagan (' + overdue.length + ')</div>';
+    html += `<div class="section-title" style="color:var(--red)">⚠ Yopilmagan <span class="count">${overdue.length}</span></div>`;
     html += '<div class="list">' + overdue.map(renderFilialCard).join('') + '</div>';
   }
   if (pending.length > 0) {
-    html += '<div class="section-title" style="color:var(--amber)">⏳ Yo\'lda (' + pending.length + ')</div>';
+    html += `<div class="section-title" style="color:var(--amber)">⏳ Yo\'lda (kassada) <span class="count">${pending.length}</span></div>`;
     html += '<div class="list">' + pending.map(renderFilialCard).join('') + '</div>';
   }
   if (openToday.length > 0) {
-    html += '<div class="section-title">Bugun ochiq (' + openToday.length + ')</div>';
+    html += `<div class="section-title">Bugun ochiq <span class="count">${openToday.length}</span></div>`;
     html += '<div class="list">' + openToday.map(renderFilialCard).join('') + '</div>';
   }
   if (closedDone.length > 0) {
-    html += '<div class="section-title">✓ Yopilgan</div>';
+    html += `<div class="section-title">✓ Yopilgan <span class="count">${closedDone.length}</span></div>`;
     html += '<div class="list">' + closedDone.map(renderFilialCard).join('') + '</div>';
   }
   if (inactive.length > 0) {
-    html += '<div class="section-title">Faol emas</div>';
+    html += `<div class="section-title">Faol emas <span class="count">${inactive.length}</span></div>`;
     html += '<div class="list">' + inactive.map(renderFilialCard).join('') + '</div>';
   }
   if (!html) html = '<div class="empty-section">Filial topilmadi</div>';
@@ -684,46 +680,23 @@ function renderFiliallarTab(d) {
 
 function attachListeners() {
   document.querySelectorAll('.tab').forEach(t => {
-    t.addEventListener('click', () => {
-      currentTab = t.dataset.tab;
-      render();
-    });
+    t.addEventListener('click', () => { currentTab = t.dataset.tab; render(); });
   });
-  
-  document.querySelectorAll('.filial-card').forEach(card => {
-    card.addEventListener('click', () => {
-      console.log('Filial clicked:', card.dataset.id);
-    });
-  });
-  
   document.querySelectorAll('.unsent-card-only').forEach(card => {
-    card.addEventListener('click', () => {
-      openUnsentModal(card.dataset.unsentId);
-    });
+    card.addEventListener('click', () => openUnsentModal(card.dataset.unsentId));
   });
-  
-  document.querySelectorAll('.kassa-card').forEach(card => {
-    card.addEventListener('click', () => {
-      console.log('Kassa clicked:', card.dataset.kassaId);
-    });
-  });
-  
-  // History controls
   document.querySelectorAll('.kassa-pill').forEach(p => {
     p.addEventListener('click', () => {
       historyKassaId = parseInt(p.dataset.kassaId);
-      // ⭐ FIX: Active class ni qo'lda yangilash (rerender o'rniga)
       document.querySelectorAll('.kassa-pill').forEach(x => x.classList.remove('active'));
       p.classList.add('active');
       loadHistory();
     });
   });
-  
   const dateInput = document.getElementById('historyDateInput');
   if (dateInput) {
     dateInput.addEventListener('change', (e) => {
       historyDate = e.target.value;
-      // Quick btns'ni yangilash
       document.querySelectorAll('.date-quick-btn').forEach(b => b.classList.remove('active'));
       const todayStr = new Date().toISOString().split('T')[0];
       const yesterdayStr = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })();
@@ -734,17 +707,13 @@ function attachListeners() {
       loadHistory();
     });
   }
-  
   document.querySelectorAll('.date-quick-btn').forEach(b => {
     b.addEventListener('click', () => {
       const offset = parseInt(b.dataset.offset);
-      const d = new Date();
-      d.setDate(d.getDate() + offset);
+      const d = new Date(); d.setDate(d.getDate() + offset);
       historyDate = d.toISOString().split('T')[0];
-      // Active class
       document.querySelectorAll('.date-quick-btn').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
-      // Date input ham yangilansin
       const inp = document.getElementById('historyDateInput');
       if (inp) inp.value = historyDate;
       loadHistory();
@@ -755,9 +724,7 @@ function attachListeners() {
 function openUnsentModal(filialId) {
   const f = dataCache.filiallar.find(x => x.id == filialId);
   if (!f || !f.unsent_documents || f.unsent_documents.length === 0) return;
-  
   const docs = f.unsent_documents;
-  
   const docsHTML = docs.map(doc => `
     <div class="doc-item">
       <div class="doc-day-badge">
@@ -775,7 +742,7 @@ function openUnsentModal(filialId) {
     </div>
   `).join('');
   
-  const modalHTML = `
+  document.getElementById('modalRoot').innerHTML = `
     <div class="modal-backdrop" id="modalBackdrop">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
@@ -790,36 +757,21 @@ function openUnsentModal(filialId) {
         </div>
         <div class="modal-body">
           <div class="modal-summary">
-            <div class="modal-summary-block">
-              <div class="modal-summary-label">Kunlar</div>
-              <div class="modal-summary-value">${f.unsent_count_days}</div>
-            </div>
-            <div class="modal-summary-block" style="text-align:right">
-              <div class="modal-summary-label">Jami</div>
-              <div class="modal-summary-value">${fmtShort(f.unsent_total_amount)} so'm</div>
-            </div>
+            <div class="modal-summary-block"><div class="modal-summary-label">Kunlar</div><div class="modal-summary-value">${f.unsent_count_days}</div></div>
+            <div class="modal-summary-block" style="text-align:right"><div class="modal-summary-label">Jami</div><div class="modal-summary-value">${fmtShort(f.unsent_total_amount)} so'm</div></div>
           </div>
           ${docsHTML}
         </div>
       </div>
     </div>
   `;
-  
-  document.getElementById('modalRoot').innerHTML = modalHTML;
-  
-  document.getElementById('modalBackdrop').addEventListener('click', (e) => {
-    if (e.target.id === 'modalBackdrop') closeModal();
-  });
+  document.getElementById('modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') closeModal(); });
   document.getElementById('modalClose').addEventListener('click', closeModal);
 }
 
-function closeModal() {
-  document.getElementById('modalRoot').innerHTML = '';
-}
+function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
 
-// ============================================================
-// HISTORY TAB
-// ============================================================
+// HISTORY
 function renderHistoryTab() {
   const kassalar = dataCache.kassalar || [];
   const todayStr = new Date().toISOString().split('T')[0];
@@ -848,7 +800,6 @@ function renderHistoryTab() {
     <div id="historyResult">
       <div class="skeleton-card"></div>
       <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
     </div>
   `;
 }
@@ -856,70 +807,37 @@ function renderHistoryTab() {
 async function loadHistory() {
   const result = document.getElementById('historyResult');
   if (!result) return;
-  
   result.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div>';
-  
   try {
     const r = await fetch(`${API_BASE}/aros-bugalter-history?cachier_id=${historyKassaId}&date=${historyDate}&uid=${UID}`);
     const data = await r.json();
-    
-    if (data.error) {
-      result.innerHTML = '<div class="empty-section">⚠ Xato: ' + data.error + '</div>';
-      return;
-    }
-    
+    if (data.error) { result.innerHTML = '<div class="empty-section">⚠ Xato: ' + data.error + '</div>'; return; }
     historyData = data;
     renderHistoryResult();
-  } catch(e) {
-    console.error(e);
-    result.innerHTML = '<div class="empty-section">❌ Yuklab bo\'lmadi</div>';
-  }
+  } catch(e) { console.error(e); result.innerHTML = '<div class="empty-section">❌ Yuklab bo\'lmadi</div>'; }
 }
 
 function renderHistoryResult() {
   const result = document.getElementById('historyResult');
   if (!result) return;
-  
   const d = historyData;
-  
   if (!d.documents || d.documents.length === 0) {
-    result.innerHTML = `
-      <div class="empty-section" style="padding:48px 20px">
-        <div style="font-size:36px;margin-bottom:10px;opacity:0.4">📭</div>
-        <div>Bu kunda hech narsa qabul qilinmagan</div>
-      </div>
-    `;
+    result.innerHTML = `<div class="empty-section" style="padding:48px 20px"><div style="font-size:36px;margin-bottom:10px;opacity:0.4">📭</div><div>Bu kunda hech narsa qabul qilinmagan</div></div>`;
     return;
   }
-  
-  const summaryHTML = `
-    <div class="history-summary">
-      <div class="history-summary-label">Jami qabul qilingan</div>
-      <div class="history-summary-value">${fmtShort(d.total_amount)} so'm</div>
-      <div class="history-summary-count">${d.documents_count} ta document</div>
-    </div>
-  `;
-  
+  const summaryHTML = `<div class="history-summary"><div class="history-summary-label">Jami qabul qilingan</div><div class="history-summary-value">${fmtShort(d.total_amount)} so'm</div><div class="history-summary-count">${d.documents_count} ta document</div></div>`;
   const itemsHTML = d.documents.map(doc => `
     <div class="history-item">
-      <div class="history-time">
-        <div class="history-time-h">${fmtTime(doc.closed_at)}</div>
-        <div class="history-time-d">${fmtDateShort(doc.closed_at)}</div>
-      </div>
-      <div class="history-info">
-        <div class="history-from">${doc.cachier_title}</div>
-        <div class="history-meta">#${doc.id} · ochilgan ${fmtDate(doc.opened_at)}</div>
-      </div>
+      <div class="history-time"><div class="history-time-h">${fmtTime(doc.closed_at)}</div><div class="history-time-d">${fmtDateShort(doc.closed_at)}</div></div>
+      <div class="history-info"><div class="history-from">${doc.cachier_title}</div><div class="history-meta">#${doc.id} · ochilgan ${fmtDate(doc.opened_at)}</div></div>
       <div class="history-amount">+${fmtShort(doc.seller_total)}</div>
     </div>
   `).join('');
-  
   result.innerHTML = summaryHTML + itemsHTML;
 }
 
 document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
 loadDashboard();
 </script>
-
 </body>
 </html>
