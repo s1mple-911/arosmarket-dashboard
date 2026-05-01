@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Buxgalter — Aros Market</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg-primary:#f5f5f7;
+    --bg-card:#ffffff;
+    --bg-secondary:#f0f0f3;
+    --text-primary:#1d1d1f;
+    --text-secondary:#6e6e73;
+    --text-tertiary:#a1a1a6;
+    --border:rgba(0,0,0,0.06);
+    --hero-bg:linear-gradient(180deg,#1c1c1e 0%,#2c2c2e 100%);
+    --red:#ef4444; --red-bg:#fef2f2; --red-text:#7f1d1d;
+    --amber:#f59e0b; --amber-bg:#fffbeb; --amber-text:#78350f;
+    --green:#22c55e; --green-bg:#f0fdf4; --green-text:#14532d;
+    --gray:#9ca3af; --gray-bg:#f3f4f6; --gray-text:#374151;
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg-primary:#000;
+      --bg-card:#1c1c1e;
+      --bg-secondary:#2c2c2e;
+      --text-primary:#f5f5f7;
+      --text-secondary:#a1a1a6;
+      --text-tertiary:#6e6e73;
+      --border:rgba(255,255,255,0.08);
+    }
+  }
+  html,body{
+    background:var(--bg-primary);
+    color:var(--text-primary);
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    font-size:15px;
+    line-height:1.4;
+    overflow-x:hidden;
+  }
+  body{padding-bottom:env(safe-area-inset-bottom)}
+  
+  /* Header */
+  .header{
+    padding:14px 16px 12px;
+    background:var(--bg-card);
+    border-bottom:0.5px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:10;
+  }
+  .header-info p{font-size:13px;color:var(--text-secondary);font-weight:500}
+  .header-info h1{font-size:22px;font-weight:600;margin-top:1px;letter-spacing:-0.4px}
+  .icon-btn{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--bg-secondary);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text-primary);
+    transition:transform 0.15s ease,opacity 0.15s ease;
+  }
+  .icon-btn:active{transform:scale(0.92);opacity:0.8}
+  .icon-btn svg{width:18px;height:18px}
+  
+  /* Container */
+  .container{padding:14px}
+  
+  /* Hero card */
+  .hero-card{
+    background:var(--hero-bg);
+    border-radius:18px;
+    padding:18px;
+    color:#fff;
+    margin-bottom:12px;
+    box-shadow:var(--shadow-md);
+  }
+  .hero-label{
+    font-size:11px;color:#c5c5d6;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.5px;
+    margin-bottom:6px;
+  }
+  .hero-amount{
+    font-size:28px;font-weight:600;line-height:1.05;
+    letter-spacing:-0.6px;
+  }
+  .hero-amount .unit{font-size:15px;color:#c5c5d6;font-weight:400;margin-left:4px}
+  .hero-divider{
+    margin-top:14px;padding-top:14px;
+    border-top:0.5px solid rgba(255,255,255,0.12);
+    display:flex;gap:10px;
+  }
+  .hero-stat{flex:1}
+  .hero-stat:not(:first-child){
+    border-left:0.5px solid rgba(255,255,255,0.12);
+    padding-left:10px;
+  }
+  .hero-stat-label{
+    font-size:10px;color:#7e7e95;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.4px;
+    margin-bottom:3px;
+  }
+  .hero-stat-value{font-size:14px;font-weight:600;letter-spacing:-0.2px}
+  
+  /* Alert cards */
+  .alerts{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    margin-bottom:14px;
+  }
+  .alert-card{
+    border-radius:14px;padding:14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .alert-card.red{background:var(--red-bg)}
+  .alert-card.amber{background:var(--amber-bg)}
+  .alert-card.green{background:var(--green-bg)}
+  .alert-header{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .alert-dot{width:8px;height:8px;border-radius:50%}
+  .alert-card.red .alert-dot{background:var(--red)}
+  .alert-card.amber .alert-dot{background:var(--amber)}
+  .alert-card.green .alert-dot{background:var(--green)}
+  .alert-label{
+    font-size:11px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.4px;
+  }
+  .alert-card.red .alert-label{color:var(--red-text)}
+  .alert-card.amber .alert-label{color:var(--amber-text)}
+  .alert-card.green .alert-label{color:var(--green-text)}
+  .alert-value{font-size:26px;font-weight:600;line-height:1;letter-spacing:-0.5px}
+  .alert-value .total{font-size:13px;font-weight:400;color:var(--text-secondary)}
+  .alert-card.red .alert-value{color:var(--red-text)}
+  .alert-card.amber .alert-value{color:var(--amber-text)}
+  .alert-card.green .alert-value{color:var(--green-text)}
+  .alert-sub{font-size:11px;margin-top:6px}
+  .alert-card.red .alert-sub{color:var(--red-text)}
+  .alert-card.amber .alert-sub{color:var(--amber-text)}
+  .alert-card.green .alert-sub{color:var(--green-text)}
+  
+  /* Tab bar */
+  .tabbar{
+    display:flex;gap:4px;
+    background:var(--bg-secondary);
+    border-radius:11px;padding:3px;
+    margin-bottom:14px;
+  }
+  .tab{
+    flex:1;padding:8px;
+    border:none;background:transparent;
+    border-radius:8px;
+    font-size:13px;font-weight:500;
+    color:var(--text-secondary);
+    cursor:pointer;
+    transition:all 0.2s ease;
+    font-family:inherit;
+  }
+  .tab.active{
+    background:var(--bg-card);
+    color:var(--text-primary);
+    box-shadow:0 1px 2px rgba(0,0,0,0.05);
+    font-weight:600;
+  }
+  .tab:active:not(.active){opacity:0.6}
+  
+  /* List section */
+  .list{display:flex;flex-direction:column;gap:8px}
+  
+  /* Filial card */
+  .filial-card{
+    background:var(--bg-card);
+    border:0.5px solid var(--border);
+    border-radius:14px;
+    padding:12px 14px;
+    display:flex;align-items:center;gap:12px;
+    cursor:pointer;
+    transition:transform 0.15s ease;
+  }
+  .filial-card:active{transform:scale(0.98)}
+  .filial-card.status-open{border-color:var(--red)}
+  .filial-card.status-pending{border-color:var(--amber)}
+  .filial-card.status-closed_done{border-color:var(--green)}
+  
+  .filial-badge{
+    width:36px;height:36px;border-radius:10px;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:600;
+  }
+  .status-open .filial-badge{background:var(--red-bg);color:var(--red-text)}
+  .status-pending .filial-badge{background:var(--amber-bg);color:var(--amber-text)}
+  .status-closed_done .filial-badge{background:var(--green-bg);color:var(--green-text)}
+  .status-closed .filial-badge{background:var(--gray-bg);color:var(--gray-text)}
+  
+  .filial-info{flex:1;min-width:0}
+  .filial-name{
+    font-size:14px;font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    letter-spacing:-0.2px;
+  }
+  .filial-status{font-size:11px;font-weight:500;margin-top:2px}
+  .filial-card.status-open .filial-status{color:var(--red)}
+  .filial-card.status-pending .filial-status{color:var(--amber)}
+  .filial-card.status-closed_done .filial-status{color:var(--green)}
+  .filial-card.status-closed .filial-status{color:var(--text-tertiary)}
+  
+  .filial-amount{text-align:right}
+  .filial-amount-value{font-size:14px;font-weight:600;letter-spacing:-0.2px}
+  .filial-amount-unit{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+  
+  /* Kassa card */
+  .kassa-card{
+    background:var(--bg-card);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:10px;
+    box-shadow:var(--shadow-sm);
+    border:0.5px solid var(--border);
+    cursor:pointer;
+    transition:transform 0.15s ease;
+  }
+  .kassa-card:active{transform:scale(0.98)}
+  .kassa-name{
+    font-size:14px;font-weight:600;
+    color:var(--text-secondary);
+    margin-bottom:6px;
+    text-transform:uppercase;letter-spacing:0.4px;
+  }
+  .kassa-total{
+    font-size:24px;font-weight:600;
+    letter-spacing:-0.5px;line-height:1.1;
+  }
+  .kassa-total .unit{font-size:14px;font-weight:400;color:var(--text-secondary);margin-left:4px}
+  .kassa-breakdown{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;
+    margin-top:12px;padding-top:12px;
+    border-top:0.5px solid var(--border);
+  }
+  .kassa-mini{display:flex;flex-direction:column;gap:2px}
+  .kassa-mini-label{font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.3px;font-weight:500}
+  .kassa-mini-value{font-size:13px;font-weight:500;letter-spacing:-0.2px}
+  
+  /* Empty / Loading / Error */
+  .state{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:48px 24px;text-align:center;
+  }
+  .state-emoji{font-size:48px;margin-bottom:12px;opacity:0.5}
+  .state-text{font-size:14px;color:var(--text-secondary);margin-bottom:14px}
+  .state-btn{
+    background:var(--text-primary);color:var(--bg-card);
+    border:none;padding:10px 18px;border-radius:10px;
+    font-size:14px;font-weight:600;cursor:pointer;
+    font-family:inherit;
+  }
+  
+  .skeleton{
+    background:linear-gradient(90deg,var(--bg-secondary) 0%,var(--bg-card) 50%,var(--bg-secondary) 100%);
+    background-size:200% 100%;
+    animation:shimmer 1.5s infinite;
+    border-radius:8px;
+  }
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .skeleton-card{height:64px;margin-bottom:8px}
+  
+  .updated-line{
+    text-align:center;font-size:11px;color:var(--text-tertiary);
+    padding:14px 0 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-info">
+    <p id="dateText">Yuklanmoqda...</p>
+    <h1>Buxgalter</h1>
+  </div>
+  <button class="icon-btn" id="refreshBtn" title="Yangilash">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+  </button>
+</div>
+
+<div class="container" id="content">
+  <div class="state">
+    <div class="skeleton" style="width:100%;height:120px;margin-bottom:12px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-bottom:14px">
+      <div class="skeleton" style="height:90px"></div>
+      <div class="skeleton" style="height:90px"></div>
+    </div>
+    <div class="skeleton-card" style="width:100%"></div>
+    <div class="skeleton-card" style="width:100%"></div>
+    <div class="skeleton-card" style="width:100%"></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://n8n.arosmarket.com/webhook';
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+// URL params yoki Telegram
+const urlParams = new URLSearchParams(window.location.search);
+const UID = urlParams.get('uid') || tg?.initDataUnsafe?.user?.id?.toString() || '1255605633';
+
+let currentTab = 'filiallar';
+let dataCache = null;
+
+// Helpers
+const fmt = n => {
+  const num = Math.round(Number(n) || 0);
+  return num.toLocaleString('en-US').replaceAll(',', ' ');
+};
+const fmtShort = n => {
+  const num = Number(n) || 0;
+  if (num >= 1e9) return (num/1e9).toFixed(2) + ' mlrd';
+  if (num >= 1e6) return (num/1e6).toFixed(1) + ' mln';
+  if (num >= 1e3) return (num/1e3).toFixed(0) + ' k';
+  return fmt(num);
+};
+
+const ru2uz = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+const months = ['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentyabr','oktyabr','noyabr','dekabr'];
+function setHeader() {
+  const d = new Date();
+  document.getElementById('dateText').textContent = `${d.getDate()} ${months[d.getMonth()]}, ${ru2uz[d.getDay()]}`;
+}
+
+const STATUS_LABELS = {
+  open: '⚠ Yopilmagan',
+  pending: '⏳ Transfer kutilmoqda',
+  closed_done: '✓ Yopilgan',
+  closed: '— Faol emas'
+};
+
+async function loadDashboard() {
+  setHeader();
+  try {
+    const r = await fetch(`${API_BASE}/aros-bugalter-dashboard?uid=${UID}`);
+    const data = await r.json();
+    
+    if (data.error === 'unauthorized') {
+      renderError('🚫 Sizga ruxsat yo\'q', 'Sizning Telegram ID\'ingiz buxgalter ro\'yxatida emas.');
+      return;
+    }
+    if (!data.kassalar) {
+      renderError('⚠️ Ma\'lumot yo\'q', 'Backend hali ma\'lumot tayyorlamagan.');
+      return;
+    }
+    
+    dataCache = data;
+    render();
+  } catch(e) {
+    console.error(e);
+    renderError('❌ Xato', 'Internet aloqasi yoki server bilan muammo.');
+  }
+}
+
+function renderError(title, msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="state">
+      <div class="state-emoji">${title.split(' ')[0]}</div>
+      <div class="state-text"><b>${title.substring(title.indexOf(' ')+1)}</b><br>${msg}</div>
+      <button class="state-btn" onclick="loadDashboard()">Qayta yuklash</button>
+    </div>`;
+}
+
+function render() {
+  const d = dataCache;
+  
+  const heroHTML = `
+    <div class="hero-card">
+      <div class="hero-label">Jami filiallar va kassalarda</div>
+      <div class="hero-amount">${fmt(d.total_kassa_uzs)}<span class="unit">so'm</span></div>
+      <div class="hero-divider">
+        ${d.kassalar.map(k => `
+          <div class="hero-stat">
+            <div class="hero-stat-label">${k.title.replace(' Kassa','')}</div>
+            <div class="hero-stat-value">${fmtShort(k.total_uzs)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  
+  const alertsHTML = `
+    <div class="alerts">
+      <div class="alert-card red">
+        <div class="alert-header">
+          <div class="alert-dot"></div>
+          <div class="alert-label">Yopilmagan</div>
+        </div>
+        <div class="alert-value">${d.stats.not_closed} <span class="total">/ ${d.stats.total_filials}</span></div>
+        <div class="alert-sub">Filial</div>
+      </div>
+      <div class="alert-card ${d.stats.pending_transfers > 0 ? 'amber' : 'green'}">
+        <div class="alert-header">
+          <div class="alert-dot"></div>
+          <div class="alert-label">${d.stats.pending_transfers > 0 ? 'Tasdiq kutilmoqda' : 'Yo\'lda yo\'q'}</div>
+        </div>
+        <div class="alert-value">${d.stats.pending_transfers}</div>
+        <div class="alert-sub">Transfer</div>
+      </div>
+    </div>
+  `;
+  
+  const tabBarHTML = `
+    <div class="tabbar">
+      <button class="tab ${currentTab==='filiallar'?'active':''}" data-tab="filiallar">Filiallar</button>
+      <button class="tab ${currentTab==='kassalar'?'active':''}" data-tab="kassalar">Kassalar</button>
+      <button class="tab ${currentTab==='tarix'?'active':''}" data-tab="tarix">Tarix</button>
+    </div>
+  `;
+  
+  let listHTML = '';
+  if (currentTab === 'filiallar') {
+    listHTML = '<div class="list">' + d.filiallar.map(f => `
+      <div class="filial-card status-${f.status}" data-id="${f.id}">
+        <div class="filial-badge">${f.id}</div>
+        <div class="filial-info">
+          <div class="filial-name">${f.title}</div>
+          <div class="filial-status">${STATUS_LABELS[f.status] || ''}</div>
+        </div>
+        <div class="filial-amount">
+          <div class="filial-amount-value">${fmtShort(f.last_doc_amount)}</div>
+          <div class="filial-amount-unit">${f.last_doc_amount > 0 ? "so'm" : ""}</div>
+        </div>
+      </div>
+    `).join('') + '</div>';
+  } else if (currentTab === 'kassalar') {
+    listHTML = d.kassalar.map(k => `
+      <div class="kassa-card" data-kassa-id="${k.id}">
+        <div class="kassa-name">${k.title}</div>
+        <div class="kassa-total">${fmt(k.total_uzs)}<span class="unit">so'm</span></div>
+        <div class="kassa-breakdown">
+          <div class="kassa-mini">
+            <div class="kassa-mini-label">Naqd</div>
+            <div class="kassa-mini-value">${fmtShort(k.cash)}</div>
+          </div>
+          <div class="kassa-mini">
+            <div class="kassa-mini-label">Click</div>
+            <div class="kassa-mini-value">${fmtShort(k.click)}</div>
+          </div>
+          <div class="kassa-mini">
+            <div class="kassa-mini-label">Payme</div>
+            <div class="kassa-mini-value">${fmtShort(k.payme)}</div>
+          </div>
+          <div class="kassa-mini">
+            <div class="kassa-mini-label">Dollar</div>
+            <div class="kassa-mini-value">$${fmt(k.dollar_usd)}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    listHTML = `<div class="state">
+      <div class="state-emoji">📜</div>
+      <div class="state-text"><b>Tarix tab</b><br>Bu yerda hamma transferlar tarixini ko'rasiz<br>(Keyingi qismda qo'shamiz)</div>
+    </div>`;
+  }
+  
+  const updatedAt = d.stats.updated_at ? new Date(d.stats.updated_at) : null;
+  const updatedHTML = updatedAt ? `
+    <div class="updated-line">
+      Yangilandi: ${updatedAt.toLocaleTimeString('uz', {hour:'2-digit',minute:'2-digit'})}
+    </div>
+  ` : '';
+  
+  document.getElementById('content').innerHTML = heroHTML + alertsHTML + tabBarHTML + listHTML + updatedHTML;
+  
+  // Tab switcher
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      currentTab = t.dataset.tab;
+      render();
+    });
+  });
+  
+  // Filial card click (keyingi qismda detail page)
+  document.querySelectorAll('.filial-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      console.log('Filial clicked:', id);
+      // window.location.href = `bugalter-filial.html?cachier_id=${id}`;
+    });
+  });
+  
+  // Kassa card click
+  document.querySelectorAll('.kassa-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.kassaId;
+      console.log('Kassa clicked:', id);
+      // window.location.href = `bugalter-kassa.html?cachier_id=${id}`;
+    });
+  });
+}
+
+// Refresh
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  loadDashboard();
+});
+
+// Init
+loadDashboard();
+</script>
+
+</body>
+</html>
