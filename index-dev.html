@@ -188,6 +188,7 @@ var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
 var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions';
 var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
 var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
+var KASSA_API      = 'https://n8n.arosmarket.com/webhook/aros-bugalter-filial-kassa';
 var recordingsCache = {}; // user_id -> recordings list
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 
@@ -475,6 +476,165 @@ function loadAllFiliallar(cb){
 }
 
 // =============================================
+// =============================================
+// KASSA INFO (yopilmagan, junatilmagan, yo'lda)
+// =============================================
+function loadKassaInfo(){
+  if(!wid) return;
+  fetch(KASSA_API+'?wid='+wid+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var d = Array.isArray(data) ? data[0] : data;
+      if(d && !d.error){
+        window._kassaInfo = d;
+        // Agar dashboard render qilingan bo'lsa - placeholder'ga inject qilamiz
+        var ph = document.getElementById('kassa-cards-placeholder');
+        if(ph){ ph.outerHTML = renderKassaCards(d); }
+      }
+    })
+    .catch(function(e){ console.error('Kassa info xato:', e); });
+}
+
+function renderKassaCards(d){
+  if(!d) return '';
+  var html = '';
+  var hasAny = (d.overdue && d.overdue.is_overdue) || (d.unsent && d.unsent.count_days > 0) || (d.on_way && d.on_way.count > 0);
+  
+  if(!hasAny){
+    return '<div style="margin-top:10px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;text-align:center;font-size:11px;color:var(--green);font-weight:600">✓ Kassa hammasi joyida</div>';
+  }
+  
+  html += '<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">';
+  
+  // 1. Yopilmagan smena (overdue) - 2+ kun ochiq
+  if(d.overdue && d.overdue.is_overdue){
+    var ov = d.overdue;
+    html += '<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:12px 14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⚠️</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#ef4444;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Yopilmagan smena</div>';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px">'+ov.days+' kun ochiq qoldi</div>';
+    html += '</div>';
+    html += '<span style="background:#ef4444;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:7px">'+ov.days+' KUN</span>';
+    html += '</div>';
+    if(ov.plan_to_cachier > 0){
+      html += '<div style="margin-top:8px;padding-top:8px;border-top:0.5px dashed rgba(239,68,68,.3);font-size:11px;color:var(--text2);display:flex;justify-content:space-between">';
+      html += '<span>Smena summasi:</span>';
+      html += '<span style="font-weight:700;color:#ef4444">'+fmt(ov.plan_to_cachier)+' so\'m</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  
+  // 2. Filialda turgan pul (junatilmagan)
+  if(d.unsent && d.unsent.count_days > 0 && d.unsent.total_amount > 0){
+    var un = d.unsent;
+    html += '<div onclick="showUnsentModal()" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:12px 14px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">💰</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Filialda turgan pul</div>';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px">'+un.count_days+' kunlik · jo\'natilmagan</div>';
+    html += '</div>';
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:14px;font-weight:800;color:#f59e0b">'+fmt(un.total_amount)+'</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div style="margin-top:8px;padding-top:8px;border-top:0.5px dashed rgba(245,158,11,.3);font-size:10px;color:var(--text3);text-align:center">Bosing — har kunlik tafsilot →</div>';
+    html += '</div>';
+  }
+  
+  // 3. Yo'lda turgan transferlar
+  if(d.on_way && d.on_way.count > 0){
+    var ow = d.on_way;
+    html += '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:12px 14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(139,92,246,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⏳</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Yo\'lda transferlar</div>';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px">'+ow.count+' ta · kassa qabul qilmagan</div>';
+    html += '</div>';
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:14px;font-weight:800;color:#8b5cf6">'+fmt(ow.total_amount)+'</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+    // Transfer ro'yxati
+    if(ow.transfers && ow.transfers.length > 0){
+      html += '<div style="margin-top:8px;padding-top:8px;border-top:0.5px dashed rgba(139,92,246,.3);display:flex;flex-direction:column;gap:4px">';
+      ow.transfers.slice(0, 3).forEach(function(t){
+        var dt = t.sent_at ? new Date(t.sent_at) : null;
+        var dtStr = dt ? (dt.getDate()+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 8px;background:rgba(139,92,246,.05);border-radius:6px">';
+        html += '<span style="color:var(--text2)">#'+t.id+' · → '+(t.receiver_title||'').replace(' Kassa','')+'</span>';
+        html += '<span style="color:var(--text);font-weight:600">'+fmt(t.total_amount)+' · '+dtStr+'</span>';
+        html += '</div>';
+      });
+      if(ow.transfers.length > 3){
+        html += '<div style="text-align:center;font-size:10px;color:var(--text3);padding-top:2px">+'+(ow.transfers.length - 3)+' ta yana</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  
+  html += '</div>';
+  return html;
+}
+
+function showUnsentModal(){
+  if(!window._kassaInfo || !window._kassaInfo.unsent || !window._kassaInfo.unsent.documents) return;
+  var docs = window._kassaInfo.unsent.documents;
+  var un = window._kassaInfo.unsent;
+  var fName = window._kassaInfo.filial ? window._kassaInfo.filial.title : '';
+  
+  var months = ['yan','fev','mar','apr','may','iyu','iyu','avg','sen','okt','noy','dek'];
+  function fmtD(iso){ if(!iso) return ''; var d=new Date(iso); return d.getDate()+' '+months[d.getMonth()]; }
+  function fmtT(iso){ if(!iso) return ''; var d=new Date(iso); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  
+  var docsHTML = docs.map(function(doc){
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px">'+
+      '<div style="width:42px;text-align:center;background:rgba(245,158,11,.15);border-radius:8px;padding:5px 0;flex-shrink:0">'+
+        '<div style="font-size:14px;font-weight:700;color:#f59e0b;line-height:1">'+doc.days_old+'</div>'+
+        '<div style="font-size:9px;color:#f59e0b;font-weight:600;letter-spacing:.4px;margin-top:1px">KUN</div>'+
+      '</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:12px;font-weight:600">'+fmtD(doc.closed_at||doc.opened_at)+'</div>'+
+        '<div style="font-size:10px;color:var(--text3);margin-top:1px">#'+doc.id+' · yopilgan '+fmtT(doc.closed_at)+'</div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div style="font-size:12px;font-weight:700">'+fmt(doc.plan_to_cachier)+'</div>'+
+        '<div style="font-size:9px;color:var(--text3)">so\'m</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  
+  var modal = document.createElement('div');
+  modal.id = 'kassa-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;display:flex;align-items:flex-end;justify-content:center';
+  modal.innerHTML = '<div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-height:80vh;overflow-y:auto;border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)">'+
+    '<div style="padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:var(--bg2)">'+
+      '<div>'+
+        '<div style="font-size:15px;font-weight:700">'+fName+'</div>'+
+        '<div style="font-size:11px;color:var(--text3);margin-top:2px">Filialda turgan pul</div>'+
+      '</div>'+
+      '<button onclick="document.getElementById(\'kassa-modal\').remove()" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>'+
+    '</div>'+
+    '<div style="padding:14px 16px">'+
+      '<div style="background:rgba(245,158,11,.1);border-radius:10px;padding:12px;margin-bottom:12px;display:flex;justify-content:space-between">'+
+        '<div><div style="font-size:10px;color:#f59e0b;font-weight:600;text-transform:uppercase">Kunlar</div><div style="font-size:18px;font-weight:700;color:#f59e0b">'+un.count_days+'</div></div>'+
+        '<div style="text-align:right"><div style="font-size:10px;color:#f59e0b;font-weight:600;text-transform:uppercase">Jami</div><div style="font-size:18px;font-weight:700;color:#f59e0b">'+fmt(un.total_amount)+' so\'m</div></div>'+
+      '</div>'+
+      docsHTML+
+    '</div>'+
+  '</div>';
+  modal.onclick = function(e){ if(e.target.id==='kassa-modal') modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+// =============================================
 // renderDash - eski kod + filial plan bloki qo'shildi
 // =============================================
 function renderDash(){
@@ -738,6 +898,14 @@ function renderDash(){
     var updStr=filialData.updated_at_str||(function(){var d=new Date(filialData.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})();
     html += '<div style="text-align:center;font-size:10px;color:var(--text3);margin-top:8px;padding-bottom:4px">⏰ So\'nggi yangilanish: '+updStr+'</div>';
   }
+
+  // YANGI: Kassa info kartichkalari (yo'lda, junatilmagan, yopilmagan)
+  if(window._kassaInfo){
+    html += renderKassaCards(window._kassaInfo);
+  } else {
+    html += '<div id="kassa-cards-placeholder"></div>';
+  }
+
   document.getElementById('page-dash').innerHTML=html;
   var trBtn=document.getElementById('tr-dash-btn');
   if(trBtn) trBtn.onclick=function(){showTransfersModal(window._dashTransfers,window._dashFilial);};
@@ -924,6 +1092,8 @@ function load(){
       function maybeRender(){ pending--; if(pending===0){ renderDash(); loadTab('otgan'); } }
       loadFilialStats(maybeRender);
       loadAllFiliallar(maybeRender);
+      // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
+      loadKassaInfo();
     })
     .catch(function(e){
       document.getElementById('hn').textContent='Xato';
