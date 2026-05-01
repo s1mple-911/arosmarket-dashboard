@@ -828,6 +828,13 @@ function renderDash(){
   html+='<div class="stat-card"><div class="sc-lbl">Jami qarzdor</div><div class="sc-val" style="color:var(--text)">'+jami+'</div><div class="sc-sub">'+(userData.warehouse_name||'')+'</div></div>';
   html+='</div>';
 
+  // YANGI: Kassa info kartichkalari (Top-5 dan tepada)
+  if(window._kassaInfo){
+    html += renderKassaCards(window._kassaInfo);
+  } else {
+    html += '<div id="kassa-cards-placeholder"></div>';
+  }
+
   // YANGI: Top-5 filiallar leaderboard (prognoz_foiz bo'yicha) — profil bo'yicha filtrlangan
   if(allFiliallar && allFiliallar.length>0){
     // Foydalanuvchining profil'ini aniqlash (filialData dan)
@@ -897,13 +904,6 @@ function renderDash(){
   if(filialData && (filialData.updated_at_str||filialData.updated_at)){
     var updStr=filialData.updated_at_str||(function(){var d=new Date(filialData.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})();
     html += '<div style="text-align:center;font-size:10px;color:var(--text3);margin-top:8px;padding-bottom:4px">⏰ So\'nggi yangilanish: '+updStr+'</div>';
-  }
-
-  // YANGI: Kassa info kartichkalari (yo'lda, junatilmagan, yopilmagan)
-  if(window._kassaInfo){
-    html += renderKassaCards(window._kassaInfo);
-  } else {
-    html += '<div id="kassa-cards-placeholder"></div>';
   }
 
   document.getElementById('page-dash').innerHTML=html;
