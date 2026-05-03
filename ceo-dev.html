@@ -232,11 +232,10 @@ var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
-var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247']; // Deadline qo'ya oladigan CEO lar
+var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
 var isCeo   = CEO_IDS.includes(String(uid));
 
-// ===================== BUXGALTER SWITCH =====================
-var BUGALTER_IDS = ['1255605633']; // Buxgalter sahifasiga o'ta oladigan ID'lar
+var BUGALTER_IDS = ['1255605633','1432724','1373701411'];
 var canSeeBugalter = BUGALTER_IDS.includes(String(uid));
 
 function goBugalter(){
@@ -252,7 +251,6 @@ function goBugalter(){
   }
 }
 
-// Tugmani ko'rsatish (faqat ruxsat bor bo'lsa)
 (function(){
   var btn = document.getElementById('bugBtn');
   if(btn && canSeeBugalter){
@@ -267,11 +265,24 @@ var curYil = now.getUTCFullYear();
 var bugunStr = now.getUTCFullYear() + '-' + String(now.getUTCMonth()+1).padStart(2,'0') + '-' + String(now.getUTCDate()).padStart(2,'0');
 var _ert = new Date(now.getTime()+86400000); var ertagaStr = _ert.getUTCFullYear() + '-' + String(_ert.getUTCMonth()+1).padStart(2,'0') + '-' + String(_ert.getUTCDate()).padStart(2,'0');
 
-// ===================== HELPERS =====================
 function fmt(n){
   return Math.round(Number(n)||0).toLocaleString('uz-UZ');
 }
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
+function fmtShort(n){
+  var v = Number(n)||0;
+  if(v===0) return '0';
+  var abs = Math.abs(v);
+  if(abs>=1000000){
+    var m = v/1000000;
+    return (m>=10 ? Math.round(m) : Math.round(m*10)/10) + 'M';
+  }
+  if(abs>=1000){
+    var k = v/1000;
+    return (k>=10 ? Math.round(k) : Math.round(k*10)/10) + 'K';
+  }
+  return String(Math.round(v));
+}
 function ini(n){if(!n)return '?';return n.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();}
 function fColor(f){return f>=80?'var(--green)':f>=50?'var(--amber)':'var(--red)';}
 function bColor(f){return f>=80?'var(--green)':f>=50?'var(--amber)':'var(--red)';}
@@ -279,14 +290,13 @@ function parseSafe(txt){
   try{var t=txt.trim();if(t[0]==='"')t=JSON.parse(t);var r=JSON.parse(t);return Array.isArray(r)?r[0]:r;}catch(e){return null;}
 }
 
-// ===================== MANAGER + CACHE =====================
 var MANAGER_WAREHOUSES = {
   all:       null,
   giyosbek:  [61,23,15,5,1,37,17,29],
   sherdil:   [71,13,33,25,35,21,27,100,101,102,103,104]
 };
 var curMgr = 'all';
-var curProfil = 'Zapchast'; // default 'Zapchast' | 'all' | 'Zapchast' | 'Aksessuar' | 'Franshiza'
+var curProfil = 'Zapchast';
 var cachedAllData = null;
 var cachedOy = null;
 var cachedYil = null;
@@ -318,13 +328,11 @@ function changeProfil(profil){
 function filterFiliallar(filiallar){
   var wids = MANAGER_WAREHOUSES[curMgr];
   var result = filiallar;
-  // Manager filter
   if(wids){
     result = result.filter(function(f){
       return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
     });
   }
-  // Profil filter
   if(curProfil && curProfil !== 'all'){
     result = result.filter(function(f){
       var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
@@ -350,7 +358,6 @@ function renderFromCache(){
   html+='<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz (oy oxirigacha)</div><div style="font-size:14px;font-weight:800;margin-top:2px"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600">so\'m</span></div></div>';
   html+='<div style="text-align:right"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px">0%</div></div>';
   html+='</div>';
-  // QARZ LIMIT PROGRESS BAR (jami)
   html+='<div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
   html+='<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Umumiy qarz limit</span>';
@@ -376,8 +383,6 @@ function renderFromCache(){
   updateJami(allData);
 }
 
-// ===================== OY SELECT =====================
-// ===================== COUNTDOWN TIMER =====================
 setInterval(function(){
   var bars = document.querySelectorAll('[id^="dl-cnt-"]');
   bars.forEach(function(el){
@@ -415,11 +420,10 @@ function buildOyOptions(){
 function changeOy(val){
   var p=val.split('-');
   curYil=parseInt(p[0]);curOy=parseInt(p[1]);
-  cachedAllData=null; // oy o'zgarganda cache tozalanadi
+  cachedAllData=null;
   load();
 }
 
-// ===================== JAMI UPDATE =====================
 function updateJami(filialData){
   var el=document.getElementById('jami-block');if(!el)return;
   var jPlan=0,jBaj=0,jQarz=0,jTugB=0,jTugS=0,jPrognoz=0;
@@ -447,7 +451,6 @@ function updateJami(filialData){
     pfEl.textContent=jPrognozFoiz+'%';
     pfEl.style.color = jPrognozFoiz>=100?'var(--green)':jPrognozFoiz>=80?'var(--amber)':'var(--red)';
   }
-  // Qarz limit progress
   var qInfo=el.querySelector('#jami-qarz-info');
   var qBar=el.querySelector('#jami-qarz-bar');
   if(qInfo && qBar){
@@ -462,7 +465,6 @@ function updateJami(filialData){
   if(a)a.textContent=fmt(jTugB);if(b)b.textContent=fmt(jTugS);
 }
 
-// ===================== FILIAL CARD =====================
 function renderCard(f,idx){
   var el=document.getElementById('fc-'+idx);if(!el)return;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
@@ -471,7 +473,6 @@ function renderCard(f,idx){
   var _filial = f.filial||'';
   var _oy = f.oy||'';
   el.onclick=(function(w,fn,o,oyR,yilR){return function(e){
-    // Agar kalendar iconga bosilgan bo'lsa, openCalendar chaqiramiz va to'xtaymiz
     var t=e&&e.target;
     while(t&&t!==el){
       if(t.getAttribute&&t.getAttribute('data-cal-icon')==='1'){
@@ -487,7 +488,6 @@ function renderCard(f,idx){
   var profil = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
   var isFr = profil === 'Franshiza';
   var isAks = profil === 'Aksessuar';
-  // Profil bo'yicha border rangi
   if(isFr){
     el.style.borderLeft = '3px solid #a855f7';
   } else if(isAks){
@@ -500,29 +500,39 @@ function renderCard(f,idx){
   if(isFr) profBadge = ' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>';
   else if(isAks) profBadge = ' · <span style="color:#06b6d4;font-weight:700">AKSESSUAR</span>';
 
-  // Qarz limit progress bar HTML (har profil uchun)
+  // Qarz limit — 3 ustunli minimal box (Limit / Berilgan / Muddati o'tgan)
   function buildQarzLimitBar() {
     var qLimit = parseFloat(f.qarz_limit)||0;
     var qFakt = parseFloat(f.qarz_fakt)||0;
-    if(qLimit<=0 && qFakt<=0) return '';
-    var qFoiz = qLimit > 0 ? Math.round(qFakt/qLimit*100) : 0;
-    var qBarW = Math.min(100, qFoiz);
-    var qColor = qFoiz<=80 ? 'var(--green)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
-    var qLabelColor = qFoiz<=80 ? 'var(--text2)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
-    var html = '<div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:10px;border:0.5px solid var(--border)">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
-    html += '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Qarz limit</span>';
-    html += '<span style="font-size:11px;font-weight:700;color:'+qLabelColor+'">'+fmt(qFakt)+' / '+fmt(qLimit)+' \u00b7 '+qFoiz+'%</span>';
+    var qMuddati = parseFloat(f.muddati_utgan||0);
+    var qarzdorSoni = (f.summary && f.summary.jami_mjoz) || (f.allUsers ? f.allUsers.length : 0);
+    if(qLimit<=0 && qFakt<=0 && !qarzdorSoni && !qMuddati) return '';
+    var berilganFoiz = qLimit>0 ? Math.round(qFakt/qLimit*100) : 0;
+    var muddatiFoiz = qFakt>0 ? Math.round(qMuddati/qFakt*100) : 0;
+    var berilganColor = berilganFoiz<=80 ? 'var(--green)' : berilganFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+    var muddatiColor = qMuddati>0 ? 'var(--red)' : 'var(--text2)';
+    var html = '<div style="margin-top:8px;background:var(--bg3);border-radius:12px;border:0.5px solid var(--border);padding:10px 6px">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center">';
+    html += '<div>';
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Qarz limit</div>';
+    html += '<div style="font-size:13px;font-weight:800;color:var(--text2);margin-top:5px">'+fmtShort(qLimit)+'</div>';
+    html += '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+qarzdorSoni+' qarzdor</div>';
     html += '</div>';
-    html += '<div style="background:var(--bg2);border-radius:6px;height:5px;overflow:hidden">';
-    html += '<div style="height:100%;width:'+qBarW+'%;background:'+qColor+';transition:width 1s ease;border-radius:6px"></div>';
+    html += '<div style="border-left:0.5px solid var(--border);border-right:0.5px solid var(--border)">';
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Berilgan qarz</div>';
+    html += '<div style="font-size:13px;font-weight:800;color:'+berilganColor+';margin-top:5px">'+fmtShort(qFakt)+'</div>';
+    html += '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+berilganFoiz+'%</div>';
     html += '</div>';
+    html += '<div>';
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Muddati o\'tgan</div>';
+    html += '<div style="font-size:13px;font-weight:800;color:'+muddatiColor+';margin-top:5px">'+fmtShort(qMuddati)+'</div>';
+    html += '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+muddatiFoiz+'%</div>';
     html += '</div>';
+    html += '</div></div>';
     return html;
   }
 
   if(isAks){
-    // AKSESSUAR — sodda kartochka: faqat plan + bajardi + foiz + qarz limit
     el.innerHTML=
       '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
       '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+' \u00b7 Plan: '+fmt(f.plan)+'</div></div>'+
@@ -541,7 +551,6 @@ function renderCard(f,idx){
         '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
         :foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
       ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
-    // Aksessuar uchun transferlar yo'q
     return;
   }
 
@@ -575,17 +584,14 @@ function renderCard(f,idx){
     '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</span></div></div>'+
     '<div class="fc-m"><div class="fc-m-lbl">Savdo oyna</div><div class="fc-m-val" style="color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div></div>'+
     '<div class="fc-m"><div class="fc-m-lbl">Savdo soni</div><div class="fc-m-val" style="color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>'+
-    '</div>'+    '<div class="fc-qarz"><span class="fc-qarz-lbl">Muddati o\'tgan qarz</span>'+
-    '<span class="fc-qarz-val">'+fmt(f.muddati_utgan||0)+'</span></div>'+
+    '</div>'+
     buildQarzLimitBar()+
     (!isFr && foiz<100&&qolganKun>0&&f.qoldi>0?
       '<div class="fc-prognoz"><span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span><span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>'
       :!isFr && foiz>=100?'<div class="fc-prognoz" style="color:var(--green);justify-content:center;font-weight:700">✅ Plan bajarildi!</div>':'')+
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
-  // Transfers badge - kartochkada (innerHTML ga qo'shamiz)
   var allTrList=f.transfers||[];
   var fWid = String(f.warehouse_id || '');
-  // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
   var trList=allTrList.filter(function(t){
     if(t.status==='created') return String(t.from_warehouse_id||'')===fWid;
     if(t.status==='on_way') return String(t.to_warehouse_id||'')===fWid;
@@ -597,7 +603,7 @@ function renderCard(f,idx){
     var trO=trList.filter(function(t){return t.status==='on_way';}).length;
     window['_tr_'+idx]=trList;
     window['_tf_'+idx]=f.filial||'';
-    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:0 10px 10px;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
       '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
       '<span style="font-size:11px;font-weight:700">'+(trC>0?'<span style="color:#378ADD">'+trC+' ta</span> ':'')+
       (trO>0?'<span style="color:#ff9f0a">'+trO+' yo\'lda</span>':'')+'</span>'+
@@ -612,7 +618,7 @@ function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
     var fd=parseSafe(txt);
     if(fd&&fd.plan!==undefined){
       fd.filial=fd.filial||filialNomi;
-      fd.warehouse_id=String(wid); // warehouse_id ni to'g'ri saqlash
+      fd.warehouse_id=String(wid);
       fd.muddati_utgan=fd.summary?fd.summary.muddati_utgan:0;
       allData[idx]=fd;
     } else {
@@ -639,13 +645,11 @@ function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
   });
 }
 
-// ===================== DETAIL PANEL =====================
 var detFilial=null,detUsers=[],detSummary={},detOrders={},detFilialCache=null;
-var detDeadlines={}; // user_id -> deadline obj
+var detDeadlines={};
 var detOtgan=[],detBugun=[],detErtaga=[];
 
 function openDetail(f){
-  // Hozirgi sahifa nomini olib (ceo.html yoki ceo-dev.html), tegishli index'ga yo'naltirish
   var curPage = window.location.pathname.split('/').pop() || '';
   var isDev = curPage.indexOf('-dev') !== -1;
   var indexFile = isDev ? 'index-dev.html' : 'index.html';
@@ -723,7 +727,6 @@ function saveDlModal(){
     status: 'active',
     ceo_id: String(uid)
   };
-  // URL params sifatida yuborish - CORS preflight yo'q
   var params = new URLSearchParams(body).toString();
   fetch(DEADLINE_SET+'?'+params, { method:'GET' })
     .then(function(r){ return r.text(); })
@@ -785,7 +788,6 @@ function renderDetDash(){
   html+='</div>';
   var allTrAll=detFilialCache?(detFilialCache.transfers||[]):[];
   var detWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : String(f.warehouse_id || '');
-  // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
   var trAll=allTrAll.filter(function(t){
     if(t.status==='created') return String(t.from_warehouse_id||'')===detWid;
     if(t.status==='on_way') return String(t.to_warehouse_id||'')===detWid;
@@ -892,7 +894,6 @@ function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
   html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
   html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Mijozlar</div>';
   html+='<span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
-  // Deadline bor mijozlar birinchi
   list = list.slice().sort(function(a,b){
     var da = detDeadlines[String(a.user_id)] ? 1 : 0;
     var db = detDeadlines[String(b.user_id)] ? 1 : 0;
@@ -905,7 +906,6 @@ function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
     var dl = detDeadlines[String(r.user_id)];
     var hasDl = dl && dl.quyilgan_deadline;
     html+='<div class="client-card" style="'+(hasDl?'border-color:#ff4d6d;border-width:2px':'')+ '">';
-    // Deadline countdown banner
     if(hasDl){
       var dlMs = new Date(dl.quyilgan_deadline).getTime()-new Date().getTime();
       var dlExpired = dlMs < 0;
@@ -992,7 +992,6 @@ function fillDetOrd(el,orders,walletBalance){
   el.innerHTML=html;
 }
 
-// ===================== MAIN LOAD =====================
 function load(){
   if(!uid){document.getElementById('main').innerHTML='<div class="err-box">URL da ?uid= topilmadi</div>';return;}
   document.getElementById('main').innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
@@ -1040,18 +1039,15 @@ function load(){
       var allData=new Array(filiallar.length);
       for(var i=0;i<filiallar.length;i++) html+='<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
       document.getElementById('main').innerHTML=html;
-      // Filiallar bo'lmasa - bo'sh xabar
       if(filiallar.length===0){
         document.getElementById('main').innerHTML+='<div style="padding:30px;text-align:center;color:var(--text3);font-size:14px">Bu filtrda filial topilmadi</div>';
         return;
       }
-      // Render avval: list dagi cache qiymatlardan, keyin har filial uchun yangilash
       for(var i=0;i<filiallar.length;i++){
         allData[i]=filiallar[i];
         renderCard(allData[i],i);
       }
       updateJami(allData);
-      // Cache uchun ham saqlaymiz (allData CEO API'dan keldi - bu cachedAllData ham bo'la oladi)
       cachedAllData=d.filiallar.slice();
       cachedOy=curOy;
       cachedYil=curYil;
@@ -1059,7 +1055,6 @@ function load(){
     .catch(function(e){document.getElementById('main').innerHTML='<div class="err-box">⚠️ '+e.message+'</div>';});
 }
 
-// ===================== THEME =====================
 var isDark=true;
 function toggleTheme(){
   isDark=!isDark;
@@ -1124,7 +1119,6 @@ function showConfirmedModal(){
   document.getElementById('det-ochiq-modal').style.display='flex';
 }
 
-// ===================== CALENDAR =====================
 function openCalendar(wid, filialNomi, oy, yil){
   var modal = document.getElementById('cal-modal');
   var title = document.getElementById('cal-title');
@@ -1150,23 +1144,16 @@ function renderCalendar(d){
   var oy = d.oy, yil = d.yil;
   var oyKunlari = d.oy_kunlari || 30;
   var kunlikPlan = d.kunlik_plan || 0;
-  // Oy boshi qaysi kunga to'g'ri kelishini hisoblaymiz (0=yakshanba, 1=dushanba)
   var firstDay = new Date(yil, oy-1, 1).getDay();
-  // Dushanba 1, Yakshanba 7 qilib qayta tartiblaymiz
   var offset = firstDay === 0 ? 6 : firstDay - 1;
-  // Har kun uchun data map
   var dayMap = {};
   days.forEach(function(day){ dayMap[day.kun] = day; });
-  // Kunlik plan + jami info
   var totalBaj = days.reduce(function(s,x){return s+(x.bajarilgan||0);},0);
-  var totalTush = days.reduce(function(s,x){return s+(x.tushum||0);},0);
-  var totalRet = days.reduce(function(s,x){return s+(x.qaytarilgan||0);},0);
   var greenCount = days.filter(function(x){return x.status==='green';}).length;
   var amberCount = days.filter(function(x){return x.status==='amber';}).length;
   var redCount = days.filter(function(x){return x.status==='red';}).length;
 
   var html = '';
-  // Info panel
   html += '<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:14px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
   html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kunlik plan</div><div style="font-weight:700;color:var(--text)">'+fmt(kunlikPlan)+'</div></div>';
@@ -1177,18 +1164,14 @@ function renderCalendar(d){
   html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--amber)">'+amberCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">O\'RTACHA</div></div>';
   html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--red)">'+redCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">PAST</div></div>';
   html += '</div></div>';
-  // Kalendar grid - hafta nomlari
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
   html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">';
   haftaKunlari.forEach(function(h){
     html += '<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:600;padding:4px 0">'+h+'</div>';
   });
   html += '</div>';
-  // Kalendar grid - kunlar
   html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="cal-grid">';
-  // Boshidagi bo'sh kataklar
   for(var i=0;i<offset;i++){ html += '<div></div>'; }
-  // Kunlar
   for(var k=1;k<=oyKunlari;k++){
     var dayData = dayMap[k];
     if(dayData){
@@ -1201,22 +1184,18 @@ function renderCalendar(d){
       html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px">'+(dayData.foiz||0)+'%</div>';
       html += '</div>';
     } else {
-      // Kelajak kun
       html += '<div style="aspect-ratio:1;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
     }
   }
   html += '</div>';
-  // Legend
   html += '<div style="display:flex;justify-content:center;gap:16px;margin-top:14px;font-size:10px;color:var(--text3)">';
   html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(34,197,94,.4)"></div>100%+</div>';
   html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(251,191,36,.4)"></div>70-99%</div>';
   html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(255,77,109,.4)"></div>&lt;70%</div>';
   html += '</div>';
-  // Kun detail placeholder
   html += '<div id="cal-day-detail" style="margin-top:14px"></div>';
 
   body.innerHTML = html;
-  // Day data ni global saqlaymiz
   window._calDays = dayMap;
   window._calKunlikPlan = kunlikPlan;
 }
@@ -1246,7 +1225,6 @@ function showTransfersModal(transfers, filialNomi){
   var modal=document.getElementById('tr-modal');
   var list=document.getElementById('tr-list');
   var subtitle=document.getElementById('tr-subtitle');
-  // Sort: on_way (kun_otgan desc) oldin, created (kun_otgan desc) keyin
   var sorted=(transfers||[]).slice().sort(function(a,b){
     if(a.status!==b.status){
       if(a.status==='on_way') return -1;
@@ -1270,7 +1248,6 @@ function showTransfersModal(transfers, filialNomi){
     var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
     html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
     html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D">';
-    // Header: ID + kun + status
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
     html+='<div style="display:flex;align-items:center;gap:5px">';
     html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
@@ -1278,13 +1255,11 @@ function showTransfersModal(transfers, filialNomi){
     html+='</div>';
     html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
     html+='</div>';
-    // From → To
     html+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:10px">';
     html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.from_warehouse||'—')+'</span>';
     html+='<span style="color:var(--text3);flex-shrink:0;font-size:9px">→</span>';
     html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.to_warehouse||'—')+'</span>';
     html+='</div>';
-    // Summa + 📞 tugma
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
     html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Summa</span>';
     html+='<div style="display:flex;align-items:center;gap:6px">';
@@ -1292,9 +1267,7 @@ function showTransfersModal(transfers, filialNomi){
     if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:2px 7px;font-size:10px;text-decoration:none;flex-shrink:0">📞</a>';
     html+='</div>';
     html+='</div>';
-    // Comment (agar bor bo'lsa)
     if(t.comment) html+='<div style="margin-bottom:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--text3);font-style:italic">💬 '+t.comment+'</div>';
-    // Sana - eng pastda
     html+='<div style="padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
     html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+sanaLabel+'</span>';
     html+='<span style="font-size:10px;font-weight:600;color:var(--text2)">'+(sana||'—')+'</span>';
