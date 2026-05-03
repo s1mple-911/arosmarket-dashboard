@@ -227,6 +227,20 @@ function fmt(n){
   return Math.round(Number(n)||0).toLocaleString('uz-UZ');
 }
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
+function fmtShort(n){
+  var v = Number(n)||0;
+  if(v===0) return '0';
+  var abs = Math.abs(v);
+  if(abs>=1000000){
+    var m = v/1000000;
+    return (m>=10 ? Math.round(m) : Math.round(m*10)/10) + 'M';
+  }
+  if(abs>=1000){
+    var k = v/1000;
+    return (k>=10 ? Math.round(k) : Math.round(k*10)/10) + 'K';
+  }
+  return String(Math.round(v));
+}
 function ini(name){
   if(!name) return '?';
   return name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
@@ -668,33 +682,41 @@ function renderDash(){
     if(isAks) profBadgeIdx = ' · <span style="color:#06b6d4;font-weight:700;font-size:10px">AKSESSUAR</span>';
     else if(isFr) profBadgeIdx = ' · <span style="color:#a855f7;font-weight:700;font-size:10px">FRANSHIZA</span>';
 
-    // Qarz limit progress bar HTML (jami qarzdorlar bilan)
+    // Qarz limit — 3 ustunli minimal box (Limit / Berilgan / Muddati o'tgan)
     function buildQarzLimitBarIdx() {
       var qLimit = parseFloat(fd.qarz_limit)||0;
       var qFakt = parseFloat(fd.qarz_fakt)||0;
-      // jami qarzdorlar soni (renderDash closure'dan)
+      var qMuddati = parseFloat((summary && summary.muddati_utgan) || 0);
       var qarzdorSoni = jami || 0;
       if(qLimit<=0 && qFakt<=0 && !qarzdorSoni) return '';
-      var qFoiz = qLimit > 0 ? Math.round(qFakt/qLimit*100) : 0;
-      var qBarW = Math.min(100, qFoiz);
-      var qColor = qFoiz<=80 ? 'var(--green)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
-      var qLabelColor = qFoiz<=80 ? 'var(--text2)' : qFoiz<=100 ? 'var(--amber)' : 'var(--red)';
-      var h = '<div style="margin-top:10px;padding:9px 12px;background:var(--bg3);border-radius:10px;border:0.5px solid var(--border)">';
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-      h += '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Qarz limit</span>';
-      h += '<span style="font-size:11px;font-weight:700;color:'+qLabelColor+'">'+fmt(qFakt)+' / '+fmt(qLimit)+' \u00b7 '+qFoiz+'%</span>';
+      // Foizlar
+      var berilganFoiz = qLimit>0 ? Math.round(qFakt/qLimit*100) : 0;
+      var muddatiFoiz = qFakt>0 ? Math.round(qMuddati/qFakt*100) : 0;
+      // Berilgan qarz rangi (limit foizi bo'yicha)
+      var berilganColor = berilganFoiz<=80 ? 'var(--green)' : berilganFoiz<=100 ? 'var(--amber)' : 'var(--red)';
+      // Muddati o'tgan rangi
+      var muddatiColor = qMuddati>0 ? 'var(--red)' : 'var(--text2)';
+      var h = '<div style="margin-top:10px;background:var(--bg3);border-radius:14px;border:0.5px solid var(--border);padding:12px 8px">';
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center">';
+      // 1. Qarz limit
+      h += '<div>';
+      h += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Qarz limit</div>';
+      h += '<div style="font-size:13px;font-weight:700;color:var(--text2);margin-top:6px">'+fmtShort(qLimit)+'</div>';
+      h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+qarzdorSoni+' qarzdor</div>';
       h += '</div>';
-      h += '<div style="background:var(--bg2);border-radius:6px;height:6px;overflow:hidden">';
-      h += '<div style="height:100%;width:'+qBarW+'%;background:'+qColor+';transition:width 1s ease;border-radius:6px"></div>';
+      // 2. Berilgan qarz
+      h += '<div style="border-left:0.5px solid var(--border);border-right:0.5px solid var(--border)">';
+      h += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Berilgan qarz</div>';
+      h += '<div style="font-size:13px;font-weight:700;color:'+berilganColor+';margin-top:6px">'+fmtShort(qFakt)+'</div>';
+      h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+berilganFoiz+'%</div>';
       h += '</div>';
-      // Jami qarzdorlar (ichida)
-      if(qarzdorSoni>0){
-        h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px;padding-top:7px;border-top:0.5px solid var(--border)">';
-        h += '<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Jami qarzdor</span>';
-        h += '<span style="font-size:11px;font-weight:700;color:var(--text2)">'+qarzdorSoni+' ta</span>';
-        h += '</div>';
-      }
+      // 3. Muddati o'tgan
+      h += '<div>';
+      h += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Muddati o\'tgan</div>';
+      h += '<div style="font-size:13px;font-weight:700;color:'+muddatiColor+';margin-top:6px">'+fmtShort(qMuddati)+'</div>';
+      h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+muddatiFoiz+'%</div>';
       h += '</div>';
+      h += '</div></div>';
       return h;
     }
 
@@ -827,9 +849,8 @@ function renderDash(){
     html+='<div class="pc-nums"><span>Bajarildi: <b>'+fmt(yig)+'</b></span><span>Qoldi: <b>'+fmt(qoldi)+'</b></span></div></div>';
   }
 
-  // ESKI: stats-grid (Jami qarzdor olib tashlandi — Qarz limit ichiga ko'chirildi)
-  html+='<div class="stats-grid stats-grid-3">';
-  html+='<div class="stat-card"><div class="sc-lbl">Muddati o\'tgan</div><div class="sc-val" style="color:var(--red)">'+fmt(otS)+'</div><div class="sc-sub">'+otganFinal.length+' ta</div></div>';
+  // Stats-grid (Muddati o'tgan Qarz limit ichiga ko'chirildi, faqat Bugun + Ertaga qoldi)
+  html+='<div class="stats-grid">';
   html+='<div class="stat-card"><div class="sc-lbl">Bugun</div><div class="sc-val" style="color:var(--red)">'+fmt(buS)+'</div><div class="sc-sub">'+bugunFinal.length+' ta</div></div>';
   html+='<div class="stat-card"><div class="sc-lbl">Ertaga</div><div class="sc-val" style="color:var(--amber)">'+fmt(erS)+'</div><div class="sc-sub">'+ertagaFinal.length+' ta</div></div>';
   html+='</div>';
