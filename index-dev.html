@@ -1222,12 +1222,22 @@ function renderOchiq(confirmedOrders){
     var kun = o._kun || 0;
     var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:6px">'+kun+' kun</span>' : '';
     var dtStr = fmtDateTime(o.created_datetime || o.sana);
+    // Transfer badge (boshqa filialdan kelgan order)
+    var isTransfer = o.is_transfer === true;
+    var transferBadge = '';
+    if(isTransfer && o.from_warehouse_name){
+      transferBadge = '<div style="display:flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;color:#8b5cf6;font-weight:600"><span style="font-size:11px">🚚</span><span>'+o.from_warehouse_name+' dan</span></div>';
+    }
+    var cardBorder = isTransfer ? '1px solid rgba(139,92,246,.35)' : '1px solid var(--border)';
+    var cardBg = isTransfer ? 'linear-gradient(90deg,rgba(139,92,246,.04),var(--bg2))' : 'var(--bg2)';
     html+='<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
-    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
+    html+='<div style="background:'+cardBg+';border:'+cardBorder+';border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
     html+='<div class="c-av">'+ini(o.ism)+'</div>';
     html+='<div style="flex:1;min-width:0">';
     html+='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+(o.client_id?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD">ID '+o.client_id+'</span>':'')+kunBadge+'</div>';
-    html+='<div class="c-phone">Order #'+o.order_id+' · '+dtStr+'</div></div>';
+    html+='<div class="c-phone">Order #'+o.order_id+' · '+dtStr+'</div>';
+    html+=transferBadge;
+    html+='</div>';
     html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq</div></div>';
     html+='</div></a>';
