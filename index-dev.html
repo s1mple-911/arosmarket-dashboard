@@ -381,21 +381,6 @@ function buildCard(r,id,color,lazy,orders){
   if(lazy&&!maxKun&&r.orders&&r.orders.length){
     r.orders.forEach(function(o){if((o.kun_otgan||0)>maxKun)maxKun=o.kun_otgan||0;});
   }
-  // DEBUG: kun_otgan tekshirish
-  if(lazy){
-    console.log('[KUN DEBUG]', {
-      ism: r.ism,
-      user_id: r.user_id,
-      max_kun_field: r.max_kun,
-      maxKun_calculated: maxKun,
-      orders_count: r.orders ? r.orders.length : 0,
-      first_order: r.orders && r.orders[0] ? {
-        order_id: r.orders[0].order_id,
-        deadline: r.orders[0].deadline,
-        kun_otgan: r.orders[0].kun_otgan
-      } : null
-    });
-  }
   var kunTag=lazy?(maxKun>0?'<span class="c-b c-b-kun">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" class="c-b c-b-kun"></span>'):'';
   var uidTag='<span class="c-b c-b-id">#'+r.user_id+'</span>';
   // Orders section
@@ -1046,11 +1031,12 @@ function proc(debtor, orders, tab, resMap){
     if(otgOrders.length>0){
       // Orderlar bor - max(orderSum, apiOtgan) - chunki API ko'pincha to'liqroq (interval qarzlarni hisobga oladi)
       rawOtgan = Math.max(orderSum, apiOtgan);
-    } else if(ordList.length===0){
-      // Orderlar umuman yo'q - faqat apiOtgan ishlatamiz (Yunus holati: API qarzlarni boshqa joydan ham oladi)
+    } else if(apiOtgan>0){
+      // BUG FIX: Order list bo'sh yoki kelajak orderlilik bo'lsa-da, apiOtgan>0 bo'lsa
+      // Bu mijozning interval qarzlari yoki cache'dagi muddati o'tgan summasi bor
       rawOtgan = apiOtgan;
     } else {
-      // Orderlar bor, lekin barcha kelajak deadline'li - "O'tgan" emas
+      // Hech narsa yo'q - "O'tgan" emas
       return;
     }
     if(rawOtgan<=0) return;
