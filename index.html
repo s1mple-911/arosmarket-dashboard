@@ -1032,7 +1032,7 @@ function proc(debtor, orders, tab, resMap){
       // Orderlar bor - max(orderSum, apiOtgan) - chunki API ko'pincha to'liqroq (interval qarzlarni hisobga oladi)
       rawOtgan = Math.max(orderSum, apiOtgan);
     } else if(ordList.length===0){
-      // Orderlar umuman yo'q - faqat apiOtgan ishlatamiz (Yunus holati: API qarzlarni boshqa joydan ham oladi)
+      // Orderlar umuman yo'q - faqat apiOtgan ishlatamiz (Yunus holati)
       rawOtgan = apiOtgan;
     } else {
       // Orderlar bor, lekin barcha kelajak deadline'li - "O'tgan" emas
