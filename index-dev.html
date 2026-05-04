@@ -1548,27 +1548,68 @@ function renderRecordings(userId, recs){
   });
 })();
 
+// Wallet tx state — qaysi mijozning modalini ochib turibmiz
+var _wtxState = { userId: null, userName: '', balance: 0, activeTab: 'cur' };
+
 function showWalletTxModal(userId, userName, currentBalance){
   var modal = document.getElementById('wtx-modal');
   var title = document.getElementById('wtx-title');
+  if(!modal) return;
+  _wtxState.userId = userId;
+  _wtxState.userName = userName || 'Foydalanuvchi';
+  _wtxState.balance = currentBalance || 0;
+  _wtxState.activeTab = 'cur';
+  title.textContent = '💰 ' + _wtxState.userName;
+  // Joriy oyni default tab qilib ochamiz
+  loadWalletTxTab('cur');
+  modal.style.display = 'flex';
+}
+
+function loadWalletTxTab(tabKey){
+  // tabKey: 'cur' yoki 'prev'
+  _wtxState.activeTab = tabKey;
+  var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
+  var curOy = nowUZB.getUTCMonth() + 1;
+  var curYil = nowUZB.getUTCFullYear();
+  var oy, yil;
+  if(tabKey === 'prev'){
+    oy = curOy === 1 ? 12 : curOy - 1;
+    yil = curOy === 1 ? curYil - 1 : curYil;
+  } else {
+    oy = curOy; yil = curYil;
+  }
   var subtitle = document.getElementById('wtx-subtitle');
   var body = document.getElementById('wtx-body');
-  if(!modal) return;
-  title.textContent = '💰 ' + (userName || 'Foydalanuvchi');
-  subtitle.textContent = 'Hamyon balansi: ' + fmtFull(currentBalance||0) + ' so\'m';
-  body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
-  modal.style.display = 'flex';
-  fetch(WALLET_TX_API+'?user_id='+userId)
+  if(subtitle) subtitle.textContent = 'Hamyon balansi: ' + fmtFull(_wtxState.balance) + ' so\'m';
+  // Loading
+  body.innerHTML = renderWtxTabs(tabKey, oy, yil) + '<div style="text-align:center;padding:30px 0;color:var(--text3)"><div style="display:inline-block;width:24px;height:24px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:8px;font-size:12px">Yuklanmoqda...</div></div>';
+  // Fetch
+  fetch(WALLET_TX_API+'?user_id='+_wtxState.userId+'&oy='+oy+'&yil='+yil)
     .then(function(r){return r.text();})
     .then(function(txt){
       var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
-      if(!d){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Ma\'lumot yuklanmadi</div>'; return; }
-      renderWalletTx(d);
+      if(!d){ body.innerHTML = renderWtxTabs(tabKey, oy, yil) + '<div style="text-align:center;padding:30px;color:var(--red)">Ma\'lumot yuklanmadi</div>'; return; }
+      renderWalletTx(d, tabKey, oy, yil);
     })
-    .catch(function(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
+    .catch(function(e){ body.innerHTML = renderWtxTabs(tabKey, oy, yil) + '<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
 }
 
-function renderWalletTx(d){
+function renderWtxTabs(activeTab, curOy, curYil){
+  // Tab tugmalari: hozirgi oy va o'tgan oy
+  var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
+  var cOy = nowUZB.getUTCMonth() + 1;
+  var pOy = cOy === 1 ? 12 : cOy - 1;
+  var curLabel = OY[cOy-1];
+  var prevLabel = OY[pOy-1];
+  var html = '<div style="display:flex;gap:6px;margin-bottom:14px;background:var(--bg3);border-radius:10px;padding:3px">';
+  var isCur = activeTab === 'cur';
+  html += '<div onclick="loadWalletTxTab(\'cur\')" style="flex:1;text-align:center;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:'+(isCur?'var(--bg2)':'transparent')+';color:'+(isCur?'var(--text)':'var(--text3)')+';transition:all .15s">'+curLabel+'</div>';
+  html += '<div onclick="loadWalletTxTab(\'prev\')" style="flex:1;text-align:center;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;background:'+(!isCur?'var(--bg2)':'transparent')+';color:'+(!isCur?'var(--text)':'var(--text3)')+';transition:all .15s">'+prevLabel+'</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderWalletTx(d, activeTab, oy, yil){
   var body = document.getElementById('wtx-body');
   var transactions = d.transactions || [];
   var totalIn = parseFloat(d.total_in) || 0;
@@ -1587,15 +1628,16 @@ function renderWalletTx(d){
     if(parts.length===3) return parts[2]+'.'+parts[1]+'.'+parts[0]+(timePart?' '+timePart:'');
     return s;
   }
-  var html = '';
+  // Tabs har doim yuqorida
+  var html = renderWtxTabs(activeTab, oy, yil);
   // Summary
   html += '<div style="display:flex;gap:8px;margin-bottom:14px">';
   html += '<div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:10px 12px">';
-  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kirim (oyda)</div>';
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kirim</div>';
   html += '<div style="font-size:14px;font-weight:800;color:var(--green)">+'+fmtFull(totalIn)+'</div>';
   html += '</div>';
   html += '<div style="flex:1;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);border-radius:10px;padding:10px 12px">';
-  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Chiqim (oyda)</div>';
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Chiqim</div>';
   html += '<div style="font-size:14px;font-weight:800;color:var(--red)">-'+fmtFull(totalOut)+'</div>';
   html += '</div></div>';
   if(!transactions.length){
