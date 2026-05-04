@@ -381,6 +381,21 @@ function buildCard(r,id,color,lazy,orders){
   if(lazy&&!maxKun&&r.orders&&r.orders.length){
     r.orders.forEach(function(o){if((o.kun_otgan||0)>maxKun)maxKun=o.kun_otgan||0;});
   }
+  // DEBUG: kun_otgan tekshirish
+  if(lazy){
+    console.log('[KUN DEBUG]', {
+      ism: r.ism,
+      user_id: r.user_id,
+      max_kun_field: r.max_kun,
+      maxKun_calculated: maxKun,
+      orders_count: r.orders ? r.orders.length : 0,
+      first_order: r.orders && r.orders[0] ? {
+        order_id: r.orders[0].order_id,
+        deadline: r.orders[0].deadline,
+        kun_otgan: r.orders[0].kun_otgan
+      } : null
+    });
+  }
   var kunTag=lazy?(maxKun>0?'<span class="c-b c-b-kun">'+maxKun+' kun</span>':'<span id="kun-'+r.user_id+'" class="c-b c-b-kun"></span>'):'';
   var uidTag='<span class="c-b c-b-id">#'+r.user_id+'</span>';
   // Orders section
