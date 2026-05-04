@@ -1031,12 +1031,11 @@ function proc(debtor, orders, tab, resMap){
     if(otgOrders.length>0){
       // Orderlar bor - max(orderSum, apiOtgan) - chunki API ko'pincha to'liqroq (interval qarzlarni hisobga oladi)
       rawOtgan = Math.max(orderSum, apiOtgan);
-    } else if(apiOtgan>0){
-      // BUG FIX: Order list bo'sh yoki kelajak orderlilik bo'lsa-da, apiOtgan>0 bo'lsa
-      // Bu mijozning interval qarzlari yoki cache'dagi muddati o'tgan summasi bor
+    } else if(ordList.length===0){
+      // Orderlar umuman yo'q - faqat apiOtgan ishlatamiz (Yunus holati)
       rawOtgan = apiOtgan;
     } else {
-      // Hech narsa yo'q - "O'tgan" emas
+      // Orderlar bor, lekin barcha kelajak deadline'li - "O'tgan" emas
       return;
     }
     if(rawOtgan<=0) return;
