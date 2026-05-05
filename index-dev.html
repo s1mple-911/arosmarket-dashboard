@@ -453,12 +453,39 @@ function renderList(pageId,list,color,badgeClass,emptyIcon,emptyText,lazy){
   html+='<div class="tb-val" style="color:'+color+'">'+fmtFull(total)+' so\'m</div></div>';
   html+='<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
   html+='<span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
-  // Sorting: deadline borlar birinchi, keyin otgan_summa/summa descending
+  // Sorting:
+  // 1. Muddati o'tib ketgan deadline'lilar (qancha o'tgan bo'lsa shuncha tepada — desc)
+  // 2. Faol deadline (hali o'tmagan, vaqt kam qolgani tepada — asc)
+  // 3. Deadline yo'qlar (max_kun desc, keyin summa desc)
+  var nowMs = Date.now();
   list = list.slice().sort(function(a,b){
-    var aDl = pageDeadlines[String(a.user_id)] ? 1 : 0;
-    var bDl = pageDeadlines[String(b.user_id)] ? 1 : 0;
-    if(bDl !== aDl) return bDl - aDl;
-    // kun_otgan descending (eng ko'p o'tgan birinchi)
+    var aDlObj = pageDeadlines[String(a.user_id)];
+    var bDlObj = pageDeadlines[String(b.user_id)];
+    // a uchun guruh va deadline ms
+    var aGroup, aDlMs = 0;
+    if(aDlObj && aDlObj.quyilgan_deadline){
+      aDlMs = new Date(aDlObj.quyilgan_deadline).getTime() - nowMs;
+      aGroup = aDlMs < 0 ? 1 : 2;  // 1=expired, 2=active
+    } else aGroup = 3;             // 3=no deadline
+    // b uchun
+    var bGroup, bDlMs = 0;
+    if(bDlObj && bDlObj.quyilgan_deadline){
+      bDlMs = new Date(bDlObj.quyilgan_deadline).getTime() - nowMs;
+      bGroup = bDlMs < 0 ? 1 : 2;
+    } else bGroup = 3;
+    // Birinchi: guruh bo'yicha
+    if(aGroup !== bGroup) return aGroup - bGroup;
+    // Bir guruh ichida:
+    if(aGroup === 1){
+      // Muddati o'tganlar — kim ko'proq o'tgan tepaga (eng manfiy birinchi)
+      // dlMs manfiy, eng manfiy = eng ko'p o'tgan
+      return aDlMs - bDlMs;
+    }
+    if(aGroup === 2){
+      // Faol deadline — kim kam vaqt qolgan tepaga (eng kichik musbat birinchi)
+      return aDlMs - bDlMs;
+    }
+    // Deadline yo'qlar — max_kun desc, keyin summa desc
     var aKun = a.max_kun||0;
     var bKun = b.max_kun||0;
     if(bKun !== aKun) return bKun - aKun;
@@ -1398,14 +1425,77 @@ function uploadRec(userId, ism, filial){
   input.onchange = function(){
     if(!input.files || !input.files.length) return;
     var file = input.files[0];
-    doUploadRec(userId, ism, filial, file);
+    // Fayl tanlandi → izoh modal ochamiz
+    showRecCommentModal(userId, ism, filial, file);
   };
   document.body.appendChild(input);
   input.click();
   setTimeout(function(){ document.body.removeChild(input); }, 1000);
 }
 
-function doUploadRec(userId, ism, filial, file){
+// ===================== REC COMMENT MODAL =====================
+var _recPending = null;
+
+function showRecCommentModal(userId, ism, filial, file){
+  _recPending = { userId: userId, ism: ism, filial: filial, file: file };
+  // Hozirgi vaqt default value
+  var now = new Date(new Date().getTime() + 5*60*60*1000);
+  var dtStr = now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0')+'-'+String(now.getUTCDate()).padStart(2,'0')+'T'+String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
+  var modal = document.getElementById('rec-comment-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'rec-comment-modal';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;align-items:flex-end;justify-content:center';
+    modal.innerHTML = '<div style="background:var(--bg);width:100%;max-width:520px;border-radius:18px 18px 0 0;max-height:85vh;overflow-y:auto">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1">'+
+        '<div>'+
+          '<div style="font-size:15px;font-weight:700" id="rec-cm-title">📎 Yangi yozuv</div>'+
+          '<div style="font-size:12px;color:var(--text3);margin-top:2px" id="rec-cm-subtitle">Mijoz</div>'+
+        '</div>'+
+        '<button onclick="closeRecCommentModal()" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>'+
+      '</div>'+
+      '<div style="padding:16px">'+
+        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;font-weight:700">📅 Sana va vaqt</div>'+
+        '<input type="datetime-local" id="rec-cm-dt" style="width:100%;padding:10px 12px;font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:14px">'+
+        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;font-weight:700">📝 Izoh <span style="color:var(--red)">*</span></div>'+
+        '<textarea id="rec-cm-izoh" placeholder="Izoh majburiy..." style="width:100%;padding:10px 12px;font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);min-height:80px;resize:vertical;font-family:inherit"></textarea>'+
+        '<div id="rec-cm-file-info" style="font-size:11px;color:var(--text3);margin-top:10px;padding:8px 10px;background:var(--bg3);border-radius:8px"></div>'+
+        '<button id="rec-cm-save" onclick="submitRecComment()" style="width:100%;margin-top:14px;padding:12px;background:#3B6D11;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">📎 Yuklash</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(modal);
+  }
+  document.getElementById('rec-cm-subtitle').textContent = ism || 'Mijoz';
+  document.getElementById('rec-cm-dt').value = dtStr;
+  document.getElementById('rec-cm-izoh').value = '';
+  document.getElementById('rec-cm-file-info').textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  modal.style.display = 'flex';
+  setTimeout(function(){ document.getElementById('rec-cm-izoh').focus(); }, 100);
+}
+
+function closeRecCommentModal(){
+  var modal = document.getElementById('rec-comment-modal');
+  if(modal) modal.style.display = 'none';
+  _recPending = null;
+}
+
+function submitRecComment(){
+  if(!_recPending) return;
+  var izoh = (document.getElementById('rec-cm-izoh').value || '').trim();
+  var dt = document.getElementById('rec-cm-dt').value || '';
+  if(!izoh){
+    alert('Izoh kiritilishi shart!');
+    document.getElementById('rec-cm-izoh').focus();
+    return;
+  }
+  // datetime-local format → "YYYY-MM-DDTHH:MM" → SQL timestamp uchun "YYYY-MM-DD HH:MM:00"
+  var waqtSql = dt ? dt.replace('T',' ')+':00' : '';
+  var p = _recPending;
+  closeRecCommentModal();
+  doUploadRec(p.userId, p.ism, p.filial, p.file, izoh, waqtSql);
+}
+
+function doUploadRec(userId, ism, filial, file, izoh, waqtSql){
   // Toast / progress
   var toast = document.createElement('div');
   toast.id = 'rec-toast';
@@ -1419,6 +1509,11 @@ function doUploadRec(userId, ism, filial, file){
   fd.append('ism', ism||'');
   fd.append('filial', filial||(filialData&&filialData.filial)||'');
   fd.append('file_name', file.name);
+  fd.append('izoh', izoh||'');
+  fd.append('waqt_dt', waqtSql||'');
+  fd.append('warehouse_id', String(wid||(filialData&&filialData.warehouse_id)||''));
+  fd.append('hodim_telegram_id', String(uid||''));
+  fd.append('hodim_ismi', (userData&&userData.ism)||'');
 
   fetch(REC_UPLOAD_API, { method: 'POST', body: fd })
     .then(function(r){ return r.text(); })
@@ -1475,6 +1570,39 @@ function renderRecordings(userId, recs){
     var dt = m[1].split('-');
     return dt[2]+'.'+dt[1]+'.'+dt[0]+' '+m[2]+':'+m[3];
   }
+  // Sana-vaqt formatlash (PG timestamp -> dd.mm.yyyy hh:mm)
+  function fmtPgDt(s){
+    if(!s) return '';
+    var str = String(s);
+    var datePart = str.split(/[T ]/)[0];
+    var timePart = '';
+    if(str.indexOf('T')!==-1 || str.indexOf(' ')!==-1){
+      var t = str.split(/[T ]/)[1] || '';
+      timePart = t.substring(0,5);
+    }
+    var parts = datePart.split('-');
+    if(parts.length===3) return parts[2]+'.'+parts[1]+'.'+parts[0]+(timePart?' '+timePart:'');
+    return str;
+  }
+  // Recording uchun meta block (izoh + waqt + hodim) — har turdagi fayl uchun bir xil
+  function metaBlock(rec, uploadDate){
+    var html = '';
+    var waqtFmt = fmtPgDt(rec.waqt_dt);
+    var createdFmt = fmtPgDt(rec.created_at);
+    if(rec.izoh){
+      html += '<div style="margin-top:6px;padding:7px 9px;background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;border-radius:4px;font-size:12px;color:var(--text);line-height:1.4">📝 '+rec.izoh.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    }
+    var infoLine = [];
+    if(waqtFmt) infoLine.push('🕒 ' + waqtFmt);
+    else if(uploadDate) infoLine.push('📅 ' + uploadDate);
+    if(rec.hodim_ismi) infoLine.push('👤 ' + rec.hodim_ismi);
+    if(infoLine.length){
+      html += '<div style="font-size:10px;color:var(--text3);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap">';
+      infoLine.forEach(function(s){ html += '<span>'+s+'</span>'; });
+      html += '</div>';
+    }
+    return html;
+  }
   var html = '<div style="padding:8px 16px 10px 70px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;font-weight:700">🎵 Yozuvlar ('+recs.length+' ta)</div>';
   recs.forEach(function(rec){
     var isAudio = (rec.mime_type||'').indexOf('audio') === 0;
@@ -1482,7 +1610,6 @@ function renderRecordings(userId, recs){
     var isVideo = (rec.mime_type||'').indexOf('video') === 0;
     var streamUrl = rec.stream_link || ('https://n8n.arosmarket.com/webhook/aros-recording-stream?file_id='+rec.id);
     var uploadDate = parseUploadDate(rec.name);
-    var dateLine = uploadDate ? '<div style="font-size:10px;color:var(--text3);margin-top:3px">📅 '+uploadDate+'</div>' : '';
     if(isAudio){
       html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">';
@@ -1490,7 +1617,7 @@ function renderRecordings(userId, recs){
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Drive</a>';
       html += '</div>';
       html += '<audio controls preload="metadata" src="'+streamUrl+'" style="width:100%;height:36px"></audio>';
-      html += dateLine;
+      html += metaBlock(rec, uploadDate);
       html += '</div>';
     } else if(isVideo){
       html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px">';
@@ -1499,24 +1626,28 @@ function renderRecordings(userId, recs){
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Drive</a>';
       html += '</div>';
       html += '<video controls preload="metadata" src="'+streamUrl+'" style="width:100%;max-height:200px;border-radius:6px"></video>';
-      html += dateLine;
+      html += metaBlock(rec, uploadDate);
       html += '</div>';
     } else if(isImage){
-      html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px;display:flex;align-items:center;gap:8px">';
+      html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px">';
+      html += '<div style="display:flex;align-items:center;gap:8px">';
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="text-decoration:none;flex-shrink:0"><img src="'+streamUrl+'" style="width:40px;height:40px;border-radius:6px;object-fit:cover"></a>';
       html += '<div style="flex:1;min-width:0">';
       html += '<div class="rec-name">📷 '+rec.name+'</div>';
-      if(uploadDate) html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">📅 '+uploadDate+'</div>';
       html += '</div>';
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗</a>';
       html += '</div>';
+      html += metaBlock(rec, uploadDate);
+      html += '</div>';
     } else {
-      html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">';
+      html += '<div style="margin-bottom:8px;background:rgba(55,138,221,.06);border-radius:8px;padding:8px">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">';
       html += '<div style="flex:1;min-width:0">';
       html += '<div class="rec-name">📄 '+rec.name+'</div>';
-      if(uploadDate) html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">📅 '+uploadDate+'</div>';
       html += '</div>';
       html += '<a href="'+rec.web_view_link+'" target="_blank" style="background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.3);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#378ADD;text-decoration:none;flex-shrink:0">🔗 Ochish</a>';
+      html += '</div>';
+      html += metaBlock(rec, uploadDate);
       html += '</div>';
     }
   });
