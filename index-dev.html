@@ -196,7 +196,7 @@ var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
 var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
-var OK_IDS = ['1255605633','1432724']; // ✓ tasdiqlash huquqi (faqat deadline qo'yish emas, ok ham bosa olish)
+var OK_IDS = ['1255605633']; // ✓ tasdiqlash huquqi (faqat deadline qo'yish emas, ok ham bosa olish)
 var isCeo = CEO_IDS.includes(String(uid));
 var isOk = OK_IDS.includes(String(uid));
 var userData={}, summary={};
@@ -1242,6 +1242,10 @@ function renderOchiq(confirmedOrders){
     var adminUrl='https://admin.aros.uz/orders/'+o.order_id+'/';
     var kun = o._kun || 0;
     var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:6px">'+kun+' kun</span>' : '';
+    // Usertype badge (M / BP)
+    var utypeBadge = '';
+    if(o.usertype==='master') utypeBadge = '<span class="c-b c-b-m">M</span>';
+    else if(o.usertype==='business_partner') utypeBadge = '<span class="c-b c-b-bp">BP</span>';
     var dtStr = fmtDateTime(o.created_datetime || o.sana);
     // Transfer badge (boshqa filialdan kelgan order)
     var isTransfer = o.is_transfer === true;
@@ -1255,7 +1259,7 @@ function renderOchiq(confirmedOrders){
     html+='<div style="background:'+cardBg+';border:'+cardBorder+';border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:12px 14px">';
     html+='<div class="c-av">'+ini(o.ism)+'</div>';
     html+='<div style="flex:1;min-width:0">';
-    html+='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+(o.client_id?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD">ID '+o.client_id+'</span>':'')+kunBadge+'</div>';
+    html+='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+utypeBadge+(o.client_id?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD">ID '+o.client_id+'</span>':'')+kunBadge+'</div>';
     html+='<div class="c-phone">Order #'+o.order_id+' · '+dtStr+'</div>';
     html+=transferBadge;
     html+='</div>';
