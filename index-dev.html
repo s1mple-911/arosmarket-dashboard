@@ -363,17 +363,27 @@ function buildCard(r,id,color,lazy,orders){
     var dlDays=Math.floor(absMs/86400000);
     var dlH=Math.floor((absMs%86400000)/3600000);
     var dlM2=Math.floor((absMs%3600000)/60000);
-    var dlStr=(dlExp?'- ':'')+(dlDays>0?dlDays+' kun ':'')+dlH+' soat '+dlM2+' daqiqa';
-    var dlBg=dlExp?'rgba(163,45,45,.15)':'rgba(226,75,74,.1)';
-    var dlBorder=dlExp?'#A32D2D':'#E24B4A';
-    var dlColor=dlExp?'#A32D2D':'#E24B4A';
-    dlHtml='<div style="background:'+dlBg+';padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid '+dlBorder+'20" id="idx-dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">'+
-      '<div style="display:flex;align-items:center;gap:6px">'+
-      '<div style="width:6px;height:6px;border-radius:3px;background:'+dlColor+'"></div>'+
-      '<span style="font-size:12px;font-weight:700;color:'+dlColor+'">DEADLINE: <span id="idx-dl-cnt-'+r.user_id+'">'+dlStr+'</span></span>'+
-      '</div>'+
-      '<span style="font-size:12px;font-weight:600;color:'+dlColor+'">'+fmtFull(dl.deadline_summa)+'</span>'+
-    '</div>';
+    if(dlExp){
+      // ===== MUDDATI O'TIB KETGAN: to'q qizil fon, oq matn, juda aniq signal =====
+      var dlStrExp=(dlDays>0?dlDays+' kun ':'')+dlH+' soat '+dlM2+' daqiqa';
+      dlHtml='<div style="background:#A32D2D;padding:9px 16px;display:flex;justify-content:space-between;align-items:center" id="idx-dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">'+
+        '<div style="display:flex;align-items:center;gap:7px">'+
+        '<span style="font-size:14px">🚨</span>'+
+        '<span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:.4px;text-transform:uppercase">Muddati o\'tib ketdi · <span id="idx-dl-cnt-'+r.user_id+'">'+dlStrExp+'</span></span>'+
+        '</div>'+
+        '<span style="font-size:12px;font-weight:800;color:#fff">'+fmtFull(dl.deadline_summa)+'</span>'+
+      '</div>';
+    } else {
+      // ===== DEADLINE KELAJAKDA: och qizil =====
+      var dlStr=(dlDays>0?dlDays+' kun ':'')+dlH+' soat '+dlM2+' daqiqa';
+      dlHtml='<div style="background:rgba(226,75,74,.1);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid #E24B4A20" id="idx-dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">'+
+        '<div style="display:flex;align-items:center;gap:6px">'+
+        '<div style="width:6px;height:6px;border-radius:3px;background:#E24B4A"></div>'+
+        '<span style="font-size:12px;font-weight:700;color:#E24B4A">DEADLINE: <span id="idx-dl-cnt-'+r.user_id+'">'+dlStr+'</span></span>'+
+        '</div>'+
+        '<span style="font-size:12px;font-weight:600;color:#E24B4A">'+fmtFull(dl.deadline_summa)+'</span>'+
+      '</div>';
+    }
   }
   // Badges
   var utag=r.usertype==='master'?'<span class="c-b c-b-m">M</span>':r.usertype==='business_partner'?'<span class="c-b c-b-bp">BP</span>':'';
