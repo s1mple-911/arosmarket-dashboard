@@ -196,7 +196,7 @@ var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
 var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
-var OK_IDS = ['1255605633','1432724','1373701411']; // ✓ tasdiqlash huquqi (faqat deadline qo'yish emas, ok ham bosa olish)
+var OK_IDS = ['1255605633','1432724', '1373701411']; // ✓ tasdiqlash huquqi (faqat deadline qo'yish emas, ok ham bosa olish)
 var isCeo = CEO_IDS.includes(String(uid));
 var isOk = OK_IDS.includes(String(uid));
 var userData={}, summary={};
@@ -1111,14 +1111,13 @@ function load(){
       userData=d.user;
       summary=(d.debts&&d.debts.summary)||{};
       allUsers=(d.debts&&d.debts.allUsers)||[];
+      // Leaderboard'ni stats javobidan olamiz (CEO_API o'rniga - hammaga ochiq)
+      allFiliallar = d.leaderboard || [];
       document.getElementById('av').textContent=ini(userData.ism);
       document.getElementById('hn').textContent=userData.ism||'Hodim';
       document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
-      // Filial stats + barcha filiallar (leaderboard uchun) parallel yuklaymiz
-      var pending=2;
-      function maybeRender(){ pending--; if(pending===0){ renderDash(); loadTab('otgan'); } }
-      loadFilialStats(maybeRender);
-      loadAllFiliallar(maybeRender);
+      // Filial stats yuklanyapti
+      loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
       loadKassaInfo();
     })
