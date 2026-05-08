@@ -297,6 +297,7 @@ var MANAGER_WAREHOUSES = {
 };
 var curMgr = 'all';
 var curProfil = 'Zapchast';
+var curSearch = '';
 var cachedAllData = null;
 var cachedOy = null;
 var cachedYil = null;
@@ -325,6 +326,22 @@ function changeProfil(profil){
   }
 }
 
+function onCeoSearch(val){
+  curSearch = val || '';
+  clearTimeout(window._ceoSearchTimer);
+  window._ceoSearchTimer = setTimeout(function(){
+    if(cachedAllData) renderFromCache();
+    setTimeout(function(){
+      var input = document.getElementById('ceo-search-input');
+      if(input){
+        input.focus();
+        var v = input.value;
+        try{ input.setSelectionRange(v.length, v.length); }catch(e){}
+      }
+    }, 0);
+  }, 200);
+}
+
 function filterFiliallar(filiallar){
   var wids = MANAGER_WAREHOUSES[curMgr];
   var result = filiallar;
@@ -337,6 +354,13 @@ function filterFiliallar(filiallar){
     result = result.filter(function(f){
       var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
       return p === curProfil;
+    });
+  }
+  // Search filter
+  var q = (curSearch||'').toLowerCase().trim();
+  if(q){
+    result = result.filter(function(f){
+      return (f.filial||'').toLowerCase().indexOf(q) !== -1;
     });
   }
   return result;
@@ -372,7 +396,7 @@ function renderFromCache(){
   html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
   html+='<div class="jq-box"><div class="jq-lbl">Savdo oyna</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-savdo">0</div></div>';
   html+='</div></div>';
-  html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
+  html+='<div style="margin:14px 0 8px"><input id="ceo-search-input" type="search" placeholder="🔍 Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)" style="width:100%;padding:10px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);outline:none"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
   var allData=new Array(filiallar.length);
   for(var i=0;i<filiallar.length;i++){
     allData[i]=filiallar[i];
@@ -1023,6 +1047,10 @@ function load(){
       var d=parseSafe(txt);
       console.log('CEO parsed:', d?'OK filiallar:'+(d.filiallar?d.filiallar.length:0):'NULL');
       if(!d) throw new Error('Serverdan xato javob keldi: '+txt.substring(0,100));
+      if(d.error === 'unauthorized'){
+        document.getElementById('main').innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text2)"><div style="font-size:48px;margin-bottom:16px">🔒</div><div style="font-size:18px;font-weight:700;margin-bottom:8px">Ruxsat yo\'q</div><div style="font-size:13px;color:var(--text3)">Bu sahifaga kirish uchun CEO huquqiga ega bo\'lishingiz kerak</div></div>';
+        return;
+      }
       if(d.error) throw new Error(d.error);
       if(!d.filiallar||!d.filiallar.length) throw new Error('Filiallar topilmadi (count:'+d.filiallar_count+')');
       var oyNomi=OY[(d.oy_raqami||curOy)-1]+' '+(d.yil||curYil);
@@ -1054,7 +1082,7 @@ function load(){
       html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
       html+='<div class="jq-box"><div class="jq-lbl">Savdo oyna</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-savdo">0</div></div>';
       html+='</div></div>';
-      html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
+      html+='<div style="margin:14px 0 8px"><input id="ceo-search-input" type="search" placeholder="🔍 Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)" style="width:100%;padding:10px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);outline:none"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
       var allData=new Array(filiallar.length);
       for(var i=0;i<filiallar.length;i++) html+='<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
       document.getElementById('main').innerHTML=html;
