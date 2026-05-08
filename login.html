@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AROS Market — Kirish</title>
+<style>
+:root[data-theme="dark"]{
+  --bg:#0F0F0F;--bg2:#1A1A1A;--bg3:#262626;
+  --text:#FFF;--text2:#B0B0B0;--text3:#707070;
+  --border:#2A2A2A;--accent:#7BC93F;--accent-bg:rgba(123,201,63,.12);--accent-border:rgba(123,201,63,.3);
+  --green:#7BC93F;--red:#FF5151;--amber:#f59e0b;
+}
+:root[data-theme="light"]{
+  --bg:#F5F5F7;--bg2:#FFF;--bg3:#F0F0F2;
+  --text:#1A1A1A;--text2:#3A3A3A;--text3:#707070;
+  --border:#E0E0E0;--accent:#3B6D11;--accent-bg:rgba(59,109,17,.08);--accent-border:rgba(59,109,17,.2);
+  --green:#3B6D11;--red:#A32D2D;--amber:#92710C;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;font-size:15px}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:30px 24px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.logo{text-align:center;margin-bottom:24px}
+.logo-icon{width:64px;height:64px;margin:0 auto 12px;background:var(--accent-bg);border:2px solid var(--accent-border);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:var(--accent)}
+.logo-title{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.logo-subtitle{font-size:12px;color:var(--text3);margin-top:3px}
+.step-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;text-align:center}
+.step-desc{font-size:12px;color:var(--text3);margin-bottom:20px;text-align:center;line-height:1.4}
+.form-group{margin-bottom:14px}
+.label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;font-weight:700;display:block}
+.input{width:100%;padding:12px 14px;font-size:15px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;color:var(--text);outline:none;transition:border-color .2s}
+.input:focus{border-color:var(--accent)}
+.input::placeholder{color:var(--text3)}
+.btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;letter-spacing:.3px}
+.btn:hover{opacity:.9}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:var(--bg3);color:var(--text2);margin-top:10px}
+.alert{padding:11px 12px;border-radius:10px;font-size:12px;font-weight:600;margin-bottom:14px;line-height:1.4}
+.alert-error{background:rgba(255,81,81,.1);border:1px solid rgba(255,81,81,.3);color:var(--red)}
+.alert-success{background:rgba(123,201,63,.1);border:1px solid rgba(123,201,63,.3);color:var(--green)}
+.alert-info{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--amber)}
+.user-info{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.user-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-bg);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--accent)}
+.user-name{font-size:13px;font-weight:700;color:var(--text)}
+.user-id{font-size:11px;color:var(--text3);margin-top:1px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.help-text{font-size:11px;color:var(--text3);margin-top:8px;text-align:center;line-height:1.4}
+.help-text a{color:var(--accent);text-decoration:none;font-weight:600}
+.theme-toggle{position:absolute;top:16px;right:16px;background:var(--bg2);border:1px solid var(--border);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
+
+<div class="login-card">
+  <div class="logo">
+    <div class="logo-icon">A</div>
+    <div class="logo-title">AROS Market</div>
+    <div class="logo-subtitle">Kassa va Savdo Tizimi</div>
+  </div>
+
+  <div id="alert-box"></div>
+
+  <!-- STEP 1: Telegram ID kiritish -->
+  <div id="step-id">
+    <div class="step-title">Tizimga kirish</div>
+    <div class="step-desc">Telegram ID'ingizni kiriting</div>
+    <div class="form-group">
+      <label class="label">Telegram ID</label>
+      <input type="text" id="tg-id" class="input" placeholder="Masalan: 1432724" inputmode="numeric" autocomplete="username">
+    </div>
+    <button class="btn" onclick="checkUser()" id="btn-check">Davom etish</button>
+    <div class="help-text">
+      Telegram ID'ingizni bilmasangiz, <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> ga yozing.
+    </div>
+  </div>
+
+  <!-- STEP 2: Login (parol bor) -->
+  <div id="step-login" style="display:none">
+    <div id="login-user-info"></div>
+    <div class="step-title">Parolni kiriting</div>
+    <div class="step-desc">Hisobingizga kirish uchun parolingizni yozing</div>
+    <div class="form-group">
+      <label class="label">Parol</label>
+      <input type="password" id="login-pwd" class="input" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn" onclick="doLogin()" id="btn-login">Kirish</button>
+    <button class="btn btn-secondary" onclick="goBack()">← Orqaga</button>
+  </div>
+
+  <!-- STEP 3: Set Password (parol yo'q yoki muddati tugagan) -->
+  <div id="step-setpwd" style="display:none">
+    <div id="setpwd-user-info"></div>
+    <div class="step-title" id="setpwd-title">Parol o'rnating</div>
+    <div class="step-desc" id="setpwd-desc">Birinchi marta tizimga kirayapsiz. Yangi parol yarating.</div>
+    <div class="form-group">
+      <label class="label">Yangi parol</label>
+      <input type="password" id="setpwd-pwd1" class="input" placeholder="Kamida 4 belgi" autocomplete="new-password">
+    </div>
+    <div class="form-group">
+      <label class="label">Parolni qayta kiriting</label>
+      <input type="password" id="setpwd-pwd2" class="input" placeholder="Parolni takrorlang" autocomplete="new-password">
+    </div>
+    <button class="btn" onclick="doSetPassword()" id="btn-setpwd">Parolni o'rnatish va kirish</button>
+    <button class="btn btn-secondary" onclick="goBack()">← Orqaga</button>
+  </div>
+</div>
+
+<script>
+var API = 'https://n8n.arosmarket.com/webhook';
+var savedTgId = '';
+var savedIsm = '';
+
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('aros-theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+(function(){
+  var saved = localStorage.getItem('aros-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('theme-btn').textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+// Agar token bor bo'lsa - to'g'ridan dashboardga
+(function(){
+  var token = localStorage.getItem('aros-token');
+  if(token){
+    fetch(API+'/aros-verify-token', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({token: token})
+    }).then(function(r){return r.json();}).then(function(d){
+      var data = Array.isArray(d) ? d[0] : d;
+      if(data && data.ok && data.user){
+        // Tokenni qabul qilindi - dashboardga
+        redirectToDashboard(data.user);
+      } else {
+        // Token noto'g'ri - tozalaymiz
+        localStorage.removeItem('aros-token');
+        localStorage.removeItem('aros-user');
+      }
+    }).catch(function(){});
+  }
+})();
+
+function redirectToDashboard(user){
+  var status = (user && user.status) || '';
+  var page = 'index-dev.html';
+  if(status === 'ceo') page = 'ceo-dev.html';
+  else if(status === 'bugalter') page = 'bugalter.html';
+  var url = page + '?uid=' + encodeURIComponent(user.telegram_id);
+  if(user.warehouse_id) url += '&wid=' + encodeURIComponent(user.warehouse_id);
+  window.location.href = url;
+}
+
+function showAlert(type, text){
+  var box = document.getElementById('alert-box');
+  box.innerHTML = '<div class="alert alert-'+type+'">'+text+'</div>';
+}
+function clearAlert(){ document.getElementById('alert-box').innerHTML = ''; }
+
+function showStep(id){
+  ['step-id','step-login','step-setpwd'].forEach(function(s){
+    document.getElementById(s).style.display = (s===id ? 'block' : 'none');
+  });
+  clearAlert();
+}
+
+function goBack(){
+  showStep('step-id');
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('setpwd-pwd1').value = '';
+  document.getElementById('setpwd-pwd2').value = '';
+}
+
+function makeUserInfo(ism, tgId){
+  var ini = (ism||'?').charAt(0).toUpperCase();
+  return '<div class="user-info"><div class="user-avatar">'+ini+'</div><div><div class="user-name">'+(ism||'Mijoz')+'</div><div class="user-id">ID: '+tgId+'</div></div></div>';
+}
+
+function checkUser(){
+  var tgId = (document.getElementById('tg-id').value || '').trim();
+  if(!tgId){ showAlert('error', 'Telegram ID kiriting'); return; }
+  if(!/^\d+$/.test(tgId)){ showAlert('error', 'Telegram ID faqat raqamlardan iborat bo\'lishi kerak'); return; }
+  var btn = document.getElementById('btn-check');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Tekshirilmoqda...';
+  fetch(API+'/aros-check-user', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({telegram_id: tgId})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    btn.disabled = false;
+    btn.textContent = 'Davom etish';
+    if(!data || !data.ok){
+      showAlert('error', (data && data.error) || 'Xato yuz berdi');
+      return;
+    }
+    savedTgId = tgId;
+    savedIsm = data.ism || '';
+    if(data.has_password && !data.password_expired){
+      // Login
+      document.getElementById('login-user-info').innerHTML = makeUserInfo(savedIsm, savedTgId);
+      showStep('step-login');
+      setTimeout(function(){ document.getElementById('login-pwd').focus(); }, 100);
+    } else {
+      // Set password
+      document.getElementById('setpwd-user-info').innerHTML = makeUserInfo(savedIsm, savedTgId);
+      if(data.password_expired){
+        document.getElementById('setpwd-title').textContent = 'Parolni yangilang';
+        document.getElementById('setpwd-desc').textContent = 'Parol muddati tugagan (30 kun). Yangi parol yarating.';
+      } else {
+        document.getElementById('setpwd-title').textContent = "Parol o'rnating";
+        document.getElementById('setpwd-desc').textContent = "Birinchi marta tizimga kirayapsiz. Yangi parol yarating.";
+      }
+      showStep('step-setpwd');
+      setTimeout(function(){ document.getElementById('setpwd-pwd1').focus(); }, 100);
+    }
+  }).catch(function(e){
+    btn.disabled = false;
+    btn.textContent = 'Davom etish';
+    showAlert('error', 'Tarmoq xatosi. Internet aloqani tekshiring.');
+  });
+}
+
+function doLogin(){
+  var pwd = document.getElementById('login-pwd').value || '';
+  if(!pwd){ showAlert('error', 'Parol kiriting'); return; }
+  var btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Tekshirilmoqda...';
+  fetch(API+'/aros-login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({telegram_id: savedTgId, password: pwd})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    btn.disabled = false;
+    btn.textContent = 'Kirish';
+    if(!data || !data.ok){
+      // Agar parol muddati tugagan bo'lsa, set-password ga o'tamiz
+      if(data && data.need_set_password){
+        showAlert('info', data.error);
+        document.getElementById('setpwd-user-info').innerHTML = makeUserInfo(savedIsm, savedTgId);
+        document.getElementById('setpwd-title').textContent = 'Parolni yangilang';
+        document.getElementById('setpwd-desc').textContent = data.error || "Yangi parol yarating.";
+        showStep('step-setpwd');
+        return;
+      }
+      showAlert('error', (data && data.error) || 'Xato yuz berdi');
+      return;
+    }
+    // Tokenni saqlash
+    localStorage.setItem('aros-token', data.token);
+    localStorage.setItem('aros-user', JSON.stringify(data.user));
+    showAlert('success', '✓ Muvaffaqiyatli kirildi! Sahifaga o\'tilmoqda...');
+    setTimeout(function(){ redirectToDashboard(data.user); }, 600);
+  }).catch(function(e){
+    btn.disabled = false;
+    btn.textContent = 'Kirish';
+    showAlert('error', 'Tarmoq xatosi');
+  });
+}
+
+function doSetPassword(){
+  var pwd1 = document.getElementById('setpwd-pwd1').value || '';
+  var pwd2 = document.getElementById('setpwd-pwd2').value || '';
+  if(!pwd1 || !pwd2){ showAlert('error', 'Parolni 2 marta kiriting'); return; }
+  if(pwd1.length < 4){ showAlert('error', 'Parol kamida 4 belgi bo\'lishi kerak'); return; }
+  if(pwd1 !== pwd2){ showAlert('error', 'Parollar mos kelmadi'); return; }
+  var btn = document.getElementById('btn-setpwd');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saqlanmoqda...';
+  fetch(API+'/aros-set-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({telegram_id: savedTgId, password: pwd1})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    btn.disabled = false;
+    btn.textContent = "Parolni o'rnatish va kirish";
+    if(!data || !data.ok){
+      showAlert('error', (data && data.error) || 'Xato yuz berdi');
+      return;
+    }
+    localStorage.setItem('aros-token', data.token);
+    localStorage.setItem('aros-user', JSON.stringify(data.user));
+    showAlert('success', '✓ Parol o\'rnatildi! Sahifaga o\'tilmoqda...');
+    setTimeout(function(){ redirectToDashboard(data.user); }, 600);
+  }).catch(function(e){
+    btn.disabled = false;
+    btn.textContent = "Parolni o'rnatish va kirish";
+    showAlert('error', 'Tarmoq xatosi');
+  });
+}
+
+// Enter tugma support
+document.getElementById('tg-id').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') checkUser();
+});
+document.getElementById('login-pwd').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') doLogin();
+});
+document.getElementById('setpwd-pwd2').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') doSetPassword();
+});
+</script>
+</body>
+</html>
