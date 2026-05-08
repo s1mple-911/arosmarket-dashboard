@@ -119,8 +119,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .swipe-wrapper{position:relative;overflow:hidden}
 .swipe-action{position:absolute;right:0;top:0;bottom:0;width:90px;background:linear-gradient(90deg,#3B6D11,#5a9c1f);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:10px;font-weight:700;cursor:pointer;z-index:1}
 .swipe-action span{display:block;font-size:18px;margin-bottom:2px}
+.swipe-action-left{position:absolute;left:0;top:0;bottom:0;width:90px;background:linear-gradient(90deg,#A32D2D,#d63838);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:10px;font-weight:700;cursor:pointer;z-index:1}
+.swipe-action-left span{display:block;font-size:18px;margin-bottom:2px}
 .swipe-content{position:relative;z-index:2;background:var(--bg2);transition:transform .25s ease}
 .swipe-content.swiped{transform:translateX(-90px)}
+.swipe-content.swiped-right{transform:translateX(90px)}
 /* Recording row */
 .rec-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(55,138,221,.06);border-radius:8px;margin-bottom:6px;gap:8px}
 .rec-row audio{flex:1;height:32px;max-width:200px}
@@ -418,6 +421,7 @@ function buildCard(r,id,color,lazy,orders){
   var swipeId='sw-'+id;
   var safeFilial=(filialData&&filialData.filial?filialData.filial:'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   return '<div class="client-card swipe-wrapper'+(hasDl?' has-dl':'')+'" id="'+swipeId+'">'+
+    '<div class="swipe-action-left" onclick="event.stopPropagation();addIzohOnly('+r.user_id+',\''+safeName+'\',\''+safeFilial+'\','+(Number(r.summa)||0)+')"><span>📝</span>Izoh</div>'+
     '<div class="swipe-action" onclick="event.stopPropagation();uploadRec('+r.user_id+',\''+safeName+'\',\''+safeFilial+'\','+(Number(r.summa)||0)+')"><span>📎</span>Yuklash</div>'+
     '<div class="swipe-content" data-uid="'+r.user_id+'" data-swipe-id="'+swipeId+'">'+
     dlHtml+
@@ -1432,6 +1436,11 @@ function uploadRec(userId, ism, filial, umumiyQarz){
   setTimeout(function(){ document.body.removeChild(input); }, 1000);
 }
 
+// Faqat izoh + budilnik (fayl yo'q)
+function addIzohOnly(userId, ism, filial, umumiyQarz){
+  showRecCommentModal(userId, ism, filial, null, umumiyQarz);
+}
+
 // ===================== REC COMMENT MODAL =====================
 var _recPending = null;
 
@@ -1705,11 +1714,10 @@ function renderRecordings(userId, recs){
   document.addEventListener('touchmove', function(e){
     if(!currentEl) return;
     var diff = e.touches[0].clientX - startX;
-    if(diff < -10){
-      // Suriladi (chap tomon)
-      // Boshqa swiped'larni yopish
-      document.querySelectorAll('.swipe-content.swiped').forEach(function(el){
-        if(el !== currentEl) el.classList.remove('swiped');
+    if(Math.abs(diff) > 10){
+      // Boshqa swiped/swiped-right'larni yopish
+      document.querySelectorAll('.swipe-content.swiped, .swipe-content.swiped-right').forEach(function(el){
+        if(el !== currentEl) { el.classList.remove('swiped'); el.classList.remove('swiped-right'); }
       });
     }
   }, { passive: true });
@@ -1718,18 +1726,28 @@ function renderRecordings(userId, recs){
     var endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
     var diff = endX - startX;
     if(diff < -50){
+      // Chapga swipe → yashil "Yuklash" ko'rinadi (o'ng tomonda)
       currentEl.classList.add('swiped');
+      currentEl.classList.remove('swiped-right');
     } else if(diff > 50){
+      // O'ngga swipe → qizil "Izoh" ko'rinadi (chap tomonda)
+      currentEl.classList.add('swiped-right');
       currentEl.classList.remove('swiped');
+    } else {
+      // Kichik harakat — ikkalasini ham yopish
+      currentEl.classList.remove('swiped');
+      currentEl.classList.remove('swiped-right');
     }
     currentEl = null;
   });
   // Sahifa boshqa joyiga bosilsa, hammasini yopish
   document.addEventListener('click', function(e){
     if(e.target.closest('.swipe-action')) return;
+    if(e.target.closest('.swipe-action-left')) return;
     if(e.target.closest('.swipe-content')) return;
-    document.querySelectorAll('.swipe-content.swiped').forEach(function(el){
+    document.querySelectorAll('.swipe-content.swiped, .swipe-content.swiped-right').forEach(function(el){
       el.classList.remove('swiped');
+      el.classList.remove('swiped-right');
     });
   });
 })();
