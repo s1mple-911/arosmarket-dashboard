@@ -9,6 +9,11 @@
 <meta name="theme-color" content="#7BC93F">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone-pro-max.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-ipad.png" media="(device-width: 810px) and (device-height: 1080px)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png">
 <title>AROS Market — Kirish</title>
 <style>
 :root[data-theme="dark"]{
@@ -153,12 +158,24 @@ function toggleTheme(){
   }
 })();
 
+var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
+var BUGALTER_IDS = ['1255605633', '1432724', '1373701411'];
+
 function redirectToDashboard(user){
   var status = (user && user.status) || '';
-  var page = 'index-dev.html';
-  if(status === 'ceo') page = 'ceo-dev.html';
-  else if(status === 'bugalter') page = 'bugalter.html';
-  var url = page + '?uid=' + encodeURIComponent(user.telegram_id);
+  var tgId = String((user && user.telegram_id) || '');
+  var page;
+  // Avval CEO_IDS bo'yicha tekshiramiz (PG da status="active" bo'lsa ham)
+  if(CEO_IDS.indexOf(tgId) !== -1){
+    page = 'ceo-dev.html';
+  } else if(status === 'ceo'){
+    page = 'ceo-dev.html';
+  } else if(status === 'bugalter' || BUGALTER_IDS.indexOf(tgId) !== -1){
+    page = 'bugalter.html';
+  } else {
+    page = 'index-dev.html';
+  }
+  var url = page + '?uid=' + encodeURIComponent(tgId);
   if(user.warehouse_id) url += '&wid=' + encodeURIComponent(user.warehouse_id);
   window.location.href = url;
 }
