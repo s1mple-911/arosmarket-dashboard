@@ -44,7 +44,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hn{font-size:14px;font-weight:700;color:var(--text)}
 .hs{font-size:11px;color:var(--text2);margin-top:1px}
 .aros-b{color:var(--accent);font-size:9px;font-weight:800;padding:3px 8px;border-radius:7px;border:1.5px solid var(--accent-border);letter-spacing:.8px}
-.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border)}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:63px;z-index:99}
 .tab{flex:1;padding:11px 4px 10px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
 .tab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -119,8 +119,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .swipe-wrapper{position:relative;overflow:hidden}
 .swipe-action{position:absolute;right:0;top:0;bottom:0;width:90px;background:linear-gradient(90deg,#3B6D11,#5a9c1f);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:10px;font-weight:700;cursor:pointer;z-index:1}
 .swipe-action span{display:block;font-size:18px;margin-bottom:2px}
+.swipe-action-left{position:absolute;left:0;top:0;bottom:0;width:90px;background:linear-gradient(90deg,#A32D2D,#d63838);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:10px;font-weight:700;cursor:pointer;z-index:1}
+.swipe-action-left span{display:block;font-size:18px;margin-bottom:2px}
 .swipe-content{position:relative;z-index:2;background:var(--bg2);transition:transform .25s ease}
 .swipe-content.swiped{transform:translateX(-90px)}
+.swipe-content.swiped-right{transform:translateX(90px)}
 /* Recording row */
 .rec-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(55,138,221,.06);border-radius:8px;margin-bottom:6px;gap:8px}
 .rec-row audio{flex:1;height:32px;max-width:200px}
@@ -418,6 +421,7 @@ function buildCard(r,id,color,lazy,orders){
   var swipeId='sw-'+id;
   var safeFilial=(filialData&&filialData.filial?filialData.filial:'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   return '<div class="client-card swipe-wrapper'+(hasDl?' has-dl':'')+'" id="'+swipeId+'">'+
+    '<div class="swipe-action-left" onclick="event.stopPropagation();addIzohOnly('+r.user_id+',\''+safeName+'\',\''+safeFilial+'\','+(Number(r.summa)||0)+')"><span>📝</span>Izoh</div>'+
     '<div class="swipe-action" onclick="event.stopPropagation();uploadRec('+r.user_id+',\''+safeName+'\',\''+safeFilial+'\','+(Number(r.summa)||0)+')"><span>📎</span>Yuklash</div>'+
     '<div class="swipe-content" data-uid="'+r.user_id+'" data-swipe-id="'+swipeId+'">'+
     dlHtml+
@@ -442,57 +446,122 @@ function buildCard(r,id,color,lazy,orders){
   '</div>';
 }
 
+// State: har page uchun search query va filter
+var pageFilters = { 'page-otgan': {q:'', type:'all'}, 'page-bugun': {q:'', type:'all'}, 'page-ertaga': {q:'', type:'all'} };
+var pageRawLists = {}; // pageId -> sorted full list cache
+
 function renderList(pageId,list,color,badgeClass,emptyIcon,emptyText,lazy){
   var el=document.getElementById(pageId);
-  if(!list||!list.length){
+  if(!list){
     el.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24">'+emptyIcon+'</svg></div><div class="et">'+emptyText+'</div></div>';
     return;
   }
-  var total=list.reduce(function(s,r){return s+Number(r.summa||0);},0);
-  var html='<div class="total-bar"><div class="tb-lbl">Jami</div>';
-  html+='<div class="tb-val" style="color:'+color+'">'+fmtFull(total)+' so\'m</div></div>';
-  html+='<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
-  html+='<span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
   // Sorting:
-  // 1. Muddati o'tib ketgan deadline'lilar (qancha o'tgan bo'lsa shuncha tepada — desc)
-  // 2. Faol deadline (hali o'tmagan, vaqt kam qolgani tepada — asc)
-  // 3. Deadline yo'qlar (max_kun desc, keyin summa desc)
   var nowMs = Date.now();
-  list = list.slice().sort(function(a,b){
+  var sortedList = list.slice().sort(function(a,b){
     var aDlObj = pageDeadlines[String(a.user_id)];
     var bDlObj = pageDeadlines[String(b.user_id)];
-    // a uchun guruh va deadline ms
     var aGroup, aDlMs = 0;
     if(aDlObj && aDlObj.quyilgan_deadline){
       aDlMs = new Date(aDlObj.quyilgan_deadline).getTime() - nowMs;
-      aGroup = aDlMs < 0 ? 1 : 2;  // 1=expired, 2=active
-    } else aGroup = 3;             // 3=no deadline
-    // b uchun
+      aGroup = aDlMs < 0 ? 1 : 2;
+    } else aGroup = 3;
     var bGroup, bDlMs = 0;
     if(bDlObj && bDlObj.quyilgan_deadline){
       bDlMs = new Date(bDlObj.quyilgan_deadline).getTime() - nowMs;
       bGroup = bDlMs < 0 ? 1 : 2;
     } else bGroup = 3;
-    // Birinchi: guruh bo'yicha
     if(aGroup !== bGroup) return aGroup - bGroup;
-    // Bir guruh ichida:
-    if(aGroup === 1){
-      // Muddati o'tganlar — kim ko'proq o'tgan tepaga (eng manfiy birinchi)
-      // dlMs manfiy, eng manfiy = eng ko'p o'tgan
-      return aDlMs - bDlMs;
-    }
-    if(aGroup === 2){
-      // Faol deadline — kim kam vaqt qolgan tepaga (eng kichik musbat birinchi)
-      return aDlMs - bDlMs;
-    }
-    // Deadline yo'qlar — max_kun desc, keyin summa desc
+    if(aGroup === 1) return aDlMs - bDlMs;
+    if(aGroup === 2) return aDlMs - bDlMs;
     var aKun = a.max_kun||0;
     var bKun = b.max_kun||0;
     if(bKun !== aKun) return bKun - aKun;
     return Number(b.summa||0) - Number(a.summa||0);
   });
-  list.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,color,lazy,r.orders||[]);});
-  el.innerHTML=html;
+  // Cache for filter
+  pageRawLists[pageId] = { list: sortedList, color: color, badgeClass: badgeClass, emptyIcon: emptyIcon, emptyText: emptyText, lazy: lazy };
+  // Apply filter and render
+  applyPageFilter(pageId);
+}
+
+function applyPageFilter(pageId){
+  var cache = pageRawLists[pageId];
+  if(!cache) return;
+  var el = document.getElementById(pageId);
+  var filter = pageFilters[pageId] || {q:'', type:'all'};
+  var q = (filter.q || '').toLowerCase().trim();
+  var typeFilter = filter.type || 'all';
+  // Filtrlash
+  var filtered = cache.list.filter(function(r){
+    // Type filter
+    if(typeFilter !== 'all'){
+      if(typeFilter === 'master' && r.usertype !== 'master') return false;
+      if(typeFilter === 'business_partner' && r.usertype !== 'business_partner') return false;
+      if(typeFilter === 'oddiy' && (r.usertype === 'master' || r.usertype === 'business_partner')) return false;
+    }
+    // Search query (ism + telefon)
+    if(q){
+      var name = (r.ism||'').toLowerCase();
+      var phone = (r.telefon||'').toLowerCase();
+      if(name.indexOf(q) === -1 && phone.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  // Top bar (search + filter)
+  var html = '';
+  html += '<div style="position:sticky;top:117px;z-index:50;background:var(--bg);padding:8px 0 10px;margin:-4px 0 4px">';
+  html += '<input type="search" placeholder="🔍 Mijoz ismi yoki telefon..." value="'+(filter.q||'').replace(/"/g,'&quot;')+'" oninput="onPageSearch(\''+pageId+'\', this.value)" style="width:100%;padding:9px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;outline:none">';
+  html += '<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  var types = [
+    {k:'all', label:'Hammasi'},
+    {k:'oddiy', label:'Oddiy'},
+    {k:'master', label:'Master'},
+    {k:'business_partner', label:'BP'}
+  ];
+  types.forEach(function(t){
+    var active = typeFilter === t.k;
+    html += '<button onclick="onPageTypeFilter(\''+pageId+'\', \''+t.k+'\')" style="padding:6px 12px;font-size:11px;font-weight:700;border-radius:8px;border:1px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'var(--accent-bg)':'var(--bg2)')+';color:'+(active?'var(--accent)':'var(--text2)')+';cursor:pointer;white-space:nowrap;flex-shrink:0">'+t.label+'</button>';
+  });
+  html += '</div></div>';
+  // Total bar
+  if(!filtered.length){
+    html += '<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24">'+cache.emptyIcon+'</svg></div><div class="et">'+(q || typeFilter !== 'all' ? 'Filter bo\'yicha hech narsa topilmadi' : cache.emptyText)+'</div></div>';
+    el.innerHTML = html;
+    return;
+  }
+  var total = filtered.reduce(function(s,r){return s+Number(r.summa||0);},0);
+  html += '<div class="total-bar"><div class="tb-lbl">Jami</div>';
+  html += '<div class="tb-val" style="color:'+cache.color+'">'+fmtFull(total)+' so\'m</div></div>';
+  html += '<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
+  html += '<span class="badge '+cache.badgeClass+'">'+filtered.length+' ta</span></div>';
+  filtered.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,cache.color,cache.lazy,r.orders||[]);});
+  el.innerHTML = html;
+}
+
+function onPageSearch(pageId, val){
+  if(!pageFilters[pageId]) pageFilters[pageId] = {q:'', type:'all'};
+  pageFilters[pageId].q = val;
+  // Search input focusni saqlash uchun re-render emas, debounce
+  clearTimeout(window._searchTimer);
+  window._searchTimer = setTimeout(function(){
+    applyPageFilter(pageId);
+    // Focusni qayta o'rnatish
+    setTimeout(function(){
+      var input = document.querySelector('#'+pageId+' input[type="search"]');
+      if(input){
+        input.focus();
+        var v = input.value;
+        input.setSelectionRange(v.length, v.length);
+      }
+    }, 0);
+  }, 250);
+}
+
+function onPageTypeFilter(pageId, type){
+  if(!pageFilters[pageId]) pageFilters[pageId] = {q:'', type:'all'};
+  pageFilters[pageId].type = type;
+  applyPageFilter(pageId);
 }
 
 // =============================================
@@ -1432,6 +1501,11 @@ function uploadRec(userId, ism, filial, umumiyQarz){
   setTimeout(function(){ document.body.removeChild(input); }, 1000);
 }
 
+// Faqat izoh + budilnik (fayl yo'q)
+function addIzohOnly(userId, ism, filial, umumiyQarz){
+  showRecCommentModal(userId, ism, filial, null, umumiyQarz);
+}
+
 // ===================== REC COMMENT MODAL =====================
 var _recPending = null;
 
@@ -1705,11 +1779,10 @@ function renderRecordings(userId, recs){
   document.addEventListener('touchmove', function(e){
     if(!currentEl) return;
     var diff = e.touches[0].clientX - startX;
-    if(diff < -10){
-      // Suriladi (chap tomon)
-      // Boshqa swiped'larni yopish
-      document.querySelectorAll('.swipe-content.swiped').forEach(function(el){
-        if(el !== currentEl) el.classList.remove('swiped');
+    if(Math.abs(diff) > 10){
+      // Boshqa swiped/swiped-right'larni yopish
+      document.querySelectorAll('.swipe-content.swiped, .swipe-content.swiped-right').forEach(function(el){
+        if(el !== currentEl) { el.classList.remove('swiped'); el.classList.remove('swiped-right'); }
       });
     }
   }, { passive: true });
@@ -1718,18 +1791,28 @@ function renderRecordings(userId, recs){
     var endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
     var diff = endX - startX;
     if(diff < -50){
+      // Chapga swipe → yashil "Yuklash" ko'rinadi (o'ng tomonda)
       currentEl.classList.add('swiped');
+      currentEl.classList.remove('swiped-right');
     } else if(diff > 50){
+      // O'ngga swipe → qizil "Izoh" ko'rinadi (chap tomonda)
+      currentEl.classList.add('swiped-right');
       currentEl.classList.remove('swiped');
+    } else {
+      // Kichik harakat — ikkalasini ham yopish
+      currentEl.classList.remove('swiped');
+      currentEl.classList.remove('swiped-right');
     }
     currentEl = null;
   });
   // Sahifa boshqa joyiga bosilsa, hammasini yopish
   document.addEventListener('click', function(e){
     if(e.target.closest('.swipe-action')) return;
+    if(e.target.closest('.swipe-action-left')) return;
     if(e.target.closest('.swipe-content')) return;
-    document.querySelectorAll('.swipe-content.swiped').forEach(function(el){
+    document.querySelectorAll('.swipe-content.swiped, .swipe-content.swiped-right').forEach(function(el){
       el.classList.remove('swiped');
+      el.classList.remove('swiped-right');
     });
   });
 })();
