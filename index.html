@@ -1440,9 +1440,9 @@ function showRecCommentModal(userId, ism, filial, file, umumiyQarz){
   // Hozirgi vaqt + 1 daqiqa default value (upcoming bo'lishi uchun)
   var now = new Date(new Date().getTime() + 5*60*60*1000 + 60*1000);
   var dtStr = now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0')+'-'+String(now.getUTCDate()).padStart(2,'0')+'T'+String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
-  // Min vaqt = hozir (upcoming bo'lishi uchun)
+  // Min = bugungi sana 00:00 (faqat kechagi va undan oldingi sanalar bloklanadi, vaqt har qanday bo'lsin)
   var nowMin = new Date(new Date().getTime() + 5*60*60*1000);
-  var minStr = nowMin.getUTCFullYear()+'-'+String(nowMin.getUTCMonth()+1).padStart(2,'0')+'-'+String(nowMin.getUTCDate()).padStart(2,'0')+'T'+String(nowMin.getUTCHours()).padStart(2,'0')+':'+String(nowMin.getUTCMinutes()).padStart(2,'0');
+  var minStr = nowMin.getUTCFullYear()+'-'+String(nowMin.getUTCMonth()+1).padStart(2,'0')+'-'+String(nowMin.getUTCDate()).padStart(2,'0')+'T00:00';
   var modal = document.getElementById('rec-comment-modal');
   if(!modal){
     modal = document.createElement('div');
@@ -1508,11 +1508,12 @@ function submitRecComment(){
     document.getElementById('rec-cm-dt').focus();
     return;
   }
-  // Upcoming check (datetime-local min ham bor, lekin qo'shimcha tekshiruv)
+  // Faqat sana kechagi yoki avvalgi bo'lmasligi tekshiriladi (vaqt erkin)
   var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
+  var todayStart = new Date(Date.UTC(nowUZB.getUTCFullYear(), nowUZB.getUTCMonth(), nowUZB.getUTCDate(), 0, 0, 0));
   var dtMs = new Date(dt).getTime();
-  if(dtMs <= nowUZB.getTime()){
-    alert('Budilnik vaqti hozirgi vaqtdan keyin bo\'lishi kerak!');
+  if(dtMs < todayStart.getTime()){
+    alert('Budilnik sanasi bugungi yoki kelajakdagi bo\'lishi kerak!');
     document.getElementById('rec-cm-dt').focus();
     return;
   }
