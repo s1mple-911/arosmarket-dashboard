@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AROS">
+<meta name="theme-color" content="#7BC93F">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>AROS CEO</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap');
@@ -255,7 +261,7 @@ var uid = new URLSearchParams(window.location.search).get('uid') || '';
     }
   } catch(e){}
   fetch('https://n8n.arosmarket.com/webhook/aros-verify-token', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({token: token})
   }).then(function(r){return r.json();}).then(function(d){
     var data = Array.isArray(d) ? d[0] : d;
@@ -272,7 +278,7 @@ function doLogout(){
   var token = localStorage.getItem('aros-token');
   if(token){
     fetch('https://n8n.arosmarket.com/webhook/aros-logout', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'text/plain'},
       body: JSON.stringify({token: token})
     }).catch(function(){});
   }
@@ -1402,5 +1408,10 @@ function showTransfersModal(transfers, filialNomi){
     <div id="cal-body" style="padding:12px 16px 24px"></div>
   </div>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function(err){ console.log('SW failed:', err); });
+}
+</script>
 </body>
 </html>
