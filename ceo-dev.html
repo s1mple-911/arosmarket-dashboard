@@ -136,6 +136,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   </div>
   <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
   <div class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</div>
+  <div class="theme-btn" onclick="doLogout()" id="logoutBtn" style="background:rgba(255,81,81,.12);border-color:rgba(255,81,81,.3);color:var(--red)" title="Chiqish">⏻</div>
 </div>
 
 <div style="display:flex;background:var(--bg2);border-bottom:1px solid var(--border)">
@@ -232,6 +233,54 @@ var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
+
+// =====================================================
+// AUTH CHECK
+// =====================================================
+(function authCheck(){
+  if(uid) return; // Telegram Mini App
+  var token = localStorage.getItem('aros-token');
+  if(!token){ window.location.href = 'login.html'; return; }
+  try {
+    var userJson = localStorage.getItem('aros-user');
+    if(userJson){
+      var u = JSON.parse(userJson);
+      if(u && u.telegram_id){
+        uid = u.telegram_id;
+        try{
+          var newUrl = window.location.pathname + '?uid=' + encodeURIComponent(uid);
+          window.history.replaceState({}, '', newUrl);
+        }catch(e){}
+      }
+    }
+  } catch(e){}
+  fetch('https://n8n.arosmarket.com/webhook/aros-verify-token', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({token: token})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    if(!data || !data.ok){
+      localStorage.removeItem('aros-token');
+      localStorage.removeItem('aros-user');
+      window.location.href = 'login.html';
+    }
+  }).catch(function(){});
+})();
+
+function doLogout(){
+  if(!confirm('Chiqmoqchimisiz?')) return;
+  var token = localStorage.getItem('aros-token');
+  if(token){
+    fetch('https://n8n.arosmarket.com/webhook/aros-logout', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({token: token})
+    }).catch(function(){});
+  }
+  localStorage.removeItem('aros-token');
+  localStorage.removeItem('aros-user');
+  window.location.href = 'login.html';
+}
+
 var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
 var isCeo   = CEO_IDS.includes(String(uid));
 
