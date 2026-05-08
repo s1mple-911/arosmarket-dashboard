@@ -237,7 +237,7 @@ var wid = new URLSearchParams(window.location.search).get('wid')||'';
   } catch(e){}
   // Background'da tekshiramiz, agar token noto'g'ri bo'lsa - logout
   fetch('https://n8n.arosmarket.com/webhook/aros-verify-token', {
-    method:'POST', headers:{'Content-Type':'text/plain'},
+    method:'POST',
     body: JSON.stringify({token: token})
   }).then(function(r){return r.json();}).then(function(d){
     var data = Array.isArray(d) ? d[0] : d;
@@ -259,7 +259,7 @@ function doLogout(){
   var token = localStorage.getItem('aros-token');
   if(token){
     fetch('https://n8n.arosmarket.com/webhook/aros-logout', {
-      method:'POST', headers:{'Content-Type':'text/plain'},
+      method:'POST',
       body: JSON.stringify({token: token})
     }).catch(function(){});
   }
