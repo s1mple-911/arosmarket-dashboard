@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AROS">
+<meta name="theme-color" content="#7BC93F">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>AROS Market — Kirish</title>
 <style>
 :root[data-theme="dark"]{
@@ -132,7 +137,7 @@ function toggleTheme(){
   var token = localStorage.getItem('aros-token');
   if(token){
     fetch(API+'/aros-verify-token', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'text/plain'},
       body: JSON.stringify({token: token})
     }).then(function(r){return r.json();}).then(function(d){
       var data = Array.isArray(d) ? d[0] : d;
@@ -191,7 +196,7 @@ function checkUser(){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Tekshirilmoqda...';
   fetch(API+'/aros-check-user', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({telegram_id: tgId})
   }).then(function(r){return r.json();}).then(function(d){
     var data = Array.isArray(d) ? d[0] : d;
@@ -235,7 +240,7 @@ function doLogin(){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Tekshirilmoqda...';
   fetch(API+'/aros-login', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({telegram_id: savedTgId, password: pwd})
   }).then(function(r){return r.json();}).then(function(d){
     var data = Array.isArray(d) ? d[0] : d;
@@ -276,7 +281,7 @@ function doSetPassword(){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Saqlanmoqda...';
   fetch(API+'/aros-set-password', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({telegram_id: savedTgId, password: pwd1})
   }).then(function(r){return r.json();}).then(function(d){
     var data = Array.isArray(d) ? d[0] : d;
@@ -307,6 +312,12 @@ document.getElementById('login-pwd').addEventListener('keydown', function(e){
 document.getElementById('setpwd-pwd2').addEventListener('keydown', function(e){
   if(e.key === 'Enter') doSetPassword();
 });
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function(err){
+    console.log('SW registration failed:', err);
+  });
+}
 </script>
 </body>
 </html>
