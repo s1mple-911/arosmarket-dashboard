@@ -198,12 +198,21 @@ function checkUser(){
   fetch(API+'/aros-check-user', {
     method:'POST',
     body: JSON.stringify({telegram_id: tgId})
-  }).then(function(r){return r.json();}).then(function(d){
+  }).then(function(r){return r.text();}).then(function(txt){
+    var d;
+    try { d = JSON.parse(txt); } catch(e){
+      showAlert('error', 'Server javob format xato: ' + txt.substring(0, 200));
+      btn.disabled = false; btn.textContent = 'Davom etish';
+      return;
+    }
     var data = Array.isArray(d) ? d[0] : d;
     btn.disabled = false;
     btn.textContent = 'Davom etish';
     if(!data || !data.ok){
-      showAlert('error', (data && data.error) || 'Xato yuz berdi');
+      // DEBUG: server nima qaytarganini ko'rsatamiz
+      var debugInfo = '';
+      try { debugInfo = ' [DEBUG: ' + JSON.stringify(data).substring(0, 200) + ']'; } catch(e){}
+      showAlert('error', ((data && data.error) || 'Xato yuz berdi') + debugInfo);
       return;
     }
     savedTgId = tgId;

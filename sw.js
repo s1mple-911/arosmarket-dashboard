@@ -1,6 +1,6 @@
 // AROS Market Service Worker
 // Versiyani har push'da o'zgartiring (cache reset)
-const CACHE_VERSION = 'aros-v1';
+const CACHE_VERSION = 'aros-v2';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 
 // Sahifalar (cache qilinadi)
