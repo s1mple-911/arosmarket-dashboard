@@ -1,0 +1,26 @@
+{
+  "name": "AROS Market",
+  "short_name": "AROS",
+  "description": "Aros Market kassa va savdo boshqaruv tizimi",
+  "start_url": "./login.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F0F0F",
+  "theme_color": "#7BC93F",
+  "lang": "uz",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
