@@ -984,6 +984,36 @@ function renderDash(){
       html+='</div>';
       // Qarz limit progress
       html+=buildQarzLimitBarIdx();
+      // === AKSESSUAR uchun ham TRANSFERLAR bloki ===
+      var allTrAks = fd.transfers || [];
+      var fdWidAks = String(fd.warehouse_id || wid || '');
+      var fdApiWidAks = String(fd.api_warehouse_id || fd.warehouse_id || wid || '');
+      var trAks = allTrAks.filter(function(t){
+        if(t.status==='created') {
+          var fromW = String(t.from_warehouse_id||'');
+          return fromW===fdWidAks || fromW===fdApiWidAks;
+        }
+        if(t.status==='on_way') {
+          var toW = String(t.to_warehouse_id||'');
+          return toW===fdWidAks || toW===fdApiWidAks;
+        }
+        return true;
+      });
+      if(trAks.length > 0){
+        var trCA = trAks.filter(function(t){return t.status==='created';});
+        var trOA = trAks.filter(function(t){return t.status==='on_way';});
+        window._dashTransfers = trAks;
+        window._dashFilial = fd.filial||'';
+        html+='<div style="margin-top:8px;cursor:pointer" id="tr-dash-btn">';
+        html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
+        html+='<div style="font-size:10px;color:#378ADD;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
+        html+='<div style="display:flex;gap:8px;align-items:center">';
+        if(trCA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCA.length+' yaratilgan</span>';
+        if(trOA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOA.length+' yo\'lda</span>';
+        html+='</div>';
+        html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
+        html+='</div></div>';
+      }
       html+='</div>';
     } else {
     // ZAPCHAST/FRANSHIZA — eski to'liq versiya (qarzdorlar, transferlar, va h.k.)

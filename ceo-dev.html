@@ -403,23 +403,18 @@ function onCeoSearch(val){
 }
 
 function filterFiliallar(filiallar){
-  console.log('[FILTER START] kirish:', filiallar.length, 'ta filial, curMgr:', curMgr, 'curProfil:', curProfil, 'curSearch:', curSearch);
-  console.log('[FILTER START] aksessuarlar kirishda:', filiallar.filter(function(f){return f.profil==='Aksessuar';}).map(function(f){return f.filial+' (wid='+f.warehouse_id+')';}));
   var wids = MANAGER_WAREHOUSES[curMgr];
   var result = filiallar;
   if(wids){
     result = result.filter(function(f){
       return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
     });
-    console.log('[FILTER manager] qoldi:', result.length, '; aksessuarlar:', result.filter(function(f){return f.profil==='Aksessuar';}).length);
   }
   if(curProfil && curProfil !== 'all'){
-    var before = result.length;
     result = result.filter(function(f){
       var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
       return p === curProfil;
     });
-    console.log('[FILTER profil="'+curProfil+'"] '+before+' -> '+result.length);
   }
   // Search filter
   var q = (curSearch||'').toLowerCase().trim();
@@ -428,7 +423,6 @@ function filterFiliallar(filiallar){
       return (f.filial||'').toLowerCase().indexOf(q) !== -1;
     });
   }
-  console.log('[FILTER END] natija:', result.length, '; ro\'yxat:', result.map(function(f){return f.filial+' ('+f.profil+')';}));
   return result;
 }
 
@@ -556,13 +550,8 @@ function updateJami(filialData){
 }
 
 function renderCard(f,idx){
-  try {
-  console.log('[CARD START]', idx, f.filial, 'profil:', f.profil);
   var el=document.getElementById('fc-'+idx);
-  if(!el){
-    console.warn('[CARD] fc-'+idx+' element TOPILMADI!');
-    return;
-  }
+  if(!el)return;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
   var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
   var _wid = String(f.warehouse_id||'');
@@ -658,6 +647,33 @@ function renderCard(f,idx){
       })()+
       buildQarzLimitBar()+
       ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
+    // AKSESSUAR uchun ham transferlarni qo'shamiz
+    var allTrListAks=f.transfers||[];
+    var fWidAks = String(f.warehouse_id || '');
+    var fApiWidAks = String(f.api_warehouse_id || f.warehouse_id || '');
+    var trListAks=allTrListAks.filter(function(t){
+      if(t.status==='created') {
+        var fromW = String(t.from_warehouse_id||'');
+        return fromW===fWidAks || fromW===fApiWidAks;
+      }
+      if(t.status==='on_way') {
+        var toW = String(t.to_warehouse_id||'');
+        return toW===fWidAks || toW===fApiWidAks;
+      }
+      return true;
+    });
+    if(trListAks.length>0){
+      var trCA=trListAks.filter(function(t){return t.status==='created';}).length;
+      var trOA=trListAks.filter(function(t){return t.status==='on_way';}).length;
+      window['_tr_'+idx]=trListAks;
+      window['_tf_'+idx]=f.filial||'';
+      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
+        '<span style="font-size:11px;font-weight:700">'+(trCA>0?'<span style="color:#378ADD">'+trCA+' ta</span> ':'')+
+        (trOA>0?'<span style="color:#ff9f0a">'+trOA+' yo\'lda</span>':'')+'</span>'+
+        '</div>';
+      el.innerHTML+=trHtmlAks;
+    }
     return;
   }
 
@@ -708,8 +724,6 @@ function renderCard(f,idx){
   var allTrList=f.transfers||[];
   var fWid = String(f.warehouse_id || '');
   var fApiWid = String(f.api_warehouse_id || f.warehouse_id || '');
-  // DEBUG: har filial uchun
-  console.log('[CARD]', f.filial, 'profil:', f.profil, 'fWid:', fWid, 'fApiWid:', fApiWid, 'transferlar:', allTrList.length);
   var trList=allTrList.filter(function(t){
     if(t.status==='created') {
       var fromW = String(t.from_warehouse_id||'');
@@ -721,9 +735,6 @@ function renderCard(f,idx){
     }
     return true;
   });
-  if(allTrList.length > 0){
-    console.log('[CARD FILTER]', f.filial, 'transfer kirish:', allTrList.length, '-> filter natija:', trList.length);
-  }
   var trHtmlBlock='';
   if(trList.length>0){
     var trC=trList.filter(function(t){return t.status==='created';}).length;
@@ -738,11 +749,6 @@ function renderCard(f,idx){
   }
   var cardEl=document.getElementById('fc-'+idx);
   if(cardEl) cardEl.innerHTML+=trHtmlBlock;
-  console.log('[CARD END OK]', idx, f.filial);
-  } catch(err){
-    console.error('[CARD XATO]', idx, f && f.filial, err.message, err.stack);
-    alert('CARD XATO idx='+idx+' filial='+(f&&f.filial)+'\n\n'+err.message+'\n\n'+err.stack);
-  }
 }
 
 function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
