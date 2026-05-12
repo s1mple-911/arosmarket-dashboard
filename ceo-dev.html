@@ -741,6 +741,7 @@ function renderCard(f,idx){
   console.log('[CARD END OK]', idx, f.filial);
   } catch(err){
     console.error('[CARD XATO]', idx, f && f.filial, err.message, err.stack);
+    alert('CARD XATO idx='+idx+' filial='+(f&&f.filial)+'\n\n'+err.message+'\n\n'+err.stack);
   }
 }
 
