@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AROS">
+<meta name="theme-color" content="#7BC93F">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone-pro-max.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-ipad.png" media="(device-width: 810px) and (device-height: 1080px)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png">
 <title>AROS CEO</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap');
@@ -136,6 +147,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   </div>
   <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
   <div class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</div>
+  <div class="theme-btn" onclick="doLogout()" id="logoutBtn" style="background:rgba(255,81,81,.12);border-color:rgba(255,81,81,.3);color:var(--red)" title="Chiqish">⏻</div>
 </div>
 
 <div style="display:flex;background:var(--bg2);border-bottom:1px solid var(--border)">
@@ -232,7 +244,55 @@ var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
-var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247','327748104'];
+
+// =====================================================
+// AUTH CHECK
+// =====================================================
+(function authCheck(){
+  if(uid) return; // Telegram Mini App
+  var token = localStorage.getItem('aros-token');
+  if(!token){ window.location.href = 'login.html'; return; }
+  try {
+    var userJson = localStorage.getItem('aros-user');
+    if(userJson){
+      var u = JSON.parse(userJson);
+      if(u && u.telegram_id){
+        uid = u.telegram_id;
+        try{
+          var newUrl = window.location.pathname + '?uid=' + encodeURIComponent(uid);
+          window.history.replaceState({}, '', newUrl);
+        }catch(e){}
+      }
+    }
+  } catch(e){}
+  fetch('https://n8n.arosmarket.com/webhook/aros-verify-token', {
+    method:'POST',
+    body: JSON.stringify({token: token})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    if(!data || !data.ok){
+      localStorage.removeItem('aros-token');
+      localStorage.removeItem('aros-user');
+      window.location.href = 'login.html';
+    }
+  }).catch(function(){});
+})();
+
+function doLogout(){
+  if(!confirm('Chiqmoqchimisiz?')) return;
+  var token = localStorage.getItem('aros-token');
+  if(token){
+    fetch('https://n8n.arosmarket.com/webhook/aros-logout', {
+      method:'POST',
+      body: JSON.stringify({token: token})
+    }).catch(function(){});
+  }
+  localStorage.removeItem('aros-token');
+  localStorage.removeItem('aros-user');
+  window.location.href = 'login.html';
+}
+
+var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
 var isCeo   = CEO_IDS.includes(String(uid));
 
 var BUGALTER_IDS = ['1255605633','1432724','1373701411'];
@@ -292,8 +352,8 @@ function parseSafe(txt){
 
 var MANAGER_WAREHOUSES = {
   all:       null,
-  giyosbek:  [61,23,15,5,1,37,17,29,102],
-  sherdil:   [71,13,33,25,35,21,27,100,101,103,104]
+  giyosbek:  [61,23,15,5,1,37,17,29,103],
+  sherdil:   [71,13,33,25,35,21,27,100,101,102,104]
 };
 var curMgr = 'all';
 var curProfil = 'Zapchast';
@@ -490,7 +550,8 @@ function updateJami(filialData){
 }
 
 function renderCard(f,idx){
-  var el=document.getElementById('fc-'+idx);if(!el)return;
+  var el=document.getElementById('fc-'+idx);
+  if(!el)return;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
   var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
   var _wid = String(f.warehouse_id||'');
@@ -586,6 +647,33 @@ function renderCard(f,idx){
       })()+
       buildQarzLimitBar()+
       ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
+    // AKSESSUAR uchun ham transferlarni qo'shamiz
+    var allTrListAks=f.transfers||[];
+    var fWidAks = String(f.warehouse_id || '');
+    var fApiWidAks = String(f.api_warehouse_id || f.warehouse_id || '');
+    var trListAks=allTrListAks.filter(function(t){
+      if(t.status==='created') {
+        var fromW = String(t.from_warehouse_id||'');
+        return fromW===fWidAks || fromW===fApiWidAks;
+      }
+      if(t.status==='on_way') {
+        var toW = String(t.to_warehouse_id||'');
+        return toW===fWidAks || toW===fApiWidAks;
+      }
+      return true;
+    });
+    if(trListAks.length>0){
+      var trCA=trListAks.filter(function(t){return t.status==='created';}).length;
+      var trOA=trListAks.filter(function(t){return t.status==='on_way';}).length;
+      window['_tr_'+idx]=trListAks;
+      window['_tf_'+idx]=f.filial||'';
+      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
+        '<span style="font-size:11px;font-weight:700">'+(trCA>0?'<span style="color:#378ADD">'+trCA+' ta</span> ':'')+
+        (trOA>0?'<span style="color:#ff9f0a">'+trOA+' yo\'lda</span>':'')+'</span>'+
+        '</div>';
+      el.innerHTML+=trHtmlAks;
+    }
     return;
   }
 
@@ -635,9 +723,16 @@ function renderCard(f,idx){
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
   var allTrList=f.transfers||[];
   var fWid = String(f.warehouse_id || '');
+  var fApiWid = String(f.api_warehouse_id || f.warehouse_id || '');
   var trList=allTrList.filter(function(t){
-    if(t.status==='created') return String(t.from_warehouse_id||'')===fWid;
-    if(t.status==='on_way') return String(t.to_warehouse_id||'')===fWid;
+    if(t.status==='created') {
+      var fromW = String(t.from_warehouse_id||'');
+      return fromW===fWid || fromW===fApiWid;
+    }
+    if(t.status==='on_way') {
+      var toW = String(t.to_warehouse_id||'');
+      return toW===fWid || toW===fApiWid;
+    }
     return true;
   });
   var trHtmlBlock='';
@@ -831,9 +926,16 @@ function renderDetDash(){
   html+='</div>';
   var allTrAll=detFilialCache?(detFilialCache.transfers||[]):[];
   var detWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : String(f.warehouse_id || '');
+  var detApiWid = detFilialCache ? String(detFilialCache.api_warehouse_id || detFilialCache.warehouse_id || '') : String(f.api_warehouse_id || f.warehouse_id || '');
   var trAll=allTrAll.filter(function(t){
-    if(t.status==='created') return String(t.from_warehouse_id||'')===detWid;
-    if(t.status==='on_way') return String(t.to_warehouse_id||'')===detWid;
+    if(t.status==='created') {
+      var fromW = String(t.from_warehouse_id||'');
+      return fromW===detWid || fromW===detApiWid;
+    }
+    if(t.status==='on_way') {
+      var toW = String(t.to_warehouse_id||'');
+      return toW===detWid || toW===detApiWid;
+    }
     return true;
   });
   if(trAll.length>0){
@@ -865,9 +967,16 @@ function renderDetDash(){
   if(detTrBtn){
     var _tlAll=detFilialCache?(detFilialCache.transfers||[]):[];
     var _tlWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : '';
+    var _tlApiWid = detFilialCache ? String(detFilialCache.api_warehouse_id || detFilialCache.warehouse_id || '') : '';
     var _tl=_tlAll.filter(function(t){
-      if(t.status==='created') return String(t.from_warehouse_id||'')===_tlWid;
-      if(t.status==='on_way') return String(t.to_warehouse_id||'')===_tlWid;
+      if(t.status==='created') {
+        var fromW = String(t.from_warehouse_id||'');
+        return fromW===_tlWid || fromW===_tlApiWid;
+      }
+      if(t.status==='on_way') {
+        var toW = String(t.to_warehouse_id||'');
+        return toW===_tlWid || toW===_tlApiWid;
+      }
       return true;
     });
     var _fn=detFilial?detFilial.filial||'':'';
@@ -1353,5 +1462,10 @@ function showTransfersModal(transfers, filialNomi){
     <div id="cal-body" style="padding:12px 16px 24px"></div>
   </div>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function(err){ console.log('SW failed:', err); });
+}
+</script>
 </body>
 </html>
