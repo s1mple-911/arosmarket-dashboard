@@ -556,7 +556,13 @@ function updateJami(filialData){
 }
 
 function renderCard(f,idx){
-  var el=document.getElementById('fc-'+idx);if(!el)return;
+  try {
+  console.log('[CARD START]', idx, f.filial, 'profil:', f.profil);
+  var el=document.getElementById('fc-'+idx);
+  if(!el){
+    console.warn('[CARD] fc-'+idx+' element TOPILMADI!');
+    return;
+  }
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
   var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
   var _wid = String(f.warehouse_id||'');
@@ -732,6 +738,10 @@ function renderCard(f,idx){
   }
   var cardEl=document.getElementById('fc-'+idx);
   if(cardEl) cardEl.innerHTML+=trHtmlBlock;
+  console.log('[CARD END OK]', idx, f.filial);
+  } catch(err){
+    console.error('[CARD XATO]', idx, f && f.filial, err.message, err.stack);
+  }
 }
 
 function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
