@@ -695,9 +695,16 @@ function renderCard(f,idx){
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
   var allTrList=f.transfers||[];
   var fWid = String(f.warehouse_id || '');
+  var fApiWid = String(f.api_warehouse_id || f.warehouse_id || '');
   var trList=allTrList.filter(function(t){
-    if(t.status==='created') return String(t.from_warehouse_id||'')===fWid;
-    if(t.status==='on_way') return String(t.to_warehouse_id||'')===fWid;
+    if(t.status==='created') {
+      var fromW = String(t.from_warehouse_id||'');
+      return fromW===fWid || fromW===fApiWid;
+    }
+    if(t.status==='on_way') {
+      var toW = String(t.to_warehouse_id||'');
+      return toW===fWid || toW===fApiWid;
+    }
     return true;
   });
   var trHtmlBlock='';
@@ -891,9 +898,16 @@ function renderDetDash(){
   html+='</div>';
   var allTrAll=detFilialCache?(detFilialCache.transfers||[]):[];
   var detWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : String(f.warehouse_id || '');
+  var detApiWid = detFilialCache ? String(detFilialCache.api_warehouse_id || detFilialCache.warehouse_id || '') : String(f.api_warehouse_id || f.warehouse_id || '');
   var trAll=allTrAll.filter(function(t){
-    if(t.status==='created') return String(t.from_warehouse_id||'')===detWid;
-    if(t.status==='on_way') return String(t.to_warehouse_id||'')===detWid;
+    if(t.status==='created') {
+      var fromW = String(t.from_warehouse_id||'');
+      return fromW===detWid || fromW===detApiWid;
+    }
+    if(t.status==='on_way') {
+      var toW = String(t.to_warehouse_id||'');
+      return toW===detWid || toW===detApiWid;
+    }
     return true;
   });
   if(trAll.length>0){
@@ -925,9 +939,16 @@ function renderDetDash(){
   if(detTrBtn){
     var _tlAll=detFilialCache?(detFilialCache.transfers||[]):[];
     var _tlWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : '';
+    var _tlApiWid = detFilialCache ? String(detFilialCache.api_warehouse_id || detFilialCache.warehouse_id || '') : '';
     var _tl=_tlAll.filter(function(t){
-      if(t.status==='created') return String(t.from_warehouse_id||'')===_tlWid;
-      if(t.status==='on_way') return String(t.to_warehouse_id||'')===_tlWid;
+      if(t.status==='created') {
+        var fromW = String(t.from_warehouse_id||'');
+        return fromW===_tlWid || fromW===_tlApiWid;
+      }
+      if(t.status==='on_way') {
+        var toW = String(t.to_warehouse_id||'');
+        return toW===_tlWid || toW===_tlApiWid;
+      }
       return true;
     });
     var _fn=detFilial?detFilial.filial||'':'';

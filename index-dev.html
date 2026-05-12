@@ -1029,10 +1029,18 @@ function renderDash(){
     var confSon = confOrders.length;
     var allTransfers = fd.transfers||[];
     var fdWid = String(fd.warehouse_id || wid || '');
+    var fdApiWid = String(fd.api_warehouse_id || fd.warehouse_id || wid || '');
     // FILTER: created -> faqat from=biz, on_way -> faqat to=biz
+    // Aksessuar filiallar uchun: sheet_id ham, api_warehouse_id ham qabul qilinadi
     var transfers = allTransfers.filter(function(t){
-      if(t.status==='created') return String(t.from_warehouse_id||'')===fdWid;
-      if(t.status==='on_way') return String(t.to_warehouse_id||'')===fdWid;
+      if(t.status==='created') {
+        var fromW = String(t.from_warehouse_id||'');
+        return fromW===fdWid || fromW===fdApiWid;
+      }
+      if(t.status==='on_way') {
+        var toW = String(t.to_warehouse_id||'');
+        return toW===fdWid || toW===fdApiWid;
+      }
       return true;
     });
     var trCreated = transfers.filter(function(t){return t.status==='created';});
