@@ -696,6 +696,10 @@ function renderCard(f,idx){
   var allTrList=f.transfers||[];
   var fWid = String(f.warehouse_id || '');
   var fApiWid = String(f.api_warehouse_id || f.warehouse_id || '');
+  // DEBUG: aksessuar uchun nima bo'layotganini ko'ramiz
+  if(f.profil === 'Aksessuar'){
+    console.log('[AKSESSUAR DEBUG]', f.filial, 'fWid:', fWid, 'fApiWid:', fApiWid, 'transferlar soni:', allTrList.length, 'birinchi transfer:', allTrList[0]);
+  }
   var trList=allTrList.filter(function(t){
     if(t.status==='created') {
       var fromW = String(t.from_warehouse_id||'');
@@ -707,6 +711,9 @@ function renderCard(f,idx){
     }
     return true;
   });
+  if(f.profil === 'Aksessuar'){
+    console.log('[AKSESSUAR DEBUG] FILTER QILINDI:', f.filial, 'trList.length:', trList.length);
+  }
   var trHtmlBlock='';
   if(trList.length>0){
     var trC=trList.filter(function(t){return t.status==='created';}).length;
