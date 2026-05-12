@@ -403,18 +403,23 @@ function onCeoSearch(val){
 }
 
 function filterFiliallar(filiallar){
+  console.log('[FILTER START] kirish:', filiallar.length, 'ta filial, curMgr:', curMgr, 'curProfil:', curProfil, 'curSearch:', curSearch);
+  console.log('[FILTER START] aksessuarlar kirishda:', filiallar.filter(function(f){return f.profil==='Aksessuar';}).map(function(f){return f.filial+' (wid='+f.warehouse_id+')';}));
   var wids = MANAGER_WAREHOUSES[curMgr];
   var result = filiallar;
   if(wids){
     result = result.filter(function(f){
       return wids.indexOf(parseInt(f.warehouse_id)) !== -1;
     });
+    console.log('[FILTER manager] qoldi:', result.length, '; aksessuarlar:', result.filter(function(f){return f.profil==='Aksessuar';}).length);
   }
   if(curProfil && curProfil !== 'all'){
+    var before = result.length;
     result = result.filter(function(f){
       var p = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
       return p === curProfil;
     });
+    console.log('[FILTER profil="'+curProfil+'"] '+before+' -> '+result.length);
   }
   // Search filter
   var q = (curSearch||'').toLowerCase().trim();
@@ -423,6 +428,7 @@ function filterFiliallar(filiallar){
       return (f.filial||'').toLowerCase().indexOf(q) !== -1;
     });
   }
+  console.log('[FILTER END] natija:', result.length, '; ro\'yxat:', result.map(function(f){return f.filial+' ('+f.profil+')';}));
   return result;
 }
 
@@ -696,10 +702,8 @@ function renderCard(f,idx){
   var allTrList=f.transfers||[];
   var fWid = String(f.warehouse_id || '');
   var fApiWid = String(f.api_warehouse_id || f.warehouse_id || '');
-  // DEBUG: aksessuar uchun nima bo'layotganini ko'ramiz
-  if(f.profil === 'Aksessuar'){
-    console.log('[AKSESSUAR DEBUG]', f.filial, 'fWid:', fWid, 'fApiWid:', fApiWid, 'transferlar soni:', allTrList.length, 'birinchi transfer:', allTrList[0]);
-  }
+  // DEBUG: har filial uchun
+  console.log('[CARD]', f.filial, 'profil:', f.profil, 'fWid:', fWid, 'fApiWid:', fApiWid, 'transferlar:', allTrList.length);
   var trList=allTrList.filter(function(t){
     if(t.status==='created') {
       var fromW = String(t.from_warehouse_id||'');
@@ -711,8 +715,8 @@ function renderCard(f,idx){
     }
     return true;
   });
-  if(f.profil === 'Aksessuar'){
-    console.log('[AKSESSUAR DEBUG] FILTER QILINDI:', f.filial, 'trList.length:', trList.length);
+  if(allTrList.length > 0){
+    console.log('[CARD FILTER]', f.filial, 'transfer kirish:', allTrList.length, '-> filter natija:', trList.length);
   }
   var trHtmlBlock='';
   if(trList.length>0){
