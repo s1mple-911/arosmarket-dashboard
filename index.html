@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AROS">
+<meta name="theme-color" content="#7BC93F">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone-pro-max.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-ipad.png" media="(device-width: 810px) and (device-height: 1080px)">
+<link rel="apple-touch-startup-image" href="icons/splash-iphone.png">
 <title>AROS</title>
 <style>
 :root{
@@ -147,6 +158,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div style="display:flex;align-items:center;gap:8px">
     <div onclick="goToHodim()" id="hodimBtn" style="width:30px;height:30px;border-radius:50%;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0" title="Mening ko'rsatkichim">👤</div>
     <div onclick="toggleTheme()" id="themeBtn" style="width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0">🌙</div>
+    <div onclick="doLogout()" id="logoutBtn" style="width:30px;height:30px;border-radius:50%;background:rgba(255,81,81,.12);border:1px solid rgba(255,81,81,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0;color:var(--red)" title="Chiqish">⏻</div>
     
   </div>
 </div>
@@ -186,6 +198,7 @@ var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var STATS_API    = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
 var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
+var WALLET_INFO_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-info';
 var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
 var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
@@ -198,12 +211,76 @@ var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
+
+// =====================================================
+// AUTH CHECK — agar uid URL'da yo'q bo'lsa, token tekshiramiz
+// =====================================================
+(function authCheck(){
+  // Telegram Mini App bo'lsa - token kerakmas
+  if(uid) return;
+  // Token bormi?
+  var token = localStorage.getItem('aros-token');
+  if(!token){
+    window.location.href = 'login.html';
+    return;
+  }
+  // Token bor — verify qilamiz (sync emas, async)
+  // Lokal user ma'lumotlarini ishlatamiz darhol
+  try {
+    var userJson = localStorage.getItem('aros-user');
+    if(userJson){
+      var u = JSON.parse(userJson);
+      if(u && u.telegram_id){
+        uid = u.telegram_id;
+        if(!wid && u.warehouse_id) wid = u.warehouse_id;
+        // URL'ni o'zgartirib qo'yamiz (ko'rinish uchun)
+        try{
+          var newUrl = window.location.pathname + '?uid=' + encodeURIComponent(uid) + (wid?'&wid='+encodeURIComponent(wid):'');
+          window.history.replaceState({}, '', newUrl);
+        }catch(e){}
+      }
+    }
+  } catch(e){}
+  // Background'da tekshiramiz, agar token noto'g'ri bo'lsa - logout
+  fetch('https://n8n.arosmarket.com/webhook/aros-verify-token', {
+    method:'POST',
+    body: JSON.stringify({token: token})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    if(!data || !data.ok){
+      localStorage.removeItem('aros-token');
+      localStorage.removeItem('aros-user');
+      window.location.href = 'login.html';
+    }
+  }).catch(function(){});
+})();
+
+// Agar auth muvaffaqiyatsiz bo'lsa va uid hali ham yo'q bo'lsa, qaytadan tekshirib hech narsa yuklamaymiz
+if(!uid){
+  // Login sahifasiga o'tib bo'ldi yoki o'tilmoqda
+}
+
+function doLogout(){
+  if(!confirm('Chiqmoqchimisiz?')) return;
+  var token = localStorage.getItem('aros-token');
+  if(token){
+    fetch('https://n8n.arosmarket.com/webhook/aros-logout', {
+      method:'POST',
+      body: JSON.stringify({token: token})
+    }).catch(function(){});
+  }
+  localStorage.removeItem('aros-token');
+  localStorage.removeItem('aros-user');
+  window.location.href = 'login.html';
+}
+
 var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
-var OK_IDS = ['1255605633', '1432724', '1373701411']; // ✓ tasdiqlash huquqi (faqat deadline qo'yish emas, ok ham bosa olish)
+var OK_IDS = ['1255605633','1432724', '1373701411']; // ✓ tasdiqlash huquqi (faqat deadline qo'yish emas, ok ham bosa olish)
 var isCeo = CEO_IDS.includes(String(uid));
 var isOk = OK_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
+var walletInfoCache={}; // user_id -> {debt_limit, debt_allowed_days}
 var allUsers=[]
 var pageDeadlines={};
 var otganFinal=[], bugunFinal=[], ertagaFinal=[];
@@ -420,6 +497,31 @@ function buildCard(r,id,color,lazy,orders){
   ordersHtml+='</div>';
   var swipeId='sw-'+id;
   var safeFilial=(filialData&&filialData.filial?filialData.filial:'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  
+  // ===== YANGI: Limit + Umumiy qarz + Foiz qatori =====
+  // r.debt_limit — qarz limiti (cache builder backend'dan keladi)
+  // r.total_debt — umumiy qarz (cache builder backend'dan keladi)
+  // r.summa — bu tab'da: muddati o'tgan qarz (yoki bugun/ertaga uchun deadline summa)
+  var debtLimit = Number(r.debt_limit || 0);
+  var totalDebt = Number(r.total_debt || 0);
+  var foizUsed = (debtLimit > 0 && totalDebt > 0) ? Math.round(totalDebt / debtLimit * 100) : 0;
+  function fmtShort(n){
+    n = Number(n) || 0;
+    if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'') + ' mlrd';
+    if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + ' mln';
+    if (n >= 1e3) return Math.round(n/1e3) + 'k';
+    return String(Math.round(n));
+  }
+  var foizColor = foizUsed >= 100 ? '#FF5151' : (foizUsed >= 80 ? '#f59e0b' : '#7BC93F');
+  var limitRowHtml = '';
+  if (debtLimit > 0 || totalDebt > 0) {
+    limitRowHtml = '<div style="padding:5px 16px 7px;background:rgba(255,255,255,.025);display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;border-top:0.5px solid var(--border)">' +
+      '<div style="color:var(--text3)">Limit: <span style="color:#7BC93F;font-weight:700">' + (debtLimit > 0 ? fmtShort(debtLimit) : '—') + '</span></div>' +
+      '<div style="color:var(--text3)">Jami qarzi: <span style="color:#FF5151;font-weight:700">' + (totalDebt > 0 ? fmtShort(totalDebt) : '—') + '</span></div>' +
+      '<div style="color:var(--text3)">Foiz: <span style="color:'+foizColor+';font-weight:700">' + (debtLimit > 0 ? foizUsed + '%' : '—') + '</span></div>' +
+    '</div>';
+  }
+  
   return '<div class="client-card swipe-wrapper'+(hasDl?' has-dl':'')+'" id="'+swipeId+'">'+
     '<div class="swipe-action-left" onclick="event.stopPropagation();addIzohOnly('+r.user_id+',\''+safeName+'\',\''+safeFilial+'\','+(Number(r.summa)||0)+')"><span>📝</span>Izoh</div>'+
     '<div class="swipe-action" onclick="event.stopPropagation();uploadRec('+r.user_id+',\''+safeName+'\',\''+safeFilial+'\','+(Number(r.summa)||0)+')"><span>📎</span>Yuklash</div>'+
@@ -440,6 +542,7 @@ function buildCard(r,id,color,lazy,orders){
       (isOk&&hasDl?'<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(59,109,17,.15);border:0.5px solid rgba(59,109,17,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#3B6D11;cursor:pointer;margin-left:3px">✓</button>':'')+
       '<span class="arr" id="ar-'+id+'">▾</span>'+
     '</div>'+
+    limitRowHtml+
     ordersHtml+
     '<div class="rec-list" id="rec-'+r.user_id+'" data-orders-id="'+id+'"></div>'+
     '</div>'+
@@ -451,108 +554,125 @@ var pageFilters = { 'page-otgan': {q:'', type:'all'}, 'page-bugun': {q:'', type:
 var pageRawLists = {}; // pageId -> sorted full list cache
 
 function renderList(pageId,list,color,badgeClass,emptyIcon,emptyText,lazy){
-  var el=document.getElementById(pageId);
-  if(!list){
-    el.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24">'+emptyIcon+'</svg></div><div class="et">'+emptyText+'</div></div>';
-    return;
+  try {
+    var el=document.getElementById(pageId);
+    if(!el) return;
+    if(!list || !list.length){
+      el.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24">'+emptyIcon+'</svg></div><div class="et">'+emptyText+'</div></div>';
+      pageRawLists[pageId] = null;
+      return;
+    }
+    // Sorting:
+    var nowMs = Date.now();
+    var sortedList = list.slice().sort(function(a,b){
+      var aDlObj = pageDeadlines && pageDeadlines[String(a.user_id)];
+      var bDlObj = pageDeadlines && pageDeadlines[String(b.user_id)];
+      var aGroup, aDlMs = 0;
+      if(aDlObj && aDlObj.quyilgan_deadline){
+        aDlMs = new Date(aDlObj.quyilgan_deadline).getTime() - nowMs;
+        aGroup = aDlMs < 0 ? 1 : 2;
+      } else aGroup = 3;
+      var bGroup, bDlMs = 0;
+      if(bDlObj && bDlObj.quyilgan_deadline){
+        bDlMs = new Date(bDlObj.quyilgan_deadline).getTime() - nowMs;
+        bGroup = bDlMs < 0 ? 1 : 2;
+      } else bGroup = 3;
+      if(aGroup !== bGroup) return aGroup - bGroup;
+      if(aGroup === 1) return aDlMs - bDlMs;
+      if(aGroup === 2) return aDlMs - bDlMs;
+      var aKun = a.max_kun||0;
+      var bKun = b.max_kun||0;
+      if(bKun !== aKun) return bKun - aKun;
+      return Number(b.summa||0) - Number(a.summa||0);
+    });
+    pageRawLists[pageId] = { list: sortedList, color: color, badgeClass: badgeClass, emptyIcon: emptyIcon, emptyText: emptyText, lazy: lazy };
+    applyPageFilter(pageId);
+  } catch(err) {
+    console.error('renderList error:', err);
+    // Fallback: simple render without filter
+    try {
+      var el2 = document.getElementById(pageId);
+      if(el2 && list && list.length){
+        var total = list.reduce(function(s,r){return s+Number(r.summa||0);},0);
+        var html = '<div class="total-bar"><div class="tb-lbl">Jami</div><div class="tb-val" style="color:'+color+'">'+fmtFull(total)+' so\'m</div></div>';
+        html += '<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div><span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
+        list.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,color,lazy,r.orders||[]);});
+        el2.innerHTML = html;
+      }
+    } catch(e2) { console.error('Fallback render error:', e2); }
   }
-  // Sorting:
-  var nowMs = Date.now();
-  var sortedList = list.slice().sort(function(a,b){
-    var aDlObj = pageDeadlines[String(a.user_id)];
-    var bDlObj = pageDeadlines[String(b.user_id)];
-    var aGroup, aDlMs = 0;
-    if(aDlObj && aDlObj.quyilgan_deadline){
-      aDlMs = new Date(aDlObj.quyilgan_deadline).getTime() - nowMs;
-      aGroup = aDlMs < 0 ? 1 : 2;
-    } else aGroup = 3;
-    var bGroup, bDlMs = 0;
-    if(bDlObj && bDlObj.quyilgan_deadline){
-      bDlMs = new Date(bDlObj.quyilgan_deadline).getTime() - nowMs;
-      bGroup = bDlMs < 0 ? 1 : 2;
-    } else bGroup = 3;
-    if(aGroup !== bGroup) return aGroup - bGroup;
-    if(aGroup === 1) return aDlMs - bDlMs;
-    if(aGroup === 2) return aDlMs - bDlMs;
-    var aKun = a.max_kun||0;
-    var bKun = b.max_kun||0;
-    if(bKun !== aKun) return bKun - aKun;
-    return Number(b.summa||0) - Number(a.summa||0);
-  });
-  // Cache for filter
-  pageRawLists[pageId] = { list: sortedList, color: color, badgeClass: badgeClass, emptyIcon: emptyIcon, emptyText: emptyText, lazy: lazy };
-  // Apply filter and render
-  applyPageFilter(pageId);
 }
 
 function applyPageFilter(pageId){
-  var cache = pageRawLists[pageId];
-  if(!cache) return;
-  var el = document.getElementById(pageId);
-  var filter = pageFilters[pageId] || {q:'', type:'all'};
-  var q = (filter.q || '').toLowerCase().trim();
-  var typeFilter = filter.type || 'all';
-  // Filtrlash
-  var filtered = cache.list.filter(function(r){
-    // Type filter
-    if(typeFilter !== 'all'){
-      if(typeFilter === 'master' && r.usertype !== 'master') return false;
-      if(typeFilter === 'business_partner' && r.usertype !== 'business_partner') return false;
-      if(typeFilter === 'oddiy' && (r.usertype === 'master' || r.usertype === 'business_partner')) return false;
+  try {
+    var cache = pageRawLists[pageId];
+    var el = document.getElementById(pageId);
+    if(!el) return;
+    if(!cache || !cache.list){
+      // Cache yo'q, hech narsa qilmaymiz (loading davomida)
+      return;
     }
-    // Search query (ism + telefon)
-    if(q){
-      var name = (r.ism||'').toLowerCase();
-      var phone = (r.telefon||'').toLowerCase();
-      if(name.indexOf(q) === -1 && phone.indexOf(q) === -1) return false;
+    var filter = pageFilters[pageId] || {q:'', type:'all'};
+    var q = (filter.q || '').toLowerCase().trim();
+    var typeFilter = filter.type || 'all';
+    // Filtrlash
+    var filtered = cache.list.filter(function(r){
+      if(typeFilter !== 'all'){
+        if(typeFilter === 'master' && r.usertype !== 'master') return false;
+        if(typeFilter === 'business_partner' && r.usertype !== 'business_partner') return false;
+        if(typeFilter === 'oddiy' && (r.usertype === 'master' || r.usertype === 'business_partner')) return false;
+      }
+      if(q){
+        var name = (r.ism||'').toLowerCase();
+        var phone = (r.telefon||'').toLowerCase();
+        if(name.indexOf(q) === -1 && phone.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    // Top bar
+    var html = '';
+    html += '<div style="position:sticky;top:117px;z-index:50;background:var(--bg);padding:8px 0 10px;margin:-4px 0 4px">';
+    html += '<input type="search" placeholder="🔍 Mijoz ismi yoki telefon..." value="'+(filter.q||'').replace(/"/g,'&quot;')+'" oninput="onPageSearch(\''+pageId+'\', this.value)" style="width:100%;padding:9px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;outline:none">';
+    html += '<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
+    var types = [
+      {k:'all', label:'Hammasi'},
+      {k:'oddiy', label:'Oddiy'},
+      {k:'master', label:'Master'},
+      {k:'business_partner', label:'BP'}
+    ];
+    types.forEach(function(t){
+      var active = typeFilter === t.k;
+      html += '<button onclick="onPageTypeFilter(\''+pageId+'\', \''+t.k+'\')" style="padding:6px 12px;font-size:11px;font-weight:700;border-radius:8px;border:1px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'var(--accent-bg)':'var(--bg2)')+';color:'+(active?'var(--accent)':'var(--text2)')+';cursor:pointer;white-space:nowrap;flex-shrink:0">'+t.label+'</button>';
+    });
+    html += '</div></div>';
+    if(!filtered.length){
+      html += '<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24">'+cache.emptyIcon+'</svg></div><div class="et">'+(q || typeFilter !== 'all' ? 'Filter bo\'yicha hech narsa topilmadi' : cache.emptyText)+'</div></div>';
+      el.innerHTML = html;
+      return;
     }
-    return true;
-  });
-  // Top bar (search + filter)
-  var html = '';
-  html += '<div style="position:sticky;top:117px;z-index:50;background:var(--bg);padding:8px 0 10px;margin:-4px 0 4px">';
-  html += '<input type="search" placeholder="🔍 Mijoz ismi yoki telefon..." value="'+(filter.q||'').replace(/"/g,'&quot;')+'" oninput="onPageSearch(\''+pageId+'\', this.value)" style="width:100%;padding:9px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;outline:none">';
-  html += '<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
-  var types = [
-    {k:'all', label:'Hammasi'},
-    {k:'oddiy', label:'Oddiy'},
-    {k:'master', label:'Master'},
-    {k:'business_partner', label:'BP'}
-  ];
-  types.forEach(function(t){
-    var active = typeFilter === t.k;
-    html += '<button onclick="onPageTypeFilter(\''+pageId+'\', \''+t.k+'\')" style="padding:6px 12px;font-size:11px;font-weight:700;border-radius:8px;border:1px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'var(--accent-bg)':'var(--bg2)')+';color:'+(active?'var(--accent)':'var(--text2)')+';cursor:pointer;white-space:nowrap;flex-shrink:0">'+t.label+'</button>';
-  });
-  html += '</div></div>';
-  // Total bar
-  if(!filtered.length){
-    html += '<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24">'+cache.emptyIcon+'</svg></div><div class="et">'+(q || typeFilter !== 'all' ? 'Filter bo\'yicha hech narsa topilmadi' : cache.emptyText)+'</div></div>';
+    var total = filtered.reduce(function(s,r){return s+Number(r.summa||0);},0);
+    html += '<div class="total-bar"><div class="tb-lbl">Jami</div>';
+    html += '<div class="tb-val" style="color:'+cache.color+'">'+fmtFull(total)+' so\'m</div></div>';
+    html += '<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
+    html += '<span class="badge '+cache.badgeClass+'">'+filtered.length+' ta</span></div>';
+    filtered.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,cache.color,cache.lazy,r.orders||[]);});
     el.innerHTML = html;
-    return;
+  } catch(err) {
+    console.error('applyPageFilter error:', err);
   }
-  var total = filtered.reduce(function(s,r){return s+Number(r.summa||0);},0);
-  html += '<div class="total-bar"><div class="tb-lbl">Jami</div>';
-  html += '<div class="tb-val" style="color:'+cache.color+'">'+fmtFull(total)+' so\'m</div></div>';
-  html += '<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
-  html += '<span class="badge '+cache.badgeClass+'">'+filtered.length+' ta</span></div>';
-  filtered.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,cache.color,cache.lazy,r.orders||[]);});
-  el.innerHTML = html;
 }
 
 function onPageSearch(pageId, val){
   if(!pageFilters[pageId]) pageFilters[pageId] = {q:'', type:'all'};
   pageFilters[pageId].q = val;
-  // Search input focusni saqlash uchun re-render emas, debounce
   clearTimeout(window._searchTimer);
   window._searchTimer = setTimeout(function(){
     applyPageFilter(pageId);
-    // Focusni qayta o'rnatish
     setTimeout(function(){
       var input = document.querySelector('#'+pageId+' input[type="search"]');
       if(input){
         input.focus();
-        var v = input.value;
-        input.setSelectionRange(v.length, v.length);
+        try{ var v=input.value; input.setSelectionRange(v.length, v.length); }catch(e){}
       }
     }, 0);
   }, 250);
@@ -1092,22 +1212,60 @@ loadPageDeadlines(userData.warehouse_id||0, function(){
     // Cache bor bo'lsa - to'g'ridan ishlatamiz (otgan/bugun/ertaga barchasi)
     var cached=ordersCache[debtor.user_id];
     if(cached!==undefined){
+      // debt_limit'ni ham cache'dan olamiz (otgan tab uchun)
+      if(tab==='otgan' && walletInfoCache[debtor.user_id]){
+        debtor.debt_limit = walletInfoCache[debtor.user_id].debt_limit || 0;
+      }
       proc(debtor,cached,tab,resMap);check();return;
     }
     // Cache yo'q - API dan olish (otgan tab uchun ham!)
     var _wh=wid||userData.warehouse_id||null;
     var url=ORDERS_API+'?user_id='+debtor.user_id;
     if(_wh) url+='&warehouse_id='+_wh;
-    fetch(url).then(function(r){return r.json();})
-      .then(function(d){
-        var data=Array.isArray(d)?d[0]:d;
-        ordersCache[debtor.user_id]=data.orders||[];
-        proc(debtor,data.orders||[],tab,resMap);check();
-      }).catch(function(){
-        // API xato - otgan_summa fallback
-        ordersCache[debtor.user_id]=null;
-        proc(debtor,null,tab,resMap);check();
-      });
+    
+    // Bir paytda 2 ta so'rov yuboramiz: orders + wallet-info (faqat otgan tab uchun)
+    var promises = [
+      fetch(url).then(function(r){return r.json();}).then(function(d){
+        return Array.isArray(d) ? d[0] : d;
+      }).catch(function(){ return null; })
+    ];
+    if(tab==='otgan' && debtor.telefon){
+      // Telefon raqami bo'yicha wallet info
+      var phone = String(debtor.telefon).trim();
+      // Agar walletInfoCache da bor bo'lsa, qaytadan chaqirmaymiz
+      if(walletInfoCache[debtor.user_id]!==undefined){
+        promises.push(Promise.resolve(walletInfoCache[debtor.user_id]));
+      } else {
+        promises.push(
+          fetch(WALLET_INFO_API+'?phone='+encodeURIComponent(phone))
+            .then(function(r){return r.json();})
+            .then(function(d){
+              var data = Array.isArray(d) ? d[0] : d;
+              if(data && data.ok){
+                walletInfoCache[debtor.user_id] = data;
+                return data;
+              }
+              walletInfoCache[debtor.user_id] = null;
+              return null;
+            }).catch(function(){
+              walletInfoCache[debtor.user_id] = null;
+              return null;
+            })
+        );
+      }
+    }
+    
+    Promise.all(promises).then(function(results){
+      var ordersData = results[0];
+      var walletData = results[1];
+      ordersCache[debtor.user_id] = (ordersData && ordersData.orders) || (ordersData ? [] : null);
+      // debt_limit ni debtor obyektiga qo'shamiz (otgan tab uchun)
+      if(tab==='otgan' && walletData && walletData.ok){
+        debtor.debt_limit = walletData.debt_limit || 0;
+      }
+      proc(debtor, ordersCache[debtor.user_id], tab, resMap);
+      check();
+    });
   });
 }
 
@@ -1154,7 +1312,9 @@ function proc(debtor, orders, tab, resMap){
     resMap[debtor.user_id]={
       ism:debtor.ism, telefon:debtor.telefon, summa:netOtgan,
       wallet_balance:wallet, user_id:debtor.user_id,
-      orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK
+      orders:otgOrders, usertype:debtor.usertype||'', max_kun:maxK,
+      total_debt: Number(debtor.summa||debtor.total_debt||0),
+      debt_limit: Number(debtor.debt_limit||0)
     };
     return;
   }
@@ -1171,7 +1331,9 @@ function proc(debtor, orders, tab, resMap){
     resMap[debtor.user_id]={
       ism:debtor.ism, telefon:debtor.telefon, summa:netB,
       wallet_balance:wallet, user_id:debtor.user_id,
-      orders:bugunOrders, usertype:debtor.usertype||''
+      orders:bugunOrders, usertype:debtor.usertype||'',
+      total_debt: Number(debtor.summa||debtor.total_debt||0),
+      debt_limit: Number(debtor.debt_limit||0)
     };
     return;
   }
@@ -1188,7 +1350,9 @@ function proc(debtor, orders, tab, resMap){
     resMap[debtor.user_id]={
       ism:debtor.ism, telefon:debtor.telefon, summa:netE,
       wallet_balance:wallet, user_id:debtor.user_id,
-      orders:ertagaOrders, usertype:debtor.usertype||''
+      orders:ertagaOrders, usertype:debtor.usertype||'',
+      total_debt: Number(debtor.summa||debtor.total_debt||0),
+      debt_limit: Number(debtor.debt_limit||0)
     };
     return;
   }
@@ -2145,5 +2309,10 @@ function showTransfersModal(transfers, filialNomi){
     <div id="wtx-body" style="padding:14px 16px 24px"></div>
   </div>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function(err){ console.log('SW failed:', err); });
+}
+</script>
 </body>
 </html>
