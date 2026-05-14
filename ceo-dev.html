@@ -1299,26 +1299,38 @@ function renderCalendar(d){
   var days = d.days||[];
   var oy = d.oy, yil = d.yil;
   var oyKunlari = d.oy_kunlari || 30;
+  var ishKunlari = d.ish_kunlari || oyKunlari;
   var kunlikPlan = d.kunlik_plan || 0;
+  var dayOffs = d.day_offs || [];
+  var dayOffMap = {};
+  dayOffs.forEach(function(x){ dayOffMap[x.kun] = (x.reason||'bayram').toLowerCase(); });
   var firstDay = new Date(yil, oy-1, 1).getDay();
   var offset = firstDay === 0 ? 6 : firstDay - 1;
   var dayMap = {};
   days.forEach(function(day){ dayMap[day.kun] = day; });
-  var totalBaj = days.reduce(function(s,x){return s+(x.bajarilgan||0);},0);
+  var totalBaj = days.reduce(function(s,x){return x.is_day_off ? s : s+(x.bajarilgan||0);},0);
   var greenCount = days.filter(function(x){return x.status==='green';}).length;
   var amberCount = days.filter(function(x){return x.status==='amber';}).length;
   var redCount = days.filter(function(x){return x.status==='red';}).length;
+  var dayOffCount = Object.keys(dayOffMap).length;
+
+  function dayOffIcon(reason){
+    return reason === 'inventory' ? '📊' : '🎉';
+  }
 
   var html = '';
   html += '<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:14px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
-  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kunlik plan</div><div style="font-weight:700;color:var(--text)">'+fmt(kunlikPlan)+'</div></div>';
+  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kunlik plan</div><div style="font-weight:700;color:var(--text)">'+fmt(kunlikPlan)+'</div><div style="font-size:9px;color:var(--text3);margin-top:1px">'+ishKunlari+' ish kuni</div></div>';
   html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Jami bajarilgan</div><div style="font-weight:700;color:var(--green)">'+fmt(totalBaj)+'</div></div>';
   html += '</div>';
-  html += '<div style="display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+  html += '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
   html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--green)">'+greenCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">YAXSHI</div></div>';
   html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--amber)">'+amberCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">O\'RTACHA</div></div>';
   html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--red)">'+redCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">PAST</div></div>';
+  if(dayOffCount > 0){
+    html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--text2)">'+dayOffCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">DAM</div></div>';
+  }
   html += '</div></div>';
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
   html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">';
@@ -1329,8 +1341,18 @@ function renderCalendar(d){
   html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="cal-grid">';
   for(var i=0;i<offset;i++){ html += '<div></div>'; }
   for(var k=1;k<=oyKunlari;k++){
+    var isDayOff = !!dayOffMap[k];
+    var reason = dayOffMap[k] || '';
     var dayData = dayMap[k];
-    if(dayData){
+    if(isDayOff){
+      var icon = dayOffIcon(reason);
+      var bg = 'rgba(148,163,184,.18)';
+      var txtColor = 'var(--text2)';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s">';
+      html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+'">'+k+'</div>';
+      html += '<div style="font-size:13px;margin-top:1px">'+icon+'</div>';
+      html += '</div>';
+    } else if(dayData){
       var bg, txtColor;
       if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
       else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
@@ -1344,23 +1366,46 @@ function renderCalendar(d){
     }
   }
   html += '</div>';
-  html += '<div style="display:flex;justify-content:center;gap:16px;margin-top:14px;font-size:10px;color:var(--text3)">';
+  html += '<div style="display:flex;justify-content:center;gap:14px;margin-top:14px;font-size:10px;color:var(--text3);flex-wrap:wrap">';
   html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(34,197,94,.4)"></div>100%+</div>';
   html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(251,191,36,.4)"></div>70-99%</div>';
   html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(255,77,109,.4)"></div>&lt;70%</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px">🎉 Bayram</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px">📊 Inventory</div>';
   html += '</div>';
   html += '<div id="cal-day-detail" style="margin-top:14px"></div>';
 
   body.innerHTML = html;
   window._calDays = dayMap;
   window._calKunlikPlan = kunlikPlan;
+  window._calDayOffs = dayOffMap;
 }
 
 function showDayDetail(kun){
   var d = (window._calDays||{})[kun];
   var kp = window._calKunlikPlan || 0;
+  var dayOffMap = window._calDayOffs || {};
+  var isDayOff = !!dayOffMap[kun];
   var el = document.getElementById('cal-day-detail');
-  if(!d || !el) return;
+  if(!el) return;
+  
+  if(isDayOff){
+    var reason = dayOffMap[kun];
+    var icon = reason === 'inventory' ? '📊' : '🎉';
+    var label = reason === 'inventory' ? 'Inventory kuni' : 'Bayram kuni';
+    var html = '<div style="background:var(--bg3);border-radius:14px;padding:14px;border:1px dashed var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    html += '<div style="font-size:14px;font-weight:700">'+kun+'-kun</div>';
+    html += '<div style="font-size:20px">'+icon+'</div>';
+    html += '</div>';
+    html += '<div style="font-size:12px;color:var(--text2);text-align:center;padding:8px 0">'+label+' — ish kuni emas</div>';
+    html += '</div>';
+    el.innerHTML = html;
+    el.scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
+  
+  if(!d) return;
   var color = d.status==='green'?'var(--green)':d.status==='amber'?'#fbbf24':'#ff4d6d';
   var html = '<div style="background:var(--bg3);border-radius:14px;padding:14px;border:1px solid '+color+'40">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
