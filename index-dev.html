@@ -1713,9 +1713,6 @@ var _recPending = null;
 
 function showRecCommentModal(userId, ism, filial, file, umumiyQarz){
   _recPending = { userId: userId, ism: ism, filial: filial, file: file, umumiyQarz: umumiyQarz || 0 };
-  // Hozirgi vaqt + 1 daqiqa default value (upcoming bo'lishi uchun)
-  var now = new Date(new Date().getTime() + 5*60*60*1000 + 60*1000);
-  var dtStr = now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0')+'-'+String(now.getUTCDate()).padStart(2,'0')+'T'+String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
   // Min = bugungi sana 00:00 (faqat kechagi va undan oldingi sanalar bloklanadi, vaqt har qanday bo'lsin)
   var nowMin = new Date(new Date().getTime() + 5*60*60*1000);
   var minStr = nowMin.getUTCFullYear()+'-'+String(nowMin.getUTCMonth()+1).padStart(2,'0')+'-'+String(nowMin.getUTCDate()).padStart(2,'0')+'T00:00';
@@ -1727,13 +1724,15 @@ function showRecCommentModal(userId, ism, filial, file, umumiyQarz){
     modal.innerHTML = '<div style="background:var(--bg);width:100%;max-width:520px;border-radius:18px 18px 0 0;max-height:85vh;overflow-y:auto">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1">'+
         '<div>'+
-          '<div style="font-size:15px;font-weight:700" id="rec-cm-title">⏰ Yangi yozuv + Budilnik</div>'+
+          '<div style="font-size:15px;font-weight:700" id="rec-cm-title">📝 Yangi yozuv</div>'+
           '<div style="font-size:12px;color:var(--text3);margin-top:2px" id="rec-cm-subtitle">Mijoz</div>'+
         '</div>'+
         '<button onclick="closeRecCommentModal()" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>'+
       '</div>'+
       '<div style="padding:16px">'+
-        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;font-weight:700">⏰ Budilnik uchun vaqt kiriting <span style="color:var(--red)">*</span></div>'+
+        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;font-weight:700">📝 Izoh <span style="color:var(--red)">*</span></div>'+
+        '<textarea id="rec-cm-izoh" placeholder="Izoh majburiy..." style="width:100%;padding:10px 12px;font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);min-height:80px;resize:vertical;font-family:inherit;margin-bottom:14px"></textarea>'+
+        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;font-weight:700">⏰ Budilnik vaqti <span style="color:var(--text3);font-weight:500;text-transform:none;letter-spacing:0">(ixtiyoriy)</span></div>'+
         '<input type="datetime-local" id="rec-cm-dt" style="width:100%;padding:10px 12px;font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:14px">'+
         '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;font-weight:700">⏱️ Eslatma uchun</div>'+
         '<select id="rec-cm-remind" style="width:100%;padding:10px 12px;font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:14px">'+
@@ -1744,10 +1743,8 @@ function showRecCommentModal(userId, ism, filial, file, umumiyQarz){
           '<option value="60">1 soat oldin</option>'+
           '<option value="120">2 soat oldin</option>'+
         '</select>'+
-        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;font-weight:700">📝 Izoh <span style="color:var(--red)">*</span></div>'+
-        '<textarea id="rec-cm-izoh" placeholder="Izoh majburiy..." style="width:100%;padding:10px 12px;font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);min-height:80px;resize:vertical;font-family:inherit"></textarea>'+
         '<div id="rec-cm-file-info" style="font-size:11px;color:var(--text3);margin-top:10px;padding:8px 10px;background:var(--bg3);border-radius:8px"></div>'+
-        '<button id="rec-cm-save" onclick="submitRecComment()" style="width:100%;margin-top:14px;padding:12px;background:#3B6D11;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">💾 Saqlash + Budilnik o\'rnatish</button>'+
+        '<button id="rec-cm-save" onclick="submitRecComment()" style="width:100%;margin-top:14px;padding:12px;background:#3B6D11;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">💾 Saqlash</button>'+
       '</div>'+
     '</div>';
     document.body.appendChild(modal);
@@ -1755,10 +1752,10 @@ function showRecCommentModal(userId, ism, filial, file, umumiyQarz){
   document.getElementById('rec-cm-subtitle').textContent = ism || 'Mijoz';
   var dtInput = document.getElementById('rec-cm-dt');
   dtInput.min = minStr;
-  dtInput.value = dtStr;
+  dtInput.value = '';  // default bo'sh
   document.getElementById('rec-cm-izoh').value = '';
   document.getElementById('rec-cm-remind').value = '15';
-  document.getElementById('rec-cm-file-info').textContent = file ? ('📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)') : '📝 Faqat izoh + budilnik (fayl yo\'q)';
+  document.getElementById('rec-cm-file-info').textContent = file ? ('📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)') : '📝 Faqat izoh (fayl yo\'q)';
   modal.style.display = 'flex';
   setTimeout(function(){ document.getElementById('rec-cm-izoh').focus(); }, 100);
 }
@@ -1779,22 +1776,20 @@ function submitRecComment(){
     document.getElementById('rec-cm-izoh').focus();
     return;
   }
-  if(!dt){
-    alert('Budilnik uchun vaqt kiritilishi shart!');
-    document.getElementById('rec-cm-dt').focus();
-    return;
+  var waqtSql = '';
+  if(dt){
+    // Faqat sana kechagi yoki avvalgi bo'lmasligi tekshiriladi (vaqt erkin)
+    var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
+    var todayStart = new Date(Date.UTC(nowUZB.getUTCFullYear(), nowUZB.getUTCMonth(), nowUZB.getUTCDate(), 0, 0, 0));
+    var dtMs = new Date(dt).getTime();
+    if(dtMs < todayStart.getTime()){
+      alert('Budilnik sanasi bugungi yoki kelajakdagi bo\'lishi kerak!');
+      document.getElementById('rec-cm-dt').focus();
+      return;
+    }
+    // datetime-local format → "YYYY-MM-DDTHH:MM" → SQL timestamp uchun "YYYY-MM-DD HH:MM:00"
+    waqtSql = dt.replace('T',' ')+':00';
   }
-  // Faqat sana kechagi yoki avvalgi bo'lmasligi tekshiriladi (vaqt erkin)
-  var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
-  var todayStart = new Date(Date.UTC(nowUZB.getUTCFullYear(), nowUZB.getUTCMonth(), nowUZB.getUTCDate(), 0, 0, 0));
-  var dtMs = new Date(dt).getTime();
-  if(dtMs < todayStart.getTime()){
-    alert('Budilnik sanasi bugungi yoki kelajakdagi bo\'lishi kerak!');
-    document.getElementById('rec-cm-dt').focus();
-    return;
-  }
-  // datetime-local format → "YYYY-MM-DDTHH:MM" → SQL timestamp uchun "YYYY-MM-DD HH:MM:00"
-  var waqtSql = dt.replace('T',' ')+':00';
   var p = _recPending;
   closeRecCommentModal();
   doUploadRec(p.userId, p.ism, p.filial, p.file, izoh, waqtSql, remind, p.umumiyQarz);
@@ -2102,22 +2097,28 @@ function renderWalletTx(d){
 
 // ===================== CALENDAR =====================
 function openCalendar(wid, filialNomi, oy, yil){
+  console.log('[openCalendar] called', { wid: wid, filialNomi: filialNomi, oy: oy, yil: yil });
   var modal = document.getElementById('cal-modal');
   var title = document.getElementById('cal-title');
   var subtitle = document.getElementById('cal-subtitle');
   var body = document.getElementById('cal-body');
-  title.textContent = '📅 ' + (filialNomi||'Kalendar');
-  subtitle.textContent = (OY[parseInt(oy)-1]||'') + ' ' + yil;
+  if(!modal){ console.error('[openCalendar] cal-modal not found in DOM'); alert('Kalendar oynasi topilmadi'); return; }
+  if(!body){ console.error('[openCalendar] cal-body not found in DOM'); return; }
+  if(title) title.textContent = '📅 ' + (filialNomi||'Kalendar');
+  if(subtitle) subtitle.textContent = (OY[parseInt(oy)-1]||'') + ' ' + yil;
   body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
   modal.style.display = 'flex';
-  fetch(CALENDAR_API+'?wid='+wid+'&oy='+oy+'&yil='+yil)
+  var url = CALENDAR_API+'?wid='+encodeURIComponent(wid)+'&oy='+encodeURIComponent(oy)+'&yil='+encodeURIComponent(yil);
+  console.log('[openCalendar] fetch', url);
+  fetch(url)
     .then(function(r){return r.text();})
     .then(function(txt){
-      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      console.log('[openCalendar] response', txt.substring(0, 300));
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ console.error('[openCalendar] JSON parse error', e); d=null; }
       if(!d || !d.days){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Ma\'lumot yuklanmadi</div>'; return; }
       renderCalendar(d);
     })
-    .catch(function(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
+    .catch(function(e){ console.error('[openCalendar] fetch error', e); body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
 }
 
 function renderCalendar(d){
