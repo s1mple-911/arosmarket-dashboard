@@ -553,7 +553,15 @@ function renderCard(f,idx){
   var el=document.getElementById('fc-'+idx);
   if(!el)return;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
-  var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
+  // ISH KUNLARI BO'YICHA — DayOff'larni chiqarib tashlaydi
+  var qolganKun = (function(){
+    var oyK = f.oy_kunlari||30;
+    var ishK = f.ish_kunlari||oyK;
+    var bugunIshKun = f.bugun_ish_kun||0;
+    var bugunDayOff = !!f.bugun_day_off;
+    var otganIshKun = bugunIshKun + (bugunDayOff ? 0 : 1);
+    return Math.max(0, ishK - otganIshKun);
+  })();
   var _wid = String(f.warehouse_id||'');
   var _filial = f.filial||'';
   var _oy = f.oy||'';
@@ -901,7 +909,15 @@ function showDetTab(t,el){
 function renderDetDash(){
   var f=detFilial;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
-  var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
+  // ISH KUNLARI BO'YICHA — DayOff'larni chiqarib tashlaydi
+  var qolganKun = (function(){
+    var oyK = f.oy_kunlari||30;
+    var ishK = f.ish_kunlari||oyK;
+    var bugunIshKun = f.bugun_ish_kun||0;
+    var bugunDayOff = !!f.bugun_day_off;
+    var otganIshKun = bugunIshKun + (bugunDayOff ? 0 : 1);
+    return Math.max(0, ishK - otganIshKun);
+  })();
   var fpColor=fColor(foiz);
   var html='';
   html+='<div class="progress-card">';
@@ -953,7 +969,7 @@ function renderDetDash(){
   if(qolganKun>0&&f.qoldi>0&&foiz<100){
     html+='<div style="margin-top:8px;padding:7px 10px;background:var(--bg3);border-radius:10px;font-size:11px;color:var(--text2);display:flex;justify-content:space-between">';
     html+='<span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span>';
-    html+='<span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>';
+    html+='<span style="color:var(--text3)">'+(f.bugun_ish_kun||0)+'/'+(f.ish_kunlari||f.oy_kunlari||30)+' ish kun</span></div>';
   } else if(foiz>=100){
     html+='<div style="margin-top:8px;padding:7px 10px;background:rgba(0,229,160,.1);border-radius:10px;font-size:11px;color:var(--green);text-align:center;font-weight:700">✅ Plan bajarildi!</div>';
   }

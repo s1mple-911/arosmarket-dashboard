@@ -903,7 +903,18 @@ function renderDash(){
     var fpColor=ffoiz>=80?'var(--green)':ffoiz>=50?'var(--amber)':'var(--red)';
     var fprogFoiz=fd.prognoz_foiz||0;
     var fprogColor=fprogFoiz>=80?'var(--green)':fprogFoiz>=50?'var(--amber)':'var(--red)';
-    var fqolganKun=(fd.oy_kunlari||30)-(fd.bugun||1);
+    // ISH KUNLARI BO'YICHA — DayOff'larni chiqarib tashlaydi
+    var fqolganKun = (function(){
+      var oyK = fd.oy_kunlari||30;
+      var bugun = fd.bugun||1;
+      var ishK = fd.ish_kunlari||oyK;
+      var bugunIshKun = fd.bugun_ish_kun||0;
+      var bugunDayOff = !!fd.bugun_day_off;
+      // Bugun ham ish kun bo'lsa, undan keyingi ish kunlari
+      // Bugun dam bo'lsa, undan keyingi ish kunlari
+      var otganIshKun = bugunIshKun + (bugunDayOff ? 0 : 1);
+      return Math.max(0, ishK - otganIshKun);
+    })();
     var profBadgeIdx = '';
     if(isAks) profBadgeIdx = ' · <span style="color:#06b6d4;font-weight:700;font-size:10px">AKSESSUAR</span>';
     else if(isFr) profBadgeIdx = ' · <span style="color:#a855f7;font-weight:700;font-size:10px">FRANSHIZA</span>';
@@ -978,7 +989,7 @@ function renderDash(){
       html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Prognoz summa</div>';
       html+='<div style="font-size:13px;font-weight:800;color:#06b6d4">'+fmt(fd.prognoz||0)+'</div>';
       if(fqolganKun>0 || ffoiz>=100){
-        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+(fd.bugun_ish_kun||0)+'/'+(fd.ish_kunlari||fd.oy_kunlari||30)+' ish kun</div>';
       }
       html+='</div>';
       html+='</div>';
@@ -1047,7 +1058,7 @@ function renderDash(){
     html+='<div style="font-size:13px;font-weight:800;color:'+fprogColor+'">'+fprogFoiz+'%</div>';
     if(fkunlik>0){
       html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(fd.bugun_ish_kun||0)+'/'+(fd.ish_kunlari||fd.oy_kunlari||30)+' ish kun</div>';
     } else if(ffoiz>=100){
       html+='<div style="font-size:9px;color:var(--green);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
     }
