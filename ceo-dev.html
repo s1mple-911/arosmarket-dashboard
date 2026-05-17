@@ -423,6 +423,15 @@ function filterFiliallar(filiallar){
       return (f.filial||'').toLowerCase().indexOf(q) !== -1;
     });
   }
+  // Tartiblash: oddiy filiallar (nom bo'yicha) yuqorida, franshizalar (nom bo'yicha) eng oxirida
+  result = result.slice().sort(function(a,b){
+    var aFr = (a.profil === 'Franshiza' || a.is_franchise) ? 1 : 0;
+    var bFr = (b.profil === 'Franshiza' || b.is_franchise) ? 1 : 0;
+    if(aFr !== bFr) return aFr - bFr;
+    var an = (a.filial||'').toLowerCase();
+    var bn = (b.filial||'').toLowerCase();
+    return an.localeCompare(bn, 'uz');
+  });
   return result;
 }
 
@@ -458,8 +467,14 @@ function renderFromCache(){
   html+='</div></div>';
   html+='<div style="margin:14px 0 8px"><input id="ceo-search-input" type="search" placeholder="🔍 Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)" style="width:100%;padding:10px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);outline:none"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
   var allData=new Array(filiallar.length);
+  var franchiseStarted=false;
   for(var i=0;i<filiallar.length;i++){
     allData[i]=filiallar[i];
+    var isFrCard = (filiallar[i].profil === 'Franshiza' || filiallar[i].is_franchise);
+    if(isFrCard && !franchiseStarted){
+      franchiseStarted=true;
+      html+='<div class="sec-hdr" style="margin-top:18px"><div class="sec-title" style="color:#a855f7">🟣 Franshizalar</div><span class="sec-badge">'+filiallar.filter(function(x){return x.profil==="Franshiza"||x.is_franchise;}).length+' ta</span></div>';
+    }
     html+='<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
   }
   document.getElementById('main').innerHTML=html;
