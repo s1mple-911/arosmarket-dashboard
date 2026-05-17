@@ -423,6 +423,15 @@ function filterFiliallar(filiallar){
       return (f.filial||'').toLowerCase().indexOf(q) !== -1;
     });
   }
+  // Tartiblash: oddiy filiallar (nom bo'yicha) yuqorida, franshizalar (nom bo'yicha) eng oxirida
+  result = result.slice().sort(function(a,b){
+    var aFr = (a.profil === 'Franshiza' || a.is_franchise) ? 1 : 0;
+    var bFr = (b.profil === 'Franshiza' || b.is_franchise) ? 1 : 0;
+    if(aFr !== bFr) return aFr - bFr;
+    var an = (a.filial||'').toLowerCase();
+    var bn = (b.filial||'').toLowerCase();
+    return an.localeCompare(bn, 'uz');
+  });
   return result;
 }
 
@@ -458,8 +467,14 @@ function renderFromCache(){
   html+='</div></div>';
   html+='<div style="margin:14px 0 8px"><input id="ceo-search-input" type="search" placeholder="🔍 Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)" style="width:100%;padding:10px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);outline:none"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
   var allData=new Array(filiallar.length);
+  var franchiseStarted=false;
   for(var i=0;i<filiallar.length;i++){
     allData[i]=filiallar[i];
+    var isFrCard = (filiallar[i].profil === 'Franshiza' || filiallar[i].is_franchise);
+    if(isFrCard && !franchiseStarted){
+      franchiseStarted=true;
+      html+='<div class="sec-hdr" style="margin-top:18px"><div class="sec-title" style="color:#a855f7">🟣 Franshizalar</div><span class="sec-badge">'+filiallar.filter(function(x){return x.profil==="Franshiza"||x.is_franchise;}).length+' ta</span></div>';
+    }
     html+='<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
   }
   document.getElementById('main').innerHTML=html;
@@ -679,40 +694,28 @@ function renderCard(f,idx){
 
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
-    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+(isFr?profBadge:profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan))+'</div></div>'+
+    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan)+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px">'+
     '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
-    (isFr
-      ? '<div style="text-align:right"><div style="font-size:16px;font-weight:800;color:#a855f7;line-height:1">'+fmt(f.bajarildi)+'</div><div style="font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.3px;margin-top:2px">BAJARDI</div></div>'
-      : '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'
-    )+
+    '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'+
     '</div></div>'+
-    (isFr
-      ? '<div style="height:2px;background:linear-gradient(90deg,#a855f7,rgba(168,85,247,.2));border-radius:2px;margin:8px 0"></div>'
-      : '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'
-    )+
-    (isFr
-      ? '<div class="fc-nums" style="justify-content:center"><span style="color:var(--text3);font-size:11px">📋 Adminkadan tortib ishla</span></div>'
-      : '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'
-    )+
+    '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
+    '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'+
     '<div class="fc-mini">'+
     '<div class="fc-m"><div class="fc-m-lbl">Tushum</div><div class="fc-m-val" style="color:var(--green)">'+fmt(f.orders_summa)+'</div></div>'+
     '<div class="fc-m"><div class="fc-m-lbl">Qaytarilgan</div><div class="fc-m-val" style="color:var(--red)">-'+fmt(f.returns_summa)+'</div></div>'+
-    (isFr
-      ? '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:#a855f7;font-size:12px">'+fmt(f.prognoz||0)+'</div></div>'
-      : (function(){
-          var fkunlik = (qolganKun>0 && f.qoldi>0 && foiz<100) ? Math.round(f.qoldi/qolganKun) : 0;
-          var h = '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div>';
-          if(fkunlik>0){
-            h += '<div style="font-size:9px;color:var(--text3);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);line-height:1.3">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-            h += '<div style="font-size:9px;color:var(--text3);margin-top:1px;line-height:1.3">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</div>';
-          } else if(foiz>=100){
-            h += '<div style="font-size:9px;color:var(--green);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
-          }
-          h += '</div>';
-          return h;
-        })()
-    )+
+    (function(){
+      var fkunlik = (qolganKun>0 && f.qoldi>0 && foiz<100) ? Math.round(f.qoldi/qolganKun) : 0;
+      var h = '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div>';
+      if(fkunlik>0){
+        h += '<div style="font-size:9px;color:var(--text3);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);line-height:1.3">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
+        h += '<div style="font-size:9px;color:var(--text3);margin-top:1px;line-height:1.3">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</div>';
+      } else if(foiz>=100){
+        h += '<div style="font-size:9px;color:var(--green);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
+      }
+      h += '</div>';
+      return h;
+    })()+
     '</div>'+
     '<div class="fc-mini" style="margin-top:0">'+
     '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</span></div></div>'+
