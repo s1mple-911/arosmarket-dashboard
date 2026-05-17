@@ -553,15 +553,7 @@ function renderCard(f,idx){
   var el=document.getElementById('fc-'+idx);
   if(!el)return;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
-  // ISH KUNLARI BO'YICHA — DayOff'larni chiqarib tashlaydi
-  var qolganKun = (function(){
-    var oyK = f.oy_kunlari||30;
-    var ishK = f.ish_kunlari||oyK;
-    var bugunIshKun = f.bugun_ish_kun||0;
-    var bugunDayOff = !!f.bugun_day_off;
-    var otganIshKun = bugunIshKun + (bugunDayOff ? 0 : 1);
-    return Math.max(0, ishK - otganIshKun);
-  })();
+  var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
   var _wid = String(f.warehouse_id||'');
   var _filial = f.filial||'';
   var _oy = f.oy||'';
@@ -687,40 +679,28 @@ function renderCard(f,idx){
 
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
-    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+(isFr?profBadge:profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan))+'</div></div>'+
+    '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan)+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px">'+
     '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
-    (isFr
-      ? '<div style="text-align:right"><div style="font-size:16px;font-weight:800;color:#a855f7;line-height:1">'+fmt(f.bajarildi)+'</div><div style="font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.3px;margin-top:2px">BAJARDI</div></div>'
-      : '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'
-    )+
+    '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'+
     '</div></div>'+
-    (isFr
-      ? '<div style="height:2px;background:linear-gradient(90deg,#a855f7,rgba(168,85,247,.2));border-radius:2px;margin:8px 0"></div>'
-      : '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'
-    )+
-    (isFr
-      ? '<div class="fc-nums" style="justify-content:center"><span style="color:var(--text3);font-size:11px">📋 Adminkadan tortib ishla</span></div>'
-      : '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'
-    )+
+    '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
+    '<div class="fc-nums"><span>Bajarildi: <b>'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b>'+fmt(f.qoldi)+'</b></span></div>'+
     '<div class="fc-mini">'+
     '<div class="fc-m"><div class="fc-m-lbl">Tushum</div><div class="fc-m-val" style="color:var(--green)">'+fmt(f.orders_summa)+'</div></div>'+
     '<div class="fc-m"><div class="fc-m-lbl">Qaytarilgan</div><div class="fc-m-val" style="color:var(--red)">-'+fmt(f.returns_summa)+'</div></div>'+
-    (isFr
-      ? '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:#a855f7;font-size:12px">'+fmt(f.prognoz||0)+'</div></div>'
-      : (function(){
-          var fkunlik = (qolganKun>0 && f.qoldi>0 && foiz<100) ? Math.round(f.qoldi/qolganKun) : 0;
-          var h = '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div>';
-          if(fkunlik>0){
-            h += '<div style="font-size:9px;color:var(--text3);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);line-height:1.3">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-            h += '<div style="font-size:9px;color:var(--text3);margin-top:1px;line-height:1.3">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</div>';
-          } else if(foiz>=100){
-            h += '<div style="font-size:9px;color:var(--green);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
-          }
-          h += '</div>';
-          return h;
-        })()
-    )+
+    (function(){
+      var fkunlik = (qolganKun>0 && f.qoldi>0 && foiz<100) ? Math.round(f.qoldi/qolganKun) : 0;
+      var h = '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div>';
+      if(fkunlik>0){
+        h += '<div style="font-size:9px;color:var(--text3);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);line-height:1.3">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
+        h += '<div style="font-size:9px;color:var(--text3);margin-top:1px;line-height:1.3">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</div>';
+      } else if(foiz>=100){
+        h += '<div style="font-size:9px;color:var(--green);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
+      }
+      h += '</div>';
+      return h;
+    })()+
     '</div>'+
     '<div class="fc-mini" style="margin-top:0">'+
     '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</span></div></div>'+
@@ -909,15 +889,7 @@ function showDetTab(t,el){
 function renderDetDash(){
   var f=detFilial;
   var foiz=f.foiz||0,barW=Math.min(100,foiz),pFoiz=f.prognoz_foiz||0;
-  // ISH KUNLARI BO'YICHA — DayOff'larni chiqarib tashlaydi
-  var qolganKun = (function(){
-    var oyK = f.oy_kunlari||30;
-    var ishK = f.ish_kunlari||oyK;
-    var bugunIshKun = f.bugun_ish_kun||0;
-    var bugunDayOff = !!f.bugun_day_off;
-    var otganIshKun = bugunIshKun + (bugunDayOff ? 0 : 1);
-    return Math.max(0, ishK - otganIshKun);
-  })();
+  var qolganKun=(f.oy_kunlari||30)-(f.bugun||1);
   var fpColor=fColor(foiz);
   var html='';
   html+='<div class="progress-card">';
@@ -969,7 +941,7 @@ function renderDetDash(){
   if(qolganKun>0&&f.qoldi>0&&foiz<100){
     html+='<div style="margin-top:8px;padding:7px 10px;background:var(--bg3);border-radius:10px;font-size:11px;color:var(--text2);display:flex;justify-content:space-between">';
     html+='<span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span>';
-    html+='<span style="color:var(--text3)">'+(f.bugun_ish_kun||0)+'/'+(f.ish_kunlari||f.oy_kunlari||30)+' ish kun</span></div>';
+    html+='<span style="color:var(--text3)">'+(f.bugun||0)+'/'+(f.oy_kunlari||30)+' kun</span></div>';
   } else if(foiz>=100){
     html+='<div style="margin-top:8px;padding:7px 10px;background:rgba(0,229,160,.1);border-radius:10px;font-size:11px;color:var(--green);text-align:center;font-weight:700">✅ Plan bajarildi!</div>';
   }
