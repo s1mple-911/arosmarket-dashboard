@@ -146,6 +146,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
   </div>
   <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
+  <div id="tilxatBtn" class="bug-btn" onclick="openTilxatPanel()" title="Tilxatlar" style="display:none">📄</div>
   <div class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</div>
   <div class="theme-btn" onclick="doLogout()" id="logoutBtn" style="background:rgba(255,81,81,.12);border-color:rgba(255,81,81,.3);color:var(--red)" title="Chiqish">⏻</div>
 </div>
@@ -243,6 +244,10 @@ var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
 var DEADLINE_API = 'https://n8n.arosmarket.com/webhook/aros-deadlines-get';
 var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
+var TILXAT_DEBTORS = 'https://n8n.arosmarket.com/webhook/aros-tilxat-debtors';
+var TILXAT_UPLOAD  = 'https://n8n.arosmarket.com/webhook/aros-tilxat-upload';
+var TILXAT_LIST    = 'https://n8n.arosmarket.com/webhook/aros-tilxat-list';
+var TILXAT_STREAM  = 'https://n8n.arosmarket.com/webhook/aros-tilxat-stream';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
 
 // =====================================================
@@ -315,6 +320,10 @@ function goBugalter(){
   var btn = document.getElementById('bugBtn');
   if(btn && canSeeBugalter){
     btn.style.display = 'flex';
+  }
+  var tbtn = document.getElementById('tilxatBtn');
+  if(tbtn && isCeo){
+    tbtn.style.display = 'flex';
   }
 })();
 
@@ -681,7 +690,8 @@ function renderCard(f,idx){
   if(isFr){
     var omborUsd = parseFloat(f.ombor_summa_usd||0);
     if(omborUsd > 0){
-      omborBadge = ' <span style="background:#EEEDFE;color:#26215C;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block">📦 $'+fmt(omborUsd)+' yuk</span>';
+      window['_om_'+idx]=f;
+      omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:#EEEDFE;color:#26215C;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block;cursor:pointer">📦 $'+fmt(omborUsd)+' yuk</span>';
     }
   }
   el.innerHTML=
@@ -1474,6 +1484,244 @@ function showTransfersModal(transfers, filialNomi){
   modal.style.display='flex';
 }
 
+function showOmborModal(f){
+  if(typeof f==='string'){ try{ f=JSON.parse(f); }catch(e){ return; } }
+  var omborUsd = parseFloat(f.ombor_summa_usd||0);
+  var omborSoni = parseFloat(f.ombor_mahsulot_soni||0);
+  var turganPul = parseFloat(f.filialda_turgan_pul||0);
+  var turganKun = parseInt(f.filialda_turgan_kun||0);
+  var qarzFakt = parseFloat(f.qarz_fakt||0);
+  var qarzMuddati = parseFloat(f.muddati_utgan||0);
+
+  var html = '';
+  html += '<div style="display:flex;flex-direction:column;gap:10px">';
+
+  // 1. Ombordagi yuk ($)
+  if(omborUsd > 0){
+    html += '<div style="background:#EEEDFE;border:1px solid #d6d3f5;border-radius:14px;padding:14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:38px;height:38px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📦</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#6b66a8;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Ombordagi yuk</div>';
+    html += '<div style="font-size:11px;color:#8b87b5;margin-top:2px">'+(omborSoni>0?fmt(omborSoni)+' dona mahsulot':'jami qiymat')+'</div>';
+    html += '</div>';
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:18px;font-weight:800;color:#26215C">$'+fmt(omborUsd)+'</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // 2. Filialda turgan pul (junatilmagan)
+  if(turganPul > 0){
+    html += '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">💰</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Filialda turgan pul</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+turganKun+' kunlik · jo\'natilmagan</div>';
+    html += '</div>';
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:16px;font-weight:800;color:#f59e0b">'+fmt(turganPul)+'</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // 3. Umumiy qarz
+  if(qarzFakt > 0 || qarzMuddati > 0){
+    html += '<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+    html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📊</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#ef4444;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Umumiy qarz</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    html += '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">';
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Berilgan qarz</div>';
+    html += '<div style="font-size:15px;font-weight:800;color:var(--text);margin-top:4px">'+fmt(qarzFakt)+'</div>';
+    html += '<div style="font-size:9px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '</div>';
+    html += '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">';
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Muddati o\'tgan</div>';
+    html += '<div style="font-size:15px;font-weight:800;color:'+(qarzMuddati>0?'#ef4444':'var(--text2)')+';margin-top:4px">'+fmt(qarzMuddati)+'</div>';
+    html += '<div style="font-size:9px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  if(omborUsd<=0 && turganPul<=0 && qarzFakt<=0 && qarzMuddati<=0){
+    html += '<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Ma\'lumot yo\'q</div>';
+  }
+
+  html += '</div>';
+
+  document.getElementById('ombor-modal-title').textContent = f.filial || 'Filial';
+  document.getElementById('ombor-modal-body').innerHTML = html;
+  document.getElementById('ombor-modal').style.display = 'flex';
+}
+
+// ============ TILXAT TIZIMI ============
+var _tilxatDebtors = [];
+var _tilxatSelected = null;
+var _tilxatSearchTimer = null;
+
+function openTilxatPanel(){
+  document.getElementById('tilxat-panel').style.display = 'flex';
+  document.getElementById('tilxat-search').value = '';
+  _tilxatSelected = null;
+  document.getElementById('tilxat-upload-box').style.display = 'none';
+  loadTilxatDebtors('');
+}
+
+function closeTilxatPanel(){
+  document.getElementById('tilxat-panel').style.display = 'none';
+}
+
+function onTilxatSearchInput(){
+  clearTimeout(_tilxatSearchTimer);
+  var q = document.getElementById('tilxat-search').value.trim();
+  _tilxatSearchTimer = setTimeout(function(){ loadTilxatDebtors(q); }, 350);
+}
+
+function loadTilxatDebtors(q){
+  var list = document.getElementById('tilxat-debtors-list');
+  list.innerHTML = '<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Yuklanmoqda...</div>';
+  fetch(TILXAT_DEBTORS + '?uid=' + encodeURIComponent(uid) + '&q=' + encodeURIComponent(q||''))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var data = Array.isArray(d) ? d[0] : d;
+      if(!data || data.error){
+        list.innerHTML = '<div style="text-align:center;color:var(--red);padding:30px;font-size:13px">Xatolik: '+(data&&data.error||'noma\'lum')+'</div>';
+        return;
+      }
+      _tilxatDebtors = data.debtors || [];
+      renderTilxatDebtors();
+    })
+    .catch(function(){
+      list.innerHTML = '<div style="text-align:center;color:var(--red);padding:30px;font-size:13px">Tarmoq xatosi</div>';
+    });
+}
+
+function renderTilxatDebtors(){
+  var list = document.getElementById('tilxat-debtors-list');
+  if(!_tilxatDebtors.length){
+    list.innerHTML = '<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Mijoz topilmadi</div>';
+    return;
+  }
+  var html = '';
+  _tilxatDebtors.forEach(function(m, i){
+    var tel = (m.telefon||'').replace(/\D/g,'');
+    html += '<div onclick="selectTilxatMijoz('+i+')" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(m.ism||'—')+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(tel?'+'+tel:'—')+' · '+(m.filial||'')+'</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;flex-shrink:0;margin-left:10px">';
+    html += '<div style="font-size:13px;font-weight:800;color:#ef4444">'+fmt(m.summa)+'</div>';
+    html += '<div style="font-size:9px;color:var(--text3)">so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function selectTilxatMijoz(i){
+  _tilxatSelected = _tilxatDebtors[i];
+  if(!_tilxatSelected) return;
+  var box = document.getElementById('tilxat-upload-box');
+  box.style.display = 'block';
+  var tel = (_tilxatSelected.telefon||'').replace(/\D/g,'');
+  document.getElementById('tilxat-sel-name').textContent = _tilxatSelected.ism || '—';
+  document.getElementById('tilxat-sel-info').textContent = (tel?'+'+tel:'') + ' · ' + (_tilxatSelected.filial||'') + ' · Qarz: ' + fmt(_tilxatSelected.summa) + ' so\'m';
+  document.getElementById('tilxat-file-input').value = '';
+  document.getElementById('tilxat-izoh').value = '';
+  document.getElementById('tilxat-upload-status').textContent = '';
+  loadTilxatHistory(_tilxatSelected.user_id);
+  box.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function loadTilxatHistory(userId){
+  var hist = document.getElementById('tilxat-history');
+  hist.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:8px 0">Yuklanmoqda...</div>';
+  fetch(TILXAT_LIST + '?user_id=' + encodeURIComponent(userId))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var data = Array.isArray(d) ? d[0] : d;
+      var arr = (data && data.tilxatlar) || [];
+      if(!arr.length){
+        hist.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:8px 0">Hali tilxat yo\'q</div>';
+        return;
+      }
+      var html = '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:8px 0 6px">Avvalgi tilxatlar ('+arr.length+')</div>';
+      arr.forEach(function(t){
+        var sana = (t.created_at||'').replace('T',' ').substring(0,16);
+        html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px">';
+        html += '<div style="flex:1;min-width:0">';
+        html += '<div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+(t.izoh||t.file_name||'Tilxat')+'</div>';
+        html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">'+sana+'</div>';
+        html += '</div>';
+        html += '<a href="'+t.download_link+'" target="_blank" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:4px 8px;font-size:11px;text-decoration:none;color:var(--green);flex-shrink:0">⬇</a>';
+        html += '</div>';
+      });
+      hist.innerHTML = html;
+    })
+    .catch(function(){
+      hist.innerHTML = '<div style="font-size:11px;color:var(--red);padding:8px 0">Tarix yuklanmadi</div>';
+    });
+}
+
+function submitTilxat(){
+  if(!_tilxatSelected){ alert('Mijoz tanlanmagan'); return; }
+  var fileInput = document.getElementById('tilxat-file-input');
+  if(!fileInput.files || !fileInput.files.length){ alert('Fayl tanlang'); return; }
+  var file = fileInput.files[0];
+  var maxMB = 15;
+  if(file.size > maxMB*1024*1024){ alert('Fayl juda katta (max '+maxMB+'MB)'); return; }
+  var izoh = document.getElementById('tilxat-izoh').value.trim();
+  var statusEl = document.getElementById('tilxat-upload-status');
+  var btn = document.getElementById('tilxat-submit-btn');
+  btn.disabled = true;
+  statusEl.style.color = 'var(--text3)';
+  statusEl.textContent = 'Yuklanmoqda...';
+
+  var fd = new FormData();
+  fd.append('file', file, file.name);
+  fd.append('file_name', file.name);
+  fd.append('user_id', String(_tilxatSelected.user_id||''));
+  fd.append('warehouse_id', String(_tilxatSelected.warehouse_id||''));
+  fd.append('ism', _tilxatSelected.ism||'');
+  fd.append('filial', _tilxatSelected.filial||'');
+  fd.append('izoh', izoh);
+  fd.append('umumiy_qarz', String(_tilxatSelected.summa||0));
+  fd.append('ceo_id', String(uid));
+
+  fetch(TILXAT_UPLOAD, { method:'POST', body: fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var data = Array.isArray(d) ? d[0] : d;
+      if(data && data.ok){
+        statusEl.style.color = 'var(--green)';
+        statusEl.textContent = '✅ Tilxat saqlandi';
+        fileInput.value = '';
+        document.getElementById('tilxat-izoh').value = '';
+        loadTilxatHistory(_tilxatSelected.user_id);
+      } else {
+        statusEl.style.color = 'var(--red)';
+        statusEl.textContent = '❌ Xatolik yuz berdi';
+      }
+      btn.disabled = false;
+    })
+    .catch(function(){
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = '❌ Tarmoq xatosi';
+      btn.disabled = false;
+    });
+}
+
 </script>
 
 <!-- TRANSFERS MODAL -->
@@ -1487,6 +1735,58 @@ function showTransfersModal(transfers, filialNomi){
       <button onclick="document.getElementById('tr-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
     </div>
     <div id="tr-list" style="padding:12px 16px 24px"></div>
+  </div>
+</div>
+
+<!-- TILXAT PANEL -->
+<div id="tilxat-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:700;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeTilxatPanel()">
+  <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;border-top:1px solid var(--border)">
+    <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10">
+      <div>
+        <div style="font-size:15px;font-weight:700">📄 Tilxat yuklash</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">Qarzdor mijoz tanlang</div>
+      </div>
+      <button onclick="closeTilxatPanel()" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer;flex-shrink:0">✕</button>
+    </div>
+    <div style="padding:14px 18px 24px">
+      <input id="tilxat-search" oninput="onTilxatSearchInput()" placeholder="🔍 Mijoz ismi yoki telefon..." style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:11px 14px;font-size:13px;color:var(--text);outline:none;margin-bottom:12px">
+      <div id="tilxat-debtors-list" style="max-height:280px;overflow-y:auto"></div>
+
+      <div id="tilxat-upload-box" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px">
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:0.5px solid var(--border);margin-bottom:12px">
+          <div style="width:34px;height:34px;border-radius:10px;background:rgba(168,85,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">👤</div>
+          <div style="flex:1;min-width:0">
+            <div id="tilxat-sel-name" style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+            <div id="tilxat-sel-info" style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          </div>
+        </div>
+
+        <label style="display:block;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Fayl (PDF / Word / hujjat)</label>
+        <input id="tilxat-file-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:12px;color:var(--text);margin-bottom:10px">
+
+        <label style="display:block;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Izoh (ixtiyoriy)</label>
+        <input id="tilxat-izoh" placeholder="Masalan: 5 mln to'lov tilxati" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text);outline:none;margin-bottom:12px">
+
+        <button id="tilxat-submit-btn" onclick="submitTilxat()" style="width:100%;background:#a855f7;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">📤 Tilxatni yuklash</button>
+        <div id="tilxat-upload-status" style="text-align:center;font-size:12px;margin-top:8px;min-height:16px"></div>
+
+        <div id="tilxat-history"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OMBOR / FILIAL KASSA MODAL (markaziy) -->
+<div id="ombor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:700;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--bg2);border-radius:20px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:11px;color:#a855f7;font-weight:700;text-transform:uppercase;letter-spacing:.3px">🟣 Franshiza</div>
+        <div style="font-size:15px;font-weight:700;margin-top:2px" id="ombor-modal-title">Filial</div>
+      </div>
+      <button onclick="document.getElementById('ombor-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer;flex-shrink:0">✕</button>
+    </div>
+    <div id="ombor-modal-body" style="padding:16px 18px 20px"></div>
   </div>
 </div>
 
