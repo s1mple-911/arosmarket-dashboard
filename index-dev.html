@@ -109,6 +109,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .call-btn:active{transform:scale(.93)}
 .arr{color:var(--text3);font-size:11px;flex-shrink:0;margin-left:4px;min-width:14px;text-align:center;transition:transform .2s}
 .arr.open{transform:rotate(180deg)}
+.client-actions{display:flex;align-items:center;gap:8px;padding:0 14px 12px 14px;flex-wrap:wrap}
+.client-actions .ca-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:34px;padding:0 12px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:0.5px solid var(--border);background:var(--bg3);color:var(--text2);text-decoration:none;transition:all .15s}
+.client-actions .ca-btn:active{transform:scale(.96)}
+.client-actions .ca-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .orders-list{background:var(--bg3);max-height:0;overflow:hidden;transition:max-height .5s ease}
 .orders-list.expanded{max-height:2000px}
 .order-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 10px 62px;border-bottom:1px solid var(--border)}
@@ -447,7 +451,7 @@ function loadTilxatIds(){
 function tilxatBadge(userId){
   var cnt = tilxatIds[String(userId)] || 0;
   if(cnt <= 0) return '';
-  return '<span class="tilxat-ic" onclick="event.stopPropagation();showTilxatModal('+userId+')" title="Tilxat bor" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:rgba(168,85,247,.15);border:0.5px solid rgba(168,85,247,.35);color:#a855f7;font-size:13px;cursor:pointer;margin-left:4px;flex-shrink:0">📄</span>';
+  return '<button class="ca-btn" onclick="event.stopPropagation();showTilxatModal('+userId+')" title="Tilxat" style="border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.15);color:#a855f7">📄 Tilxat'+(cnt>1?' ('+cnt+')':'')+'</button>';
 }
 
 function refreshTilxatIcons(){
@@ -630,11 +634,13 @@ function buildCard(r,id,color,lazy,orders){
         '</div>'+
         '<div class="c-phone">'+(tel?'+'+tel:'—')+'</div>'+
       '</div>'+
-      '<span data-tilxat-slot="'+r.user_id+'">'+tilxatBadge(r.user_id)+'</span>'+
-      callBtn(tel)+
-      (isCeo?'<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism.replace(/\'/g,"\\'")+'\','+(r.otgan_summa||r.summa)+')" style="background:rgba(186,117,23,.15);border:0.5px solid rgba(186,117,23,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#BA7517;cursor:pointer;margin-left:4px">⏰</button>':'')+
-      (isOk&&hasDl?'<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(59,109,17,.15);border:0.5px solid rgba(59,109,17,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#3B6D11;cursor:pointer;margin-left:3px">✓</button>':'')+
       '<span class="arr" id="ar-'+id+'">▾</span>'+
+    '</div>'+
+    '<div class="client-actions">'+
+      '<span data-tilxat-slot="'+r.user_id+'">'+tilxatBadge(r.user_id)+'</span>'+
+      (tel?'<a class="ca-btn" href="tel:+'+tel+'" onclick="event.stopPropagation()" style="border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.1);color:var(--green)"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.95 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012.85 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>Qo\'ng\'iroq</a>':'')+
+      (isCeo?'<button class="ca-btn" onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism.replace(/\'/g,"\\'")+'\','+(r.otgan_summa||r.summa)+')" style="border-color:rgba(186,117,23,.4);background:rgba(186,117,23,.15);color:#BA7517">⏰ Deadline</button>':'')+
+      (isOk&&hasDl?'<button class="ca-btn" onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="border-color:rgba(59,109,17,.4);background:rgba(59,109,17,.15);color:#3B6D11">✓ Hal qildim</button>':'')+
     '</div>'+
     limitRowHtml+
     ordersHtml+
