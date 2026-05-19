@@ -206,7 +206,10 @@ var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions
 var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
 var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
 var KASSA_API      = 'https://n8n.arosmarket.com/webhook/aros-bugalter-filial-kassa';
+var TILXAT_LIST    = 'https://n8n.arosmarket.com/webhook/aros-tilxat-list';
 var recordingsCache = {}; // user_id -> recordings list
+var tilxatIds = {};        // user_id -> tilxat soni (qaysi mijozda tilxat bor)
+var tilxatCache = {};      // user_id -> tilxatlar list (modal uchun)
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
@@ -426,6 +429,96 @@ function callBtn(tel){
     '<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.95 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012.85 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg></a>';
 }
 
+// ============ TILXAT (mijoz box icon + modal) ============
+function loadTilxatIds(){
+  fetch(TILXAT_LIST)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var data = Array.isArray(d) ? d[0] : d;
+      if(data && data.mode === 'ids'){
+        tilxatIds = data.counts || {};
+        // Allaqachon render bo'lgan box'larga icon qo'shish
+        refreshTilxatIcons();
+      }
+    })
+    .catch(function(){});
+}
+
+function tilxatBadge(userId){
+  var cnt = tilxatIds[String(userId)] || 0;
+  if(cnt <= 0) return '';
+  return '<span class="tilxat-ic" onclick="event.stopPropagation();showTilxatModal('+userId+')" title="Tilxat bor" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:rgba(168,85,247,.15);border:0.5px solid rgba(168,85,247,.35);color:#a855f7;font-size:13px;cursor:pointer;margin-left:4px;flex-shrink:0">📄</span>';
+}
+
+function refreshTilxatIcons(){
+  // Render bo'lgan kartochkalarda placeholder'larni to'ldirish
+  var slots = document.querySelectorAll('[data-tilxat-slot]');
+  slots.forEach(function(s){
+    var uidv = s.getAttribute('data-tilxat-slot');
+    s.innerHTML = tilxatBadge(uidv);
+  });
+}
+
+function showTilxatModal(userId){
+  var modal = document.getElementById('tilxat-modal');
+  var body = document.getElementById('tilxat-modal-body');
+  var titleEl = document.getElementById('tilxat-modal-title');
+  modal.style.display = 'flex';
+  titleEl.textContent = 'Tilxatlar';
+  body.innerHTML = '<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Yuklanmoqda...</div>';
+
+  if(tilxatCache[userId]){
+    renderTilxatModal(userId, tilxatCache[userId]);
+    return;
+  }
+  fetch(TILXAT_LIST + '?user_id=' + encodeURIComponent(userId))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var data = Array.isArray(d) ? d[0] : d;
+      var arr = (data && data.tilxatlar) || [];
+      tilxatCache[userId] = arr;
+      renderTilxatModal(userId, arr);
+    })
+    .catch(function(){
+      body.innerHTML = '<div style="text-align:center;color:var(--red);padding:30px;font-size:13px">Yuklanmadi</div>';
+    });
+}
+
+function renderTilxatModal(userId, arr){
+  var body = document.getElementById('tilxat-modal-body');
+  var titleEl = document.getElementById('tilxat-modal-title');
+  if(!arr.length){
+    body.innerHTML = '<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Tilxat topilmadi</div>';
+    return;
+  }
+  titleEl.textContent = (arr[0].ism || 'Mijoz') + ' — ' + arr.length + ' ta tilxat';
+  var html = '';
+  arr.forEach(function(t){
+    var sana = (t.created_at||'').replace('T',' ').substring(0,16);
+    var ext = (t.file_name||'').split('.').pop().toLowerCase();
+    var icon = (ext==='pdf')?'📕':((ext==='doc'||ext==='docx')?'📘':((ext==='xls'||ext==='xlsx')?'📗':'📄'));
+    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:8px">';
+    html += '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">';
+    html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(168,85,247,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">'+icon+'</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--text)">'+(t.izoh||'Tilxat')+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+sana+'</div>';
+    if(t.umumiy_qarz>0) html += '<div style="font-size:11px;color:#ef4444;margin-top:2px">Qarz: '+fmtFull(t.umumiy_qarz)+' so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px">';
+    html += '<a href="'+t.view_link+'" target="_blank" style="flex:1;text-align:center;background:rgba(59,130,246,.12);border:0.5px solid rgba(59,130,246,.3);border-radius:10px;padding:9px;font-size:12px;font-weight:600;text-decoration:none;color:#3b82f6">👁 Ko\'rish</a>';
+    html += '<a href="'+t.download_link+'" target="_blank" style="flex:1;text-align:center;background:rgba(34,197,94,.12);border:0.5px solid rgba(34,197,94,.3);border-radius:10px;padding:9px;font-size:12px;font-weight:600;text-decoration:none;color:var(--green)">⬇ Yuklab olish</a>';
+    html += '</div>';
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
+function closeTilxatModal(){
+  document.getElementById('tilxat-modal').style.display = 'none';
+}
+
 function buildCard(r,id,color,lazy,orders){
   var tel=(r.telefon||'').replace(/\D/g,'');
   var safeName=(r.ism||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -537,6 +630,7 @@ function buildCard(r,id,color,lazy,orders){
         '</div>'+
         '<div class="c-phone">'+(tel?'+'+tel:'—')+'</div>'+
       '</div>'+
+      '<span data-tilxat-slot="'+r.user_id+'">'+tilxatBadge(r.user_id)+'</span>'+
       callBtn(tel)+
       (isCeo?'<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism.replace(/\'/g,"\\'")+'\','+(r.otgan_summa||r.summa)+')" style="background:rgba(186,117,23,.15);border:0.5px solid rgba(186,117,23,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#BA7517;cursor:pointer;margin-left:4px">⏰</button>':'')+
       (isOk&&hasDl?'<button onclick="event.stopPropagation();okDeadline('+r.user_id+')" style="background:rgba(59,109,17,.15);border:0.5px solid rgba(59,109,17,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;color:#3B6D11;cursor:pointer;margin-left:3px">✓</button>':'')+
@@ -1428,6 +1522,8 @@ function load(){
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
       loadKassaInfo();
+      // Tilxatli mijozlar ro'yxati (icon ko'rsatish uchun)
+      loadTilxatIds();
     })
     .catch(function(e){
       document.getElementById('hn').textContent='Xato';
@@ -2389,6 +2485,20 @@ function showTransfersModal(transfers, filialNomi){
       <button onclick="document.getElementById('wtx-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
     </div>
     <div id="wtx-body" style="padding:14px 16px 24px"></div>
+  </div>
+</div>
+
+<!-- TILXAT MODAL (markaziy) -->
+<div id="tilxat-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:700;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeTilxatModal()">
+  <div style="background:var(--bg2);border-radius:20px;width:100%;max-width:420px;max-height:80vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:11px;color:#a855f7;font-weight:700;text-transform:uppercase;letter-spacing:.3px">📄 Tilxat</div>
+        <div style="font-size:14px;font-weight:700;margin-top:2px" id="tilxat-modal-title">Tilxatlar</div>
+      </div>
+      <button onclick="closeTilxatModal()" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer;flex-shrink:0">✕</button>
+    </div>
+    <div id="tilxat-modal-body" style="padding:16px 18px 20px"></div>
   </div>
 </div>
 <script>
