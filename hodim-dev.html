@@ -245,7 +245,7 @@ function renderHodim(d){
     html += '<div style="height:100%;width:'+barW+'%;background:'+planColor+';transition:width 1s ease;border-radius:6px"></div>';
     html += '</div>';
     html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:5px">';
-    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(jamiSof)+'</b></span>';
+    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(d.jami_savdo||0)+'</b></span>';
     html += '<span>Plan: <b style="color:var(--text)">'+fmt(hodimPlan)+'</b></span>';
     html += '</div>';
     html += '</div>';
