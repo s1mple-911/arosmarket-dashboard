@@ -368,7 +368,8 @@ function renderHodim(d){
     list.forEach(function(c){
       var tel = (c.telefon||'').replace(/\D/g,'');
       var isActive = c.is_active;
-      var netColor = c.net_sum < 0 ? 'var(--red)' : (c.net_sum > 0 ? 'var(--green)' : 'var(--text3)');
+      var savdoSum = c.savdo_sum || (c.orders_sum + c.return_sum);
+      var savdoColor = savdoSum > 0 ? 'var(--green)' : 'var(--text3)';
       var rowClass = isActive ? 'mijoz-aktiv' : '';
       html += '<div class="mijoz-row '+rowClass+'" onclick="toggleClient('+c.client_id+')" style="cursor:pointer;flex-direction:column;align-items:stretch">';
       // Asosiy qator
@@ -379,7 +380,7 @@ function renderHodim(d){
       html += '</div>';
       html += '<div style="text-align:right;flex-shrink:0;margin-left:10px">';
       if(isActive){
-        html += '<div style="font-size:14px;font-weight:800;color:'+netColor+'">'+fmt(c.net_sum)+'</div>';
+        html += '<div style="font-size:14px;font-weight:800;color:'+savdoColor+'">'+fmt(savdoSum)+'</div>';
         html += '<div style="font-size:10px;color:var(--text3)">'+(c.orders_count||0)+' ta buyurtma</div>';
       } else {
         html += '<div style="font-size:11px;color:var(--text3);background:var(--bg3);padding:4px 8px;border-radius:8px">Savdo yo\'q</div>';
@@ -390,10 +391,10 @@ function renderHodim(d){
       html += '<div id="cl-'+c.client_id+'" style="display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)">';
       if(isActive){
         html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Savdo</div><div style="font-size:13px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(c.orders_sum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Savdo</div><div style="font-size:13px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(savdoSum)+'</div></div>';
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qaytarilgan</div><div style="font-size:13px;font-weight:800;color:'+(c.return_sum>0?'var(--red)':'var(--text2)')+';margin-top:2px">'+fmt(c.return_sum)+'</div></div>';
-        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.orders_count||0)+' ta</div></div>';
-        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Plan buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.plan_orders_count||0)+' ta</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Sof (KPI)</div><div style="font-size:13px;font-weight:800;color:var(--blue);margin-top:2px">'+fmt(c.net_sum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.orders_count||0)+' / '+(c.plan_orders_count||0)+' ta</div></div>';
         html += '</div>';
       } else {
         html += '<div style="text-align:center;color:var(--text3);font-size:12px;padding:8px">Bu oyda hech qanday savdo yo\'q. Plan: '+(c.plan_orders_count||0)+' ta buyurtma</div>';
