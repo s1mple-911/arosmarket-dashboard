@@ -172,8 +172,8 @@ function load(){
 
 function loadHodimData(){
   var main = document.getElementById('main');
-  // uid bo'yicha worker clientlarni olamiz (real-time Aros API)
-  fetch(HODIM_API+'?uid='+encodeURIComponent(uid)+(wid?'&wid='+wid:''))
+  // uid + oy/yil — joriy oy: Aros API; o'tgan oy: history PG
+  fetch(HODIM_API+'?uid='+encodeURIComponent(uid)+(wid?'&wid='+wid:'')+'&oy='+curOy+'&yil='+curYil)
     .then(function(r){return r.text();})
     .then(function(txt){
       var d;
@@ -183,6 +183,12 @@ function loadHodimData(){
         main.innerHTML = '<div class="empty"><div class="empty-ic">🔌</div>'+
           '<div style="font-weight:700;margin-bottom:6px">Worker biriktirilmagan</div>'+
           '<div style="font-size:12px">Bu xodimga adminkadagi worker hali ulanmagan. Administrator bilan bog\'laning.</div></div>';
+        return;
+      }
+      if(d.no_data){
+        main.innerHTML = '<div class="empty"><div class="empty-ic">📭</div>'+
+          '<div style="font-weight:700;margin-bottom:6px">Arxiv yo\'q</div>'+
+          '<div style="font-size:12px">'+(OY[(d.oy||1)-1]||'')+' '+d.yil+' uchun ma\'lumot arxivlanmagan</div></div>';
         return;
       }
       if(d.ism && d.ism !== userIsm){
@@ -199,93 +205,199 @@ function loadHodimData(){
 
 function renderHodim(d){
   var main = document.getElementById('main');
-  var jamiSavdo = d.jami_savdo || 0;
   var jamiSof = d.jami_sof || 0;
-  var planFoiz = oylikPlan > 0 ? Math.round(jamiSavdo / oylikPlan * 100) : 0;
-  var planColor = planFoiz >= 80 ? 'var(--green)' : planFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+  var hodimPlan = d.hodim_plan || 0;
+  var hodimFoiz = d.hodim_foiz || 0;
+  var prognoz = d.prognoz || 0;
+  var prognozFoiz = d.prognoz_foiz || 0;
+  var isBoshliq = d.is_boshliq || false;
+  var isArchive = d.is_archive || !d.is_current;
+
+  // Plan bar rangi
+  var planColor = hodimFoiz >= 80 ? 'var(--green)' : hodimFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+  var barW = Math.min(100, hodimFoiz);
+
+  // Filial foizi rangi
+  var filialColor = d.filial_foiz >= 80 ? 'var(--green)' : d.filial_foiz >= 60 ? 'var(--amber)' : 'var(--red)';
 
   var html = '';
 
-  // Hodim card
+  // ==== HODIM CARD ====
   html += '<div class="hodim-card">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
+  html += '<div style="flex:1;min-width:0">';
   html += '<div class="hodim-name">'+(d.ism||userIsm)+'</div>';
-  html += '<div class="hodim-lavozim">'+(userLavozim||'Hodim')+' · '+(d.warehouse_name||'')+'</div>';
+  html += '<div class="hodim-lavozim">'+(isBoshliq?'🎯 Filial boshlig\'i':'💼 Sotuvchi')+' · '+(d.filial_nomi||d.warehouse_name||'')+'</div>';
+  html += '</div>';
+  if(isArchive){
+    html += '<span style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);color:#a855f7;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0">📦 ARXIV</span>';
+  }
+  html += '</div>';
 
-  // Plan progress (agar plan bor bo'lsa)
-  if(oylikPlan > 0){
-    var barW = Math.min(100, planFoiz);
-    html += '<div style="margin-top:14px">';
+  // ==== HODIM PLAN PROGRESS ====
+  if(hodimPlan > 0){
+    html += '<div style="margin-top:16px">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Oylik plan</span>';
-    html += '<span style="font-size:13px;font-weight:800;color:'+planColor+'">'+planFoiz+'%</span>';
+    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Shaxsiy plan</span>';
+    html += '<span style="font-size:14px;font-weight:800;color:'+planColor+'">'+hodimFoiz+'%</span>';
     html += '</div>';
-    html += '<div style="background:var(--bg3);border-radius:6px;height:8px;overflow:hidden">';
+    html += '<div style="background:var(--bg3);border-radius:6px;height:10px;overflow:hidden;position:relative">';
     html += '<div style="height:100%;width:'+barW+'%;background:'+planColor+';transition:width 1s ease;border-radius:6px"></div>';
     html += '</div>';
     html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:5px">';
-    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(jamiSavdo)+'</b></span>';
-    html += '<span>Plan: <b style="color:var(--text)">'+fmt(oylikPlan)+'</b></span>';
+    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(jamiSof)+'</b></span>';
+    html += '<span>Plan: <b style="color:var(--text)">'+fmt(hodimPlan)+'</b></span>';
     html += '</div>';
     html += '</div>';
   }
 
-  // Stats grid
+  // ==== PROGNOZ BLOK (faqat joriy oy) ====
+  if(!isArchive && prognoz > 0){
+    var prognozColor = prognozFoiz >= 80 ? 'var(--green)' : prognozFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+    html += '<div style="margin-top:12px;padding:12px;background:var(--bg3);border-radius:12px;border:0.5px solid var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">📈 Oy oxiri prognoz</span>';
+    html += '<span style="font-size:13px;font-weight:800;color:'+prognozColor+'">'+prognozFoiz+'%</span>';
+    html += '</div>';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    html += '<span style="font-size:13px;font-weight:700">'+fmt(prognoz)+' so\'m</span>';
+    html += '<span style="font-size:10px;color:var(--text3)">'+d.bugun+'/'+d.oy_kunlari+' kun</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // ==== STATS GRID ====
   html += '<div class="stats-grid">';
-  html += '<div class="stat-box"><div class="stat-lbl">Jami savdo</div><div class="stat-val" style="color:var(--green)">'+fmt(jamiSavdo)+'</div><div class="stat-sub">so\'m</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Jami savdo</div><div class="stat-val" style="color:var(--green)">'+fmt(d.jami_savdo||0)+'</div><div class="stat-sub">so\'m</div></div>';
   html += '<div class="stat-box"><div class="stat-lbl">Sof savdo</div><div class="stat-val" style="color:'+(jamiSof<0?'var(--red)':'var(--blue)')+'">'+fmt(jamiSof)+'</div><div class="stat-sub">qaytarilgan ayrildi</div></div>';
   html += '<div class="stat-box"><div class="stat-lbl">Buyurtmalar</div><div class="stat-val" style="color:var(--amber)">'+(d.jami_buyurtma||0)+'</div><div class="stat-sub">ta</div></div>';
   html += '<div class="stat-box"><div class="stat-lbl">Mijozlar</div><div class="stat-val" style="color:var(--purple)">'+(d.clients_aktiv_soni||0)+'/'+(d.clients_jami_soni||0)+'</div><div class="stat-sub">aktiv / jami</div></div>';
   html += '</div>';
 
-  // Qaytarilgan (agar bor bo'lsa)
+  // Qaytarilgan eslatma
   if((d.jami_qaytarilgan||0) > 0){
     html += '<div style="margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">';
-    html += '<span style="font-size:12px;color:var(--text2)">↩️ Jami qaytarilgan</span>';
+    html += '<span style="font-size:12px;color:var(--text2)">↩️ Qaytarilgan</span>';
     html += '<span style="font-size:14px;font-weight:800;color:var(--red)">'+fmt(d.jami_qaytarilgan)+' so\'m</span>';
     html += '</div>';
   }
 
+  html += '</div>'; // hodim-card end
+
+  // ==== OYLIK / KPI CARD ====
+  html += '<div style="background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(168,85,247,.05));border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:12px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  html += '<div>';
+  html += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+(isArchive?'Oylik (arxiv)':'Joriy oylik')+'</div>';
+  html += '<div style="font-size:22px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(d.oylik||0)+'</div>';
+  html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+  html += '</div>';
+  if(!isArchive && d.prognoz_oylik > 0){
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz</div>';
+    html += '<div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">'+fmt(d.prognoz_oylik)+'</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">oy oxirida</div>';
+    html += '</div>';
+  }
   html += '</div>';
 
-  // Tab switch
-  html += '<div class="tab-switch">';
-  html += '<button class="tw-btn '+(curView==='aktiv'?'active':'')+'" onclick="switchView(\'aktiv\')">Aktiv ('+(d.clients_aktiv_soni||0)+')</button>';
+  // Tafsilot (fiksa + KPI + boshqaruv)
+  html += '<div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:0.5px solid var(--border)">';
+  // Fiksa
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+  html += '<span style="color:var(--text2)">💰 Fiksa</span>';
+  html += '<span style="font-weight:700">'+fmt(d.fiksa||0)+' so\'m</span>';
+  html += '</div>';
+  // KPI bonus
+  var filialFoizTxt = isArchive ? d.filial_foiz : d.filial_foiz;
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+  html += '<span style="color:var(--text2)">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(filial '+filialFoizTxt+'% → '+(d.kpi_foiz||0)+'%)</span></span>';
+  html += '<span style="font-weight:700;color:'+((d.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+(d.kpi_bonus>0?'+':'')+fmt(d.kpi_bonus||0)+' so\'m</span>';
+  html += '</div>';
+  // Boshqaruv bonus (faqat boshliq)
+  if(isBoshliq){
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+    html += '<span style="color:var(--text2)">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">('+(d.boshqaruv_foiz||0)+'%)</span></span>';
+    html += '<span style="font-weight:700;color:'+((d.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+(d.boshqaruv_bonus>0?'+':'')+fmt(d.boshqaruv_bonus||0)+' so\'m</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // KPI 0 holatida eslatma
+  if(!isArchive && (d.kpi_bonus||0) === 0 && (d.filial_foiz||0) < 60){
+    html += '<div style="margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:8px 10px;font-size:11px;color:var(--text2);text-align:center">';
+    html += '⚠️ Filial 60% dan past — bonus yo\'q, faqat fiksa';
+    html += '</div>';
+  }
+
+  // Prognoz KPI tafsilot (joriy oy va prognoz bo'lsa)
+  if(!isArchive && d.prognoz_oylik > d.oylik){
+    html += '<details style="margin-top:10px"><summary style="font-size:11px;color:var(--text3);cursor:pointer;text-transform:uppercase;letter-spacing:.3px">📈 Prognoz tafsilot</summary>';
+    html += '<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;font-size:11px">';
+    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Filial prognoz foizi</span><span style="font-weight:700">'+(d.filial_prognoz_foiz||0)+'%</span></div>';
+    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz KPI ('+(d.prognoz_kpi_foiz||0)+'%)</span><span style="font-weight:700;color:var(--green)">+'+fmt(d.prognoz_kpi_bonus||0)+'</span></div>';
+    if(isBoshliq){
+      html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz boshqaruv ('+(d.prognoz_boshqaruv_foiz||0)+'%)</span><span style="font-weight:700;color:var(--purple)">+'+fmt(d.prognoz_boshqaruv_bonus||0)+'</span></div>';
+    }
+    html += '</div></details>';
+  }
+  html += '</div>'; // oylik card end
+
+  // ==== TAB SWITCH (Aktiv / Aktiv emas / Hammasi) ====
+  html += '<div class="tab-switch" style="margin-top:14px">';
+  html += '<button class="tw-btn '+(curView==='aktiv'?'active':'')+'" onclick="switchView(\'aktiv\')">✅ Aktiv ('+(d.clients_aktiv_soni||0)+')</button>';
+  html += '<button class="tw-btn '+(curView==='passiv'?'active':'')+'" onclick="switchView(\'passiv\')">⚠️ Aktiv emas ('+(d.clients_passiv_soni||0)+')</button>';
   html += '<button class="tw-btn '+(curView==='jami'?'active':'')+'" onclick="switchView(\'jami\')">Hammasi ('+(d.clients_jami_soni||0)+')</button>';
   html += '</div>';
 
-  // Clientlar ro'yxati
+  // ==== CLIENTLAR RO'YXATI ====
   html += '<div id="mijozlar-list">';
   var allClients = d.clients || [];
-  var list = curView === 'aktiv' ? allClients.filter(function(c){ return c.is_active; }) : allClients;
+  var list;
+  if(curView === 'aktiv') list = allClients.filter(function(c){ return c.is_active; });
+  else if(curView === 'passiv') list = allClients.filter(function(c){ return !c.is_active; });
+  else list = allClients;
 
   if(!list.length){
-    var emptyMsg = curView === 'aktiv' ? 'Bu oyda hech kim xarid qilmagan' : 'Hech qanday mijoz biriktirilmagan';
+    var emptyMsg;
+    if(curView === 'aktiv') emptyMsg = 'Hech kim xarid qilmagan';
+    else if(curView === 'passiv') emptyMsg = '🎉 Barcha mijozlar aktiv!';
+    else emptyMsg = 'Mijoz biriktirilmagan';
     html += '<div class="empty"><div class="empty-ic">📊</div>'+emptyMsg+'</div>';
   } else {
     list.forEach(function(c){
       var tel = (c.telefon||'').replace(/\D/g,'');
       var isActive = c.is_active;
-      var netColor = c.net_sum < 0 ? 'var(--red)' : 'var(--green)';
-      html += '<div class="mijoz-row '+(isActive?'mijoz-aktiv':'')+'" onclick="toggleClient('+c.client_id+')" style="cursor:pointer;flex-direction:column;align-items:stretch">';
+      var netColor = c.net_sum < 0 ? 'var(--red)' : (c.net_sum > 0 ? 'var(--green)' : 'var(--text3)');
+      var rowClass = isActive ? 'mijoz-aktiv' : '';
+      html += '<div class="mijoz-row '+rowClass+'" onclick="toggleClient('+c.client_id+')" style="cursor:pointer;flex-direction:column;align-items:stretch">';
       // Asosiy qator
       html += '<div style="display:flex;justify-content:space-between;align-items:center;width:100%">';
       html += '<div class="mijoz-info">';
-      html += '<div class="mijoz-nomi">'+(isActive?'✅ ':'')+(c.ism||'—')+'</div>';
+      html += '<div class="mijoz-nomi">'+(isActive?'✅ ':'⚠️ ')+(c.ism||'—')+'</div>';
       html += '<div class="mijoz-tel">'+(tel?'+'+tel:'—')+(c.role==='business_partner'?' · BP':'')+'</div>';
       html += '</div>';
       html += '<div style="text-align:right;flex-shrink:0;margin-left:10px">';
-      html += '<div style="font-size:14px;font-weight:800;color:'+netColor+'">'+fmt(c.net_sum)+'</div>';
-      html += '<div style="font-size:10px;color:var(--text3)">'+(c.orders_count||0)+' ta buyurtma</div>';
+      if(isActive){
+        html += '<div style="font-size:14px;font-weight:800;color:'+netColor+'">'+fmt(c.net_sum)+'</div>';
+        html += '<div style="font-size:10px;color:var(--text3)">'+(c.orders_count||0)+' ta buyurtma</div>';
+      } else {
+        html += '<div style="font-size:11px;color:var(--text3);background:var(--bg3);padding:4px 8px;border-radius:8px">Savdo yo\'q</div>';
+      }
       html += '</div>';
       html += '</div>';
       // Yashirin detail
       html += '<div id="cl-'+c.client_id+'" style="display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)">';
-      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-      html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Savdo</div><div style="font-size:13px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(c.orders_sum)+'</div></div>';
-      html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qaytarilgan</div><div style="font-size:13px;font-weight:800;color:'+(c.return_sum>0?'var(--red)':'var(--text2)')+';margin-top:2px">'+fmt(c.return_sum)+'</div></div>';
-      html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.orders_count||0)+' ta</div></div>';
-      html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Plan buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.plan_orders_count||0)+' ta</div></div>';
-      html += '</div>';
+      if(isActive){
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Savdo</div><div style="font-size:13px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(c.orders_sum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qaytarilgan</div><div style="font-size:13px;font-weight:800;color:'+(c.return_sum>0?'var(--red)':'var(--text2)')+';margin-top:2px">'+fmt(c.return_sum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.orders_count||0)+' ta</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Plan buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.plan_orders_count||0)+' ta</div></div>';
+        html += '</div>';
+      } else {
+        html += '<div style="text-align:center;color:var(--text3);font-size:12px;padding:8px">Bu oyda hech qanday savdo yo\'q. Plan: '+(c.plan_orders_count||0)+' ta buyurtma</div>';
+      }
       if(tel){
         html += '<a href="tel:+'+tel+'" onclick="event.stopPropagation()" style="display:block;text-align:center;margin-top:8px;background:rgba(34,197,94,.12);border:0.5px solid rgba(34,197,94,.3);border-radius:10px;padding:9px;font-size:12px;font-weight:700;text-decoration:none;color:var(--green)">📞 Qo\'ng\'iroq qilish</a>';
       }
