@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Hodim Ko'rsatkich</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0f0f1a;
+  --bg2:#1a1a2e;
+  --bg3:#252540;
+  --border:rgba(255,255,255,.06);
+  --text:#fff;
+  --text2:#c5c5d6;
+  --text3:#7e7e95;
+  --green:#22c55e;
+  --amber:#fbbf24;
+  --red:#ef4444;
+  --blue:#378ADD;
+  --purple:#a855f7;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f5f5f5;
+    --bg2:#ffffff;
+    --bg3:#f0f0f0;
+    --border:rgba(0,0,0,.08);
+    --text:#1a1a2e;
+    --text2:#3a3a52;
+    --text3:#7a7a8e;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;padding-bottom:30px}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.hdr-back{width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:var(--text)}
+.hdr-info{flex:1}
+.hdr-title{font-size:15px;font-weight:700}
+.hdr-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.filter-bar{padding:12px 16px;background:var(--bg);display:flex;gap:8px;align-items:center}
+.filter-bar select{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px;font-family:inherit;cursor:pointer}
+.refresh-btn{background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;margin-left:auto}
+.main{padding:0 16px}
+.hodim-card{background:linear-gradient(135deg,rgba(55,138,221,.1),rgba(168,85,247,.06));border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px}
+.hodim-name{font-size:18px;font-weight:800;margin-bottom:4px}
+.hodim-lavozim{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat-box{background:var(--bg3);border-radius:12px;padding:12px}
+.stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.stat-val{font-size:18px;font-weight:800}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.section-hdr{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;display:flex;align-items:center;justify-content:space-between}
+.sec-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(55,138,221,.15);color:var(--blue);border:1px solid rgba(55,138,221,.25)}
+.mijoz-row{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.mijoz-info{flex:1;min-width:0}
+.mijoz-nomi{font-size:13px;font-weight:700}
+.mijoz-tel{font-size:11px;color:var(--text3);margin-top:2px}
+.mijoz-sikl{flex-shrink:0;background:var(--bg3);border-radius:8px;padding:4px 8px;font-size:10px;font-weight:700;color:var(--text2)}
+.mijoz-aktiv{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3)}
+.mijoz-aktiv .mijoz-sikl{background:rgba(34,197,94,.2);color:var(--green)}
+.empty{text-align:center;padding:40px 16px;color:var(--text3)}
+.empty-ic{font-size:36px;margin-bottom:10px;opacity:.5}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid var(--bg3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-wrap{padding:60px 16px;text-align:center;color:var(--text3)}
+.tab-switch{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.tab-switch .tw-btn{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:none;font-family:inherit}
+.tab-switch .tw-btn.active{background:var(--bg3);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <button class="hdr-back" onclick="goBack()">←</button>
+  <div class="hdr-info">
+    <div class="hdr-title" id="hdr-title">Mening ko'rsatkichim</div>
+    <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <select id="oy-select" onchange="changeOy(this.value)"></select>
+  <select id="yil-select" onchange="changeYil(this.value)"></select>
+  <div class="refresh-btn" onclick="load()">🔄</div>
+</div>
+
+<div class="main" id="main">
+  <div class="loading-wrap"><div class="spin"></div><div style="margin-top:8px">Yuklanmoqda...</div></div>
+</div>
+
+<script>
+var HODIM_API = 'https://n8n.arosmarket.com/webhook/aros-hodim-clients';
+var STATS_API = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
+var hodimData = null;
+var uid = new URLSearchParams(window.location.search).get('uid') || '';
+var wid = new URLSearchParams(window.location.search).get('wid') || '';
+var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+var now = new Date(new Date().getTime() + 5*60*60*1000);
+var curOy = now.getUTCMonth() + 1;
+var curYil = now.getUTCFullYear();
+var userIsm = '';
+var userLavozim = '';
+var oylikPlan = 0;
+var curView = 'aktiv'; // 'aktiv' | 'jami'
+
+function fmt(n){ return Math.round(Number(n)||0).toLocaleString('uz-UZ'); }
+function ini(name){ if(!name) return '?'; return name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase(); }
+
+function goBack(){
+  var indexPage = window.location.pathname.indexOf('-dev')!==-1 ? 'index-dev.html' : 'index.html';
+  var url = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + indexPage + '?uid=' + uid + (wid?'&wid='+wid:'');
+  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
+function setupOySelect(){
+  var sel = document.getElementById('oy-select');
+  sel.innerHTML = '';
+  for(var i=1;i<=12;i++){
+    var o = document.createElement('option');
+    o.value = i;
+    o.textContent = OY[i-1];
+    if(i===curOy) o.selected = true;
+    sel.appendChild(o);
+  }
+  var ysel = document.getElementById('yil-select');
+  ysel.innerHTML = '';
+  for(var y=curYil-1;y<=curYil+1;y++){
+    var o = document.createElement('option');
+    o.value = y;
+    o.textContent = y;
+    if(y===curYil) o.selected = true;
+    ysel.appendChild(o);
+  }
+}
+
+function changeOy(v){ curOy = parseInt(v); load(); }
+function changeYil(v){ curYil = parseInt(v); load(); }
+
+function loadUserInfo(){
+  return fetch(STATS_API+'?uid='+uid+(wid?'&wid='+wid:''))
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      try{
+        var raw = JSON.parse(txt);
+        var d = Array.isArray(raw) ? raw[0] : raw;
+        if(d && d.user){
+          userIsm = d.user.ism || 'Hodim';
+          userLavozim = d.user.status || '';
+          oylikPlan = parseInt(d.user.oylik_plan) || 0;
+          document.getElementById('hdr-title').textContent = userIsm;
+          document.getElementById('hdr-sub').textContent = (d.user.warehouse_name || '') + (userLavozim?' · '+userLavozim:'');
+        }
+      }catch(e){}
+    })
+    .catch(function(){});
+}
+
+function load(){
+  var main = document.getElementById('main');
+  main.innerHTML = '<div class="loading-wrap"><div class="spin"></div><div style="margin-top:8px">Yuklanmoqda...</div></div>';
+  
+  if(!userIsm){
+    loadUserInfo().then(function(){ loadHodimData(); });
+  } else {
+    loadHodimData();
+  }
+}
+
+function loadHodimData(){
+  var main = document.getElementById('main');
+  // uid + oy/yil — joriy oy: Aros API; o'tgan oy: history PG
+  fetch(HODIM_API+'?uid='+encodeURIComponent(uid)+(wid?'&wid='+wid:'')+'&oy='+curOy+'&yil='+curYil)
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d;
+      try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(!d){ main.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div>Ma\'lumot yuklanmadi</div>'; return; }
+      if(d.has_worker === false || d.error === 'no_worker'){
+        main.innerHTML = '<div class="empty"><div class="empty-ic">🔌</div>'+
+          '<div style="font-weight:700;margin-bottom:6px">Worker biriktirilmagan</div>'+
+          '<div style="font-size:12px">Bu xodimga adminkadagi worker hali ulanmagan. Administrator bilan bog\'laning.</div></div>';
+        return;
+      }
+      if(d.no_data){
+        main.innerHTML = '<div class="empty"><div class="empty-ic">📭</div>'+
+          '<div style="font-weight:700;margin-bottom:6px">Arxiv yo\'q</div>'+
+          '<div style="font-size:12px">'+(OY[(d.oy||1)-1]||'')+' '+d.yil+' uchun ma\'lumot arxivlanmagan</div></div>';
+        return;
+      }
+      if(d.ism && d.ism !== userIsm){
+        userIsm = d.ism;
+        document.getElementById('hdr-title').textContent = userIsm;
+      }
+      hodimData = d;
+      renderHodim(d);
+    })
+    .catch(function(e){
+      main.innerHTML = '<div class="empty"><div class="empty-ic">❌</div>Xato: '+e.message+'</div>';
+    });
+}
+
+function renderHodim(d){
+  var main = document.getElementById('main');
+  var jamiSof = d.jami_sof || 0;
+  var hodimPlan = d.hodim_plan || 0;
+  var hodimFoiz = d.hodim_foiz || 0;
+  var prognoz = d.prognoz || 0;
+  var prognozFoiz = d.prognoz_foiz || 0;
+  var isBoshliq = d.is_boshliq || false;
+  var isArchive = d.is_archive || !d.is_current;
+
+  // Plan bar rangi
+  var planColor = hodimFoiz >= 80 ? 'var(--green)' : hodimFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+  var barW = Math.min(100, hodimFoiz);
+
+  // Filial foizi rangi
+  var filialColor = d.filial_foiz >= 80 ? 'var(--green)' : d.filial_foiz >= 60 ? 'var(--amber)' : 'var(--red)';
+
+  var html = '';
+
+  // ==== HODIM CARD ====
+  html += '<div class="hodim-card">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
+  html += '<div style="flex:1;min-width:0">';
+  html += '<div class="hodim-name">'+(d.ism||userIsm)+'</div>';
+  html += '<div class="hodim-lavozim">'+(isBoshliq?'🎯 Filial boshlig\'i':'💼 Sotuvchi')+' · '+(d.filial_nomi||d.warehouse_name||'')+'</div>';
+  html += '</div>';
+  if(isArchive){
+    html += '<span style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);color:#a855f7;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0">📦 ARXIV</span>';
+  }
+  html += '</div>';
+
+  // ==== HODIM PLAN PROGRESS ====
+  if(hodimPlan > 0){
+    html += '<div style="margin-top:16px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Shaxsiy plan</span>';
+    html += '<span style="font-size:14px;font-weight:800;color:'+planColor+'">'+hodimFoiz+'%</span>';
+    html += '</div>';
+    html += '<div style="background:var(--bg3);border-radius:6px;height:10px;overflow:hidden;position:relative">';
+    html += '<div style="height:100%;width:'+barW+'%;background:'+planColor+';transition:width 1s ease;border-radius:6px"></div>';
+    html += '</div>';
+    html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:5px">';
+    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(jamiSof)+'</b></span>';
+    html += '<span>Plan: <b style="color:var(--text)">'+fmt(hodimPlan)+'</b></span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // ==== PROGNOZ BLOK (faqat joriy oy) ====
+  if(!isArchive && prognoz > 0){
+    var prognozColor = prognozFoiz >= 80 ? 'var(--green)' : prognozFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+    html += '<div style="margin-top:12px;padding:12px;background:var(--bg3);border-radius:12px;border:0.5px solid var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">📈 Oy oxiri prognoz</span>';
+    html += '<span style="font-size:13px;font-weight:800;color:'+prognozColor+'">'+prognozFoiz+'%</span>';
+    html += '</div>';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    html += '<span style="font-size:13px;font-weight:700">'+fmt(prognoz)+' so\'m</span>';
+    html += '<span style="font-size:10px;color:var(--text3)">'+d.bugun+'/'+d.oy_kunlari+' kun</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // ==== STATS GRID ====
+  html += '<div class="stats-grid">';
+  html += '<div class="stat-box"><div class="stat-lbl">Jami savdo</div><div class="stat-val" style="color:var(--green)">'+fmt(d.jami_savdo||0)+'</div><div class="stat-sub">so\'m</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Sof foyda</div><div class="stat-val" style="color:'+(jamiSof<0?'var(--red)':'var(--blue)')+'">'+fmt(jamiSof)+'</div><div class="stat-sub">jami savdo − qaytarilgan</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Buyurtmalar</div><div class="stat-val" style="color:var(--amber)">'+(d.jami_buyurtma||0)+'</div><div class="stat-sub">ta</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Mijozlar</div><div class="stat-val" style="color:var(--purple)">'+(d.clients_aktiv_soni||0)+'/'+(d.clients_jami_soni||0)+'</div><div class="stat-sub">aktiv / jami</div></div>';
+  html += '</div>';
+
+  // Qaytarilgan eslatma
+  if((d.jami_qaytarilgan||0) > 0){
+    html += '<div style="margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">';
+    html += '<span style="font-size:12px;color:var(--text2)">↩️ Qaytarilgan</span>';
+    html += '<span style="font-size:14px;font-weight:800;color:var(--red)">'+fmt(d.jami_qaytarilgan)+' so\'m</span>';
+    html += '</div>';
+  }
+
+  html += '</div>'; // hodim-card end
+
+  // ==== OYLIK / KPI CARD ====
+  html += '<div style="background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(168,85,247,.05));border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:12px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  html += '<div>';
+  html += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+(isArchive?'Oylik (arxiv)':'Joriy oylik')+'</div>';
+  html += '<div style="font-size:22px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(d.oylik||0)+'</div>';
+  html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+  html += '</div>';
+  if(!isArchive && d.prognoz_oylik > 0){
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz</div>';
+    html += '<div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">'+fmt(d.prognoz_oylik)+'</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">oy oxirida</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Tafsilot (fiksa + KPI + boshqaruv)
+  html += '<div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:0.5px solid var(--border)">';
+  // Fiksa
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+  html += '<span style="color:var(--text2)">💰 Fiksa</span>';
+  html += '<span style="font-weight:700">'+fmt(d.fiksa||0)+' so\'m</span>';
+  html += '</div>';
+  // KPI bonus
+  var filialFoizTxt = isArchive ? d.filial_foiz : d.filial_foiz;
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+  html += '<span style="color:var(--text2)">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(filial '+filialFoizTxt+'% → '+(d.kpi_foiz||0)+'%)</span></span>';
+  html += '<span style="font-weight:700;color:'+((d.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+(d.kpi_bonus>0?'+':'')+fmt(d.kpi_bonus||0)+' so\'m</span>';
+  html += '</div>';
+  // Boshqaruv bonus (faqat boshliq)
+  if(isBoshliq){
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+    html += '<span style="color:var(--text2)">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">('+(d.boshqaruv_foiz||0)+'%)</span></span>';
+    html += '<span style="font-weight:700;color:'+((d.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+(d.boshqaruv_bonus>0?'+':'')+fmt(d.boshqaruv_bonus||0)+' so\'m</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // KPI 0 holatida eslatma
+  if(!isArchive && (d.kpi_bonus||0) === 0 && (d.filial_foiz||0) < 60){
+    html += '<div style="margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:8px 10px;font-size:11px;color:var(--text2);text-align:center">';
+    html += '⚠️ Filial 60% dan past — bonus yo\'q, faqat fiksa';
+    html += '</div>';
+  }
+
+  // Prognoz KPI tafsilot (joriy oy va prognoz bo'lsa)
+  if(!isArchive && d.prognoz_oylik > d.oylik){
+    html += '<details style="margin-top:10px"><summary style="font-size:11px;color:var(--text3);cursor:pointer;text-transform:uppercase;letter-spacing:.3px">📈 Prognoz tafsilot</summary>';
+    html += '<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;font-size:11px">';
+    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Filial prognoz foizi</span><span style="font-weight:700">'+(d.filial_prognoz_foiz||0)+'%</span></div>';
+    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz KPI ('+(d.prognoz_kpi_foiz||0)+'%)</span><span style="font-weight:700;color:var(--green)">+'+fmt(d.prognoz_kpi_bonus||0)+'</span></div>';
+    if(isBoshliq){
+      html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz boshqaruv ('+(d.prognoz_boshqaruv_foiz||0)+'%)</span><span style="font-weight:700;color:var(--purple)">+'+fmt(d.prognoz_boshqaruv_bonus||0)+'</span></div>';
+    }
+    html += '</div></details>';
+  }
+  html += '</div>'; // oylik card end
+
+  // ==== TAB SWITCH (Aktiv / Aktiv emas / Hammasi) ====
+  html += '<div class="tab-switch" style="margin-top:14px">';
+  html += '<button class="tw-btn '+(curView==='aktiv'?'active':'')+'" onclick="switchView(\'aktiv\')">✅ Aktiv ('+(d.clients_aktiv_soni||0)+')</button>';
+  html += '<button class="tw-btn '+(curView==='passiv'?'active':'')+'" onclick="switchView(\'passiv\')">⚠️ Aktiv emas ('+(d.clients_passiv_soni||0)+')</button>';
+  html += '<button class="tw-btn '+(curView==='jami'?'active':'')+'" onclick="switchView(\'jami\')">Hammasi ('+(d.clients_jami_soni||0)+')</button>';
+  html += '</div>';
+
+  // ==== CLIENTLAR RO'YXATI ====
+  html += '<div id="mijozlar-list">';
+  var allClients = d.clients || [];
+  var list;
+  if(curView === 'aktiv') list = allClients.filter(function(c){ return c.is_active; });
+  else if(curView === 'passiv') list = allClients.filter(function(c){ return !c.is_active; });
+  else list = allClients;
+
+  if(!list.length){
+    var emptyMsg;
+    if(curView === 'aktiv') emptyMsg = 'Hech kim xarid qilmagan';
+    else if(curView === 'passiv') emptyMsg = '🎉 Barcha mijozlar aktiv!';
+    else emptyMsg = 'Mijoz biriktirilmagan';
+    html += '<div class="empty"><div class="empty-ic">📊</div>'+emptyMsg+'</div>';
+  } else {
+    list.forEach(function(c){
+      var tel = (c.telefon||'').replace(/\D/g,'');
+      var isActive = c.is_active;
+      var savdoSum = c.savdo_sum || (c.orders_sum + c.return_sum);
+      var savdoColor = savdoSum > 0 ? 'var(--green)' : 'var(--text3)';
+      var rowClass = isActive ? 'mijoz-aktiv' : '';
+      html += '<div class="mijoz-row '+rowClass+'" onclick="toggleClient('+c.client_id+')" style="cursor:pointer;flex-direction:column;align-items:stretch">';
+      // Asosiy qator
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;width:100%">';
+      html += '<div class="mijoz-info">';
+      html += '<div class="mijoz-nomi">'+(isActive?'✅ ':'⚠️ ')+(c.ism||'—')+'</div>';
+      html += '<div class="mijoz-tel">'+(tel?'+'+tel:'—')+(c.role==='business_partner'?' · BP':'')+'</div>';
+      html += '</div>';
+      html += '<div style="text-align:right;flex-shrink:0;margin-left:10px">';
+      if(isActive){
+        html += '<div style="font-size:14px;font-weight:800;color:'+savdoColor+'">'+fmt(savdoSum)+'</div>';
+        html += '<div style="font-size:10px;color:var(--text3)">'+(c.orders_count||0)+' ta buyurtma</div>';
+      } else {
+        html += '<div style="font-size:11px;color:var(--text3);background:var(--bg3);padding:4px 8px;border-radius:8px">Savdo yo\'q</div>';
+      }
+      html += '</div>';
+      html += '</div>';
+      // Yashirin detail
+      html += '<div id="cl-'+c.client_id+'" style="display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)">';
+      if(isActive){
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Savdo</div><div style="font-size:13px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(savdoSum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qaytarilgan</div><div style="font-size:13px;font-weight:800;color:'+(c.return_sum>0?'var(--red)':'var(--text2)')+';margin-top:2px">'+fmt(c.return_sum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Bajarildi</div><div style="font-size:13px;font-weight:800;color:var(--blue);margin-top:2px">'+fmt(c.bajarildi||c.net_sum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.orders_count||0)+' / '+(c.plan_orders_count||0)+' ta</div></div>';
+        html += '</div>';
+      } else {
+        html += '<div style="text-align:center;color:var(--text3);font-size:12px;padding:8px">Bu oyda hech qanday savdo yo\'q. Plan: '+(c.plan_orders_count||0)+' ta buyurtma</div>';
+      }
+      if(tel){
+        html += '<a href="tel:+'+tel+'" onclick="event.stopPropagation()" style="display:block;text-align:center;margin-top:8px;background:rgba(34,197,94,.12);border:0.5px solid rgba(34,197,94,.3);border-radius:10px;padding:9px;font-size:12px;font-weight:700;text-decoration:none;color:var(--green)">📞 Qo\'ng\'iroq qilish</a>';
+      }
+      html += '</div>';
+      html += '</div>';
+    });
+  }
+
+  html += '</div>';
+
+  main.innerHTML = html;
+}
+
+function toggleClient(cid){
+  var el = document.getElementById('cl-'+cid);
+  if(!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function switchView(v){
+  curView = v;
+  if(hodimData){ renderHodim(hodimData); } else { load(); }
+}
+
+// Init
+setupOySelect();
+load();
+</script>
+</body>
+</html>
