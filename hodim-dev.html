@@ -393,7 +393,7 @@ function renderHodim(d){
         html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Savdo</div><div style="font-size:13px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(savdoSum)+'</div></div>';
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qaytarilgan</div><div style="font-size:13px;font-weight:800;color:'+(c.return_sum>0?'var(--red)':'var(--text2)')+';margin-top:2px">'+fmt(c.return_sum)+'</div></div>';
-        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Sof (KPI)</div><div style="font-size:13px;font-weight:800;color:var(--blue);margin-top:2px">'+fmt(c.net_sum)+'</div></div>';
+        html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Bajarildi</div><div style="font-size:13px;font-weight:800;color:var(--blue);margin-top:2px">'+fmt(c.bajarildi||c.net_sum)+'</div></div>';
         html += '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+(c.orders_count||0)+' / '+(c.plan_orders_count||0)+' ta</div></div>';
         html += '</div>';
       } else {
