@@ -269,7 +269,7 @@ function renderHodim(d){
   // ==== STATS GRID ====
   html += '<div class="stats-grid">';
   html += '<div class="stat-box"><div class="stat-lbl">Jami savdo</div><div class="stat-val" style="color:var(--green)">'+fmt(d.jami_savdo||0)+'</div><div class="stat-sub">so\'m</div></div>';
-  html += '<div class="stat-box"><div class="stat-lbl">Sof foyda</div><div class="stat-val" style="color:'+(jamiSof<0?'var(--red)':'var(--blue)')+'">'+fmt(jamiSof)+'</div><div class="stat-sub">jami savdo − qaytarilgan</div></div>';
+  html += '<div class="stat-box"><div class="stat-lbl">Sof savdo</div><div class="stat-val" style="color:'+(jamiSof<0?'var(--red)':'var(--blue)')+'">'+fmt(jamiSof)+'</div><div class="stat-sub">jami savdo − qaytarilgan</div></div>';
   html += '<div class="stat-box"><div class="stat-lbl">Buyurtmalar</div><div class="stat-val" style="color:var(--amber)">'+(d.jami_buyurtma||0)+'</div><div class="stat-sub">ta</div></div>';
   html += '<div class="stat-box"><div class="stat-lbl">Mijozlar</div><div class="stat-val" style="color:var(--purple)">'+(d.clients_aktiv_soni||0)+'/'+(d.clients_jami_soni||0)+'</div><div class="stat-sub">aktiv / jami</div></div>';
   html += '</div>';
