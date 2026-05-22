@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>CEO — Hodimlar KPI</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0f0f1a;
+  --bg2:#1a1a2e;
+  --bg3:#252540;
+  --border:rgba(255,255,255,.06);
+  --text:#fff;
+  --text2:#c5c5d6;
+  --text3:#7e7e95;
+  --green:#22c55e;
+  --amber:#fbbf24;
+  --red:#ef4444;
+  --blue:#378ADD;
+  --purple:#a855f7;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f5f5f5;
+    --bg2:#ffffff;
+    --bg3:#f0f0f0;
+    --border:rgba(0,0,0,.08);
+    --text:#1a1a2e;
+    --text2:#3a3a52;
+    --text3:#7a7a8e;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;padding-bottom:30px}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.hdr-back{width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:var(--text)}
+.hdr-info{flex:1}
+.hdr-title{font-size:15px;font-weight:700}
+.hdr-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.refresh-btn{background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text)}
+.main{padding:14px 16px}
+
+/* TOP STATS CARD */
+.stats-hero{background:linear-gradient(135deg,rgba(55,138,221,.12),rgba(168,85,247,.08));border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:14px}
+.stats-hero-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.stats-hero-main{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:14px}
+.stats-hero-num{font-size:24px;font-weight:800;line-height:1.1}
+.stats-hero-prognoz{text-align:right}
+.stats-hero-prognoz-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.stats-hero-prognoz-num{font-size:16px;font-weight:800;color:var(--blue);margin-top:1px}
+.stats-mini-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:12px;border-top:0.5px solid var(--border)}
+.stats-mini{text-align:center}
+.stats-mini-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.stats-mini-val{font-size:14px;font-weight:800}
+
+/* FILIAL CARD */
+.section-hdr{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:6px 4px 10px}
+.filial-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:transform .15s,border-color .15s}
+.filial-card:active{transform:scale(.98)}
+.filial-card.expanded{border-color:rgba(55,138,221,.4)}
+.filial-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.filial-info{flex:1;min-width:0}
+.filial-nomi{font-size:15px;font-weight:800;margin-bottom:2px}
+.filial-boshliq{font-size:11px;color:var(--text3);margin-bottom:8px}
+.filial-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.foiz-badge{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700}
+.hodimlar-count{font-size:10px;color:var(--text3);background:var(--bg3);padding:3px 8px;border-radius:8px}
+.filial-right{text-align:right;flex-shrink:0}
+.filial-savdo{font-size:15px;font-weight:800;color:var(--green)}
+.filial-oylik{font-size:12px;color:var(--purple);font-weight:700;margin-top:2px}
+.filial-oylik-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.arr{color:var(--text3);font-size:12px;flex-shrink:0;margin-left:6px;transition:transform .2s;display:inline-block}
+.arr.open{transform:rotate(180deg)}
+
+/* HODIMLAR LIST (inside expanded filial) */
+.hodimlar-wrap{max-height:0;overflow:hidden;transition:max-height .4s ease;margin:0 -14px -14px -14px}
+.hodimlar-wrap.expanded{max-height:5000px}
+.hodimlar-list{padding:12px 14px 4px 14px;border-top:0.5px solid var(--border);background:var(--bg3);border-radius:0 0 14px 14px;margin-top:14px}
+.hodim-row{background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;transition:transform .15s}
+.hodim-row:active{transform:scale(.98)}
+.hodim-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.hodim-info{flex:1;min-width:0}
+.hodim-nomi{font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+.lavozim-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.3px}
+.lav-boshliq{background:rgba(168,85,247,.15);color:var(--purple);border:0.5px solid rgba(168,85,247,.3)}
+.lav-sotuvchi{background:rgba(55,138,221,.15);color:var(--blue);border:0.5px solid rgba(55,138,221,.3)}
+.hodim-plan-bar-wrap{margin-top:6px}
+.hodim-plan-bar-top{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text3);margin-bottom:3px}
+.hodim-plan-bar{background:var(--bg3);border-radius:5px;height:6px;overflow:hidden}
+.hodim-plan-bar-fill{height:100%;border-radius:5px;transition:width .8s ease}
+.hodim-right{text-align:right;flex-shrink:0}
+.hodim-oylik{font-size:15px;font-weight:800;color:var(--green)}
+.hodim-oylik-sub{font-size:9px;color:var(--text3);margin-top:1px}
+
+/* KPI tafsilot inside hodim card */
+.kpi-detail{display:flex;flex-direction:column;gap:4px;padding-top:10px;border-top:0.5px dashed var(--border);font-size:11px}
+.kpi-row{display:flex;justify-content:space-between;align-items:center}
+.kpi-lbl{color:var(--text2)}
+.kpi-val{font-weight:700}
+.kpi-warn{margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.08);border:0.5px solid rgba(239,68,68,.2);border-radius:8px;font-size:10px;color:var(--text2);text-align:center}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;backdrop-filter:blur(4px)}
+.modal-bg.active{display:block}
+.modal{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-radius:18px 18px 0 0;max-height:92vh;overflow-y:auto;z-index:201;display:none;animation:slideUp .25s ease}
+.modal.active{display:block}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-hdr{position:sticky;top:0;background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px;border-radius:18px 18px 0 0;z-index:5}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:none;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-title{flex:1;font-size:15px;font-weight:700}
+.modal-body{padding:14px 16px 30px}
+.modal-handle{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:36px;height:4px;background:var(--text3);border-radius:2px;opacity:.4}
+
+/* Modal hodim card */
+.m-hero{background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(168,85,247,.05));border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
+.m-hero-ism{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.m-hero-meta{font-size:11px;color:var(--text3)}
+.m-progress{margin-top:14px}
+.m-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.m-progress-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.m-progress-foiz{font-size:14px;font-weight:800}
+.m-progress-bar{background:var(--bg3);border-radius:6px;height:8px;overflow:hidden}
+.m-progress-fill{height:100%;border-radius:6px;transition:width 1s ease}
+.m-progress-sub{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:5px}
+.m-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.m-stat{background:var(--bg3);border-radius:10px;padding:10px;text-align:center}
+.m-stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.m-stat-val{font-size:14px;font-weight:800}
+
+.m-oylik-card{background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(168,85,247,.05));border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
+.m-oylik-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.m-oylik-main-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.m-oylik-main-num{font-size:22px;font-weight:800;color:var(--green);margin-top:2px}
+.m-oylik-prognoz{text-align:right}
+.m-oylik-prognoz-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.m-oylik-prognoz-num{font-size:16px;font-weight:800;color:var(--blue);margin-top:2px}
+.m-oylik-detail{display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:0.5px solid var(--border);font-size:12px}
+.m-oylik-row{display:flex;justify-content:space-between;align-items:center}
+.m-oylik-lbl{color:var(--text2)}
+.m-oylik-lbl-sub{font-size:10px;color:var(--text3);margin-left:4px}
+.m-oylik-val{font-weight:700}
+
+.loading-wrap{padding:60px 16px;text-align:center;color:var(--text3)}
+.spin{display:inline-block;width:22px;height:22px;border:3px solid var(--bg3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-sub{margin-top:10px;font-size:12px}
+.loading-note{margin-top:6px;font-size:10px;color:var(--text3);opacity:.7}
+.empty{text-align:center;padding:50px 16px;color:var(--text3)}
+.empty-ic{font-size:38px;margin-bottom:10px;opacity:.5}
+
+.action-btn{display:block;text-align:center;background:rgba(55,138,221,.12);border:0.5px solid rgba(55,138,221,.3);border-radius:10px;padding:11px;font-size:13px;font-weight:700;text-decoration:none;color:var(--blue);margin-top:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <button class="hdr-back" onclick="goBack()">←</button>
+  <div class="hdr-info">
+    <div class="hdr-title">Hodimlar KPI</div>
+    <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
+  </div>
+  <button class="refresh-btn" onclick="load()">🔄</button>
+</div>
+
+<div class="main" id="main">
+  <div class="loading-wrap">
+    <div class="spin"></div>
+    <div class="loading-sub">Hodimlar ma'lumotini yig'moqda...</div>
+    <div class="loading-note">⏱ 5-10 sekund kutiladi</div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal()"></div>
+<div class="modal" id="modal">
+  <div class="modal-hdr">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-title" id="modal-title">Hodim</div>
+  </div>
+  <div class="modal-body" id="modal-body"></div>
+</div>
+
+<script>
+var CEO_API = 'https://n8n.arosmarket.com/webhook/aros-ceo-hodimlar';
+var uid = new URLSearchParams(window.location.search).get('uid') || '';
+var ceoData = null;
+var expandedFilials = {};
+
+function fmt(n){ return Math.round(Number(n)||0).toLocaleString('uz-UZ'); }
+function fmtShort(n){
+  n = Number(n)||0;
+  if(n >= 1e9) return (n/1e9).toFixed(2)+' mlrd';
+  if(n >= 1e6) return (n/1e6).toFixed(1)+' mln';
+  if(n >= 1e3) return Math.round(n/1e3)+'k';
+  return String(n);
+}
+function foizColor(f){
+  return f >= 100 ? 'var(--green)' : f >= 80 ? 'var(--green)' : f >= 60 ? 'var(--amber)' : 'var(--red)';
+}
+
+function goBack(){
+  var ceoPage = window.location.pathname.indexOf('-dev')!==-1 ? 'ceo-dev.html' : 'ceo.html';
+  var url = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + ceoPage + '?uid=' + uid;
+  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
+function load(){
+  var main = document.getElementById('main');
+  main.innerHTML = '<div class="loading-wrap"><div class="spin"></div><div class="loading-sub">Hodimlar ma\'lumotini yig\'moqda...</div><div class="loading-note">⏱ 5-10 sekund kutiladi</div></div>';
+  
+  fetch(CEO_API+'?uid='+encodeURIComponent(uid))
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d;
+      try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(!d){ main.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div>Ma\'lumot yuklanmadi</div>'; return; }
+      if(d.error === 'unauthorized'){
+        main.innerHTML = '<div class="empty"><div class="empty-ic">🔒</div><div style="font-weight:700;margin-bottom:6px">Ruxsat yo\'q</div><div style="font-size:12px">Bu sahifa faqat CEO uchun</div></div>';
+        return;
+      }
+      ceoData = d;
+      render(d);
+    })
+    .catch(function(e){
+      main.innerHTML = '<div class="empty"><div class="empty-ic">❌</div>Xato: '+e.message+'</div>';
+    });
+}
+
+function render(d){
+  var main = document.getElementById('main');
+  var s = d.stats || {};
+  
+  document.getElementById('hdr-sub').textContent = (s.filiallar_soni||0)+' filial · '+(s.hodimlar_soni||0)+' hodim';
+  
+  var html = '';
+  
+  // ===== TOP STATS HERO =====
+  html += '<div class="stats-hero">';
+  html += '<div class="stats-hero-title">Joriy oy umumiy</div>';
+  html += '<div class="stats-hero-main">';
+  html += '<div>';
+  html += '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px">Jami oylik (xodimlarga)</div>';
+  html += '<div class="stats-hero-num" style="color:var(--purple)">'+fmt(s.jami_oylik||0)+'</div>';
+  html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+  html += '</div>';
+  html += '<div class="stats-hero-prognoz">';
+  html += '<div class="stats-hero-prognoz-lbl">Prognoz oy oxiri</div>';
+  html += '<div class="stats-hero-prognoz-num">'+fmt(s.jami_prognoz_oylik||0)+'</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div class="stats-mini-grid">';
+  html += '<div class="stats-mini"><div class="stats-mini-lbl">Jami savdo</div><div class="stats-mini-val" style="color:var(--green)">'+fmtShort(s.jami_savdo)+'</div></div>';
+  html += '<div class="stats-mini"><div class="stats-mini-lbl">Bajarildi</div><div class="stats-mini-val" style="color:var(--blue)">'+fmtShort(s.jami_bajarildi)+'</div></div>';
+  html += '<div class="stats-mini"><div class="stats-mini-lbl">Buyurtma</div><div class="stats-mini-val" style="color:var(--amber)">'+fmt(s.jami_buyurtma||0)+'</div></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // ===== FILIALLAR =====
+  html += '<div class="section-hdr">📍 Filiallar ('+(s.filiallar_soni||0)+')</div>';
+  
+  var filiallar = d.filiallar || [];
+  if(!filiallar.length){
+    html += '<div class="empty"><div class="empty-ic">📭</div>Hodim biriktirilgan filial yo\'q</div>';
+  } else {
+    filiallar.forEach(function(f, idx){
+      var fid = 'f-'+f.warehouse_id;
+      var isExpanded = expandedFilials[f.warehouse_id];
+      html += '<div class="filial-card '+(isExpanded?'expanded':'')+'" id="'+fid+'" onclick="toggleFilial(\''+f.warehouse_id+'\')">';
+      
+      // Filial top row
+      html += '<div class="filial-row">';
+      html += '<div class="filial-info">';
+      html += '<div class="filial-nomi">'+(f.filial_nomi||f.warehouse_name||'—')+'</div>';
+      html += '<div class="filial-boshliq">'+(f.boshliq_ism?'🎯 '+f.boshliq_ism:'Boshliq yo\'q')+'</div>';
+      html += '<div class="filial-meta">';
+      html += '<span class="foiz-badge" style="color:'+foizColor(f.filial_foiz)+'">'+(f.filial_foiz||0)+'% filial</span>';
+      html += '<span class="hodimlar-count">👥 '+(f.hodimlar_soni||0)+' hodim</span>';
+      html += '</div>';
+      html += '</div>';
+      
+      html += '<div class="filial-right">';
+      html += '<div class="filial-savdo">'+fmtShort(f.jami_savdo||0)+'</div>';
+      html += '<div class="filial-oylik">'+fmt(f.jami_oylik||0)+'</div>';
+      html += '<div class="filial-oylik-sub">jami oylik</div>';
+      html += '</div>';
+      
+      html += '<span class="arr '+(isExpanded?'open':'')+'" id="arr-'+f.warehouse_id+'">▾</span>';
+      html += '</div>';
+      
+      // Hodimlar list
+      html += '<div class="hodimlar-wrap '+(isExpanded?'expanded':'')+'" id="hodimlar-'+f.warehouse_id+'">';
+      html += '<div class="hodimlar-list">';
+      (f.hodimlar||[]).forEach(function(h, hidx){
+        var hodimFoiz = h.hodim_foiz || 0;
+        var planColor = hodimFoiz >= 80 ? 'var(--green)' : hodimFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+        var barW = Math.min(100, hodimFoiz);
+        
+        html += '<div class="hodim-row" onclick="event.stopPropagation();openHodimModal('+f.warehouse_id+','+hidx+')">';
+        html += '<div class="hodim-top">';
+        html += '<div class="hodim-info">';
+        html += '<div class="hodim-nomi">'+h.ism+'<span class="lavozim-tag '+(h.is_boshliq?'lav-boshliq':'lav-sotuvchi')+'">'+(h.is_boshliq?'🎯 BOSHLIQ':'💼 SOTUVCHI')+'</span></div>';
+        
+        // Plan bar
+        if(h.hodim_plan > 0){
+          html += '<div class="hodim-plan-bar-wrap">';
+          html += '<div class="hodim-plan-bar-top">';
+          html += '<span>Plan: '+fmtShort(h.hodim_plan)+'</span>';
+          html += '<span style="color:'+planColor+';font-weight:800">'+hodimFoiz+'%</span>';
+          html += '</div>';
+          html += '<div class="hodim-plan-bar"><div class="hodim-plan-bar-fill" style="width:'+barW+'%;background:'+planColor+'"></div></div>';
+          html += '</div>';
+        }
+        html += '</div>';
+        
+        html += '<div class="hodim-right">';
+        html += '<div class="hodim-oylik">'+fmt(h.oylik||0)+'</div>';
+        html += '<div class="hodim-oylik-sub">oylik so\'m</div>';
+        html += '</div>';
+        html += '</div>';
+        
+        // KPI tafsilot
+        html += '<div class="kpi-detail">';
+        html += '<div class="kpi-row"><span class="kpi-lbl">💰 Fiksa</span><span class="kpi-val">'+fmt(h.fiksa||0)+'</span></div>';
+        html += '<div class="kpi-row"><span class="kpi-lbl">📊 KPI ('+(h.kpi_foiz||0)+'%)</span><span class="kpi-val" style="color:'+((h.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+((h.kpi_bonus||0)>0?'+':'')+fmt(h.kpi_bonus||0)+'</span></div>';
+        if(h.is_boshliq){
+          html += '<div class="kpi-row"><span class="kpi-lbl">🎯 Boshqaruv ('+(h.boshqaruv_foiz||0)+'%)</span><span class="kpi-val" style="color:'+((h.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+((h.boshqaruv_bonus||0)>0?'+':'')+fmt(h.boshqaruv_bonus||0)+'</span></div>';
+        }
+        if((h.kpi_bonus||0) === 0 && (h.filial_foiz||0) < 60){
+          html += '<div class="kpi-warn">⚠️ Filial 60% dan past — faqat fiksa</div>';
+        }
+        html += '</div>';
+        
+        html += '</div>';
+      });
+      html += '</div>';
+      html += '</div>';
+      
+      html += '</div>';
+    });
+  }
+  
+  main.innerHTML = html;
+}
+
+function toggleFilial(wid){
+  var card = document.getElementById('f-'+wid);
+  var wrap = document.getElementById('hodimlar-'+wid);
+  var arr = document.getElementById('arr-'+wid);
+  if(!card || !wrap) return;
+  
+  var isOpen = wrap.classList.contains('expanded');
+  if(isOpen){
+    wrap.classList.remove('expanded');
+    card.classList.remove('expanded');
+    arr.classList.remove('open');
+    expandedFilials[wid] = false;
+  } else {
+    wrap.classList.add('expanded');
+    card.classList.add('expanded');
+    arr.classList.add('open');
+    expandedFilials[wid] = true;
+  }
+}
+
+function openHodimModal(wid, hidx){
+  if(!ceoData) return;
+  var filial = (ceoData.filiallar||[]).find(function(f){ return String(f.warehouse_id) === String(wid); });
+  if(!filial) return;
+  var h = (filial.hodimlar||[])[hidx];
+  if(!h) return;
+  
+  document.getElementById('modal-title').textContent = h.ism;
+  document.getElementById('modal-body').innerHTML = renderHodimModal(h, filial);
+  document.getElementById('modal-bg').classList.add('active');
+  document.getElementById('modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  document.getElementById('modal-bg').classList.remove('active');
+  document.getElementById('modal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function renderHodimModal(h, f){
+  var hodimFoiz = h.hodim_foiz || 0;
+  var planColor = hodimFoiz >= 80 ? 'var(--green)' : hodimFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+  var barW = Math.min(100, hodimFoiz);
+  
+  var html = '';
+  
+  // Hero
+  html += '<div class="m-hero">';
+  html += '<div class="m-hero-ism">'+h.ism+'<span class="lavozim-tag '+(h.is_boshliq?'lav-boshliq':'lav-sotuvchi')+'">'+(h.is_boshliq?'🎯 BOSHLIQ':'💼 SOTUVCHI')+'</span></div>';
+  html += '<div class="m-hero-meta">'+(f.filial_nomi||f.warehouse_name||'')+' · Filial '+(f.filial_foiz||0)+'%</div>';
+  
+  // Progress
+  if(h.hodim_plan > 0){
+    html += '<div class="m-progress">';
+    html += '<div class="m-progress-top">';
+    html += '<span class="m-progress-lbl">Shaxsiy plan</span>';
+    html += '<span class="m-progress-foiz" style="color:'+planColor+'">'+hodimFoiz+'%</span>';
+    html += '</div>';
+    html += '<div class="m-progress-bar"><div class="m-progress-fill" style="width:'+barW+'%;background:'+planColor+'"></div></div>';
+    html += '<div class="m-progress-sub">';
+    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(h.jami_bajarildi)+'</b></span>';
+    html += '<span>Plan: <b style="color:var(--text)">'+fmt(h.hodim_plan)+'</b></span>';
+    html += '</div>';
+    html += '</div>';
+  }
+  
+  // Stats grid
+  html += '<div class="m-stats">';
+  html += '<div class="m-stat"><div class="m-stat-lbl">Jami savdo</div><div class="m-stat-val" style="color:var(--green)">'+fmt(h.jami_savdo)+'</div></div>';
+  html += '<div class="m-stat"><div class="m-stat-lbl">Bajarildi</div><div class="m-stat-val" style="color:var(--blue)">'+fmt(h.jami_bajarildi)+'</div></div>';
+  html += '<div class="m-stat"><div class="m-stat-lbl">Buyurtma</div><div class="m-stat-val" style="color:var(--amber)">'+(h.jami_buyurtma||0)+'</div></div>';
+  html += '<div class="m-stat"><div class="m-stat-lbl">Mijozlar</div><div class="m-stat-val" style="color:var(--purple)">'+(h.clients_aktiv_soni||0)+'/'+(h.clients_jami_soni||0)+'</div></div>';
+  html += '</div>';
+  
+  if((h.jami_qaytarilgan||0) > 0){
+    html += '<div style="margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;font-size:12px"><span style="color:var(--text2)">↩️ Qaytarilgan</span><span style="font-weight:800;color:var(--red)">'+fmt(h.jami_qaytarilgan)+'</span></div>';
+  }
+  
+  html += '</div>';
+  
+  // Oylik card
+  html += '<div class="m-oylik-card">';
+  html += '<div class="m-oylik-top">';
+  html += '<div>';
+  html += '<div class="m-oylik-main-lbl">Joriy oylik</div>';
+  html += '<div class="m-oylik-main-num">'+fmt(h.oylik||0)+'</div>';
+  html += '</div>';
+  if((h.prognoz_oylik||0) > (h.oylik||0)){
+    html += '<div class="m-oylik-prognoz">';
+    html += '<div class="m-oylik-prognoz-lbl">Prognoz</div>';
+    html += '<div class="m-oylik-prognoz-num">'+fmt(h.prognoz_oylik)+'</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  
+  // Detail rows
+  html += '<div class="m-oylik-detail">';
+  html += '<div class="m-oylik-row"><span class="m-oylik-lbl">💰 Fiksa</span><span class="m-oylik-val">'+fmt(h.fiksa||0)+'</span></div>';
+  html += '<div class="m-oylik-row"><span class="m-oylik-lbl">📊 KPI bonus <span class="m-oylik-lbl-sub">(filial '+(h.filial_foiz||0)+'% → '+(h.kpi_foiz||0)+'%)</span></span><span class="m-oylik-val" style="color:'+((h.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+((h.kpi_bonus||0)>0?'+':'')+fmt(h.kpi_bonus||0)+'</span></div>';
+  if(h.is_boshliq){
+    html += '<div class="m-oylik-row"><span class="m-oylik-lbl">🎯 Boshqaruv bonusi <span class="m-oylik-lbl-sub">('+(h.boshqaruv_foiz||0)+'%)</span></span><span class="m-oylik-val" style="color:'+((h.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+((h.boshqaruv_bonus||0)>0?'+':'')+fmt(h.boshqaruv_bonus||0)+'</span></div>';
+  }
+  html += '</div>';
+  
+  if((h.kpi_bonus||0) === 0 && (h.filial_foiz||0) < 60){
+    html += '<div style="margin-top:10px;background:rgba(239,68,68,.08);border:0.5px solid rgba(239,68,68,.2);border-radius:10px;padding:8px 10px;font-size:11px;color:var(--text2);text-align:center">⚠️ Filial 60% dan past — bonus yo\'q, faqat fiksa</div>';
+  }
+  
+  html += '</div>';
+  
+  // Hodim sahifasi tugma
+  var indexDev = window.location.pathname.indexOf('-dev')!==-1 ? 'hodim-dev.html' : 'hodim.html';
+  html += '<a class="action-btn" onclick="openHodimPage(\''+h.telegram_id+'\')">📈 Hodim batafsil sahifa →</a>';
+  
+  return html;
+}
+
+function openHodimPage(tgId){
+  var hodimPage = window.location.pathname.indexOf('-dev')!==-1 ? 'hodim-dev.html' : 'hodim.html';
+  var url = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + hodimPage + '?uid=' + tgId;
+  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
+// Init
+if(window.Telegram && window.Telegram.WebApp){
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
+load();
+</script>
+</body>
+</html>
