@@ -379,8 +379,8 @@ function parseSafe(txt){
 
 var MANAGER_WAREHOUSES = {
   all:       null,
-  giyosbek:  [61,23,15,5,1,37,17,29,103],
-  sherdil:   [71,13,33,25,35,21,27,100,101,102,104]
+  giyosbek:  [61,23,15,5,1,37,17,29],
+  sherdil:   [71,13,33,25,35,21,27,100,101,102,103,104]
 };
 var curMgr = 'all';
 var curProfil = 'Zapchast';
@@ -704,14 +704,12 @@ function renderCard(f,idx){
     return;
   }
 
-  var omborBadge = '';
-  if(isFr){
-    var omborUsd = parseFloat(f.ombor_summa_usd||0);
-    if(omborUsd > 0){
-      window['_om_'+idx]=f;
-      omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:#EEEDFE;color:#26215C;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block;cursor:pointer">📦 $'+fmt(omborUsd)+' yuk</span>';
-    }
-  }
+  // Bitta birlashgan badge: yuk + kassa + qarz, bosilsa modal ochiladi
+  var omborUsd = parseFloat(f.ombor_summa_usd||0);
+  var turganPul = parseFloat(f.filialda_turgan_pul||0);
+  var qarzFakt = parseFloat(f.qarz_fakt||0);
+  window['_om_'+idx]=f;
+  var omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:var(--bg3);border:0.5px solid var(--border);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;cursor:pointer;margin-left:4px;color:var(--text2)">📦 $'+fmtShort(omborUsd)+' <span style="color:var(--text3);margin:0 2px">·</span> 💰 '+fmtShort(turganPul)+' <span style="color:var(--text3);margin:0 2px">·</span> ⚠️ '+fmtShort(qarzFakt)+'</span>';
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+omborBadge+'</div>'+
     '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan)+'</div></div>'+
