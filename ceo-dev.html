@@ -704,14 +704,15 @@ function renderCard(f,idx){
     return;
   }
 
-  var omborBadge = '';
-  if(isFr){
-    var omborUsd = parseFloat(f.ombor_summa_usd||0);
-    if(omborUsd > 0){
-      window['_om_'+idx]=f;
-      omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:#EEEDFE;color:#26215C;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block;cursor:pointer">📦 $'+fmt(omborUsd)+' yuk</span>';
-    }
-  }
+  // 3 ta badge har filial uchun: yuk + kassa + qarz
+  var omborUsd = parseFloat(f.ombor_summa_usd||0);
+  var turganPul = parseFloat(f.filialda_turgan_pul||0);
+  var qarzFakt = parseFloat(f.qarz_fakt||0);
+  window['_om_'+idx]=f;
+  var badgeStyle = 'font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;cursor:pointer;margin-left:4px';
+  var omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:#EEEDFE;color:#26215C;'+badgeStyle+'">📦 $'+fmtShort(omborUsd)+'</span>'+
+    ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:rgba(245,158,11,.15);color:#f59e0b;'+badgeStyle+'">💰 '+fmtShort(turganPul)+'</span>'+
+    ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:rgba(239,68,68,.12);color:#ef4444;'+badgeStyle+'">⚠️ '+fmtShort(qarzFakt)+'</span>';
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+omborBadge+'</div>'+
     '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan)+'</div></div>'+
