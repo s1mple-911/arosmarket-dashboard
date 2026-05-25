@@ -1857,7 +1857,6 @@ function showRecCommentModal(userId, ism, filial, file, umumiyQarz){
   document.getElementById('rec-cm-subtitle').textContent = ism || 'Mijoz';
   var dtInput = document.getElementById('rec-cm-dt');
   dtInput.min = minStr;
-  dtInput.value = dtStr;
   document.getElementById('rec-cm-izoh').value = '';
   document.getElementById('rec-cm-remind').value = '15';
   document.getElementById('rec-cm-file-info').textContent = file ? ('📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)') : '📝 Faqat izoh + budilnik (fayl yo\'q)';
@@ -1881,22 +1880,19 @@ function submitRecComment(){
     document.getElementById('rec-cm-izoh').focus();
     return;
   }
-  if(!dt){
-    alert('Budilnik uchun vaqt kiritilishi shart!');
-    document.getElementById('rec-cm-dt').focus();
-    return;
+  // Budilnik majburiy emas, lekin agar kiritilgan bo'lsa o'tgan vaqt bo'lmasin
+  var waqtSql = '';
+  if(dt){
+    var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
+    var todayStart = new Date(Date.UTC(nowUZB.getUTCFullYear(), nowUZB.getUTCMonth(), nowUZB.getUTCDate(), 0, 0, 0));
+    var dtMs = new Date(dt).getTime();
+    if(dtMs < todayStart.getTime()){
+      alert('Budilnik sanasi bugungi yoki kelajakdagi bo\'lishi kerak!');
+      document.getElementById('rec-cm-dt').focus();
+      return;
+    }
+    waqtSql = dt.replace('T',' ')+':00';
   }
-  // Faqat sana kechagi yoki avvalgi bo'lmasligi tekshiriladi (vaqt erkin)
-  var nowUZB = new Date(new Date().getTime() + 5*60*60*1000);
-  var todayStart = new Date(Date.UTC(nowUZB.getUTCFullYear(), nowUZB.getUTCMonth(), nowUZB.getUTCDate(), 0, 0, 0));
-  var dtMs = new Date(dt).getTime();
-  if(dtMs < todayStart.getTime()){
-    alert('Budilnik sanasi bugungi yoki kelajakdagi bo\'lishi kerak!');
-    document.getElementById('rec-cm-dt').focus();
-    return;
-  }
-  // datetime-local format → "YYYY-MM-DDTHH:MM" → SQL timestamp uchun "YYYY-MM-DD HH:MM:00"
-  var waqtSql = dt.replace('T',' ')+':00';
   var p = _recPending;
   closeRecCommentModal();
   doUploadRec(p.userId, p.ism, p.filial, p.file, izoh, waqtSql, remind, p.umumiyQarz);
