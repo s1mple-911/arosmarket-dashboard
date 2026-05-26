@@ -206,6 +206,8 @@ var WALLET_INFO_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-info';
 var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
 var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
+var MML_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-mml-history';
+var MML_CHECK_API = 'https://n8n.arosmarket.com/webhook/aros-mml-check';
 var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions';
 var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
 var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
@@ -2317,6 +2319,42 @@ function renderCalendar(d){
   window._calDays = dayMap;
   window._calKunlikPlan = kunlikPlan;
   window._calDayOffs = dayOffMap;
+  window._calWid = d.warehouse_id;
+  window._calOy = oy;
+  window._calYil = yil;
+  window._calOyKunlari = oyKunlari;
+  // MML badge'larni async yuklaymiz
+  loadAndApplyMmlBadges(d.warehouse_id, oy, yil, oyKunlari);
+}
+
+// MML badge loader - har kun cell'ga 📦 X/Y badge qo'shadi
+function loadAndApplyMmlBadges(wid, oy, yil, oyKunlari){
+  if(!wid) return;
+  fetch(MML_HISTORY_API+'?wid='+wid+'&oy='+oy+'&yil='+yil)
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(!d || !d.days) return;
+      window._calMmlDays = d.days; // {26: {total_a, mavjud_a, yetishmovchi_a}, ...}
+      for(var k=1;k<=oyKunlari;k++){
+        var mml = d.days[k];
+        if(!mml || !mml.total_a) continue;
+        var cell = document.getElementById('cd-'+k);
+        if(!cell) continue;
+        // Foiz hisoblash
+        var foiz = mml.total_a > 0 ? Math.round(mml.mavjud_a / mml.total_a * 100) : 0;
+        var badgeColor, badgeBg;
+        if(foiz >= 100){ badgeColor='#22c55e'; badgeBg='rgba(34,197,94,.18)'; }
+        else if(foiz >= 90){ badgeColor='#fbbf24'; badgeBg='rgba(251,191,36,.18)'; }
+        else { badgeColor='#ff4d6d'; badgeBg='rgba(255,77,109,.18)'; }
+        // Badge HTML - cell ning oxiriga qo'shamiz
+        var badge = document.createElement('div');
+        badge.style.cssText = 'font-size:8px;font-weight:700;color:'+badgeColor+';background:'+badgeBg+';border-radius:4px;padding:1px 3px;margin-top:1px;line-height:1.2';
+        badge.textContent = '📦 '+mml.mavjud_a+'/'+mml.total_a;
+        cell.appendChild(badge);
+      }
+    })
+    .catch(function(e){ console.warn('MML badges load error:', e); });
 }
 
 function showDayDetail(kun){
@@ -2355,9 +2393,63 @@ function showDayDetail(kun){
   html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Qaytarilgan</div><div style="font-weight:700;color:var(--red)">-'+fmt(d.qaytarilgan||0)+'</div></div>';
   html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Bajarilgan</div><div style="font-weight:700;color:'+color+'">'+fmt(d.bajarilgan||0)+'</div></div>';
   html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Kunlik plan</div><div style="font-weight:700;color:var(--text2)">'+fmt(kp)+'</div></div>';
-  html += '</div></div>';
+  html += '</div>';
+  // MML A toifa qismi (agar mavjud bo'lsa)
+  var mml = (window._calMmlDays||{})[kun];
+  if(mml && mml.total_a){
+    var mmlFoiz = mml.total_a > 0 ? Math.round(mml.mavjud_a / mml.total_a * 100) : 0;
+    var mmlColor = mmlFoiz>=100?'#22c55e':mmlFoiz>=90?'#fbbf24':'#ff4d6d';
+    html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<div style="font-size:11px;color:var(--text2);font-weight:600">📦 A toifa MML</div>';
+    html += '<div style="font-size:13px;font-weight:800;color:'+mmlColor+'">'+mml.mavjud_a+' / '+mml.total_a+' ('+mmlFoiz+'%)</div>';
+    html += '</div>';
+    if(mml.yetishmovchi_a > 0){
+      html += '<div onclick="loadMissingList('+(window._calWid||0)+',\''+(mml.sana||d.sana)+'\')" style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">';
+      html += '<span style="font-size:11px;color:#ff4d6d;font-weight:600">❌ '+mml.yetishmovchi_a+' yetishmovchi</span>';
+      html += '<span style="font-size:11px;color:#ff4d6d">📋 Ro\'yxatni ko\'rish →</span>';
+      html += '</div>';
+      html += '<div id="mml-missing-'+kun+'" style="margin-top:8px"></div>';
+    } else {
+      html += '<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:6px 10px;font-size:11px;color:#22c55e;text-align:center;font-weight:600">✅ Barcha A toifa to\'liq</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
   el.innerHTML = html;
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// Yetishmovchi mahsulotlar ro'yxatini yuklash va ko'rsatish
+function loadMissingList(wid, sana){
+  // Topish - qaysi kun uchun bu funksiya chaqirildi
+  var kun = parseInt(String(sana).split('-')[2]);
+  var container = document.getElementById('mml-missing-'+kun);
+  if(!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text3);font-size:11px">Yuklanmoqda...</div>';
+  fetch(MML_CHECK_API+'?wid='+wid+'&sana='+sana)
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(!d || !d.missing_products || !d.missing_products.length){
+        container.innerHTML = '<div style="text-align:center;padding:8px;color:var(--text3);font-size:11px">Ma\'lumot yo\'q</div>';
+        return;
+      }
+      var html = '<div style="background:var(--bg2);border-radius:8px;padding:8px;max-height:280px;overflow-y:auto">';
+      d.missing_products.forEach(function(p, i){
+        html += '<div style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px">';
+        html += '<div style="font-weight:600;color:var(--text);margin-bottom:2px">'+(i+1)+'. '+(p.nomi||'—')+'</div>';
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap;font-size:9px;color:var(--text3);margin-top:3px">';
+        if(p.kategoriya) html += '<span style="background:var(--bg3);padding:1px 5px;border-radius:3px">'+p.kategoriya+'</span>';
+        if(p.sifat) html += '<span style="background:var(--bg3);padding:1px 5px;border-radius:3px">'+p.sifat+'</span>';
+        if(p.rang) html += '<span style="background:var(--bg3);padding:1px 5px;border-radius:3px">'+p.rang+'</span>';
+        html += '<span style="background:rgba(255,77,109,.15);color:#ff4d6d;padding:1px 5px;border-radius:3px;font-weight:600">ID: '+p.id+'</span>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    })
+    .catch(function(e){ container.innerHTML = '<div style="text-align:center;padding:8px;color:#ff4d6d;font-size:11px">Xato: '+e.message+'</div>'; });
 }
 
 
