@@ -2269,13 +2269,13 @@ function renderCalendar(d){
   html += '</div></div>';
   // Kalendar grid - hafta nomlari
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:6px;width:100%">';
   haftaKunlari.forEach(function(h){
     html += '<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:600;padding:4px 0">'+h+'</div>';
   });
   html += '</div>';
   // Kalendar grid - kunlar
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="cal-grid">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%" id="cal-grid">';
   // Boshidagi bo'sh kataklar
   for(var i=0;i<offset;i++){ html += '<div></div>'; }
   // Kunlar
@@ -2288,32 +2288,32 @@ function renderCalendar(d){
       var icon = dayOffIcon(reason);
       var bg = 'rgba(148,163,184,.18)';
       var txtColor = 'var(--text2)';
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s">';
-      html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+'">'+k+'</div>';
-      html += '<div style="font-size:13px;margin-top:1px">'+icon+'</div>';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s;min-width:0;overflow:hidden">';
+      html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
+      html += '<div style="font-size:13px;margin-top:1px;line-height:1">'+icon+'</div>';
       html += '</div>';
     } else if(dayData){
       var bg, txtColor;
       if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
       else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
       else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
-      html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+'">'+k+'</div>';
-      html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px">'+(dayData.foiz||0)+'%</div>';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
+      html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
+      html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px;line-height:1">'+(dayData.foiz||0)+'%</div>';
       html += '</div>';
     } else {
       // Kelajak kun
-      html += '<div style="aspect-ratio:1;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
+      html += '<div style="position:relative;aspect-ratio:1;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35;min-width:0;overflow:hidden"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
     }
   }
   html += '</div>';
   // Legend
-  html += '<div style="display:flex;justify-content:center;gap:14px;margin-top:14px;font-size:10px;color:var(--text3);flex-wrap:wrap">';
-  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(34,197,94,.4)"></div>100%+</div>';
-  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(251,191,36,.4)"></div>70-99%</div>';
-  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(255,77,109,.4)"></div>&lt;70%</div>';
-  html += '<div style="display:flex;align-items:center;gap:4px">🎉 Bayram</div>';
-  html += '<div style="display:flex;align-items:center;gap:4px">📊 Inventory</div>';
+  html += '<div style="display:flex;justify-content:center;gap:8px;margin-top:14px;font-size:9px;color:var(--text3);flex-wrap:wrap">';
+  html += '<div style="display:flex;align-items:center;gap:3px"><div style="width:9px;height:9px;border-radius:3px;background:rgba(34,197,94,.4)"></div>100%+</div>';
+  html += '<div style="display:flex;align-items:center;gap:3px"><div style="width:9px;height:9px;border-radius:3px;background:rgba(251,191,36,.4)"></div>70-99%</div>';
+  html += '<div style="display:flex;align-items:center;gap:3px"><div style="width:9px;height:9px;border-radius:3px;background:rgba(255,77,109,.4)"></div>&lt;70%</div>';
+  html += '<div style="display:flex;align-items:center;gap:3px">🎉 Bayram</div>';
+  html += '<div style="display:flex;align-items:center;gap:3px">📦 MML A</div>';
   html += '</div>';
   // Kun detail placeholder
   html += '<div id="cal-day-detail" style="margin-top:14px"></div>';
@@ -2349,10 +2349,11 @@ function loadAndApplyMmlBadges(wid, oy, yil, oyKunlari){
         if(foiz >= 100){ badgeColor='#22c55e'; badgeBg='rgba(34,197,94,.18)'; }
         else if(foiz >= 90){ badgeColor='#fbbf24'; badgeBg='rgba(251,191,36,.18)'; }
         else { badgeColor='#ff4d6d'; badgeBg='rgba(255,77,109,.18)'; }
-        // Badge HTML - cell ning oxiriga qo'shamiz
+        // MML indikator - kichik rangli nuqta cell'ning yuqori-o'ng burchagida
+        // (cell width'ni cho'zmaydi, swipe muammosi yo'q)
         var badge = document.createElement('div');
-        badge.style.cssText = 'font-size:8px;font-weight:700;color:'+badgeColor+';background:'+badgeBg+';border-radius:4px;padding:1px 3px;margin-top:1px;line-height:1.2';
-        badge.textContent = '📦 '+mml.mavjud_a+'/'+mml.total_a;
+        badge.style.cssText = 'position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:'+badgeColor+';box-shadow:0 0 0 1.5px '+badgeBg+';pointer-events:none';
+        badge.title = 'MML A: '+mml.mavjud_a+'/'+mml.total_a+' ('+foiz+'%)';
         cell.appendChild(badge);
       }
     })
@@ -2491,7 +2492,9 @@ function loadMissingList(wid, sana){
 function downloadMmlExcel(){
   var data = window._mmlExcelData;
   if(!data || !data.products || !data.products.length){ return; }
-  var csv = '\uFEFF';
+  // sep=, directive Excel uchun (rus/uzb lokalda comma'ni separator qiladi)
+  // \uFEFF BOM utf-8 uchun
+  var csv = '\uFEFF' + 'sep=,\n';
   csv += 'No,ID,Mahsulot nomi,Kategoriya,Sifat,Rang\n';
   data.products.forEach(function(p, i){
     var nomi = String(p.nomi||'').replace(/"/g,'""');
@@ -2624,7 +2627,7 @@ function showTransfersModal(transfers, filialNomi){
       </div>
       <button onclick="document.getElementById('cal-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
     </div>
-    <div id="cal-body" style="padding:12px 16px 24px"></div>
+    <div id="cal-body" style="padding:12px 16px 24px;overflow-x:hidden"></div>
   </div>
 </div>
 
