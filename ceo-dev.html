@@ -135,6 +135,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 .et{font-size:13px;color:var(--text3)}
 .err-box{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:12px;padding:14px;font-size:13px;color:var(--red);text-align:center}
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -480,6 +481,10 @@ function renderFromCache(){
   html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
   html+='</div>';
   html+='</div>';
+  // MML Download tugma
+  html+='<button id="mml-dl-btn" onclick="downloadMmlBatch()" style="width:100%;margin-top:8px;padding:11px 14px;background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s">';
+  html+='<span style="font-size:15px">📥</span><span id="mml-dl-text">MML yetishmovchi tovarlarni yuklash</span>';
+  html+='</button>';
   html+='<div class="jami-qarz">';
   html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
   html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
@@ -1209,6 +1214,10 @@ function load(){
       html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
       html+='</div>';
       html+='</div>';
+      // MML Download tugma
+      html+='<button id="mml-dl-btn" onclick="downloadMmlBatch()" style="width:100%;margin-top:8px;padding:11px 14px;background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s">';
+      html+='<span style="font-size:15px">📥</span><span id="mml-dl-text">MML yetishmovchi tovarlarni yuklash</span>';
+      html+='</button>';
       html+='<div class="jami-qarz">';
       html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
       html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
@@ -1594,6 +1603,148 @@ function downloadMmlExcel(){
   a.click();
   document.body.removeChild(a);
   setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+}
+
+// ============ MULTI-SHEET MML DOWNLOAD ============
+var _mmlDlBusy = false;
+
+function downloadMmlBatch(){
+  if(_mmlDlBusy) return;
+  if(typeof XLSX === 'undefined'){
+    alert('Excel kutubxonasi yuklanmagan. Sahifani qayta yuklang.');
+    return;
+  }
+  // Filtrlangan filiallar (curMgr, curProfil, curSearch'ga binoan)
+  var filiallar = filterFiliallar(cachedAllData || []);
+  if(!filiallar || filiallar.length === 0){
+    alert('Tanlangan filterda filial topilmadi');
+    return;
+  }
+  _mmlDlBusy = true;
+  var btn = document.getElementById('mml-dl-btn');
+  var txt = document.getElementById('mml-dl-text');
+  if(btn){ btn.style.opacity = '0.75'; btn.style.cursor = 'wait'; btn.disabled = true; }
+
+  var total = filiallar.length;
+  var completed = 0;
+  var errors = 0;
+  var sheets = []; // {name, rows, filial, sana, total_a, mavjud_a}
+
+  function updateProgress(){
+    var pct = Math.round(completed / total * 100);
+    if(txt) txt.textContent = 'Yuklanmoqda... '+pct+'% ('+completed+'/'+total+')';
+  }
+
+  function finalize(){
+    if(sheets.length === 0){
+      if(txt) txt.textContent = 'Hech qanday ma\'lumot topilmadi';
+      setTimeout(resetBtn, 2000);
+      return;
+    }
+    if(txt) txt.textContent = 'Excel yaratilmoqda...';
+    try {
+      var wb = XLSX.utils.book_new();
+      // Filial nomi bo'yicha alfavit tartib
+      sheets.sort(function(a,b){ return (a.filial||'').localeCompare(b.filial||''); });
+      sheets.forEach(function(s){
+        var ws = XLSX.utils.json_to_sheet(s.rows);
+        // Ustun kengligi
+        ws['!cols'] = [
+          {wch: 5},   // No
+          {wch: 8},   // ID
+          {wch: 50},  // Mahsulot nomi
+          {wch: 28},  // Kategoriya
+          {wch: 14},  // Sifat
+          {wch: 14},  // Rang
+          {wch: 10}   // Oxirgi miqdor
+        ];
+        // Sheet nomi (Excel max 31 char, ba'zi belgilar yo'q)
+        var sheetName = (s.filial||'Filial').replace(/[\\/?*\[\]:]/g,' ').substring(0,31);
+        // Dublikat oldini olish
+        var origName = sheetName;
+        var dup = 2;
+        while(wb.SheetNames.indexOf(sheetName) !== -1){
+          sheetName = origName.substring(0, 28)+'_'+dup;
+          dup++;
+        }
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      });
+      var sana = new Date().toISOString().split('T')[0];
+      var filterLabel = '';
+      if(curMgr !== 'all') filterLabel += '_'+curMgr;
+      if(curProfil && curProfil !== 'all') filterLabel += '_'+curProfil;
+      var filename = 'MML_yetishmovchi'+filterLabel+'_'+sana+'.xlsx';
+      XLSX.writeFile(wb, filename);
+      if(txt) txt.textContent = '✓ Yuklab olindi · '+sheets.length+' filial'+(errors>0?' ('+errors+' xato)':'');
+    } catch(e){
+      console.error('Excel yaratishda xato:', e);
+      if(txt) txt.textContent = '✗ Xato: '+e.message;
+    }
+    setTimeout(resetBtn, 3000);
+  }
+
+  function resetBtn(){
+    _mmlDlBusy = false;
+    if(btn){ btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.disabled = false; }
+    if(txt) txt.textContent = 'MML yetishmovchi tovarlarni yuklash';
+  }
+
+  // Parallel batch — 5 ta filial bir vaqtning o'zida
+  var idx = 0;
+  var BATCH = 5;
+  var active = 0;
+
+  function fetchOne(filial){
+    var wid = filial.warehouse_id;
+    return fetch(MML_CHECK_API+'?wid='+wid+'&_='+Date.now())
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && !d.error && d.missing_products && d.missing_products.length > 0){
+          var rows = d.missing_products.map(function(p, i){
+            return {
+              'No': i + 1,
+              'ID': p.id || '',
+              'Mahsulot nomi': p.nomi || p.mahsulot_nomi || p.name || '',
+              'Kategoriya': p.kategoriya || p.category || '',
+              'Sifat': p.sifat || p.quality || '',
+              'Rang': p.rang || p.color || '',
+              'Oxirgi miqdor': p.oxirgi_miqdori != null ? p.oxirgi_miqdori : ''
+            };
+          });
+          sheets.push({
+            filial: filial.filial || d.filial_nomi || filial.warehouse_name || ('Filial-'+wid),
+            rows: rows,
+            sana: d.sana,
+            total_a: d.total_a,
+            mavjud_a: d.mavjud_a
+          });
+        }
+      })
+      .catch(function(e){
+        console.warn('MML fetch xato wid='+wid+':', e);
+        errors++;
+      })
+      .then(function(){
+        completed++;
+        active--;
+        updateProgress();
+        next();
+      });
+  }
+
+  function next(){
+    while(active < BATCH && idx < filiallar.length){
+      active++;
+      fetchOne(filiallar[idx]);
+      idx++;
+    }
+    if(idx >= filiallar.length && active === 0){
+      finalize();
+    }
+  }
+
+  updateProgress();
+  next();
 }
 
 function showTransfersModal(transfers, filialNomi){
