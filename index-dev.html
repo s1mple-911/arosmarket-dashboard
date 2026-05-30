@@ -842,10 +842,11 @@ function loadKassaInfo(){
 function renderKassaCards(d){
   if(!d) return '';
   var html = '';
-  var hasAny = (d.overdue && d.overdue.is_overdue) || (d.unsent && d.unsent.count_days > 0) || (d.on_way && d.on_way.count > 0);
+  var hasAny = (d.overdue && d.overdue.is_overdue) || (d.unsent && d.unsent.count_days > 0);
   
   if(!hasAny){
     return '<div style="margin-top:10px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;text-align:center;font-size:11px;color:var(--green);font-weight:600">✓ Kassa hammasi joyida</div>'
+      + renderReceivedTransfersCard()
       + renderKassaHistoryCard();
   }
   
@@ -891,43 +892,83 @@ function renderKassaCards(d){
     html += '</div>';
   }
   
-  // 3. Yo'lda turgan transferlar
-  if(d.on_way && d.on_way.count > 0){
-    var ow = d.on_way;
-    html += '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:12px 14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px">';
-    html += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(139,92,246,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⏳</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Yo\'lda transferlar</div>';
-    html += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px">'+ow.count+' ta · kassa qabul qilmagan</div>';
-    html += '</div>';
-    html += '<div style="text-align:right">';
-    html += '<div style="font-size:14px;font-weight:800;color:#8b5cf6">'+fmt(ow.total_amount)+'</div>';
-    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
-    html += '</div>';
-    html += '</div>';
-    // Transfer ro'yxati
-    if(ow.transfers && ow.transfers.length > 0){
-      html += '<div style="margin-top:8px;padding-top:8px;border-top:0.5px dashed rgba(139,92,246,.3);display:flex;flex-direction:column;gap:4px">';
-      ow.transfers.slice(0, 3).forEach(function(t){
-        var dt = t.sent_at ? new Date(t.sent_at) : null;
-        var dtStr = dt ? (dt.getDate()+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 8px;background:rgba(139,92,246,.05);border-radius:6px">';
-        html += '<span style="color:var(--text2)">#'+t.id+' · → '+(t.receiver_title||'').replace(' Kassa','')+'</span>';
-        html += '<span style="color:var(--text);font-weight:600">'+fmt(t.total_amount)+' · '+dtStr+'</span>';
-        html += '</div>';
-      });
-      if(ow.transfers.length > 3){
-        html += '<div style="text-align:center;font-size:10px;color:var(--text3);padding-top:2px">+'+(ow.transfers.length - 3)+' ta yana</div>';
-      }
-      html += '</div>';
-    }
-    html += '</div>';
-  }
-  
   html += '</div>';
-  // Kassa transferlar tarixi card — yo'lda transferlar tagidan
+  // Qabul qilingan transferlar va kassa transferlar tarixi
+  html += renderReceivedTransfersCard();
   html += renderKassaHistoryCard();
+  return html;
+}
+
+// ============ QABUL QILINGAN TRANSFERLAR ============
+var RECEIVED_TRANSFERS_API = 'https://n8n.arosmarket.com/webhook/aros-filial-received-transfers';
+
+function renderReceivedTransfersCard(){
+  var h = '';
+  h += '<div style="margin-top:12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:12px;padding:12px 14px">';
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
+  h += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(34,197,94,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">✅</div>';
+  h += '<div style="flex:1;min-width:0">';
+  h += '<div style="font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Qabul qilingan transferlar</div>';
+  h += '<div style="font-size:12px;color:var(--text2);margin-top:2px" id="rt-summary">Yuklanmoqda...</div>';
+  h += '</div>';
+  h += '<select id="rt-days" onchange="loadReceivedTransfers()" style="padding:5px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:10px;font-family:inherit;cursor:pointer">';
+  h += '<option value="7" selected>7 kun</option>';
+  h += '<option value="14">14 kun</option>';
+  h += '<option value="30">30 kun</option>';
+  h += '<option value="90">90 kun</option>';
+  h += '</select>';
+  h += '</div>';
+  h += '<div id="received-transfers-body"></div>';
+  h += '</div>';
+  setTimeout(function(){ loadReceivedTransfers(); }, 50);
+  return h;
+}
+
+function loadReceivedTransfers(){
+  var widLocal = (userData && userData.warehouse_id) || wid;
+  if(!widLocal) return;
+  var daysSel = document.getElementById('rt-days');
+  var days = daysSel ? daysSel.value : '7';
+  var body = document.getElementById('received-transfers-body');
+  var summary = document.getElementById('rt-summary');
+  if(body) body.innerHTML = '<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3)">Yuklanmoqda...</div>';
+  fetch(RECEIVED_TRANSFERS_API+'?wid='+widLocal+'&days='+days+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(summary) summary.textContent = (d.count||0)+' ta · '+fmt(d.total_amount||0)+' so\'m';
+      if(body) body.innerHTML = renderReceivedTransfersBody(d);
+    })
+    .catch(function(e){
+      if(body) body.innerHTML = '<div style="color:#ef4444;font-size:11px;padding:6px">Xato: '+(e.message||'unknown')+'</div>';
+    });
+}
+
+function renderReceivedTransfersBody(d){
+  if(!d || d.error) return '<div style="color:#ef4444;font-size:11px;padding:6px">Xato: '+((d&&d.error)||'unknown')+'</div>';
+  if(!d.transfers || d.transfers.length === 0){
+    return '<div style="font-size:11px;color:var(--text3);text-align:center;padding:10px">Bu davrda qabul qilingan transfer yo\'q</div>';
+  }
+  var html = '<div style="display:flex;flex-direction:column;gap:5px">';
+  d.transfers.forEach(function(t){
+    var recv = t.received_at ? new Date(t.received_at) : null;
+    var recvStr = recv ? (String(recv.getDate()).padStart(2,'0')+'.'+String(recv.getMonth()+1).padStart(2,'0')+' '+String(recv.getHours()).padStart(2,'0')+':'+String(recv.getMinutes()).padStart(2,'0')) : '';
+    var daysWait = t.days_to_receive || 0;
+    var waitStr = daysWait === 0 ? 'shu kuni' : (daysWait+' kun');
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:7px 9px;background:rgba(34,197,94,.06);border-radius:7px;gap:6px">';
+    html += '<div style="flex:1;min-width:0;overflow:hidden">';
+    html += '<div style="display:flex;align-items:center;gap:5px;color:var(--text);font-weight:600">';
+    html += '<span style="font-size:10px;color:var(--text3)">#'+t.id+'</span>';
+    html += '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">→ '+(t.receiver_title||'').replace(' Kassa','')+'</span>';
+    html += '</div>';
+    html += '<div style="font-size:9px;color:var(--text3);margin-top:1px">📥 '+recvStr+' · '+waitStr+' yo\'lda</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;white-space:nowrap">';
+    html += '<div style="color:var(--green);font-weight:800">'+fmt(t.total_amount)+'</div>';
+    html += '<div style="font-size:9px;color:var(--text3)">'+t.items_count+' ta smena</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
   return html;
 }
 
