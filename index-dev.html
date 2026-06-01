@@ -219,6 +219,26 @@ var tilxatIds = {};        // user_id -> tilxat soni (qaysi mijozda tilxat bor)
 var tilxatCache = {};      // user_id -> tilxatlar list (modal uchun)
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 
+// BI-MONTHLY (Iyun 2026 dan): oy 2 yarimga bo'linadi (Y1=1-15, Y2=16-oy oxiri)
+var _bmNow = new Date(new Date().getTime() + 5*60*60*1000);
+var BIMONTHLY_START_YIL = 2026, BIMONTHLY_START_OY = 6;
+function isBimonthly(y, m){
+  return (y > BIMONTHLY_START_YIL) || (y === BIMONTHLY_START_YIL && m >= BIMONTHLY_START_OY);
+}
+function defaultYarim(y, m){
+  if(!isBimonthly(y, m)) return 0;
+  if(y === _bmNow.getUTCFullYear() && m === (_bmNow.getUTCMonth()+1)){
+    return _bmNow.getUTCDate() <= 15 ? 1 : 2;
+  }
+  return 1;
+}
+var curYarim = defaultYarim(_bmNow.getUTCFullYear(), _bmNow.getUTCMonth()+1);
+function getOyNomi(m, y, yarim){
+  var base = OY[m-1] + ' ' + y;
+  if(!yarim) return base;
+  return OY[m-1] + ' ' + yarim + '-yarim ' + y;
+}
+
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
 
@@ -1665,7 +1685,13 @@ function load(){
       allFiliallar = d.leaderboard || [];
       document.getElementById('av').textContent=ini(userData.ism);
       document.getElementById('hn').textContent=userData.ism||'Hodim';
-      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+      var _hsOyTxt;
+      if(curYarim){
+        _hsOyTxt = OY[_bmNow.getUTCMonth()] + ' ' + curYarim + '-yarim ' + _bmNow.getUTCFullYear();
+      } else {
+        _hsOyTxt = new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+      }
+      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+_hsOyTxt;
       // Filial stats yuklanyapti
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
@@ -2434,7 +2460,8 @@ function renderCalendar(d){
       html += '</div>';
     } else if(dayData){
       var bg, txtColor;
-      if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
+      if(dayData.status==='outofyarim'){ bg='var(--bg3)'; txtColor='var(--text3)'; }
+      else if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
       else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
       else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
       html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
