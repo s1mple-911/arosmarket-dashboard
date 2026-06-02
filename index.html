@@ -219,6 +219,39 @@ var tilxatIds = {};        // user_id -> tilxat soni (qaysi mijozda tilxat bor)
 var tilxatCache = {};      // user_id -> tilxatlar list (modal uchun)
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 
+// BI-MONTHLY (Iyun 2026 dan): oy 2 yarimga bo'linadi (Y1=1-15, Y2=16-oy oxiri)
+var _bmNow = new Date(new Date().getTime() + 5*60*60*1000);
+var BIMONTHLY_START_YIL = 2026, BIMONTHLY_START_OY = 6;
+function isBimonthly(y, m){
+  return (y > BIMONTHLY_START_YIL) || (y === BIMONTHLY_START_YIL && m >= BIMONTHLY_START_OY);
+}
+function defaultYarim(y, m){
+  if(!isBimonthly(y, m)) return 0;
+  if(y === _bmNow.getUTCFullYear() && m === (_bmNow.getUTCMonth()+1)){
+    return _bmNow.getUTCDate() <= 15 ? 1 : 2;
+  }
+  return 1;
+}
+var curYarim = defaultYarim(_bmNow.getUTCFullYear(), _bmNow.getUTCMonth()+1);
+function getOyNomi(m, y, yarim){
+  var base = OY[m-1] + ' ' + y;
+  if(!yarim) return base;
+  return OY[m-1] + ' ' + yarim + '-yarim ' + y;
+}
+// BI-MONTHLY: kun display "bugun/oy_kunlari" -> "bugun_yarim/yarim_kunlari" (agar yarim bo'lsa)
+function getKunDisplay(f){
+  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
+    return (f.bugun_yarim||0)+'/'+f.yarim_kunlari;
+  }
+  return ((f&&f.bugun)||0)+'/'+((f&&f.oy_kunlari)||30);
+}
+function getQolganKun(f){
+  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
+    return f.yarim_kunlari - (f.bugun_yarim||1);
+  }
+  return ((f&&f.oy_kunlari)||30)-((f&&f.bugun)||1);
+}
+
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
 
@@ -1145,7 +1178,7 @@ function renderDash(){
     var fpColor=ffoiz>=80?'var(--green)':ffoiz>=50?'var(--amber)':'var(--red)';
     var fprogFoiz=fd.prognoz_foiz||0;
     var fprogColor=fprogFoiz>=80?'var(--green)':fprogFoiz>=50?'var(--amber)':'var(--red)';
-    var fqolganKun=(fd.oy_kunlari||30)-(fd.bugun||1);
+    var fqolganKun=getQolganKun(fd);
     var profBadgeIdx = '';
     if(isAks) profBadgeIdx = ' · <span style="color:#06b6d4;font-weight:700;font-size:10px">AKSESSUAR</span>';
     else if(isFr) profBadgeIdx = ' · <span style="color:#a855f7;font-weight:700;font-size:10px">FRANSHIZA</span>';
@@ -1220,7 +1253,7 @@ function renderDash(){
       html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Prognoz summa</div>';
       html+='<div style="font-size:13px;font-weight:800;color:#06b6d4">'+fmt(fd.prognoz||0)+'</div>';
       if(fqolganKun>0 || ffoiz>=100){
-        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+getKunDisplay(fd)+' kun</div>';
       }
       html+='</div>';
       html+='</div>';
@@ -1289,7 +1322,7 @@ function renderDash(){
     html+='<div style="font-size:13px;font-weight:800;color:'+fprogColor+'">'+fprogFoiz+'%</div>';
     if(fkunlik>0){
       html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+getKunDisplay(fd)+' kun</div>';
     } else if(ffoiz>=100){
       html+='<div style="font-size:9px;color:var(--green);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
     }
@@ -1665,7 +1698,13 @@ function load(){
       allFiliallar = d.leaderboard || [];
       document.getElementById('av').textContent=ini(userData.ism);
       document.getElementById('hn').textContent=userData.ism||'Hodim';
-      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+      var _hsOyTxt;
+      if(curYarim){
+        _hsOyTxt = OY[_bmNow.getUTCMonth()] + ' ' + curYarim + '-yarim ' + _bmNow.getUTCFullYear();
+      } else {
+        _hsOyTxt = new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+      }
+      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+_hsOyTxt;
       // Filial stats yuklanyapti
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
@@ -2434,7 +2473,8 @@ function renderCalendar(d){
       html += '</div>';
     } else if(dayData){
       var bg, txtColor;
-      if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
+      if(dayData.status==='outofyarim'){ bg='var(--bg3)'; txtColor='var(--text3)'; }
+      else if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
       else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
       else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
       html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
