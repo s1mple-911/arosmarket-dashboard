@@ -238,6 +238,19 @@ function getOyNomi(m, y, yarim){
   if(!yarim) return base;
   return OY[m-1] + ' ' + yarim + '-yarim ' + y;
 }
+// BI-MONTHLY: kun display "bugun/oy_kunlari" -> "bugun_yarim/yarim_kunlari" (agar yarim bo'lsa)
+function getKunDisplay(f){
+  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
+    return (f.bugun_yarim||0)+'/'+f.yarim_kunlari;
+  }
+  return ((f&&f.bugun)||0)+'/'+((f&&f.oy_kunlari)||30);
+}
+function getQolganKun(f){
+  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
+    return f.yarim_kunlari - (f.bugun_yarim||1);
+  }
+  return ((f&&f.oy_kunlari)||30)-((f&&f.bugun)||1);
+}
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
@@ -1165,7 +1178,7 @@ function renderDash(){
     var fpColor=ffoiz>=80?'var(--green)':ffoiz>=50?'var(--amber)':'var(--red)';
     var fprogFoiz=fd.prognoz_foiz||0;
     var fprogColor=fprogFoiz>=80?'var(--green)':fprogFoiz>=50?'var(--amber)':'var(--red)';
-    var fqolganKun=(fd.oy_kunlari||30)-(fd.bugun||1);
+    var fqolganKun=getQolganKun(fd);
     var profBadgeIdx = '';
     if(isAks) profBadgeIdx = ' · <span style="color:#06b6d4;font-weight:700;font-size:10px">AKSESSUAR</span>';
     else if(isFr) profBadgeIdx = ' · <span style="color:#a855f7;font-weight:700;font-size:10px">FRANSHIZA</span>';
@@ -1240,7 +1253,7 @@ function renderDash(){
       html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Prognoz summa</div>';
       html+='<div style="font-size:13px;font-weight:800;color:#06b6d4">'+fmt(fd.prognoz||0)+'</div>';
       if(fqolganKun>0 || ffoiz>=100){
-        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+getKunDisplay(fd)+' kun</div>';
       }
       html+='</div>';
       html+='</div>';
@@ -1309,7 +1322,7 @@ function renderDash(){
     html+='<div style="font-size:13px;font-weight:800;color:'+fprogColor+'">'+fprogFoiz+'%</div>';
     if(fkunlik>0){
       html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+getKunDisplay(fd)+' kun</div>';
     } else if(ffoiz>=100){
       html+='<div style="font-size:9px;color:var(--green);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
     }
