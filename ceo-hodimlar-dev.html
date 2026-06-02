@@ -39,6 +39,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hdr-title{font-size:15px;font-weight:700}
 .hdr-sub{font-size:11px;color:var(--text3);margin-top:1px}
 .refresh-btn{background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text)}
+.filter-bar{padding:8px 14px;display:flex;gap:8px;border-bottom:0.5px solid var(--border);background:var(--bg)}
+.filter-bar select{flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:9px 10px;font-size:13px;color:var(--text);outline:none;font-family:inherit}
 .main{padding:14px 16px}
 
 /* TOP STATS CARD */
@@ -162,6 +164,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="refresh-btn" onclick="load()">🔄</button>
 </div>
 
+<div class="filter-bar">
+  <select id="oy-select" onchange="changeOy(this.value)"></select>
+</div>
+
 <div class="main" id="main">
   <div class="loading-wrap">
     <div class="spin"></div>
@@ -186,6 +192,63 @@ var CEO_API = 'https://n8n.arosmarket.com/webhook/aros-ceo-hodimlar';
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
 var ceoData = null;
 var expandedFilials = {};
+
+// BI-MONTHLY
+var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+var now = new Date(new Date().getTime() + 5*60*60*1000);
+var curOy = now.getUTCMonth() + 1;
+var curYil = now.getUTCFullYear();
+var BIMONTHLY_START_YIL = 2026, BIMONTHLY_START_OY = 6;
+function isBimonthly(y, m){
+  return (y > BIMONTHLY_START_YIL) || (y === BIMONTHLY_START_YIL && m >= BIMONTHLY_START_OY);
+}
+function defaultYarim(y, m){
+  if(!isBimonthly(y, m)) return 0;
+  if(y === now.getUTCFullYear() && m === (now.getUTCMonth()+1)){
+    return now.getUTCDate() <= 15 ? 1 : 2;
+  }
+  return 1;
+}
+var curYarim = defaultYarim(curYil, curOy);
+function getOyNomi(m, y, yarim){
+  if(!yarim) return OY[m-1] + ' ' + y;
+  return OY[m-1] + ' ' + yarim + '-yarim ' + y;
+}
+function buildYarimSuffix(){ return curYarim ? '&yarim=' + curYarim : ''; }
+
+function setupOySelect(){
+  var sel = document.getElementById('oy-select');
+  sel.innerHTML = '';
+  for(var y=2026;y<=curYil;y++){
+    var endM = y===curYil ? curOy : 12;
+    for(var m=1;m<=endM;m++){
+      if(isBimonthly(y, m)){
+        var maxYarim = (y===curYil && m===curOy) ? defaultYarim(y, m) : 2;
+        for(var yr=1; yr<=maxYarim; yr++){
+          var o = document.createElement('option');
+          o.value = y+'-'+m+'-'+yr;
+          o.textContent = OY[m-1] + ' ' + yr + '-yarim ' + y;
+          if(y===curYil && m===curOy && yr===curYarim) o.selected = true;
+          sel.appendChild(o);
+        }
+      } else {
+        var o = document.createElement('option');
+        o.value = y+'-'+m+'-0';
+        o.textContent = OY[m-1] + ' ' + y;
+        sel.appendChild(o);
+      }
+    }
+  }
+}
+function changeOy(v){
+  var p = String(v).split('-');
+  if(p.length === 3){
+    curYil = parseInt(p[0]);
+    curOy = parseInt(p[1]);
+    curYarim = parseInt(p[2]) || 0;
+  }
+  load();
+}
 
 function fmt(n){ return Math.round(Number(n)||0).toLocaleString('uz-UZ'); }
 function fmtShort(n){
@@ -213,7 +276,7 @@ function load(){
   var main = document.getElementById('main');
   main.innerHTML = '<div class="loading-wrap"><div class="spin"></div><div class="loading-sub">Hodimlar ma\'lumotini yig\'moqda...</div><div class="loading-note">⏱ 5-10 sekund kutiladi</div></div>';
   
-  fetch(CEO_API+'?uid='+encodeURIComponent(uid))
+  fetch(CEO_API+'?uid='+encodeURIComponent(uid)+'&oy='+curOy+'&yil='+curYil+buildYarimSuffix())
     .then(function(r){return r.text();})
     .then(function(txt){
       var d;
@@ -480,6 +543,7 @@ if(window.Telegram && window.Telegram.WebApp){
   window.Telegram.WebApp.ready();
   window.Telegram.WebApp.expand();
 }
+setupOySelect();
 load();
 </script>
 </body>
