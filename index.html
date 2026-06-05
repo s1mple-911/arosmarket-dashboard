@@ -149,6 +149,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .empty-icon{width:48px;height:48px;margin:0 auto 14px;opacity:.3}
 .empty-icon svg{width:100%;height:100%;stroke:var(--text2);fill:none;stroke-width:1.5}
 .et{font-size:13px;color:var(--text3)}
+.kechikish-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:600;white-space:nowrap}
+.kechikish-badge.kech-warn{background:rgba(245,158,11,.15);color:#d97706;border:1px solid rgba(245,158,11,.3)}
+.kechikish-badge.kech-bad{background:rgba(239,68,68,.15);color:#dc2626;border:1px solid rgba(239,68,68,.3)}
+.kechikish-badge.kech-crit{background:rgba(220,38,38,.25);color:#fff;border:1px solid rgba(220,38,38,.5);animation:kechPulse 1.8s infinite}
+@keyframes kechPulse{0%,100%{opacity:1}50%{opacity:.65}}
+.kech-ok{display:inline-block;padding:1px 5px;border-radius:4px;font-size:9px;background:rgba(34,197,94,.15);color:#16a34a;font-weight:600}
+.tr-auto{display:inline-block;padding:1px 4px;border-radius:3px;font-size:8px;background:rgba(99,102,241,.18);color:#6366f1;font-weight:600;letter-spacing:.3px}
+[data-theme="dark"] .kechikish-badge.kech-warn{background:rgba(245,158,11,.22);color:#fbbf24}
+[data-theme="dark"] .kechikish-badge.kech-bad{background:rgba(239,68,68,.25);color:#f87171}
+[data-theme="dark"] .kech-ok{background:rgba(34,197,94,.22);color:#4ade80}
+[data-theme="dark"] .tr-auto{background:rgba(99,102,241,.3);color:#a5b4fc}
 </style>
 </head>
 <body>
@@ -212,11 +223,45 @@ var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions
 var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
 var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
 var KASSA_API      = 'https://n8n.arosmarket.com/webhook/aros-bugalter-filial-kassa';
+var KASSA_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-filial-kassa-history';
 var TILXAT_LIST    = 'https://n8n.arosmarket.com/webhook/aros-tilxat-list';
 var recordingsCache = {}; // user_id -> recordings list
 var tilxatIds = {};        // user_id -> tilxat soni (qaysi mijozda tilxat bor)
 var tilxatCache = {};      // user_id -> tilxatlar list (modal uchun)
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+
+// BI-MONTHLY (Iyun 2026 dan): oy 2 yarimga bo'linadi (Y1=1-15, Y2=16-oy oxiri)
+var _bmNow = new Date(new Date().getTime() + 5*60*60*1000);
+var BIMONTHLY_START_YIL = 2026, BIMONTHLY_START_OY = 6;
+function isBimonthly(y, m){
+  return (y > BIMONTHLY_START_YIL) || (y === BIMONTHLY_START_YIL && m >= BIMONTHLY_START_OY);
+}
+function defaultYarim(y, m){
+  if(!isBimonthly(y, m)) return 0;
+  if(y === _bmNow.getUTCFullYear() && m === (_bmNow.getUTCMonth()+1)){
+    return _bmNow.getUTCDate() <= 15 ? 1 : 2;
+  }
+  return 1;
+}
+var curYarim = defaultYarim(_bmNow.getUTCFullYear(), _bmNow.getUTCMonth()+1);
+function getOyNomi(m, y, yarim){
+  var base = OY[m-1] + ' ' + y;
+  if(!yarim) return base;
+  return OY[m-1] + ' ' + yarim + '-yarim ' + y;
+}
+// BI-MONTHLY: kun display "bugun/oy_kunlari" -> "bugun_yarim/yarim_kunlari" (agar yarim bo'lsa)
+function getKunDisplay(f){
+  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
+    return (f.bugun_yarim||0)+'/'+f.yarim_kunlari;
+  }
+  return ((f&&f.bugun)||0)+'/'+((f&&f.oy_kunlari)||30);
+}
+function getQolganKun(f){
+  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
+    return f.yarim_kunlari - (f.bugun_yarim||1);
+  }
+  return ((f&&f.oy_kunlari)||30)-((f&&f.bugun)||1);
+}
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
@@ -316,6 +361,23 @@ function fmt(n){
   return Math.round(Number(n)||0).toLocaleString('uz-UZ');
 }
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
+function kechikishBadge(t){
+  if(!t||!t.is_auto) return '';
+  var soat=t.kechikish_soat, label=t.kechikish_label||'';
+  if(soat===null||soat===undefined) return '<span class="tr-auto">AUTO</span>';
+  if(soat===0||!label) return '<span class="tr-auto">AUTO</span> <span class="kech-ok">✓ vaqtida</span>';
+  var cls='kech-warn';
+  if(soat>=24&&soat<72) cls='kech-bad';
+  if(soat>=72) cls='kech-crit';
+  var ttl='';
+  if(t.kutilgan_yetkazish){
+    try{ var dt=new Date(t.kutilgan_yetkazish);
+      ttl='Kutilgan: '+String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    }catch(e){}
+  }
+  return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge '+cls+'" title="'+ttl+'">⏰ '+label+'</span>';
+}
+
 function fmtShort(n){
   var v = Number(n)||0;
   if(v===0) return '0';
@@ -841,10 +903,11 @@ function loadKassaInfo(){
 function renderKassaCards(d){
   if(!d) return '';
   var html = '';
-  var hasAny = (d.overdue && d.overdue.is_overdue) || (d.unsent && d.unsent.count_days > 0) || (d.on_way && d.on_way.count > 0);
+  var hasAny = (d.overdue && d.overdue.is_overdue) || (d.unsent && d.unsent.count_days > 0);
   
   if(!hasAny){
-    return '<div style="margin-top:10px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;text-align:center;font-size:11px;color:var(--green);font-weight:600">✓ Kassa hammasi joyida</div>';
+    return '<div style="margin-top:10px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;text-align:center;font-size:11px;color:var(--green);font-weight:600">✓ Kassa hammasi joyida</div>'
+      + renderKassaHistoryCard();
   }
   
   html += '<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">';
@@ -889,41 +952,179 @@ function renderKassaCards(d){
     html += '</div>';
   }
   
-  // 3. Yo'lda turgan transferlar
-  if(d.on_way && d.on_way.count > 0){
-    var ow = d.on_way;
-    html += '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:12px 14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px">';
-    html += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(139,92,246,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⏳</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Yo\'lda transferlar</div>';
-    html += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px">'+ow.count+' ta · kassa qabul qilmagan</div>';
-    html += '</div>';
-    html += '<div style="text-align:right">';
-    html += '<div style="font-size:14px;font-weight:800;color:#8b5cf6">'+fmt(ow.total_amount)+'</div>';
-    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
-    html += '</div>';
-    html += '</div>';
-    // Transfer ro'yxati
-    if(ow.transfers && ow.transfers.length > 0){
-      html += '<div style="margin-top:8px;padding-top:8px;border-top:0.5px dashed rgba(139,92,246,.3);display:flex;flex-direction:column;gap:4px">';
-      ow.transfers.slice(0, 3).forEach(function(t){
-        var dt = t.sent_at ? new Date(t.sent_at) : null;
-        var dtStr = dt ? (dt.getDate()+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 8px;background:rgba(139,92,246,.05);border-radius:6px">';
-        html += '<span style="color:var(--text2)">#'+t.id+' · → '+(t.receiver_title||'').replace(' Kassa','')+'</span>';
-        html += '<span style="color:var(--text);font-weight:600">'+fmt(t.total_amount)+' · '+dtStr+'</span>';
-        html += '</div>';
-      });
-      if(ow.transfers.length > 3){
-        html += '<div style="text-align:center;font-size:10px;color:var(--text3);padding-top:2px">+'+(ow.transfers.length - 3)+' ta yana</div>';
-      }
-      html += '</div>';
+  html += '</div>';
+  // Kassa transferlar tarixi
+  html += renderKassaHistoryCard();
+  return html;
+}
+
+// ============ QABUL QILINGAN TRANSFERLAR ============
+// ============ KASSA TRANSFERLAR TARIXI ============
+function nowUZBDateStr(){
+  // UZB (UTC+5) bo'yicha YYYY-MM-DD
+  var u = new Date(new Date().getTime() + 5*60*60*1000);
+  return u.toISOString().split('T')[0];
+}
+
+function renderKassaHistoryCard(){
+  var today = nowUZBDateStr();
+  var h = '';
+  h += '<div style="margin-top:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px">';
+  // Header
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+  h += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">📊</div>';
+  h += '<div style="flex:1;min-width:0">';
+  h += '<div style="font-size:11px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Kassa transferlar tarixi</div>';
+  h += '<div style="font-size:12px;color:var(--text2);margin-top:2px">Platforma · Sotuvchi · Kassa</div>';
+  h += '</div>';
+  h += '</div>';
+  // Date filter
+  h += '<div style="display:flex;gap:5px;margin-bottom:10px;align-items:center;flex-wrap:wrap">';
+  h += '<input type="date" id="kh-start" value="'+today+'" onchange="loadKassaHistoryFromInputs()" style="flex:1;min-width:0;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit">';
+  h += '<span style="font-size:11px;color:var(--text3);padding:0 2px">→</span>';
+  h += '<input type="date" id="kh-end" value="'+today+'" onchange="loadKassaHistoryFromInputs()" style="flex:1;min-width:0;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit">';
+  h += '<button onclick="setKhBugun()" style="padding:6px 10px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:7px;color:#3b82f6;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">Bugun</button>';
+  h += '</div>';
+  // Body
+  h += '<div id="kassa-history-body" style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0">Yuklanmoqda...</div>';
+  h += '</div>';
+  // Birinchi yuklanish (ozgina kechiktirib DOM tayyor bo'lguncha)
+  setTimeout(function(){ loadKassaHistoryData(today, today); }, 50);
+  return h;
+}
+
+function setKhBugun(){
+  var today = nowUZBDateStr();
+  var s = document.getElementById('kh-start');
+  var e = document.getElementById('kh-end');
+  if(s) s.value = today;
+  if(e) e.value = today;
+  loadKassaHistoryData(today, today);
+}
+
+function loadKassaHistoryFromInputs(){
+  var s = document.getElementById('kh-start');
+  var e = document.getElementById('kh-end');
+  if(!s || !e || !s.value || !e.value) return;
+  var start = s.value, end = e.value;
+  if(start > end){ var t = start; start = end; end = t; s.value = start; e.value = end; }
+  loadKassaHistoryData(start, end);
+}
+
+function loadKassaHistoryData(start, end){
+  var widLocal = (userData && userData.warehouse_id) || wid;
+  if(!widLocal) return;
+  var body = document.getElementById('kassa-history-body');
+  if(body) body.innerHTML = '<div style="padding:14px 0">Yuklanmoqda...</div>';
+  fetch(KASSA_HISTORY_API+'?wid='+widLocal+'&start='+start+'&end='+end+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var ph = document.getElementById('kassa-history-body');
+      if(ph) ph.innerHTML = renderKassaHistoryBody(d);
+    })
+    .catch(function(e){
+      var ph = document.getElementById('kassa-history-body');
+      if(ph) ph.innerHTML = '<div style="color:#ef4444;padding:8px">Xato: '+(e.message||'unknown')+'</div>';
+    });
+}
+
+function renderKhTriplet(platforma, sotuvchi, kassa, farqS, farqK){
+  var h = '<div style="display:flex;flex-direction:column;gap:5px">';
+  // Platforma
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">';
+  h += '<span style="color:var(--text2)">Platforma:</span>';
+  h += '<span style="color:var(--text);font-weight:700">'+fmt(platforma)+'</span>';
+  h += '</div>';
+  // Sotuvchi
+  var sCol = farqS === 0 ? 'var(--text3)' : (farqS > 0 ? 'var(--green)' : '#ef4444');
+  var sStr = farqS === 0 ? '' : (farqS > 0 ? '+' : '') + fmt(farqS);
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">';
+  h += '<span style="color:var(--text2)">Sotuvchi:</span>';
+  h += '<div style="text-align:right;display:flex;align-items:baseline;gap:5px">';
+  h += '<span style="color:var(--text);font-weight:700">'+fmt(sotuvchi)+'</span>';
+  if(sStr) h += '<span style="font-size:9px;color:'+sCol+';font-weight:600">('+sStr+')</span>';
+  h += '</div>';
+  h += '</div>';
+  // Kassa
+  var kCol = farqK === 0 ? 'var(--text3)' : (farqK > 0 ? 'var(--green)' : '#ef4444');
+  var kStr = farqK === 0 ? '' : (farqK > 0 ? '+' : '') + fmt(farqK);
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">';
+  h += '<span style="color:var(--text2)">Kassa:</span>';
+  h += '<div style="text-align:right;display:flex;align-items:baseline;gap:5px">';
+  h += '<span style="color:var(--text);font-weight:700">'+fmt(kassa)+'</span>';
+  if(kStr) h += '<span style="font-size:9px;color:'+kCol+';font-weight:600">('+kStr+')</span>';
+  h += '</div>';
+  h += '</div>';
+  h += '</div>';
+  return h;
+}
+
+function renderKassaHistoryBody(d){
+  if(!d || d.error) return '<div style="color:#ef4444;font-size:11px;padding:8px">Xato: '+((d&&d.error)||'unknown')+'</div>';
+  if(!d.kunlar || d.kunlar.length === 0) return '<div style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0">Bu davrda yopilgan smena yo\'q</div>';
+  
+  // Range bo'lsa (>1 kun) — faqat KASSA QABUL QILGAN (received) kunlarni ko'rsatamiz
+  // Yo'lda va junatilmaganlar ko'rsatilmaydi, JAMI ham faqat received'lardan hisoblanadi
+  var isRange = d.is_range && d.kunlar.length > 1;
+  var kunlar = d.kunlar;
+  var totals = d.totals;
+  if(isRange){
+    kunlar = d.kunlar.filter(function(k){ return k.status === 'received'; });
+    if(kunlar.length === 0){
+      return '<div style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0">Bu davrda kassa qabul qilgan smena yo\'q</div>';
     }
-    html += '</div>';
+    // JAMI ni faqat received kunlardan qayta hisoblash
+    totals = kunlar.reduce(function(acc, k){
+      acc.platforma += k.platforma || 0;
+      acc.sotuvchi += k.sotuvchi || 0;
+      acc.kassa += k.kassa || 0;
+      acc.doc_count += k.doc_count || 0;
+      return acc;
+    }, { platforma: 0, sotuvchi: 0, kassa: 0, doc_count: 0 });
+    totals.farq_sotuvchi = totals.sotuvchi - totals.platforma;
+    totals.farq_kassa = totals.kassa - totals.platforma;
   }
   
-  html += '</div>';
+  var html = '';
+  // Range bo'lsa va > 1 kun → umumiy card (faqat received'lardan)
+  if(isRange){
+    html += '<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:10px 12px;margin-bottom:8px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html += '<div style="font-size:10px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:.4px">JAMI · Kassa qabul qilgan</div>';
+    html += '<div style="font-size:10px;color:var(--text3)">'+kunlar.length+' kun · '+d.start+' → '+d.end+'</div>';
+    html += '</div>';
+    html += renderKhTriplet(totals.platforma, totals.sotuvchi, totals.kassa, totals.farq_sotuvchi, totals.farq_kassa);
+    html += '</div>';
+  }
+  // Har kun uchun card
+  var todayStr = nowUZBDateStr();
+  kunlar.forEach(function(k){
+    var parts = k.sana.split('-');
+    var dtStr = parts[2]+'.'+parts[1]+'.'+parts[0];
+    var dt = new Date(k.sana);
+    var weekday = ['Yak','Du','Se','Ch','Pa','Ju','Sh'][dt.getDay()];
+    var bColor = '#3b82f6', bgColor = 'rgba(59,130,246,.06)';
+    if(k.status === 'not_sent'){ bColor = '#f59e0b'; bgColor = 'rgba(245,158,11,.08)'; }
+    else if(k.status === 'partial'){ bColor = '#8b5cf6'; bgColor = 'rgba(139,92,246,.08)'; }
+    else if(k.status === 'on_way'){ bColor = '#8b5cf6'; bgColor = 'rgba(139,92,246,.08)'; }
+    else if(k.status === 'received'){ bColor = '#22c55e'; bgColor = 'rgba(34,197,94,.08)'; }
+    
+    html += '<div style="background:'+bgColor+';border:1px solid '+bColor+'40;border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+    // Header
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text)">'+dtStr+' · '+weekday+'</div>';
+    html += '<div style="font-size:9px;font-weight:700;color:'+bColor+';background:'+bColor+'22;padding:2px 7px;border-radius:6px;white-space:nowrap">'+k.status_label+'</div>';
+    html += '</div>';
+    // Agar bugun va not_sent — alohida belgi
+    if(k.status === 'not_sent' && k.sana === todayStr){
+      html += '<div style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,.12);padding:5px 8px;border-radius:6px;margin-bottom:8px;text-align:center;font-weight:700">⏳ Xali junatilmagan bugunki kassa</div>';
+    } else if(k.status === 'not_sent'){
+      html += '<div style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,.12);padding:5px 8px;border-radius:6px;margin-bottom:8px;text-align:center;font-weight:700">⏳ Xali junatilmagan</div>';
+    }
+    // 3 qiymat
+    html += renderKhTriplet(k.platforma, k.sotuvchi, k.kassa, k.farq_sotuvchi, k.farq_kassa);
+    html += '</div>';
+  });
   return html;
 }
 
@@ -1005,7 +1206,7 @@ function renderDash(){
     var fpColor=ffoiz>=80?'var(--green)':ffoiz>=50?'var(--amber)':'var(--red)';
     var fprogFoiz=fd.prognoz_foiz||0;
     var fprogColor=fprogFoiz>=80?'var(--green)':fprogFoiz>=50?'var(--amber)':'var(--red)';
-    var fqolganKun=(fd.oy_kunlari||30)-(fd.bugun||1);
+    var fqolganKun=getQolganKun(fd);
     var profBadgeIdx = '';
     if(isAks) profBadgeIdx = ' · <span style="color:#06b6d4;font-weight:700;font-size:10px">AKSESSUAR</span>';
     else if(isFr) profBadgeIdx = ' · <span style="color:#a855f7;font-weight:700;font-size:10px">FRANSHIZA</span>';
@@ -1080,7 +1281,7 @@ function renderDash(){
       html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Prognoz summa</div>';
       html+='<div style="font-size:13px;font-weight:800;color:#06b6d4">'+fmt(fd.prognoz||0)+'</div>';
       if(fqolganKun>0 || ffoiz>=100){
-        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+getKunDisplay(fd)+' kun</div>';
       }
       html+='</div>';
       html+='</div>';
@@ -1149,7 +1350,7 @@ function renderDash(){
     html+='<div style="font-size:13px;font-weight:800;color:'+fprogColor+'">'+fprogFoiz+'%</div>';
     if(fkunlik>0){
       html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+getKunDisplay(fd)+' kun</div>';
     } else if(ffoiz>=100){
       html+='<div style="font-size:9px;color:var(--green);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
     }
@@ -1525,7 +1726,13 @@ function load(){
       allFiliallar = d.leaderboard || [];
       document.getElementById('av').textContent=ini(userData.ism);
       document.getElementById('hn').textContent=userData.ism||'Hodim';
-      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+      var _hsOyTxt;
+      if(curYarim){
+        _hsOyTxt = OY[_bmNow.getUTCMonth()] + ' ' + curYarim + '-yarim ' + _bmNow.getUTCFullYear();
+      } else {
+        _hsOyTxt = new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+      }
+      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+_hsOyTxt;
       // Filial stats yuklanyapti
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
@@ -2269,13 +2476,13 @@ function renderCalendar(d){
   html += '</div></div>';
   // Kalendar grid - hafta nomlari
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:6px;width:100%">';
   haftaKunlari.forEach(function(h){
     html += '<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:600;padding:4px 0">'+h+'</div>';
   });
   html += '</div>';
   // Kalendar grid - kunlar
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="cal-grid">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%" id="cal-grid">';
   // Boshidagi bo'sh kataklar
   for(var i=0;i<offset;i++){ html += '<div></div>'; }
   // Kunlar
@@ -2288,22 +2495,23 @@ function renderCalendar(d){
       var icon = dayOffIcon(reason);
       var bg = 'rgba(148,163,184,.18)';
       var txtColor = 'var(--text2)';
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="min-height:62px;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s;padding:4px 2px">';
-      html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+';line-height:1.1">'+k+'</div>';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s;min-width:0;overflow:hidden">';
+      html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
       html += '<div style="font-size:13px;margin-top:1px;line-height:1">'+icon+'</div>';
       html += '</div>';
     } else if(dayData){
       var bg, txtColor;
-      if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
+      if(dayData.status==='outofyarim'){ bg='var(--bg3)'; txtColor='var(--text3)'; }
+      else if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
       else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
       else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="min-height:62px;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;padding:4px 2px" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
-      html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+';line-height:1.1">'+k+'</div>';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
+      html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
       html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px;line-height:1">'+(dayData.foiz||0)+'%</div>';
       html += '</div>';
     } else {
       // Kelajak kun
-      html += '<div style="min-height:62px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35;padding:4px 2px"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
+      html += '<div style="position:relative;aspect-ratio:1;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35;min-width:0;overflow:hidden"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
     }
   }
   html += '</div>';
@@ -2349,10 +2557,11 @@ function loadAndApplyMmlBadges(wid, oy, yil, oyKunlari){
         if(foiz >= 100){ badgeColor='#22c55e'; badgeBg='rgba(34,197,94,.18)'; }
         else if(foiz >= 90){ badgeColor='#fbbf24'; badgeBg='rgba(251,191,36,.18)'; }
         else { badgeColor='#ff4d6d'; badgeBg='rgba(255,77,109,.18)'; }
-        // Badge HTML - cell ning oxiriga qo'shamiz (kompakt mobile uchun)
+        // MML indikator - kichik rangli nuqta cell'ning yuqori-o'ng burchagida
+        // (cell width'ni cho'zmaydi, swipe muammosi yo'q)
         var badge = document.createElement('div');
-        badge.style.cssText = 'font-size:8px;font-weight:700;color:'+badgeColor+';background:'+badgeBg+';border-radius:3px;padding:1px 3px;margin-top:2px;line-height:1.1;white-space:nowrap';
-        badge.textContent = mml.mavjud_a+'/'+mml.total_a;
+        badge.style.cssText = 'position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:'+badgeColor+';box-shadow:0 0 0 1.5px '+badgeBg+';pointer-events:none';
+        badge.title = 'MML A: '+mml.mavjud_a+'/'+mml.total_a+' ('+foiz+'%)';
         cell.appendChild(badge);
       }
     })
@@ -2545,6 +2754,7 @@ function showTransfersModal(transfers, filialNomi){
     html+='<div style="display:flex;align-items:center;gap:5px">';
     html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
     html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
+    html+=kechikishBadge(t);
     html+='</div>';
     html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
     html+='</div>';
@@ -2626,7 +2836,7 @@ function showTransfersModal(transfers, filialNomi){
       </div>
       <button onclick="document.getElementById('cal-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
     </div>
-    <div id="cal-body" style="padding:12px 16px 24px"></div>
+    <div id="cal-body" style="padding:12px 16px 24px;overflow-x:hidden"></div>
   </div>
 </div>
 
