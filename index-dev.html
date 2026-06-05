@@ -149,6 +149,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .empty-icon{width:48px;height:48px;margin:0 auto 14px;opacity:.3}
 .empty-icon svg{width:100%;height:100%;stroke:var(--text2);fill:none;stroke-width:1.5}
 .et{font-size:13px;color:var(--text3)}
+.kechikish-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:600;white-space:nowrap}
+.kechikish-badge.kech-warn{background:rgba(245,158,11,.15);color:#d97706;border:1px solid rgba(245,158,11,.3)}
+.kechikish-badge.kech-bad{background:rgba(239,68,68,.15);color:#dc2626;border:1px solid rgba(239,68,68,.3)}
+.kechikish-badge.kech-crit{background:rgba(220,38,38,.25);color:#fff;border:1px solid rgba(220,38,38,.5);animation:kechPulse 1.8s infinite}
+@keyframes kechPulse{0%,100%{opacity:1}50%{opacity:.65}}
+.kech-ok{display:inline-block;padding:1px 5px;border-radius:4px;font-size:9px;background:rgba(34,197,94,.15);color:#16a34a;font-weight:600}
+.tr-auto{display:inline-block;padding:1px 4px;border-radius:3px;font-size:8px;background:rgba(99,102,241,.18);color:#6366f1;font-weight:600;letter-spacing:.3px}
+[data-theme="dark"] .kechikish-badge.kech-warn{background:rgba(245,158,11,.22);color:#fbbf24}
+[data-theme="dark"] .kechikish-badge.kech-bad{background:rgba(239,68,68,.25);color:#f87171}
+[data-theme="dark"] .kech-ok{background:rgba(34,197,94,.22);color:#4ade80}
+[data-theme="dark"] .tr-auto{background:rgba(99,102,241,.3);color:#a5b4fc}
 </style>
 </head>
 <body>
@@ -350,6 +361,23 @@ function fmt(n){
   return Math.round(Number(n)||0).toLocaleString('uz-UZ');
 }
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
+function kechikishBadge(t){
+  if(!t||!t.is_auto) return '';
+  var soat=t.kechikish_soat, label=t.kechikish_label||'';
+  if(soat===null||soat===undefined) return '<span class="tr-auto">AUTO</span>';
+  if(soat===0||!label) return '<span class="tr-auto">AUTO</span> <span class="kech-ok">✓ vaqtida</span>';
+  var cls='kech-warn';
+  if(soat>=24&&soat<72) cls='kech-bad';
+  if(soat>=72) cls='kech-crit';
+  var ttl='';
+  if(t.kutilgan_yetkazish){
+    try{ var dt=new Date(t.kutilgan_yetkazish);
+      ttl='Kutilgan: '+String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    }catch(e){}
+  }
+  return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge '+cls+'" title="'+ttl+'">⏰ '+label+'</span>';
+}
+
 function fmtShort(n){
   var v = Number(n)||0;
   if(v===0) return '0';
@@ -2726,6 +2754,7 @@ function showTransfersModal(transfers, filialNomi){
     html+='<div style="display:flex;align-items:center;gap:5px">';
     html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
     html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
+    html+=kechikishBadge(t);
     html+='</div>';
     html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
     html+='</div>';
