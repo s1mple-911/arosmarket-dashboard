@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- AROS Admin v3 — flex layout, no-cache -->
+<!-- AROS Admin v5 — Filiallar embedded + Yuklanmalar + Sidebar toggle + POST fix -->
 <html lang="uz" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -51,7 +51,24 @@ input,select,textarea{font:inherit;color:inherit}
 /* === App layout (FLEX, full screen) === */
 #app{display:flex;width:100%;min-height:100vh}
 #app.app-hidden{display:none}
-.sidebar{flex:0 0 200px;width:200px;background:var(--bg-2);border-right:0.5px solid var(--border);padding:16px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:10}
+.sidebar{flex:0 0 200px;width:200px;background:var(--bg-2);border-right:0.5px solid var(--border);padding:16px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:10;transition:flex-basis 0.2s,width 0.2s,padding 0.2s}
+
+/* === Sidebar COLLAPSED state (desktop) === */
+.sidebar.collapsed{flex:0 0 56px;width:56px;padding:16px 6px}
+.sidebar.collapsed .brand{justify-content:center;padding:6px 0 20px}
+.sidebar.collapsed .brand-text{display:none}
+.sidebar.collapsed .sb-grp{display:none}
+.sidebar.collapsed .nav-item{justify-content:center;padding:8px 0}
+.sidebar.collapsed .nav-item .nav-label,
+.sidebar.collapsed .nav-item .ct{display:none}
+.sidebar.collapsed .sb-foot{padding:12px 0 8px;flex-direction:column;gap:8px}
+.sidebar.collapsed .sb-foot .foot-info{display:none}
+.sidebar.collapsed .sb-foot .av{margin:0 auto}
+.sidebar.collapsed .theme-btn{margin-left:0}
+.sidebar.collapsed .sb-toggle{align-self:center}
+.sb-toggle{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:14px;cursor:pointer;margin-left:auto;transition:transform 0.2s}
+.sb-toggle:hover{background:var(--bg-3);color:var(--text)}
+.sidebar.collapsed .sb-toggle{transform:rotate(180deg);margin-left:0}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 20px;font-size:14px;font-weight:500}
 .brand-dot{width:22px;height:22px;border-radius:6px;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
 .sb-grp{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;padding:14px 10px 6px;font-weight:500}
@@ -272,21 +289,22 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
-<div class="brand"><span class="brand-dot">A</span>AROS Admin</div>
-<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')"><i class="ti ti-layout-dashboard"></i>Bosh sahifa</a>
+<div class="brand"><span class="brand-dot">A</span><span class="brand-text">AROS Admin</span><button class="sb-toggle" onclick="toggleCollapse()" title="Yopish/ochish"><i class="ti ti-chevron-left"></i></button></div>
+<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')" title="Bosh sahifa"><i class="ti ti-layout-dashboard"></i><span class="nav-label">Bosh sahifa</span></a>
 <div class="sb-grp">Boshqaruv</div>
-<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')"><i class="ti ti-user-plus"></i>Yangi<span class="ct" id="nav-pending-ct">0</span></a>
-<a class="nav-item" data-screen="users-all" onclick="goto('users-all')"><i class="ti ti-users"></i>Hammasi</a>
-<a class="nav-item" data-screen="roles" onclick="goto('roles')"><i class="ti ti-shield-lock"></i>Rollar</a>
-<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')"><i class="ti ti-building-store"></i>Filiallar</a>
-<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')"><i class="ti ti-cash-register"></i>Bugalter</a>
+<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')" title="Yangi userlar"><i class="ti ti-user-plus"></i><span class="nav-label">Yangi</span><span class="ct" id="nav-pending-ct">0</span></a>
+<a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users"></i><span class="nav-label">Hammasi</span></a>
+<a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock"></i><span class="nav-label">Rollar</span></a>
+<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store"></i><span class="nav-label">Filiallar</span></a>
+<a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder"></i><span class="nav-label">Yuklanmalar</span></a>
+<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register"></i><span class="nav-label">Bugalter</span></a>
 <div class="sb-grp">Sistema</div>
-<a class="nav-item" data-screen="audit" onclick="goto('audit')"><i class="ti ti-history"></i>Kuzatuv</a>
-<a class="nav-item" data-screen="workflows" onclick="goto('workflows')"><i class="ti ti-circuit-bulb"></i>Workflow'lar</a>
-<a class="nav-item" data-screen="settings" onclick="goto('settings')"><i class="ti ti-settings"></i>Sozlamalar</a>
+<a class="nav-item" data-screen="audit" onclick="goto('audit')" title="Kuzatuv"><i class="ti ti-history"></i><span class="nav-label">Kuzatuv</span></a>
+<a class="nav-item" data-screen="workflows" onclick="goto('workflows')" title="Workflow'lar"><i class="ti ti-circuit-bulb"></i><span class="nav-label">Workflow'lar</span></a>
+<a class="nav-item" data-screen="settings" onclick="goto('settings')" title="Sozlamalar"><i class="ti ti-settings"></i><span class="nav-label">Sozlamalar</span></a>
 <div class="sb-foot">
 <span class="av" id="footer-av">?</span>
-<div style="flex:1;min-width:0">
+<div class="foot-info" style="flex:1;min-width:0">
 <div style="font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="footer-name">User</div>
 <div style="font-size:10.5px;color:var(--text-3)" id="footer-role">Loading</div>
 </div>
@@ -343,6 +361,11 @@ async function init(){
   }
   updateThemeIcon();
 
+  // Sidebar collapse state
+  if (localStorage.getItem('aros-admin-sb') === '1') {
+    document.getElementById('sidebar').classList.add('collapsed');
+  }
+
   // Get UID
   if (tg) {
     tg.ready();
@@ -397,18 +420,20 @@ function showForbidden(uid){
 // =========================================================
 async function api(endpoint, params, opts={}){
   let url = `${API_BASE}/${endpoint}`;
-  const method = opts.method || 'GET';
-  const fetchOpts = { method };
-  if (method === 'GET' && params) {
-    const qs = new URLSearchParams(params).toString();
-    if (qs) url += '?' + qs;
-  } else if (method === 'POST') {
-    fetchOpts.body = JSON.stringify(params);
-    fetchOpts.headers = { 'Content-Type': 'application/json' };
+  // Hammasi GET — POST CORS preflight'ni o'tkazib yuborish uchun
+  if (params) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        qs.append(k, v.join(','));
+      } else if (v !== null && v !== undefined) {
+        qs.append(k, v);
+      }
+    });
+    const qsStr = qs.toString();
+    if (qsStr) url += '?' + qsStr;
   }
-  // NOTE: GET uchun header qo'ymayapmiz — Content-Type qo'shilsa brauzer CORS preflight 
-  // jo'natadi va n8n webhook (GET-only) preflight'ga to'g'ri javob bermaydi.
-  const r = await fetch(url, fetchOpts);
+  const r = await fetch(url);
   if (!r.ok) {
     let txt = '';
     try { txt = (await r.text()).slice(0,150); } catch(e){}
@@ -442,6 +467,7 @@ function renderScreen(s){
     case 'users-all': return renderUsersAll(root);
     case 'roles': return renderRoles(root);
     case 'filiallar': return renderFiliallar(root);
+    case 'yuklanmalar': return renderYuklanmalar(root);
     case 'bugalter': return renderBugalter(root);
     case 'audit': return renderAudit(root);
     case 'workflows': return renderWorkflows(root);
@@ -451,6 +477,12 @@ function renderScreen(s){
 
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('backdrop').classList.toggle('open'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('backdrop').classList.remove('open'); }
+
+function toggleCollapse(){
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('aros-admin-sb', sb.classList.contains('collapsed') ? '1' : '0');
+}
 
 // =========================================================
 // THEME
@@ -713,11 +745,11 @@ async function approveUser(telegramId, ism){
     const saveRes = await api('admin-user-save', {
       uid: UID, telegram_id: telegramId, ism, warehouse_id, warehouse_name,
       oylik_plan: plan || '0', status: stat
-    }, { method: 'POST' });
+    });
     if (saveRes.error) throw new Error(saveRes.error);
     const assignRes = await api('admin-role-assign', {
       uid: UID, telegram_id: telegramId, role_keys: [roleKey]
-    }, { method: 'POST' });
+    });
     if (assignRes.error) throw new Error(assignRes.error);
     toast(`${ism} tasdiqlandi`);
     renderUsersPending(document.getElementById('screens'));
@@ -872,11 +904,11 @@ async function saveUserEdit(telegramId){
       uid: UID, telegram_id: telegramId, ism,
       warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
       oylik_plan: plan || '0', status: stat
-    }, { method: 'POST' });
+    });
     if (r1.error) throw new Error(r1.error);
     const r2 = await api('admin-role-assign', {
       uid: UID, telegram_id: telegramId, role_keys: roleKeys
-    }, { method: 'POST' });
+    });
     if (r2.error) throw new Error(r2.error);
     toast('Saqlandi');
     closeModal();
@@ -969,7 +1001,7 @@ async function saveRolePerms(roleKey, label, description, icon){
     const r = await api('admin-role-save', {
       uid: UID, key: roleKey, label, description, icon,
       permissions: Array.from(editingPerms)
-    }, { method: 'POST' });
+    });
     if (r.error) throw new Error(r.error);
     toast(`Rol saqlandi · ${r.permissions_set} ruxsat`);
     cache.rbac = null;
@@ -1005,7 +1037,7 @@ async function createRole(){
   try {
     const r = await api('admin-role-save', {
       uid: UID, key, label, description: desc, icon, permissions: []
-    }, { method: 'POST' });
+    });
     if (r.error) throw new Error(r.error);
     toast('Rol yaratildi · ruxsatlar tanlang');
     closeModal();
@@ -1016,30 +1048,424 @@ async function createRole(){
 }
 
 // =========================================================
-// SCREEN: FILIALLAR (link to ceo.html)
+// SCREEN: FILIALLAR (embedded CEO view, desktop)
 // =========================================================
-function renderFiliallar(root){
-  root.innerHTML = topbar('Filiallar', 'CEO Dashboard');
+let filiallarFilter = { yarim: (new Date().getDate() <= 15 ? 1 : 2), profil: 'all', search: '', sort: 'foiz_desc' };
+let currentFiliallar = [];
+
+async function renderFiliallar(root){
+  root.innerHTML = topbar('Filiallar', 'CEO Dashboard', `
+    <select class="select" style="height:34px;width:auto;min-width:110px" id="fil-yarim-sel">
+      <option value="1" ${filiallarFilter.yarim===1?'selected':''}>Yarim 1 (1–15)</option>
+      <option value="2" ${filiallarFilter.yarim===2?'selected':''}>Yarim 2 (16+)</option>
+    </select>
+    <button class="icon-btn" onclick="renderFiliallar(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+  `);
   const content = document.createElement('div');
-  content.innerHTML = `
-<div class="card">
-<div style="text-align:center;padding:32px 20px">
-<i class="ti ti-building-store" style="font-size:48px;color:var(--text-3);margin-bottom:14px;display:block"></i>
-<h3 style="font-size:16px;font-weight:500;margin-bottom:6px">Filiallar boshqaruvi</h3>
-<p style="font-size:13px;color:var(--text-2);max-width:360px;margin:0 auto 20px;line-height:1.6">Barcha filiallar bo'yicha CEO dashboard — plan/bajarildi, qarzlar, transferlar, deadline'lar. Hozircha mavjud ceo.html sahifasini ochadi.</p>
-<a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/ceo.html?uid=${UID}" target="_blank"><i class="ti ti-external-link"></i>CEO Dashboard'ni ochish</a>
+  content.innerHTML = `<div class="kpi-row"><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div></div><div class="skeleton" style="height:400px"></div>`;
+  root.appendChild(content);
+  
+  document.getElementById('fil-yarim-sel').addEventListener('change', (e) => {
+    filiallarFilter.yarim = parseInt(e.target.value);
+    renderFiliallar(document.getElementById('screens'));
+  });
+
+  try {
+    const data = await api('admin-ceo-data', { uid: UID, yarim: filiallarFilter.yarim });
+    if (data.error) throw new Error(data.error);
+    
+    const j = data.jami || {};
+    const fils = data.filiallar || [];
+    currentFiliallar = fils;
+    
+    let displayed = fils;
+    if (filiallarFilter.profil !== 'all') {
+      displayed = fils.filter(f => f.is_franchise ? filiallarFilter.profil==='Franshiza' : f.profil === filiallarFilter.profil);
+    }
+    
+    const planFoiz = j.plan > 0 ? Math.round(j.bajarildi/j.plan*100) : 0;
+    const prognozFoizJami = j.plan > 0 ? Math.round(j.prognoz/j.plan*100) : 0;
+
+    content.innerHTML = `
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="kpi-lbl"><i class="ti ti-target"></i>Plan</div>
+    <div class="kpi-val">${fmtShort(j.plan)}<span class="unit"> so'm</span></div>
+    <div class="kpi-delta" style="color:var(--text-3)">${j.active_count}/${data.total_count} aktiv filial</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl"><i class="ti ti-check"></i>Bajarildi</div>
+    <div class="kpi-val">${fmtShort(j.bajarildi)}</div>
+    <div class="kpi-delta ${planFoiz>=80?'up':planFoiz>=50?'warn':'dn'}">${planFoiz}% plandan</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl"><i class="ti ti-chart-line"></i>Prognoz</div>
+    <div class="kpi-val">${fmtShort(j.prognoz)}</div>
+    <div class="kpi-delta ${prognozFoizJami>=100?'up':'warn'}">${j.on_track_count} normal · ${j.at_risk_count} xavfli</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl"><i class="ti ti-alert-triangle"></i>Qarzlar</div>
+    <div class="kpi-val" style="color:${j.qarz_fakt>0?'var(--err-text)':'var(--text)'}">${fmtShort(j.qarz_fakt)}</div>
+    <div class="kpi-delta dn">${fmtShort(j.muddati_utgan)} muddati o'tgan</div>
+  </div>
 </div>
+
+<div class="audit-toolbar">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <div class="pill-sel ${filiallarFilter.profil==='all'?'active':''}" onclick="setFilProf('all')">Hammasi (${fils.length})</div>
+    <div class="pill-sel ${filiallarFilter.profil==='Zapchast'?'active':''}" onclick="setFilProf('Zapchast')">Zapchast</div>
+    <div class="pill-sel ${filiallarFilter.profil==='Aksessuar'?'active':''}" onclick="setFilProf('Aksessuar')">Aksessuar</div>
+    <div class="pill-sel ${filiallarFilter.profil==='Franshiza'?'active':''}" onclick="setFilProf('Franshiza')">Franshiza</div>
+  </div>
+  <input type="text" class="search-box" placeholder="Filial nomi..." id="fil-search" style="max-width:240px" value="${escapeHtml(filiallarFilter.search)}">
 </div>
-<div class="card" style="margin-top:14px">
-<div class="card-h"><h3>Tez kirishlar</h3></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-<a class="btn" href="https://s1mple-911.github.io/arosmarket-dashboard/index.html?uid=${UID}" target="_blank"><i class="ti ti-dashboard"></i>Filial dashboard</a>
-<a class="btn" href="https://s1mple-911.github.io/arosmarket-dashboard/hodim.html?uid=${UID}" target="_blank"><i class="ti ti-user"></i>Hodim panel</a>
-<a class="btn" href="https://s1mple-911.github.io/arosmarket-dashboard/bugalter.html?uid=${UID}" target="_blank"><i class="ti ti-cash-register"></i>Bugalter</a>
-</div>
+
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:2fr 100px 1fr 1fr 70px 1fr 1fr 90px">
+    <div onclick="sortFil('filial')" style="cursor:pointer">Filial</div>
+    <div>Profil</div>
+    <div onclick="sortFil('plan')" style="cursor:pointer">Plan ↓</div>
+    <div onclick="sortFil('bajarildi')" style="cursor:pointer">Bajarildi</div>
+    <div onclick="sortFil('foiz')" style="cursor:pointer">Foiz</div>
+    <div onclick="sortFil('prognoz')" style="cursor:pointer">Prognoz</div>
+    <div onclick="sortFil('qarz_fakt')" style="cursor:pointer">Qarz</div>
+    <div>Updated</div>
+  </div>
+  <div id="fil-rows">${displayed.map((f,i) => filRow(f, fils.indexOf(f))).join('')}</div>
 </div>
 `;
+
+    document.getElementById('fil-search').addEventListener('input', (e) => {
+      filiallarFilter.search = e.target.value;
+      filterFilRows();
+    });
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function filRow(f, idx) {
+  const foizColor = f.foiz >= 80 ? 'var(--ok-text)' : f.foiz >= 50 ? 'var(--warn-text)' : 'var(--err-text)';
+  const prognozColor = f.prognoz_foiz >= 100 ? 'var(--ok-text)' : f.prognoz_foiz >= 80 ? 'var(--warn-text)' : 'var(--err-text)';
+  const profilBadge = f.is_franchise ? '<span class="badge muted">Franshiza</span>' :
+    f.profil === 'Aksessuar' ? '<span class="badge info">Aksessuar</span>' : '<span class="badge ok">Zapchast</span>';
+  return `<div class="table-row" data-filial="${escapeHtml((f.filial||'').toLowerCase())}" style="grid-template-columns:2fr 100px 1fr 1fr 70px 1fr 1fr 90px;cursor:pointer" onclick="openFilDetail(${idx})">
+    <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(f.filial||'—')}</div>
+    <div>${profilBadge}</div>
+    <div style="font-variant-numeric:tabular-nums">${f.plan>0?fmtShort(f.plan):'—'}</div>
+    <div style="font-variant-numeric:tabular-nums">${f.bajarildi>0?fmtShort(f.bajarildi):'—'}</div>
+    <div style="color:${foizColor};font-weight:500">${f.foiz}%</div>
+    <div style="color:${prognozColor};font-variant-numeric:tabular-nums">${f.prognoz>0?fmtShort(f.prognoz)+' ('+f.prognoz_foiz+'%)':'—'}</div>
+    <div style="font-variant-numeric:tabular-nums;color:${f.qarz_fakt>0?'var(--err-text)':'var(--text-3)'}">${f.qarz_fakt>0?fmtShort(f.qarz_fakt):'—'}</div>
+    <div style="font-size:11px;color:var(--text-3)">${escapeHtml(f.updated_at_str||'—')}</div>
+  </div>`;
+}
+
+function setFilProf(p) { filiallarFilter.profil = p; renderFiliallar(document.getElementById('screens')); }
+
+function sortFil(key) {
+  const fils = [...currentFiliallar];
+  const desc = filiallarFilter.sort === key+'_desc';
+  fils.sort((a,b) => {
+    let av = a[key], bv = b[key];
+    if (typeof av === 'string') return desc ? bv.localeCompare(av) : av.localeCompare(bv);
+    return desc ? bv - av : av - bv;
+  });
+  filiallarFilter.sort = desc ? key+'_asc' : key+'_desc';
+  const wrap = document.getElementById('fil-rows');
+  if (wrap) {
+    wrap.innerHTML = fils.map(f => filRow(f, currentFiliallar.indexOf(f))).join('');
+    filterFilRows();
+  }
+}
+
+function filterFilRows() {
+  const q = filiallarFilter.search.toLowerCase();
+  document.querySelectorAll('#fil-rows .table-row').forEach(row => {
+    row.style.display = (q === '' || row.dataset.filial.includes(q)) ? '' : 'none';
+  });
+}
+
+function openFilDetail(idx) {
+  const f = currentFiliallar[idx];
+  if (!f) return;
+  const planFoiz = f.plan > 0 ? Math.round(f.bajarildi/f.plan*100) : 0;
+  openModal(`
+<div class="modal-h">
+  <div>
+    <h3>${escapeHtml(f.filial)}</h3>
+    <p>${f.is_franchise?'Franshiza':escapeHtml(f.profil||'—')} · warehouse_id: ${f.warehouse_id} · ${escapeHtml(f.oy||'')} ${f.yil}</p>
+  </div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Plan</div>
+      <div style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">${f.plan>0?fmt(f.plan):'—'}</div>
+    </div>
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Bajarildi · ${planFoiz}%</div>
+      <div style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">${fmt(f.bajarildi)}</div>
+    </div>
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Prognoz · ${f.prognoz_foiz}%</div>
+      <div style="font-size:16px;font-weight:500;font-variant-numeric:tabular-nums;color:${f.prognoz_foiz>=100?'var(--ok-text)':'var(--warn-text)'}">${fmt(f.prognoz)}</div>
+    </div>
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Qarz · ${fmtShort(f.muddati_utgan)} m.o'tgan</div>
+      <div style="font-size:16px;font-weight:500;font-variant-numeric:tabular-nums;color:${f.qarz_fakt>0?'var(--err-text)':'var(--text)'}">${fmt(f.qarz_fakt)}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;font-size:12.5px;padding:12px 0">
+    <div style="color:var(--text-3)">Qoldi planga</div><div style="font-variant-numeric:tabular-nums">${fmt(f.qoldi)} so'm</div>
+    <div style="color:var(--text-3)">Tug. savdo</div><div style="font-variant-numeric:tabular-nums">${fmt(f.tugallanmagan_savdo)} so'm · ${f.tugallanmagan_savdo_son} ta</div>
+    <div style="color:var(--text-3)">Jami mijoz</div><div>${f.jami_mijoz} ta</div>
+    <div style="color:var(--text-3)">Transferlar</div><div>${f.transfers_count} ta yo'lda</div>
+    <div style="color:var(--text-3)">Ochiq buyurtmalar</div><div>${f.confirmed_count} ta</div>
+    <div style="color:var(--text-3)">Updated</div><div>${escapeHtml(f.updated_at_str||'—')}</div>
+  </div>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Yopish</button>
+  <a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/ceo.html?uid=${UID}&wid=${f.warehouse_id}" target="_blank"><i class="ti ti-external-link"></i>To'liq sahifa</a>
+</div>
+`);
+}
+
+// =========================================================
+// SCREEN: YUKLANMALAR (Zapis + Tilxat)
+// =========================================================
+let yukSubTab = 'zapis';
+let yukFilter = { search: '', filial: '', type: '', budilnik: '' };
+
+function renderYuklanmalar(root){
+  root.innerHTML = topbar('Yuklanmalar', yukSubTab === 'zapis' ? 'Audio yozuvlar va izohlar' : 'Tilxat hujjatlari');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div style="display:flex;gap:6px;margin-bottom:14px;border-bottom:0.5px solid var(--border);padding-bottom:8px">
+  <div class="pill-sel ${yukSubTab==='zapis'?'active':''}" onclick="setYukSubTab('zapis')"><i class="ti ti-microphone"></i>Zapislar</div>
+  <div class="pill-sel ${yukSubTab==='tilxat'?'active':''}" onclick="setYukSubTab('tilxat')"><i class="ti ti-file-text"></i>Tilxatlar</div>
+</div>
+<div id="yuk-content"><div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
   root.appendChild(content);
+  if (yukSubTab === 'zapis') loadZapislar(); else loadTilxatlar();
+}
+
+function setYukSubTab(t) { yukSubTab = t; yukFilter = { search: '', filial: '', type: '', budilnik: '' }; renderYuklanmalar(document.getElementById('screens')); }
+function setYukType(t) { yukFilter.type = yukFilter.type === t ? '' : t; (yukSubTab==='zapis'?fetchZap:fetchTil)(); }
+function setYukBud(b) { yukFilter.budilnik = yukFilter.budilnik === b ? '' : b; fetchZap(); }
+
+async function loadZapislar(){
+  const wrap = document.getElementById('yuk-content');
+  wrap.innerHTML = `
+<div class="audit-toolbar">
+  <input type="text" class="search-box" placeholder="Mijoz, hodim, izoh..." id="zap-search" value="${escapeHtml(yukFilter.search)}" style="min-width:240px">
+  <select class="select" id="zap-filial" style="max-width:200px;height:34px"><option value="">Filial · hammasi</option></select>
+  <div class="pill-sel ${yukFilter.type==='audio'?'active':''}" onclick="setYukType('audio')"><i class="ti ti-volume"></i>Audio</div>
+  <div class="pill-sel ${yukFilter.type==='izoh'?'active':''}" onclick="setYukType('izoh')"><i class="ti ti-note"></i>Izoh</div>
+  <div class="pill-sel ${yukFilter.budilnik==='bilan'?'active':''}" onclick="setYukBud('bilan')"><i class="ti ti-bell"></i>Budilnik</div>
+</div>
+<div id="zap-rows"><div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  document.getElementById('zap-search').addEventListener('input', (e) => {
+    yukFilter.search = e.target.value;
+    clearTimeout(window._zsearch);
+    window._zsearch = setTimeout(fetchZap, 300);
+  });
+  fetchZap();
+}
+
+async function fetchZap(){
+  try {
+    const data = await api('admin-recordings-list', {
+      uid: UID, limit: 100,
+      search: yukFilter.search, filial: yukFilter.filial,
+      type: yukFilter.type, budilnik: yukFilter.budilnik
+    });
+    if (data.error) throw new Error(data.error);
+    const recs = data.recordings || [];
+    
+    const sel = document.getElementById('zap-filial');
+    if (sel && sel.options.length <= 1) {
+      sel.innerHTML = '<option value="">Filial · hammasi</option>' + (data.filiallar || []).map(f =>
+        `<option value="${f.warehouse_id}" ${yukFilter.filial==String(f.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('');
+      sel.onchange = (e) => { yukFilter.filial = e.target.value; fetchZap(); };
+    }
+    
+    const wrap = document.getElementById('zap-rows');
+    if (!recs.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-microphone-off"></i><p>Zapis topilmadi</p></div>`;
+      return;
+    }
+    window._recs = recs;
+    wrap.innerHTML = `
+<div style="margin-bottom:10px;font-size:12px;color:var(--text-3);display:flex;justify-content:space-between">
+  <span><b>${data.shown}</b> / ${data.total} ko'rsatildi</span>
+  <span>Jami qarz: <b style="color:var(--err-text)">${fmt(recs.reduce((s,r)=>s+Number(r.umumiy_qarz||0),0))}</b> so'm</span>
+</div>
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:80px 1.6fr 1.2fr 1fr 110px 80px">
+    <div>Tur</div><div>Mijoz</div><div>Hodim</div><div>Filial</div><div>Sana</div><div></div>
+  </div>
+  ${recs.map((r,i) => zapRow(r, i)).join('')}
+</div>
+`;
+  } catch(e) {
+    document.getElementById('zap-rows').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function zapRow(r, i) {
+  const isAudio = !!r.file_id;
+  const typeBadge = isAudio
+    ? '<span class="badge info"><i class="ti ti-volume"></i> Audio</span>'
+    : '<span class="badge muted"><i class="ti ti-note"></i> Izoh</span>';
+  return `<div class="table-row" style="grid-template-columns:80px 1.6fr 1.2fr 1fr 110px 80px;cursor:pointer" onclick="openZapDetail(${i})">
+    <div>${typeBadge}</div>
+    <div style="min-width:0">
+      <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.ism||'—')}</div>
+      ${r.izoh ? `<div style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.izoh)}</div>` : ''}
+      ${r.umumiy_qarz > 0 ? `<div style="font-size:11px;color:var(--err-text);font-variant-numeric:tabular-nums">${fmt(r.umumiy_qarz)} so'm</div>` : ''}
+    </div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2)">${escapeHtml(r.hodim_ismi||'—')}</div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${escapeHtml(r.filial_nomi||'—')}</div>
+    <div style="font-size:11px;color:var(--text-3)">${timeAgo(r.created_at)}${r.budilnik_dt ? `<div style="font-size:10px;color:var(--warn-text);margin-top:2px"><i class="ti ti-bell" style="font-size:9px"></i> ${escapeHtml(r.budilnik_dt.split(' ')[0])}</div>` : ''}</div>
+    <div style="display:flex;gap:4px;justify-content:flex-end;align-items:center">
+      ${isAudio ? `<a class="icon-btn" href="${r.view_link}" target="_blank" title="Eshitish" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation()"><i class="ti ti-player-play"></i></a>` : ''}
+      <span class="icon-btn" style="width:28px;height:28px;font-size:13px;border:none"><i class="ti ti-chevron-right"></i></span>
+    </div>
+  </div>`;
+}
+
+function openZapDetail(i) {
+  const r = (window._recs || [])[i];
+  if (!r) return;
+  const isAudio = !!r.file_id;
+  openModal(`
+<div class="modal-h">
+  <div><h3>${escapeHtml(r.ism||'Yozuv #'+r.id)}</h3><p>${escapeHtml(r.filial_nomi||'—')} · ${timeAgo(r.created_at)}</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  ${isAudio ? `<audio controls style="width:100%;border-radius:var(--radius)"><source src="${r.view_link}"></audio>` : ''}
+  ${r.izoh ? `<div style="background:var(--bg-2);padding:12px;border-radius:var(--radius);font-size:13px;line-height:1.55"><i class="ti ti-quote" style="color:var(--text-3);margin-right:6px"></i>${escapeHtml(r.izoh)}</div>` : ''}
+  <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:12.5px">
+    <div style="color:var(--text-3)">Mijoz</div><div>${escapeHtml(r.ism||'—')} <code class="mono">#${r.user_id}</code></div>
+    <div style="color:var(--text-3)">Hodim</div><div>${escapeHtml(r.hodim_ismi||'—')}${r.hodim_telegram_id?` <code class="mono">@${r.hodim_telegram_id}</code>`:''}</div>
+    <div style="color:var(--text-3)">Filial</div><div>${escapeHtml(r.filial_nomi||'—')} (id: ${r.warehouse_id})</div>
+    ${r.umumiy_qarz > 0 ? `<div style="color:var(--text-3)">Qarz</div><div style="font-variant-numeric:tabular-nums;color:var(--err-text);font-weight:500">${fmt(r.umumiy_qarz)} so'm</div>` : ''}
+    <div style="color:var(--text-3)">Yaratilgan</div><div>${escapeHtml((r.created_at||'').replace('T',' ').split('.')[0])}</div>
+    ${r.budilnik_dt ? `<div style="color:var(--text-3)">Budilnik</div><div>${escapeHtml(r.budilnik_dt.replace('T',' '))} <span style="color:var(--text-3)">· ${r.remind_minutes_before} daq oldin</span><br>${r.budilnik_sent_at ? `<span class="badge ok"><i class="ti ti-bell-ringing"></i>Yuborilgan ${timeAgo(r.budilnik_sent_at)}</span>` : '<span class="badge warn">Kutilmoqda</span>'}</div>` : ''}
+  </div>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Yopish</button>
+  ${isAudio ? `<a class="btn primary" href="${r.view_link}" target="_blank"><i class="ti ti-download"></i>Yuklab olish</a>` : ''}
+</div>
+`);
+}
+
+// ---- TILXAT ----
+async function loadTilxatlar(){
+  const wrap = document.getElementById('yuk-content');
+  wrap.innerHTML = `
+<div class="audit-toolbar">
+  <input type="text" class="search-box" placeholder="Ism, filial, izoh..." id="til-search" value="${escapeHtml(yukFilter.search)}" style="min-width:240px">
+  <select class="select" id="til-filial" style="max-width:200px;height:34px"><option value="">Filial · hammasi</option></select>
+</div>
+<div id="til-rows"><div class="skeleton" style="height:60px"></div></div>
+`;
+  document.getElementById('til-search').addEventListener('input', (e) => {
+    yukFilter.search = e.target.value;
+    clearTimeout(window._tsearch);
+    window._tsearch = setTimeout(fetchTil, 300);
+  });
+  fetchTil();
+}
+
+async function fetchTil(){
+  try {
+    const data = await api('admin-tilxat-list', {
+      uid: UID, limit: 100,
+      search: yukFilter.search, filial: yukFilter.filial
+    });
+    if (data.error) throw new Error(data.error);
+    const tils = data.tilxatlar || [];
+    
+    const sel = document.getElementById('til-filial');
+    if (sel && sel.options.length <= 1) {
+      sel.innerHTML = '<option value="">Filial · hammasi</option>' + (data.filiallar || []).map(f =>
+        `<option value="${f.warehouse_id}" ${yukFilter.filial==String(f.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('');
+      sel.onchange = (e) => { yukFilter.filial = e.target.value; fetchTil(); };
+    }
+    
+    const wrap = document.getElementById('til-rows');
+    if (!tils.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i><p>Tilxat topilmadi</p></div>`;
+      return;
+    }
+    window._tils = tils;
+    wrap.innerHTML = `
+<div style="margin-bottom:10px;font-size:12px;color:var(--text-3);display:flex;justify-content:space-between">
+  <span><b>${data.shown}</b> / ${data.total} ko'rsatildi</span>
+  <span>Jami summa: <b style="color:var(--err-text)">${fmt(data.total_summa)}</b> so'm</span>
+</div>
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:1.6fr 1fr 1fr 120px 110px 80px">
+    <div>Mijoz</div><div>Filial</div><div>CEO</div><div>Summa</div><div>Sana</div><div></div>
+  </div>
+  ${tils.map((t,i) => tilRow(t, i)).join('')}
+</div>
+`;
+  } catch(e) {
+    document.getElementById('til-rows').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function tilRow(t, i) {
+  return `<div class="table-row" style="grid-template-columns:1.6fr 1fr 1fr 120px 110px 80px;cursor:pointer" onclick="openTilDetail(${i})">
+    <div style="min-width:0">
+      <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.ism||'—')}</div>
+      <div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${t.user_id}</div>
+    </div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${escapeHtml(t.filial||'—')}</div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2)">${escapeHtml(t.ceo_ism||'@'+t.ceo_id)}</div>
+    <div style="font-variant-numeric:tabular-nums;font-weight:500;color:var(--err-text)">${fmt(t.umumiy_qarz)} so'm</div>
+    <div style="font-size:11px;color:var(--text-3)">${timeAgo(t.created_at)}</div>
+    <div style="display:flex;gap:4px;justify-content:flex-end;align-items:center">
+      ${t.view_link ? `<a class="icon-btn" href="${t.view_link}" target="_blank" title="Ko'rish" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation()"><i class="ti ti-eye"></i></a>` : ''}
+      <span class="icon-btn" style="width:28px;height:28px;font-size:13px;border:none"><i class="ti ti-chevron-right"></i></span>
+    </div>
+  </div>`;
+}
+
+function openTilDetail(i) {
+  const t = (window._tils || [])[i];
+  if (!t) return;
+  openModal(`
+<div class="modal-h">
+  <div><h3>${escapeHtml(t.ism||'Tilxat #'+t.id)}</h3><p>${escapeHtml(t.filial||'—')} · ${timeAgo(t.created_at)}</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  ${t.view_link ? `<div style="background:var(--bg-2);border-radius:var(--radius);padding:10px;text-align:center"><iframe src="${t.view_link}" style="width:100%;height:400px;border:none;border-radius:var(--radius);background:white"></iframe></div>` : '<div class="empty"><i class="ti ti-file-off"></i><p>Fayl topilmadi</p></div>'}
+  ${t.izoh ? `<div style="background:var(--bg-2);padding:12px;border-radius:var(--radius);font-size:13px;line-height:1.55"><i class="ti ti-quote" style="color:var(--text-3);margin-right:6px"></i>${escapeHtml(t.izoh)}</div>` : ''}
+  <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:12.5px">
+    <div style="color:var(--text-3)">Mijoz</div><div>${escapeHtml(t.ism||'—')} <code class="mono">#${t.user_id}</code></div>
+    <div style="color:var(--text-3)">Filial</div><div>${escapeHtml(t.filial||'—')} (id: ${t.warehouse_id})</div>
+    <div style="color:var(--text-3)">CEO</div><div>${escapeHtml(t.ceo_ism||'')} <code class="mono">@${t.ceo_id}</code></div>
+    <div style="color:var(--text-3)">Summa</div><div style="font-variant-numeric:tabular-nums;color:var(--err-text);font-weight:500">${fmt(t.umumiy_qarz)} so'm</div>
+    <div style="color:var(--text-3)">Yaratilgan</div><div>${escapeHtml((t.created_at||'').replace('T',' ').split('.')[0])}</div>
+    <div style="color:var(--text-3)">Fayl</div><div style="font-family:var(--mono);font-size:10.5px;color:var(--text-3);word-break:break-all">${escapeHtml(t.file_name||'—')}</div>
+  </div>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Yopish</button>
+  ${t.download_link ? `<a class="btn primary" href="${t.download_link}" target="_blank"><i class="ti ti-download"></i>Yuklab olish</a>` : ''}
+</div>
+`);
 }
 
 // =========================================================
