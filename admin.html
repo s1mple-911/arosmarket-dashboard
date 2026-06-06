@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>AROS Admin</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fff;--bg-2:#f7f7f5;--bg-3:#efeee9;
+  --text:#1a1a19;--text-2:#5f5e5a;--text-3:#888780;
+  --border:#e8e7e2;--border-2:#d3d1c7;
+  --info-bg:#E6F1FB;--info-text:#0C447C;--info-line:#185FA5;
+  --ok-bg:#E1F5EE;--ok-text:#0F6E56;--ok-line:#1D9E75;
+  --warn-bg:#FAEEDA;--warn-text:#854F0B;--warn-line:#BA7517;
+  --err-bg:#FCEBEB;--err-text:#A32D2D;--err-line:#E24B4A;
+  --pink-bg:#FBEAF0;--pink-text:#993556;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 2px rgba(0,0,0,0.03);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
+  --mono:"SF Mono",ui-monospace,Menlo,monospace;
+}
+[data-theme="dark"]{
+  --bg:#0e0e0c;--bg-2:#1a1a18;--bg-3:#222220;
+  --text:#f4f3ee;--text-2:#a8a7a1;--text-3:#7a7975;
+  --border:#2b2b29;--border-2:#3a3a37;
+  --info-bg:#0c2540;--info-text:#85B7EB;--info-line:#378ADD;
+  --ok-bg:#0a2a22;--ok-text:#5DCAA5;--ok-line:#1D9E75;
+  --warn-bg:#2e1f08;--warn-text:#FAC775;--warn-line:#EF9F27;
+  --err-bg:#2e1313;--err-text:#F09595;--err-line:#E24B4A;
+  --pink-bg:#2c1118;--pink-text:#ED93B1;
+}
+html,body{height:100%}
+body{font-family:var(--font);font-size:14px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+
+/* === Loading & Forbidden === */
+#loading,#forbidden{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:1000;padding:24px;text-align:center}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.forbidden-icon{width:56px;height:56px;border-radius:14px;background:var(--err-bg);color:var(--err-text);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px}
+
+/* === App layout === */
+#app{display:none;min-height:100vh;display:grid;grid-template-columns:200px 1fr}
+.sidebar{background:var(--bg-2);border-right:0.5px solid var(--border);padding:16px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 10px 20px;font-size:14px;font-weight:500}
+.brand-dot{width:22px;height:22px;border-radius:6px;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.sb-grp{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;padding:14px 10px 6px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px;color:var(--text-2);border-radius:var(--radius);line-height:1;transition:all 0.12s}
+.nav-item:hover{background:var(--bg-3)}
+.nav-item.active{background:var(--bg);color:var(--text);font-weight:500;box-shadow:var(--shadow)}
+.nav-item i{font-size:16px}
+.nav-item .ct{margin-left:auto;font-size:11px;color:var(--text-3);background:var(--bg-3);padding:1px 7px;border-radius:9px;min-width:18px;text-align:center}
+.nav-item.active .ct{background:var(--info-bg);color:var(--info-text)}
+.nav-sub{padding-left:26px;display:flex;flex-direction:column;gap:1px;margin:2px 0 6px}
+.nav-sub .nav-item{padding:6px 10px;font-size:13px}
+.sb-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 8px;font-size:12px;border-top:0.5px solid var(--border);margin-top:auto}
+.av{width:30px;height:30px;border-radius:50%;background:var(--info-bg);color:var(--info-text);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.theme-btn{margin-left:auto;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:15px}
+.theme-btn:hover{background:var(--bg-3);color:var(--text)}
+
+/* === Main area === */
+.main{padding:24px 28px;min-width:0;max-width:100%}
+.topbar{display:flex;align-items:flex-end;gap:12px;margin-bottom:20px}
+.topbar .crumb{font-size:12px;color:var(--text-3);margin-bottom:3px}
+.topbar h1{font-size:22px;font-weight:500;line-height:1.2}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icon-btn{width:34px;height:34px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:16px;transition:all 0.12s}
+.icon-btn:hover{background:var(--bg-2);color:var(--text)}
+
+/* === Buttons === */
+.btn{height:34px;padding:0 16px;border-radius:var(--radius);font-size:13px;font-weight:500;border:0.5px solid var(--border);background:var(--bg);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all 0.12s;white-space:nowrap}
+.btn:hover{background:var(--bg-2)}
+.btn:active{transform:scale(0.97)}
+.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn.primary:hover{opacity:0.88}
+.btn.danger{color:var(--err-text);border-color:var(--err-bg)}
+.btn.danger:hover{background:var(--err-bg)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--text-2)}
+.btn.ghost:hover{background:var(--bg-2)}
+.btn i{font-size:15px}
+.btn.sm{height:28px;padding:0 12px;font-size:12px}
+.btn.sm i{font-size:13px}
+
+/* === Inputs === */
+.input,.select{height:36px;padding:0 12px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);font-size:13.5px;color:var(--text);width:100%;outline:none;transition:all 0.12s;font-family:var(--font)}
+.input:focus,.select:focus{border-color:var(--info-line);box-shadow:0 0 0 3px var(--info-bg)}
+.input::placeholder{color:var(--text-3)}
+.select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f5e5a' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.ff{display:flex;flex-direction:column;gap:5px}
+.ff label{font-size:11.5px;color:var(--text-2);font-weight:500}
+
+/* === Cards === */
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.card-h{display:flex;align-items:center;margin-bottom:12px}
+.card-h h3{font-size:14px;font-weight:500}
+.card-h .link{margin-left:auto;font-size:12px;color:var(--info-text);cursor:pointer}
+
+/* === KPI === */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--bg-2);border-radius:var(--radius);padding:12px 14px}
+.kpi-lbl{font-size:11.5px;color:var(--text-2);display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.kpi-lbl i{font-size:13px}
+.kpi-val{font-size:24px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.kpi-val .unit{font-size:13px;color:var(--text-2);margin-left:3px;font-weight:400}
+.kpi-delta{font-size:11px;margin-top:5px}
+.kpi-delta.up{color:var(--ok-text)}
+.kpi-delta.dn{color:var(--err-text)}
+.kpi-delta.warn{color:var(--warn-text)}
+
+/* === Badges === */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.badge.ok{background:var(--ok-bg);color:var(--ok-text)}
+.badge.warn{background:var(--warn-bg);color:var(--warn-text)}
+.badge.err{background:var(--err-bg);color:var(--err-text)}
+.badge.info{background:var(--info-bg);color:var(--info-text)}
+.badge.muted{background:var(--bg-3);color:var(--text-2)}
+
+/* === Pills === */
+.pill-sel{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);font-size:12.5px;cursor:pointer;color:var(--text)}
+.pill-sel i{font-size:12px;color:var(--text-3)}
+.pill-sel.active{background:var(--info-bg);color:var(--info-text);border-color:transparent}
+
+/* === Tables === */
+.table-wrap{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg)}
+.table-head{display:grid;padding:10px 16px;background:var(--bg-2);font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;gap:12px}
+.table-row{display:grid;padding:12px 16px;font-size:13px;border-top:0.5px solid var(--border);align-items:center;gap:12px}
+.table-row:hover{background:var(--bg-2)}
+
+/* === Feed === */
+.feed{display:flex;flex-direction:column;gap:11px}
+.feed-item{display:flex;gap:10px;font-size:13px;line-height:1.45}
+.feed-ic{width:26px;height:26px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-2);flex-shrink:0;margin-top:1px}
+.feed-meta{font-size:11px;color:var(--text-3);margin-top:2px}
+
+/* === Top filiallar list === */
+.lboard{display:flex;flex-direction:column;gap:9px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+.lb-num{font-size:10.5px;color:var(--text-3);width:14px;text-align:right;font-variant-numeric:tabular-nums}
+.lb-name{font-size:13px;color:var(--text);min-width:90px}
+.lb-bar{flex:1;height:5px;background:var(--bg-3);border-radius:3px;overflow:hidden;position:relative}
+.lb-bar-fill{height:100%;border-radius:3px;transition:width 0.5s}
+.lb-pct{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;min-width:40px;text-align:right}
+
+/* === User card (pending) === */
+.user-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px}
+.uc-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.uc-name{font-size:14px;font-weight:500}
+.uc-meta{font-size:11.5px;color:var(--text-3);margin-top:1px;font-family:var(--mono)}
+.uc-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.uc-acts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* === Roles layout === */
+.roles-layout{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:start}
+.roles-list{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:6px;display:flex;flex-direction:column;gap:1px}
+.role-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;color:var(--text-2);line-height:1}
+.role-item:hover{background:var(--bg-2)}
+.role-item.active{background:var(--bg-2);color:var(--text);font-weight:500}
+.role-item i{font-size:15px}
+.role-ct{margin-left:auto;font-size:11px;color:var(--text-3)}
+.role-detail{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
+.rd-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--border)}
+.rd-head h3{font-size:16px;font-weight:500}
+.rd-head p{margin-top:3px;font-size:12px;color:var(--text-3)}
+.perm-grp{margin-bottom:18px}
+.perm-grp-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;margin-bottom:8px}
+.perm-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:0.5px solid var(--border)}
+.perm-row:last-child{border-bottom:none}
+.toggle{width:32px;height:18px;border-radius:9px;background:var(--bg-3);position:relative;flex-shrink:0;border:0.5px solid var(--border-2);cursor:pointer;transition:all 0.12s}
+.toggle.on{background:var(--ok-line);border-color:var(--ok-line)}
+.toggle-knob{width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:1px;transition:left 0.15s}
+.toggle.on .toggle-knob{left:15px}
+.toggle.disabled{opacity:0.5;cursor:not-allowed}
+.perm-name{font-size:13px;color:var(--text);flex:1}
+.perm-desc{font-size:11px;color:var(--text-3);margin-top:1px}
+
+/* === Audit log === */
+.audit-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;height:34px;padding:0 12px 0 36px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);font-size:13px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f5e5a' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");background-repeat:no-repeat;background-position:12px center}
+
+/* === Modal === */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:100;overflow-y:auto;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg);border-radius:14px;width:100%;max-width:500px;padding:24px;border:0.5px solid var(--border)}
+.modal-h{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.modal-h h3{font-size:18px;font-weight:500}
+.modal-h p{font-size:12.5px;color:var(--text-3);margin-top:3px}
+.modal-close{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:16px;cursor:pointer}
+.modal-close:hover{background:var(--bg-2)}
+.modal-body{display:flex;flex-direction:column;gap:12px}
+.modal-foot{display:flex;gap:8px;margin-top:18px;padding-top:16px;border-top:0.5px solid var(--border)}
+.modal-foot .btn{flex:1}
+
+/* === Toast === */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px;z-index:200;opacity:0;transition:opacity 0.2s;pointer-events:none}
+#toast.show{opacity:1}
+#toast.err{background:var(--err-text)}
+#toast.ok{background:var(--ok-line)}
+
+/* === Empty states === */
+.empty{padding:48px 24px;text-align:center;color:var(--text-3)}
+.empty i{font-size:36px;margin-bottom:12px;display:block;opacity:0.5}
+.empty p{font-size:13px}
+
+/* === Mobile === */
+.menu-toggle{display:none;width:34px;height:34px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg);align-items:center;justify-content:center;font-size:18px}
+@media (max-width:768px){
+  #app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-220px;top:0;width:220px;z-index:50;transition:left 0.25s;box-shadow:8px 0 24px rgba(0,0,0,0.08)}
+  .sidebar.open{left:0}
+  .sb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:40;display:none;backdrop-filter:blur(2px)}
+  .sb-backdrop.open{display:block}
+  .menu-toggle{display:flex}
+  .main{padding:16px 18px}
+  .topbar{margin-bottom:14px}
+  .topbar h1{font-size:18px}
+  .uc-form{grid-template-columns:1fr}
+  .roles-layout{grid-template-columns:1fr}
+  .audit-toolbar{flex-direction:column;align-items:stretch}
+  .search-box{width:100%}
+  .table-row,.table-head{padding:10px 12px}
+}
+
+/* === Misc === */
+.hide{display:none!important}
+code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);padding:2px 6px;border-radius:4px}
+.divider{height:0.5px;background:var(--border);margin:12px 0}
+.spark{height:24px;width:100%}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok-line);margin-right:5px;vertical-align:middle}
+.dot.warn{background:var(--warn-line)}
+.dot.err{background:var(--err-line)}
+.dot.off{background:var(--text-3)}
+.role-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--bg-2);border-radius:8px;font-size:11px;color:var(--text-2);margin:1px 3px 1px 0}
+.role-tag i{font-size:11px}
+.role-tag.super_admin{background:var(--warn-bg);color:var(--warn-text)}
+.role-tag.ceo{background:var(--info-bg);color:var(--info-text)}
+.role-tag.bugalter{background:var(--ok-bg);color:var(--ok-text)}
+.skeleton{background:linear-gradient(90deg,var(--bg-2) 0%,var(--bg-3) 50%,var(--bg-2) 100%);background-size:200% 100%;animation:skel 1.5s infinite;border-radius:var(--radius);height:14px}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+<div class="spinner"></div>
+<div style="font-size:13px;color:var(--text-2)">Yuklanmoqda...</div>
+</div>
+
+<!-- FORBIDDEN -->
+<div id="forbidden" style="display:none">
+<div class="forbidden-icon"><i class="ti ti-lock"></i></div>
+<h2 style="font-size:18px;font-weight:500;margin-bottom:8px">Kirish rad etildi</h2>
+<p style="font-size:13px;color:var(--text-2);max-width:300px;line-height:1.5">Sizda admin panelga kirish ruxsati yo'q. Super admin bilan bog'laning.</p>
+<p style="font-size:11px;color:var(--text-3);margin-top:16px">UID: <code class="mono" id="forbidden-uid"></code></p>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+
+<!-- Sidebar backdrop (mobile) -->
+<div class="sb-backdrop" id="backdrop" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+<div class="brand"><span class="brand-dot">A</span>AROS Admin</div>
+<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')"><i class="ti ti-layout-dashboard"></i>Bosh sahifa</a>
+<div class="sb-grp">Boshqaruv</div>
+<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')"><i class="ti ti-user-plus"></i>Yangi<span class="ct" id="nav-pending-ct">0</span></a>
+<a class="nav-item" data-screen="users-all" onclick="goto('users-all')"><i class="ti ti-users"></i>Hammasi</a>
+<a class="nav-item" data-screen="roles" onclick="goto('roles')"><i class="ti ti-shield-lock"></i>Rollar</a>
+<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')"><i class="ti ti-building-store"></i>Filiallar</a>
+<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')"><i class="ti ti-cash-register"></i>Bugalter</a>
+<div class="sb-grp">Sistema</div>
+<a class="nav-item" data-screen="audit" onclick="goto('audit')"><i class="ti ti-history"></i>Kuzatuv</a>
+<a class="nav-item" data-screen="workflows" onclick="goto('workflows')"><i class="ti ti-circuit-bulb"></i>Workflow'lar</a>
+<a class="nav-item" data-screen="settings" onclick="goto('settings')"><i class="ti ti-settings"></i>Sozlamalar</a>
+<div class="sb-foot">
+<span class="av" id="footer-av">?</span>
+<div style="flex:1;min-width:0">
+<div style="font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="footer-name">User</div>
+<div style="font-size:10.5px;color:var(--text-3)" id="footer-role">Loading</div>
+</div>
+<button class="theme-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="theme-icon"></i></button>
+</div>
+</aside>
+
+<!-- Main content -->
+<main class="main">
+<div id="screens"></div>
+</main>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg">
+<div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// =========================================================
+// CONFIG & GLOBAL STATE
+// =========================================================
+const API_BASE = 'https://n8n.arosmarket.com/webhook';
+const tg = window.Telegram?.WebApp;
+
+let UID = null;
+let me = null;        // user info from admin-check
+let myPerms = [];     // permission keys
+let myRoles = [];     // role objects
+let currentScreen = 'dashboard';
+
+// Cached data
+let cache = {
+  dashboard: null,
+  users: { pending: null, all: null },
+  rbac: null,
+  audit: null
+};
+
+// =========================================================
+// INIT
+// =========================================================
+async function init(){
+  // Theme
+  const savedTheme = localStorage.getItem('aros-admin-theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  } else if (tg?.colorScheme) {
+    document.documentElement.setAttribute('data-theme', tg.colorScheme);
+  }
+  updateThemeIcon();
+
+  // Get UID
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    UID = tg.initDataUnsafe?.user?.id?.toString();
+  }
+  if (!UID) {
+    const params = new URLSearchParams(location.search);
+    UID = params.get('uid');
+  }
+  if (!UID) {
+    showForbidden('UID topilmadi');
+    return;
+  }
+
+  // Check admin access
+  try {
+    const data = await api('admin-check', { uid: UID });
+    if (!data.has_admin_access) {
+      showForbidden(UID);
+      return;
+    }
+    me = data.user || { telegram_id: UID, ism: 'User' };
+    myPerms = data.permissions || [];
+    myRoles = data.roles || [];
+
+    // Update footer
+    const initials = (me.ism || 'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('footer-av').textContent = initials;
+    document.getElementById('footer-name').textContent = me.ism || 'User';
+    document.getElementById('footer-role').textContent = myRoles.map(r=>r.label).join(', ') || 'No role';
+
+    // Show app
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+
+    // Load initial screen
+    goto('dashboard');
+  } catch(e){
+    showForbidden('API xato: ' + e.message);
+  }
+}
+
+function showForbidden(uid){
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('forbidden-uid').textContent = uid || '—';
+  document.getElementById('forbidden').style.display = 'flex';
+}
+
+// =========================================================
+// API CLIENT
+// =========================================================
+async function api(endpoint, params, opts={}){
+  let url = `${API_BASE}/${endpoint}`;
+  const method = opts.method || 'GET';
+  let body = null;
+  if (method === 'GET' && params) {
+    const qs = new URLSearchParams(params).toString();
+    if (qs) url += '?' + qs;
+  } else if (method === 'POST') {
+    body = JSON.stringify(params);
+  }
+  const r = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+
+function hasPerm(key){
+  return myPerms.includes(key);
+}
+
+// =========================================================
+// NAVIGATION
+// =========================================================
+function goto(screen){
+  currentScreen = screen;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.screen === screen);
+  });
+  closeSidebar();
+  renderScreen(screen);
+}
+
+function renderScreen(s){
+  const root = document.getElementById('screens');
+  root.innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto 12px"></div></div>';
+  switch(s){
+    case 'dashboard': return renderDashboard(root);
+    case 'users-pending': return renderUsersPending(root);
+    case 'users-all': return renderUsersAll(root);
+    case 'roles': return renderRoles(root);
+    case 'filiallar': return renderFiliallar(root);
+    case 'bugalter': return renderBugalter(root);
+    case 'audit': return renderAudit(root);
+    case 'workflows': return renderWorkflows(root);
+    case 'settings': return renderSettings(root);
+  }
+}
+
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('backdrop').classList.toggle('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('backdrop').classList.remove('open'); }
+
+// =========================================================
+// THEME
+// =========================================================
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('aros-admin-theme', next);
+  updateThemeIcon();
+}
+function updateThemeIcon(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.getElementById('theme-icon').className = cur === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+}
+
+// =========================================================
+// TOAST
+// =========================================================
+let toastTimer;
+function toast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.className = type === 'err' ? 'show err' : 'show ok';
+  t.innerHTML = `<i class="ti ti-${type==='err'?'alert-circle':'check'}"></i> ${msg}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.className = '', 2400);
+}
+
+// =========================================================
+// MODAL
+// =========================================================
+function openModal(html){
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-bg').classList.remove('open');
+}
+document.getElementById('modal-bg').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-bg') closeModal();
+});
+
+// =========================================================
+// HELPERS
+// =========================================================
+const fmt = n => Math.round(Number(n)||0).toLocaleString('en-US').replaceAll(',', ' ');
+const fmtShort = n => {
+  n = Number(n)||0;
+  if (n >= 1e9) return (n/1e9).toFixed(2).replace('.00','') + ' mlrd';
+  if (n >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + ' mln';
+  if (n >= 1e3) return Math.round(n/1e3) + 'k';
+  return n.toString();
+};
+const tagOf = role => `<span class="role-tag ${role.key||''}">${role.icon?`<i class="ti ${role.icon}"></i>`:''}${role.label}</span>`;
+const initials = name => (name || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const escapeHtml = s => (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const topbar = (crumb, title, actions='') => `
+<div class="topbar">
+<button class="menu-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+<div><div class="crumb">${escapeHtml(crumb)}</div><h1>${escapeHtml(title)}</h1></div>
+<div class="topbar-actions">${actions}</div>
+</div>`;
+
+const timeAgo = isoStr => {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60) return diff + ' soniya oldin';
+  if (diff < 3600) return Math.floor(diff/60) + ' daqiqa oldin';
+  if (diff < 86400) return Math.floor(diff/3600) + ' soat oldin';
+  const days = Math.floor(diff/86400);
+  if (days === 1) return 'kecha';
+  if (days < 7) return days + ' kun oldin';
+  return d.toLocaleDateString('uz-UZ');
+};
+
+const actionLabel = a => ({
+  'admin.init': 'Sistema yaratildi',
+  'user.create': 'User yaratdi',
+  'user.update': 'User yangiladi',
+  'user.delete': 'User o\'chirdi',
+  'role.save': 'Rol saqladi',
+  'role.assign': 'Rol berdi'
+}[a] || a);
+
+// =========================================================
+// SCREEN: DASHBOARD
+// =========================================================
+async function renderDashboard(root){
+  root.innerHTML = topbar('Boshqaruv', 'Bosh sahifa', '<button class="icon-btn" onclick="renderDashboard(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="kpi-row"><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div></div>`;
+  root.appendChild(content);
+
+  try {
+    const data = await api('admin-dashboard', { uid: UID });
+    if (data.error) throw new Error(data.error);
+    cache.dashboard = data;
+
+    // Update pending count in nav
+    const pendingCt = data.kpi?.pending_users || 0;
+    document.getElementById('nav-pending-ct').textContent = pendingCt;
+
+    const k = data.kpi || {};
+    const top = data.top_filiallar || [];
+    const recent = data.recent_activity || [];
+
+    const maxBajarildi = Math.max(...top.map(f => Number(f.bajarildi)||0), 1);
+
+    content.innerHTML = `
+<div class="kpi-row">
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-users"></i>Userlar</div>
+<div class="kpi-val">${k.total_users || 0}</div>
+<div class="kpi-delta" style="color:var(--text-3)">jami ro'yxatdan o'tgan</div>
+</div>
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-building"></i>Aktiv filiallar</div>
+<div class="kpi-val">${k.active_filiallar || 0}</div>
+<div class="kpi-delta" style="color:var(--text-3)">joriy yarim oy</div>
+</div>
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-clock"></i>Kutilmoqda</div>
+<div class="kpi-val" style="color:${pendingCt > 0 ? 'var(--warn-text)' : 'var(--text)'}">${pendingCt}</div>
+<div class="kpi-delta ${pendingCt > 0 ? 'warn' : ''}">${pendingCt > 0 ? "yangi user tasdiqlash kerak" : "hammasi tasdiqlangan"}</div>
+</div>
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-history"></i>Bugungi hodisalar</div>
+<div class="kpi-val">${k.audit_today || 0}</div>
+<div class="kpi-delta" style="color:var(--text-3)">audit log</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px" class="dash-grid">
+
+<div class="card">
+<div class="card-h"><h3>Top filiallar · prognoz</h3><span class="link" onclick="goto('filiallar')">Hammasi →</span></div>
+${top.length ? `<div class="lboard">${top.map((f, i) => {
+  const pct = f.prognoz_foiz || 0;
+  const color = pct >= 100 ? 'var(--ok-line)' : pct >= 80 ? 'var(--warn-line)' : 'var(--err-line)';
+  const textColor = pct >= 100 ? 'var(--ok-text)' : pct >= 80 ? 'var(--warn-text)' : 'var(--err-text)';
+  return `<div class="lb-row">
+<span class="lb-num">${i+1}</span>
+<span class="lb-name">${escapeHtml(f.filial || '—')}</span>
+<div class="lb-bar"><div class="lb-bar-fill" style="width:${Math.min(pct, 150)*0.66}%;background:${color}"></div></div>
+<span class="lb-pct" style="color:${textColor}">${pct}%</span>
+</div>`;
+}).join('')}</div>` : `<div class="empty"><i class="ti ti-building-off"></i><p>Filial ma'lumoti yo'q</p></div>`}
+</div>
+
+<div class="card">
+<div class="card-h"><h3>So'nggi faollik</h3><span class="link" onclick="goto('audit')">Audit →</span></div>
+${recent.length ? `<div class="feed">${recent.slice(0,6).map(a => `
+<div class="feed-item">
+<div class="feed-ic"><i class="ti ti-${a.action.startsWith('user.')?'user':a.action.startsWith('role.')?'shield':'history'}"></i></div>
+<div style="flex:1;min-width:0">
+<span style="color:var(--text)">${escapeHtml(a.actor_name || 'Sistema')}</span>
+<span style="color:var(--text-2)"> · ${escapeHtml(actionLabel(a.action))}</span>
+${a.target_label ? `<span style="color:var(--text)"> ${escapeHtml(a.target_label)}</span>` : ''}
+<div class="feed-meta">${timeAgo(a.created_at)}</div>
+</div>
+</div>`).join('')}</div>` : `<div class="empty"><i class="ti ti-history-off"></i><p>Faollik yo'q</p></div>`}
+</div>
+
+</div>
+
+<div class="card" style="margin-top:14px">
+<div class="card-h"><h3>Sistema holati</h3></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">n8n</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">Postgres</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">Aros API</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">Bot</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+</div>
+</div>
+`;
+
+    // Mobile: stack columns
+    if (window.innerWidth <= 768) {
+      content.querySelector('.dash-grid').style.gridTemplateColumns = '1fr';
+    }
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// =========================================================
+// SCREEN: USERS PENDING
+// =========================================================
+async function renderUsersPending(root){
+  root.innerHTML = topbar('Userlar', 'Yangi · tasdiqlash kutmoqda');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="skeleton" style="height:120px;margin-bottom:10px"></div><div class="skeleton" style="height:120px"></div>`;
+  root.appendChild(content);
+
+  try {
+    const [usersData, rbacData] = await Promise.all([
+      api('admin-users', { uid: UID, status: 'pending' }),
+      cache.rbac ? Promise.resolve(cache.rbac) : api('admin-rbac', { uid: UID })
+    ]);
+    if (!cache.rbac) cache.rbac = rbacData;
+
+    const users = usersData.users || [];
+    document.getElementById('nav-pending-ct').textContent = users.length;
+
+    if (users.length === 0) {
+      content.innerHTML = `<div class="empty"><i class="ti ti-checks"></i><p>Hammasi tasdiqlangan! Yangi user yo'q.</p></div>`;
+      return;
+    }
+
+    const filiallar = rbacData.filiallar || [];
+    const roles = (rbacData.roles || []).filter(r => r.key !== 'super_admin');
+
+    content.innerHTML = users.map(u => {
+      const waitingName = u.status === 'waiting_name';
+      return `
+<div class="user-card" id="pc-${u.telegram_id}">
+<div class="uc-head">
+<div class="av" style="background:${waitingName?'var(--bg-3)':'var(--info-bg)'};color:${waitingName?'var(--text-3)':'var(--info-text)'};width:38px;height:38px;font-size:13px">${waitingName?'?':initials(u.ism)}</div>
+<div style="flex:1;min-width:0">
+<div class="uc-name">${escapeHtml(u.ism || 'Ism kutilmoqda')}</div>
+<div class="uc-meta">@${u.telegram_id}</div>
+</div>
+<span class="badge ${waitingName?'muted':'warn'}">${waitingName?'ISM YO\'Q':'PENDING'}</span>
+</div>
+${waitingName ? `
+<div style="padding:8px 0;color:var(--text-3);font-size:12.5px">Bu user botda <code class="mono">/start</code> bosgan lekin hali ismini yozmagan.</div>
+<div class="uc-acts">
+<button class="btn ghost sm" onclick="alert('Botga eslatma yuborish hali Phase 3 da')"><i class="ti ti-message"></i>Eslatma yubor</button>
+<button class="btn danger sm" onclick="confirmDeleteUser('${u.telegram_id}', '${escapeHtml(u.ism||'')}')"><i class="ti ti-trash"></i>O'chirish</button>
+</div>
+` : `
+<div class="uc-form">
+<div class="ff"><label>Filial</label><select class="select" id="pc-fil-${u.telegram_id}"><option value="">— tanlang —</option>${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}">${escapeHtml(f.filial)}</option>`).join('')}</select></div>
+<div class="ff"><label>Rol</label><select class="select" id="pc-role-${u.telegram_id}"><option value="">— tanlang —</option>${roles.map(r=>`<option value="${r.key}">${escapeHtml(r.label)}</option>`).join('')}</select></div>
+<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="pc-plan-${u.telegram_id}" placeholder="0" value="${u.oylik_plan||''}"></div>
+<div class="ff"><label>Status</label><select class="select" id="pc-stat-${u.telegram_id}"><option value="active" selected>Aktiv</option><option value="ceo">CEO</option></select></div>
+</div>
+<div class="uc-acts">
+<button class="btn primary" onclick="approveUser('${u.telegram_id}', '${escapeHtml(u.ism||'')}')"><i class="ti ti-check"></i>Tasdiqlash</button>
+<button class="btn danger ghost" onclick="confirmDeleteUser('${u.telegram_id}', '${escapeHtml(u.ism||'')}')"><i class="ti ti-x"></i>Rad etish</button>
+</div>
+`}
+</div>`;
+    }).join('');
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function approveUser(telegramId, ism){
+  const filVal = document.getElementById(`pc-fil-${telegramId}`).value;
+  const roleKey = document.getElementById(`pc-role-${telegramId}`).value;
+  const plan = document.getElementById(`pc-plan-${telegramId}`).value;
+  const stat = document.getElementById(`pc-stat-${telegramId}`).value;
+  if (!filVal || !roleKey) { toast('Filial va rol tanlang', 'err'); return; }
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  try {
+    const saveRes = await api('admin-user-save', {
+      uid: UID, telegram_id: telegramId, ism, warehouse_id, warehouse_name,
+      oylik_plan: plan || '0', status: stat
+    }, { method: 'POST' });
+    if (saveRes.error) throw new Error(saveRes.error);
+    const assignRes = await api('admin-role-assign', {
+      uid: UID, telegram_id: telegramId, role_keys: [roleKey]
+    }, { method: 'POST' });
+    if (assignRes.error) throw new Error(assignRes.error);
+    toast(`${ism} tasdiqlandi`);
+    renderUsersPending(document.getElementById('screens'));
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+function confirmDeleteUser(telegramId, ism){
+  openModal(`
+<div class="modal-h">
+<div><h3>O'chirilsinmi?</h3><p>${escapeHtml(ism || 'Ushbu user')} ma'lumotlari va rollari butunlay o'chiriladi.</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor qilish</button>
+<button class="btn danger primary" style="background:var(--err-text);border-color:var(--err-text);color:white" onclick="toast('Phase 3 da kelayotgan funktsiya', 'err');closeModal()">O'chirish</button>
+</div>
+`);
+}
+
+// =========================================================
+// SCREEN: USERS ALL
+// =========================================================
+let usersFilters = { status: 'all', search: '' };
+
+async function renderUsersAll(root){
+  root.innerHTML = topbar('Userlar', 'Hammasi · barcha foydalanuvchilar');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<input type="text" class="search-box" placeholder="Qidiruv · ism yoki telegram ID" id="users-search" value="${escapeHtml(usersFilters.search)}">
+<div class="pill-sel ${usersFilters.status==='all'?'active':''}" onclick="setUsersFilter('all')">Hammasi</div>
+<div class="pill-sel ${usersFilters.status==='active'?'active':''}" onclick="setUsersFilter('active')">Aktiv</div>
+<div class="pill-sel ${usersFilters.status==='pending'?'active':''}" onclick="setUsersFilter('pending')">Pending</div>
+</div>
+<div id="users-table-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>
+`;
+  root.appendChild(content);
+
+  // Wire up search
+  document.getElementById('users-search').addEventListener('input', (e) => {
+    usersFilters.search = e.target.value;
+    clearTimeout(window._usearch);
+    window._usearch = setTimeout(loadUsersTable, 300);
+  });
+
+  loadUsersTable();
+}
+
+function setUsersFilter(status){
+  usersFilters.status = status;
+  renderUsersAll(document.getElementById('screens'));
+}
+
+async function loadUsersTable(){
+  try {
+    const data = await api('admin-users', {
+      uid: UID,
+      status: usersFilters.status,
+      search: usersFilters.search
+    });
+    const users = data.users || [];
+    const wrap = document.getElementById('users-table-wrap');
+    if (!users.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-users-off"></i><p>User topilmadi</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:1.8fr 1.5fr 1fr 90px">
+<div>User</div><div>Filial</div><div>Rollar</div><div>Status</div>
+</div>
+${users.map(u => {
+  const statBadge = u.status === 'active' ? '<span class="badge ok">Aktiv</span>' :
+    u.status === 'ceo' ? '<span class="badge info">CEO</span>' :
+    u.status === 'pending' ? '<span class="badge warn">Pending</span>' :
+    u.status === 'waiting_name' ? '<span class="badge muted">No name</span>' :
+    `<span class="badge muted">${escapeHtml(u.status||'')}</span>`;
+  return `
+<div class="table-row" style="grid-template-columns:1.8fr 1.5fr 1fr 90px;cursor:pointer" onclick="editUser('${u.telegram_id}')">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
+<div style="min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">@${u.telegram_id}</div>
+</div>
+</div>
+<div style="color:var(--text-2)">${escapeHtml(u.warehouse_name || '—')}</div>
+<div style="display:flex;flex-wrap:wrap;gap:3px">${(u.roles||[]).slice(0,2).map(tagOf).join('')}${u.roles?.length > 2 ? `<span style="font-size:10.5px;color:var(--text-3)">+${u.roles.length-2}</span>` : ''}</div>
+<div>${statBadge}</div>
+</div>`;
+}).join('')}
+</div>
+`;
+  } catch(e){
+    document.getElementById('users-table-wrap').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function editUser(telegramId){
+  if (!cache.rbac) cache.rbac = await api('admin-rbac', { uid: UID });
+  const allUsers = await api('admin-users', { uid: UID, search: telegramId });
+  const u = allUsers.users?.find(x => x.telegram_id === telegramId);
+  if (!u) { toast('User topilmadi', 'err'); return; }
+  const filiallar = cache.rbac.filiallar || [];
+  const roles = cache.rbac.roles || [];
+  const userRoleKeys = (u.roles || []).map(r => r.key);
+
+  openModal(`
+<div class="modal-h">
+<div><h3>${escapeHtml(u.ism||'User')}</h3><p>@${u.telegram_id} · ${escapeHtml(u.warehouse_name||'filial yo\'q')}</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Ism</label><input type="text" class="input" id="ed-ism" value="${escapeHtml(u.ism||'')}"></div>
+<div class="ff"><label>Filial</label><select class="select" id="ed-fil">
+<option value="">— filial yo'q —</option>
+${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}" ${String(f.warehouse_id)===String(u.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('')}
+</select></div>
+<div class="ff"><label>Oylik plan</label><input type="number" class="input" id="ed-plan" value="${u.oylik_plan||''}"></div>
+<div class="ff"><label>Status</label><select class="select" id="ed-stat">
+<option value="active" ${u.status==='active'?'selected':''}>Aktiv</option>
+<option value="ceo" ${u.status==='ceo'?'selected':''}>CEO</option>
+<option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
+</select></div>
+<div class="ff"><label>Rollar</label>
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${roles.map(r => `
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+<input type="checkbox" class="role-cb" value="${r.key}" ${userRoleKeys.includes(r.key)?'checked':''}>
+${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
+<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
+</label>`).join('')}
+</div>
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" onclick="saveUserEdit('${u.telegram_id}')"><i class="ti ti-check"></i>Saqlash</button>
+</div>
+`);
+}
+
+async function saveUserEdit(telegramId){
+  const ism = document.getElementById('ed-ism').value.trim();
+  const filVal = document.getElementById('ed-fil').value;
+  const plan = document.getElementById('ed-plan').value;
+  const stat = document.getElementById('ed-stat').value;
+  const roleKeys = Array.from(document.querySelectorAll('.role-cb:checked')).map(cb => cb.value);
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  try {
+    const r1 = await api('admin-user-save', {
+      uid: UID, telegram_id: telegramId, ism,
+      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
+      oylik_plan: plan || '0', status: stat
+    }, { method: 'POST' });
+    if (r1.error) throw new Error(r1.error);
+    const r2 = await api('admin-role-assign', {
+      uid: UID, telegram_id: telegramId, role_keys: roleKeys
+    }, { method: 'POST' });
+    if (r2.error) throw new Error(r2.error);
+    toast('Saqlandi');
+    closeModal();
+    loadUsersTable();
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: ROLES
+// =========================================================
+let selectedRoleKey = null;
+let editingPerms = new Set();
+
+async function renderRoles(root){
+  root.innerHTML = topbar('Userlar', 'Rollar va ruxsatlar', '<button class="btn primary" onclick="newRole()"><i class="ti ti-plus"></i>Yangi rol</button>');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="skeleton" style="height:300px"></div>`;
+  root.appendChild(content);
+
+  try {
+    const data = await api('admin-rbac', { uid: UID });
+    if (data.error) throw new Error(data.error);
+    cache.rbac = data;
+    if (!selectedRoleKey && data.roles?.length) selectedRoleKey = data.roles[0].key;
+    renderRolesUI(content, data);
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderRolesUI(content, data){
+  const roles = data.roles || [];
+  const perms = data.permissions || [];
+  const selected = roles.find(r => r.key === selectedRoleKey) || roles[0];
+  if (!selected) {
+    content.innerHTML = `<div class="empty"><i class="ti ti-shield-off"></i><p>Rol yo'q</p></div>`;
+    return;
+  }
+  editingPerms = new Set(selected.permission_keys || []);
+  const byCategory = {};
+  perms.forEach(p => { (byCategory[p.category] = byCategory[p.category] || []).push(p); });
+
+  content.innerHTML = `
+<div class="roles-layout">
+<div class="roles-list">
+${roles.map(r => `
+<div class="role-item ${r.key===selected.key?'active':''}" onclick="selectRole('${r.key}')">
+<i class="ti ${r.icon||'ti-shield'}"></i>
+<span style="flex:1;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.label)}</span>
+<span class="role-ct">${r.user_count}</span>
+</div>`).join('')}
+</div>
+<div class="role-detail">
+<div class="rd-head">
+<div><h3>${escapeHtml(selected.label)}</h3><p>${escapeHtml(selected.description||'')} · ${selected.user_count} user · ${selected.permission_count} ruxsat${selected.is_system?' · sistema roli':''}</p></div>
+<div style="display:flex;gap:6px">
+<button class="btn sm" onclick="saveRolePerms('${selected.key}', '${escapeHtml(selected.label)}', '${escapeHtml(selected.description||'')}', '${selected.icon||''}')"><i class="ti ti-check"></i>Saqlash</button>
+${!selected.is_system?`<button class="btn sm danger" onclick="toast('Phase 3 da kelayotgan funktsiya', 'err')"><i class="ti ti-trash"></i></button>`:''}
+</div>
+</div>
+${Object.entries(byCategory).map(([cat, items]) => `
+<div class="perm-grp">
+<div class="perm-grp-lbl">${escapeHtml(cat)}</div>
+${items.map(p => `
+<div class="perm-row">
+<span class="toggle ${editingPerms.has(p.key)?'on':''} ${selected.key==='super_admin'?'disabled':''}" onclick="${selected.key==='super_admin'?'':"togglePerm('"+p.key+"')"}"><span class="toggle-knob"></span></span>
+<div class="perm-name">${escapeHtml(p.label)}${p.description?`<div class="perm-desc">${escapeHtml(p.description)}</div>`:''}</div>
+</div>`).join('')}
+</div>`).join('')}
+</div>
+</div>
+`;
+}
+
+function selectRole(key){ selectedRoleKey = key; renderRolesUI(document.getElementById('screens').querySelector('.roles-layout').parentElement, cache.rbac); }
+
+function togglePerm(key){
+  if (editingPerms.has(key)) editingPerms.delete(key); else editingPerms.add(key);
+  document.querySelectorAll('.perm-row').forEach(row => {
+    const toggle = row.querySelector('.toggle');
+    const name = row.querySelector('.perm-name').textContent;
+    // We need to find which key corresponds to which row — re-render
+  });
+  // Just toggle the clicked one
+  event.target.closest('.toggle').classList.toggle('on');
+}
+
+async function saveRolePerms(roleKey, label, description, icon){
+  try {
+    const r = await api('admin-role-save', {
+      uid: UID, key: roleKey, label, description, icon,
+      permissions: Array.from(editingPerms)
+    }, { method: 'POST' });
+    if (r.error) throw new Error(r.error);
+    toast(`Rol saqlandi · ${r.permissions_set} ruxsat`);
+    cache.rbac = null;
+    renderRoles(document.getElementById('screens'));
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+function newRole(){
+  openModal(`
+<div class="modal-h">
+<div><h3>Yangi rol</h3><p>Yangi rol yaratish — keyin ruxsatlar tanlanadi</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Kalit (lowercase, _ bilan)</label><input type="text" class="input" id="nr-key" placeholder="masalan: junior_seller"></div>
+<div class="ff"><label>Nomi (display)</label><input type="text" class="input" id="nr-label" placeholder="masalan: Junior sotuvchi"></div>
+<div class="ff"><label>Tavsif</label><input type="text" class="input" id="nr-desc" placeholder="ixtiyoriy"></div>
+<div class="ff"><label>Ikonka (Tabler)</label><input type="text" class="input" id="nr-icon" placeholder="ti-user" value="ti-user"></div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" onclick="createRole()"><i class="ti ti-check"></i>Yaratish</button>
+</div>
+`);
+}
+
+async function createRole(){
+  const key = document.getElementById('nr-key').value.trim().toLowerCase();
+  const label = document.getElementById('nr-label').value.trim();
+  const desc = document.getElementById('nr-desc').value.trim();
+  const icon = document.getElementById('nr-icon').value.trim();
+  if (!key || !label) { toast('Kalit va nomi kerak', 'err'); return; }
+  try {
+    const r = await api('admin-role-save', {
+      uid: UID, key, label, description: desc, icon, permissions: []
+    }, { method: 'POST' });
+    if (r.error) throw new Error(r.error);
+    toast('Rol yaratildi · ruxsatlar tanlang');
+    closeModal();
+    cache.rbac = null;
+    selectedRoleKey = key;
+    renderRoles(document.getElementById('screens'));
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: FILIALLAR (link to ceo.html)
+// =========================================================
+function renderFiliallar(root){
+  root.innerHTML = topbar('Filiallar', 'CEO Dashboard');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="card">
+<div style="text-align:center;padding:32px 20px">
+<i class="ti ti-building-store" style="font-size:48px;color:var(--text-3);margin-bottom:14px;display:block"></i>
+<h3 style="font-size:16px;font-weight:500;margin-bottom:6px">Filiallar boshqaruvi</h3>
+<p style="font-size:13px;color:var(--text-2);max-width:360px;margin:0 auto 20px;line-height:1.6">Barcha filiallar bo'yicha CEO dashboard — plan/bajarildi, qarzlar, transferlar, deadline'lar. Hozircha mavjud ceo.html sahifasini ochadi.</p>
+<a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/ceo.html?uid=${UID}" target="_blank"><i class="ti ti-external-link"></i>CEO Dashboard'ni ochish</a>
+</div>
+</div>
+<div class="card" style="margin-top:14px">
+<div class="card-h"><h3>Tez kirishlar</h3></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+<a class="btn" href="https://s1mple-911.github.io/arosmarket-dashboard/index.html?uid=${UID}" target="_blank"><i class="ti ti-dashboard"></i>Filial dashboard</a>
+<a class="btn" href="https://s1mple-911.github.io/arosmarket-dashboard/hodim.html?uid=${UID}" target="_blank"><i class="ti ti-user"></i>Hodim panel</a>
+<a class="btn" href="https://s1mple-911.github.io/arosmarket-dashboard/bugalter.html?uid=${UID}" target="_blank"><i class="ti ti-cash-register"></i>Bugalter</a>
+</div>
+</div>
+`;
+  root.appendChild(content);
+}
+
+// =========================================================
+// SCREEN: BUGALTER
+// =========================================================
+function renderBugalter(root){
+  root.innerHTML = topbar('Bugalter', 'Kassa va transferlar');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="card">
+<div style="text-align:center;padding:32px 20px">
+<i class="ti ti-cash-register" style="font-size:48px;color:var(--text-3);margin-bottom:14px;display:block"></i>
+<h3 style="font-size:16px;font-weight:500;margin-bottom:6px">Bugalter dashboard</h3>
+<p style="font-size:13px;color:var(--text-2);max-width:360px;margin:0 auto 20px;line-height:1.6">Kassa balanslari, yo'ldagi transferlar, yopilmagan smenalar. Mavjud bugalter.html sahifasini ochadi.</p>
+<a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/bugalter.html?uid=${UID}" target="_blank"><i class="ti ti-external-link"></i>Bugalter'ni ochish</a>
+</div>
+</div>
+`;
+  root.appendChild(content);
+}
+
+// =========================================================
+// SCREEN: AUDIT LOG
+// =========================================================
+async function renderAudit(root){
+  root.innerHTML = topbar('Sistema', 'Kuzatuv · audit log');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<input type="text" class="search-box" placeholder="Qidiruv · user, action, target" id="au-search">
+<div class="pill-sel" onclick="toast('Filterlar Phase 3 da', 'err')"><i class="ti ti-filter"></i>Hammasi</div>
+<button class="icon-btn" onclick="loadAuditLog()"><i class="ti ti-refresh"></i></button>
+</div>
+<div id="audit-table-wrap"><div class="skeleton" style="height:50px;margin-bottom:4px"></div><div class="skeleton" style="height:50px;margin-bottom:4px"></div><div class="skeleton" style="height:50px"></div></div>
+`;
+  root.appendChild(content);
+  loadAuditLog();
+}
+
+async function loadAuditLog(){
+  try {
+    const data = await api('admin-audit-log', { uid: UID, limit: 50 });
+    if (data.error) throw new Error(data.error);
+    const entries = data.entries || [];
+    const wrap = document.getElementById('audit-table-wrap');
+    if (!entries.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-history-off"></i><p>Hodisalar yo'q</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:100px 130px 1fr 90px"><div>Vaqt</div><div>User</div><div>Hodisa</div><div>Natija</div></div>
+${entries.map(a => `
+<div class="table-row" style="grid-template-columns:100px 130px 1fr 90px">
+<div style="font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums">${escapeHtml(timeAgo(a.created_at))}</div>
+<div style="display:flex;align-items:center;gap:6px;min-width:0">
+<div class="av" style="width:22px;height:22px;font-size:10px">${initials(a.actor_name)}</div>
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(a.actor_name||'Sistema')}</div>
+</div>
+<div>
+<span style="font-weight:500">${escapeHtml(actionLabel(a.action))}</span>
+${a.target_label ? `<span style="color:var(--text-2)"> · ${escapeHtml(a.target_label)}</span>` : ''}
+${a.meta && Object.keys(a.meta).length ? `<div style="font-size:10.5px;color:var(--text-3);margin-top:2px">${Object.entries(a.meta).filter(([k,v])=>v).slice(0,3).map(([k,v])=>`${k}: ${typeof v==='object'?JSON.stringify(v):v}`).join(' · ')}</div>` : ''}
+</div>
+<div><span class="badge ${a.result==='ok'?'ok':a.result==='error'?'err':'muted'}">${escapeHtml(a.result||'—')}</span></div>
+</div>`).join('')}
+</div>
+`;
+  } catch(e){
+    document.getElementById('audit-table-wrap').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// =========================================================
+// SCREEN: WORKFLOWS (placeholder)
+// =========================================================
+function renderWorkflows(root){
+  root.innerHTML = topbar('Sistema', 'Workflow\'lar', '<a class="btn" href="https://n8n.arosmarket.com" target="_blank"><i class="ti ti-external-link"></i>n8n</a>');
+  const content = document.createElement('div');
+  const workflows = [
+    { name: 'Cache Builder', id: 'xgfB2F52mXZ5tJJk', desc: 'Aros → PG, har soatda', status: 'ok' },
+    { name: 'Cache API', id: 'qEsBNa7FRUkraYjZ', desc: '6 ta webhook (CEO/Filial/Calendar)', status: 'ok' },
+    { name: 'Bugalter Sync', id: 't6nBWXXlC7NQiGfu', desc: 'Kassa balanslari, har soatda', status: 'warn' },
+    { name: 'Bugalter API', id: '3AqD76zvhI76nByf', desc: 'Bugalter dashboard endpoint\'lari', status: 'ok' },
+    { name: 'SLA Sync', id: 'wKrngMVzHq7MYhb6', desc: 'warehouse_sla_outbound', status: 'ok' },
+    { name: 'AROS - Admin API', id: 'hgfueNHEIfdMCGFb', desc: 'Admin panel API (yangi)', status: 'ok' },
+    { name: 'Hodim Sync', id: 'MYRCp6cMuMjczufF', desc: 'Xodim KPI, hozir o\'chirilgan', status: 'off' }
+  ];
+  content.innerHTML = `
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-lbl">Aktiv</div><div class="kpi-val">${workflows.filter(w=>w.status==='ok').length}</div></div>
+<div class="kpi"><div class="kpi-lbl">Ogohlantirish</div><div class="kpi-val" style="color:var(--warn-text)">${workflows.filter(w=>w.status==='warn').length}</div></div>
+<div class="kpi"><div class="kpi-lbl">O'chiq</div><div class="kpi-val" style="color:var(--text-3)">${workflows.filter(w=>w.status==='off').length}</div></div>
+</div>
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:1.8fr 1fr 60px"><div>Workflow</div><div>Status</div><div></div></div>
+${workflows.map(w => `
+<div class="table-row" style="grid-template-columns:1.8fr 1fr 60px">
+<div style="display:flex;align-items:center;gap:10px">
+<span class="dot ${w.status==='warn'?'warn':w.status==='off'?'off':''}"></span>
+<div><div style="font-weight:500">${escapeHtml(w.name)}</div><div style="font-size:11px;color:var(--text-3)">${escapeHtml(w.desc)}</div></div>
+</div>
+<div>${w.status==='ok'?'<span class="badge ok">Online</span>':w.status==='warn'?'<span class="badge warn">Diqqat</span>':'<span class="badge muted">O\'chiq</span>'}</div>
+<div><a class="icon-btn" href="https://n8n.arosmarket.com/workflow/${w.id}" target="_blank" title="n8n'da ochish"><i class="ti ti-external-link"></i></a></div>
+</div>`).join('')}
+</div>
+<div style="margin-top:14px;padding:12px;background:var(--bg-2);border-radius:var(--radius);font-size:11.5px;color:var(--text-3);text-align:center">N8n bilan to'liq integratsiya (real-time status, manual run, execution history) Phase 4 da rejalashtirilgan</div>
+`;
+  root.appendChild(content);
+}
+
+// =========================================================
+// SCREEN: SETTINGS (placeholder)
+// =========================================================
+function renderSettings(root){
+  root.innerHTML = topbar('Sistema', 'Sozlamalar');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="card">
+<div class="card-h"><h3>Telegram bot</h3></div>
+<div style="display:grid;gap:10px">
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="font-size:12px;color:var(--text-2)">Bot username</div><code class="mono">@arosmarket_dashboard_bot</code></div>
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="font-size:12px;color:var(--text-2)">Mini App URL</div><code class="mono" style="font-size:10.5px">s1mple-911.github.io/arosmarket-dashboard/</code></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<div class="card-h"><h3>API endpoint'lari</h3></div>
+<div style="display:grid;gap:8px;font-size:12px">
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="color:var(--text-2)">n8n base</div><code class="mono">n8n.arosmarket.com</code></div>
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="color:var(--text-2)">Aros API</div><code class="mono">api.aros.uz</code></div>
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="color:var(--text-2)">PostgreSQL</div><span class="badge ok">Postgres account 3</span></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<div class="card-h"><h3>Rejalashtirilgan</h3></div>
+<div style="font-size:13px;color:var(--text-2);line-height:1.7">
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Telegram bot token o'zgartirish (Phase 3)</div>
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Aros API credentials boshqarish (Phase 3)</div>
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Maxsus ID'lar (CEO_IDS, BUGALTER_IDS, DEV_IDS) tahrirlash (Phase 3)</div>
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Bildirishnomalar sozlamalari (Phase 4)</div>
+<div style="padding:8px 0">⚪ Backup va restore (Phase 4)</div>
+</div>
+</div>
+`;
+  root.appendChild(content);
+}
+
+// =========================================================
+// START
+// =========================================================
+init();
+</script>
+
+</body>
+</html>
