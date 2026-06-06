@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- AROS Admin v5 — Filiallar embedded + Yuklanmalar + Sidebar toggle + POST fix -->
+<!-- AROS Admin v6 — inline audio (Drive direct), date/hodim filter, stats card -->
 <html lang="uz" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -256,6 +256,23 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 .dot.warn{background:var(--warn-line)}
 .dot.err{background:var(--err-line)}
 .dot.off{background:var(--text-3)}
+
+/* === Mini audio player (inline) === */
+.mini-audio{width:100%;max-width:220px;height:30px;border-radius:15px;outline:none}
+.mini-audio::-webkit-media-controls-panel{background:var(--bg-2)}
+.mini-audio::-webkit-media-controls-current-time-display,
+.mini-audio::-webkit-media-controls-time-remaining-display{font-size:10px;color:var(--text-2)}
+.audio-cell{display:flex;align-items:center;gap:6px;min-width:0}
+.audio-cell .open-drive{font-size:11px;color:var(--text-3);cursor:pointer;flex-shrink:0}
+.audio-cell .open-drive:hover{color:var(--info-text)}
+
+/* === Stats card === */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.stat-card{background:var(--bg-2);padding:12px 14px;border-radius:var(--radius)}
+.stat-lbl{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.stat-val{font-size:20px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:11px;color:var(--text-3);margin-top:4px}
+
 .role-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--bg-2);border-radius:8px;font-size:11px;color:var(--text-2);margin:1px 3px 1px 0}
 .role-tag i{font-size:11px}
 .role-tag.super_admin{background:var(--warn-bg);color:var(--warn-text)}
@@ -1237,7 +1254,7 @@ function openFilDetail(idx) {
 // SCREEN: YUKLANMALAR (Zapis + Tilxat)
 // =========================================================
 let yukSubTab = 'zapis';
-let yukFilter = { search: '', filial: '', type: '', budilnik: '' };
+let yukFilter = { search: '', filial: '', type: '', budilnik: '', since: '', hodim: '', sort: 'newest' };
 
 function renderYuklanmalar(root){
   root.innerHTML = topbar('Yuklanmalar', yukSubTab === 'zapis' ? 'Audio yozuvlar va izohlar' : 'Tilxat hujjatlari');
@@ -1253,26 +1270,58 @@ function renderYuklanmalar(root){
   if (yukSubTab === 'zapis') loadZapislar(); else loadTilxatlar();
 }
 
-function setYukSubTab(t) { yukSubTab = t; yukFilter = { search: '', filial: '', type: '', budilnik: '' }; renderYuklanmalar(document.getElementById('screens')); }
+function setYukSubTab(t) { yukSubTab = t; yukFilter = { search: '', filial: '', type: '', budilnik: '', since: '', hodim: '', sort: 'newest' }; renderYuklanmalar(document.getElementById('screens')); }
 function setYukType(t) { yukFilter.type = yukFilter.type === t ? '' : t; (yukSubTab==='zapis'?fetchZap:fetchTil)(); }
 function setYukBud(b) { yukFilter.budilnik = yukFilter.budilnik === b ? '' : b; fetchZap(); }
+function setYukSince(s) { yukFilter.since = yukFilter.since === s ? '' : s; fetchZap(); }
 
 async function loadZapislar(){
   const wrap = document.getElementById('yuk-content');
   wrap.innerHTML = `
-<div class="audit-toolbar">
-  <input type="text" class="search-box" placeholder="Mijoz, hodim, izoh..." id="zap-search" value="${escapeHtml(yukFilter.search)}" style="min-width:240px">
-  <select class="select" id="zap-filial" style="max-width:200px;height:34px"><option value="">Filial · hammasi</option></select>
-  <div class="pill-sel ${yukFilter.type==='audio'?'active':''}" onclick="setYukType('audio')"><i class="ti ti-volume"></i>Audio</div>
-  <div class="pill-sel ${yukFilter.type==='izoh'?'active':''}" onclick="setYukType('izoh')"><i class="ti ti-note"></i>Izoh</div>
-  <div class="pill-sel ${yukFilter.budilnik==='bilan'?'active':''}" onclick="setYukBud('bilan')"><i class="ti ti-bell"></i>Budilnik</div>
+<div class="stats-row" id="zap-stats">
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-microphone"></i>Jami</div><div class="stat-val skeleton" style="height:20px;width:60px"></div></div>
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-volume"></i>Audio</div><div class="stat-val skeleton" style="height:20px;width:60px"></div></div>
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-bell"></i>Budilnikli</div><div class="stat-val skeleton" style="height:20px;width:60px"></div></div>
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-cash"></i>Jami qarz</div><div class="stat-val skeleton" style="height:20px;width:80px"></div></div>
 </div>
+
+<div class="audit-toolbar">
+  <input type="text" class="search-box" placeholder="Mijoz, hodim, izoh..." id="zap-search" value="${escapeHtml(yukFilter.search)}" style="min-width:220px">
+  <select class="select" id="zap-filial" style="max-width:170px;height:34px"><option value="">Filial · hammasi</option></select>
+  <select class="select" id="zap-hodim" style="max-width:170px;height:34px"><option value="">Hodim · hammasi</option></select>
+  <select class="select" id="zap-sort" style="max-width:130px;height:34px">
+    <option value="newest" ${yukFilter.sort==='newest'?'selected':''}>Yangi avval</option>
+    <option value="oldest" ${yukFilter.sort==='oldest'?'selected':''}>Eski avval</option>
+    <option value="qarz_desc" ${yukFilter.sort==='qarz_desc'?'selected':''}>Qarz · katta</option>
+  </select>
+</div>
+
+<div class="audit-toolbar" style="margin-top:-4px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text-3);align-self:center;padding-right:4px">SANA:</span>
+    <div class="pill-sel ${yukFilter.since===''?'active':''}" onclick="setYukSince('')">Hammasi</div>
+    <div class="pill-sel ${yukFilter.since==='today'?'active':''}" onclick="setYukSince('today')">Bugun</div>
+    <div class="pill-sel ${yukFilter.since==='7days'?'active':''}" onclick="setYukSince('7days')">7 kun</div>
+    <div class="pill-sel ${yukFilter.since==='30days'?'active':''}" onclick="setYukSince('30days')">30 kun</div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text-3);align-self:center;padding-right:4px">TUR:</span>
+    <div class="pill-sel ${yukFilter.type==='audio'?'active':''}" onclick="setYukType('audio')"><i class="ti ti-volume"></i>Audio</div>
+    <div class="pill-sel ${yukFilter.type==='izoh'?'active':''}" onclick="setYukType('izoh')"><i class="ti ti-note"></i>Izoh</div>
+    <div class="pill-sel ${yukFilter.budilnik==='bilan'?'active':''}" onclick="setYukBud('bilan')"><i class="ti ti-bell"></i>Budilnik</div>
+  </div>
+</div>
+
 <div id="zap-rows"><div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div></div>
 `;
   document.getElementById('zap-search').addEventListener('input', (e) => {
     yukFilter.search = e.target.value;
     clearTimeout(window._zsearch);
     window._zsearch = setTimeout(fetchZap, 300);
+  });
+  document.getElementById('zap-sort').addEventListener('change', (e) => {
+    yukFilter.sort = e.target.value;
+    fetchZap();
   });
   fetchZap();
 }
@@ -1282,16 +1331,38 @@ async function fetchZap(){
     const data = await api('admin-recordings-list', {
       uid: UID, limit: 100,
       search: yukFilter.search, filial: yukFilter.filial,
-      type: yukFilter.type, budilnik: yukFilter.budilnik
+      type: yukFilter.type, budilnik: yukFilter.budilnik,
+      since: yukFilter.since, hodim: yukFilter.hodim, sort: yukFilter.sort
     });
     if (data.error) throw new Error(data.error);
     const recs = data.recordings || [];
     
+    // Stats card
+    const st = data.stats || {};
+    const statsRow = document.getElementById('zap-stats');
+    if (statsRow) {
+      statsRow.innerHTML = `
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-microphone"></i>Jami</div><div class="stat-val">${st.total||0}</div><div class="stat-sub">yozuv</div></div>
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-volume"></i>Audio</div><div class="stat-val">${st.audio_count||0}</div><div class="stat-sub">${Math.round((st.audio_count||0)/(st.total||1)*100)}% audio bilan</div></div>
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-bell"></i>Budilnikli</div><div class="stat-val">${st.budilnik_count||0}</div><div class="stat-sub">${Math.round((st.budilnik_count||0)/(st.total||1)*100)}% eslatma</div></div>
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-cash"></i>Jami qarz</div><div class="stat-val" style="color:var(--err-text)">${fmtShort(st.total_qarz)}</div><div class="stat-sub">so'm</div></div>
+`;
+    }
+    
+    // Filial dropdown
     const sel = document.getElementById('zap-filial');
     if (sel && sel.options.length <= 1) {
       sel.innerHTML = '<option value="">Filial · hammasi</option>' + (data.filiallar || []).map(f =>
         `<option value="${f.warehouse_id}" ${yukFilter.filial==String(f.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('');
       sel.onchange = (e) => { yukFilter.filial = e.target.value; fetchZap(); };
+    }
+    
+    // Hodim dropdown
+    const selH = document.getElementById('zap-hodim');
+    if (selH && selH.options.length <= 1) {
+      selH.innerHTML = '<option value="">Hodim · hammasi</option>' + (data.hodimlar || []).map(h =>
+        `<option value="${h.telegram_id}" ${yukFilter.hodim===h.telegram_id?'selected':''}>${escapeHtml(h.ism||'@'+h.telegram_id)} (${h.count})</option>`).join('');
+      selH.onchange = (e) => { yukFilter.hodim = e.target.value; fetchZap(); };
     }
     
     const wrap = document.getElementById('zap-rows');
@@ -1301,13 +1372,13 @@ async function fetchZap(){
     }
     window._recs = recs;
     wrap.innerHTML = `
-<div style="margin-bottom:10px;font-size:12px;color:var(--text-3);display:flex;justify-content:space-between">
-  <span><b>${data.shown}</b> / ${data.total} ko'rsatildi</span>
-  <span>Jami qarz: <b style="color:var(--err-text)">${fmt(recs.reduce((s,r)=>s+Number(r.umumiy_qarz||0),0))}</b> so'm</span>
+<div style="margin-bottom:10px;font-size:12px;color:var(--text-3);display:flex;justify-content:space-between;align-items:center">
+  <span><b>${data.shown}</b> / ${st.total||0} ko'rsatildi</span>
+  <span>Sahifa qarzlari: <b style="color:var(--err-text)">${fmt(recs.reduce((s,r)=>s+Number(r.umumiy_qarz||0),0))}</b> so'm</span>
 </div>
 <div class="table-wrap">
-  <div class="table-head" style="grid-template-columns:80px 1.6fr 1.2fr 1fr 110px 80px">
-    <div>Tur</div><div>Mijoz</div><div>Hodim</div><div>Filial</div><div>Sana</div><div></div>
+  <div class="table-head" style="grid-template-columns:1.4fr 240px 1.1fr 0.9fr 100px 50px">
+    <div>Mijoz / Izoh</div><div>Audio</div><div>Hodim</div><div>Filial</div><div>Sana</div><div></div>
   </div>
   ${recs.map((r,i) => zapRow(r, i)).join('')}
 </div>
@@ -1319,23 +1390,25 @@ async function fetchZap(){
 
 function zapRow(r, i) {
   const isAudio = !!r.file_id;
-  const typeBadge = isAudio
-    ? '<span class="badge info"><i class="ti ti-volume"></i> Audio</span>'
-    : '<span class="badge muted"><i class="ti ti-note"></i> Izoh</span>';
-  return `<div class="table-row" style="grid-template-columns:80px 1.6fr 1.2fr 1fr 110px 80px;cursor:pointer" onclick="openZapDetail(${i})">
-    <div>${typeBadge}</div>
+  return `<div class="table-row" style="grid-template-columns:1.4fr 240px 1.1fr 0.9fr 100px 50px;cursor:pointer" onclick="openZapDetail(${i})">
     <div style="min-width:0">
-      <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.ism||'—')}</div>
-      ${r.izoh ? `<div style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.izoh)}</div>` : ''}
-      ${r.umumiy_qarz > 0 ? `<div style="font-size:11px;color:var(--err-text);font-variant-numeric:tabular-nums">${fmt(r.umumiy_qarz)} so'm</div>` : ''}
+      <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px">
+        ${isAudio ? '<i class="ti ti-volume" style="font-size:13px;color:var(--info-text);flex-shrink:0"></i>' : '<i class="ti ti-note" style="font-size:13px;color:var(--text-3);flex-shrink:0"></i>'}
+        <span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.ism||'—')}</span>
+      </div>
+      ${r.izoh ? `<div style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${escapeHtml(r.izoh)}</div>` : ''}
+      ${r.umumiy_qarz > 0 ? `<div style="font-size:11px;color:var(--err-text);font-variant-numeric:tabular-nums;margin-top:2px">${fmt(r.umumiy_qarz)} so'm</div>` : ''}
+    </div>
+    <div class="audio-cell" onclick="event.stopPropagation()">
+      ${isAudio ? `
+        <audio class="mini-audio" controls preload="none" src="${r.view_link}"></audio>
+        <a class="open-drive" href="${r.drive_link}" target="_blank" title="Drive'da ochish"><i class="ti ti-external-link"></i></a>
+      ` : '<span style="font-size:11px;color:var(--text-3)">audio yo\'q</span>'}
     </div>
     <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2)">${escapeHtml(r.hodim_ismi||'—')}</div>
     <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${escapeHtml(r.filial_nomi||'—')}</div>
     <div style="font-size:11px;color:var(--text-3)">${timeAgo(r.created_at)}${r.budilnik_dt ? `<div style="font-size:10px;color:var(--warn-text);margin-top:2px"><i class="ti ti-bell" style="font-size:9px"></i> ${escapeHtml(r.budilnik_dt.split(' ')[0])}</div>` : ''}</div>
-    <div style="display:flex;gap:4px;justify-content:flex-end;align-items:center">
-      ${isAudio ? `<a class="icon-btn" href="${r.view_link}" target="_blank" title="Eshitish" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation()"><i class="ti ti-player-play"></i></a>` : ''}
-      <span class="icon-btn" style="width:28px;height:28px;font-size:13px;border:none"><i class="ti ti-chevron-right"></i></span>
-    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;color:var(--text-3)"><i class="ti ti-chevron-right"></i></div>
   </div>`;
 }
 
@@ -1349,7 +1422,7 @@ function openZapDetail(i) {
   <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
-  ${isAudio ? `<audio controls style="width:100%;border-radius:var(--radius)"><source src="${r.view_link}"></audio>` : ''}
+  ${isAudio ? `<audio controls preload="metadata" style="width:100%;border-radius:var(--radius)" src="${r.view_link}"></audio>` : ''}
   ${r.izoh ? `<div style="background:var(--bg-2);padding:12px;border-radius:var(--radius);font-size:13px;line-height:1.55"><i class="ti ti-quote" style="color:var(--text-3);margin-right:6px"></i>${escapeHtml(r.izoh)}</div>` : ''}
   <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:12.5px">
     <div style="color:var(--text-3)">Mijoz</div><div>${escapeHtml(r.ism||'—')} <code class="mono">#${r.user_id}</code></div>
@@ -1362,7 +1435,8 @@ function openZapDetail(i) {
 </div>
 <div class="modal-foot">
   <button class="btn" onclick="closeModal()">Yopish</button>
-  ${isAudio ? `<a class="btn primary" href="${r.view_link}" target="_blank"><i class="ti ti-download"></i>Yuklab olish</a>` : ''}
+  ${isAudio && r.drive_link ? `<a class="btn" href="${r.drive_link}" target="_blank"><i class="ti ti-external-link"></i>Drive'da</a>` : ''}
+  ${isAudio ? `<a class="btn primary" href="${r.view_link}" download><i class="ti ti-download"></i>Yuklab olish</a>` : ''}
 </div>
 `);
 }
