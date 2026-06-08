@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- AROS Admin v7 — audio via n8n proxy (Drive 403 fix), date/hodim filter, stats card -->
+<!-- AROS Admin v8 — Filiallar filtrlari birga ishlaydi + KPI filterga moslashadi -->
 <html lang="uz" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -313,6 +313,7 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users"></i><span class="nav-label">Hammasi</span></a>
 <a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock"></i><span class="nav-label">Rollar</span></a>
 <a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store"></i><span class="nav-label">Filiallar</span></a>
+<a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
 <a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder"></i><span class="nav-label">Yuklanmalar</span></a>
 <a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register"></i><span class="nav-label">Bugalter</span></a>
 <div class="sb-grp">Sistema</div>
@@ -484,6 +485,7 @@ function renderScreen(s){
     case 'users-all': return renderUsersAll(root);
     case 'roles': return renderRoles(root);
     case 'filiallar': return renderFiliallar(root);
+    case 'ulanmagan': return renderUlanmagan(root);
     case 'yuklanmalar': return renderYuklanmalar(root);
     case 'bugalter': return renderBugalter(root);
     case 'audit': return renderAudit(root);
@@ -1066,9 +1068,11 @@ async function createRole(){
 
 // =========================================================
 // SCREEN: FILIALLAR (embedded CEO view, desktop)
+// Barcha filtrlar bir-birga ishlaydi, KPI har filterda yangilanadi
 // =========================================================
-let filiallarFilter = { yarim: (new Date().getDate() <= 15 ? 1 : 2), profil: 'all', search: '', sort: 'foiz_desc' };
-let currentFiliallar = [];
+let filiallarFilter = { yarim: (new Date().getDate() <= 15 ? 1 : 2), profil: 'all', search: '', sortKey: 'prognoz_foiz', sortDir: 'desc' };
+let allFiliallar = [];      // API'dan kelgan to'liq ro'yxat
+let currentFiliallar = [];  // hozir ko'rsatilayotgan (filterlangan + sortlangan), openFilDetail uchun
 
 async function renderFiliallar(root){
   root.innerHTML = topbar('Filiallar', 'CEO Dashboard', `
@@ -1079,9 +1083,9 @@ async function renderFiliallar(root){
     <button class="icon-btn" onclick="renderFiliallar(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
   `);
   const content = document.createElement('div');
-  content.innerHTML = `<div class="kpi-row"><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div></div><div class="skeleton" style="height:400px"></div>`;
+  content.innerHTML = `<div class="kpi-row" id="fil-kpi"><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div></div><div class="skeleton" style="height:400px"></div>`;
   root.appendChild(content);
-  
+
   document.getElementById('fil-yarim-sel').addEventListener('change', (e) => {
     filiallarFilter.yarim = parseInt(e.target.value);
     renderFiliallar(document.getElementById('screens'));
@@ -1090,74 +1094,148 @@ async function renderFiliallar(root){
   try {
     const data = await api('admin-ceo-data', { uid: UID, yarim: filiallarFilter.yarim });
     if (data.error) throw new Error(data.error);
-    
-    const j = data.jami || {};
-    const fils = data.filiallar || [];
-    currentFiliallar = fils;
-    
-    let displayed = fils;
-    if (filiallarFilter.profil !== 'all') {
-      displayed = fils.filter(f => f.is_franchise ? filiallarFilter.profil==='Franshiza' : f.profil === filiallarFilter.profil);
-    }
-    
-    const planFoiz = j.plan > 0 ? Math.round(j.bajarildi/j.plan*100) : 0;
-    const prognozFoizJami = j.plan > 0 ? Math.round(j.prognoz/j.plan*100) : 0;
+    allFiliallar = data.filiallar || [];
 
     content.innerHTML = `
-<div class="kpi-row">
-  <div class="kpi">
-    <div class="kpi-lbl"><i class="ti ti-target"></i>Plan</div>
-    <div class="kpi-val">${fmtShort(j.plan)}<span class="unit"> so'm</span></div>
-    <div class="kpi-delta" style="color:var(--text-3)">${j.active_count}/${data.total_count} aktiv filial</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-lbl"><i class="ti ti-check"></i>Bajarildi</div>
-    <div class="kpi-val">${fmtShort(j.bajarildi)}</div>
-    <div class="kpi-delta ${planFoiz>=80?'up':planFoiz>=50?'warn':'dn'}">${planFoiz}% plandan</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-lbl"><i class="ti ti-chart-line"></i>Prognoz</div>
-    <div class="kpi-val">${fmtShort(j.prognoz)}</div>
-    <div class="kpi-delta ${prognozFoizJami>=100?'up':'warn'}">${j.on_track_count} normal · ${j.at_risk_count} xavfli</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-lbl"><i class="ti ti-alert-triangle"></i>Qarzlar</div>
-    <div class="kpi-val" style="color:${j.qarz_fakt>0?'var(--err-text)':'var(--text)'}">${fmtShort(j.qarz_fakt)}</div>
-    <div class="kpi-delta dn">${fmtShort(j.muddati_utgan)} muddati o'tgan</div>
-  </div>
-</div>
+<div class="kpi-row" id="fil-kpi"></div>
 
 <div class="audit-toolbar">
-  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-    <div class="pill-sel ${filiallarFilter.profil==='all'?'active':''}" onclick="setFilProf('all')">Hammasi (${fils.length})</div>
-    <div class="pill-sel ${filiallarFilter.profil==='Zapchast'?'active':''}" onclick="setFilProf('Zapchast')">Zapchast</div>
-    <div class="pill-sel ${filiallarFilter.profil==='Aksessuar'?'active':''}" onclick="setFilProf('Aksessuar')">Aksessuar</div>
-    <div class="pill-sel ${filiallarFilter.profil==='Franshiza'?'active':''}" onclick="setFilProf('Franshiza')">Franshiza</div>
-  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center" id="fil-profils"></div>
   <input type="text" class="search-box" placeholder="Filial nomi..." id="fil-search" style="max-width:240px" value="${escapeHtml(filiallarFilter.search)}">
 </div>
 
 <div class="table-wrap">
-  <div class="table-head" style="grid-template-columns:2fr 100px 1fr 1fr 70px 1fr 1fr 90px">
-    <div onclick="sortFil('filial')" style="cursor:pointer">Filial</div>
+  <div class="table-head" style="grid-template-columns:2fr 100px 1fr 1fr 70px 70px 1fr 1fr 90px" id="fil-head">
+    <div data-sort="filial" style="cursor:pointer">Filial</div>
     <div>Profil</div>
-    <div onclick="sortFil('plan')" style="cursor:pointer">Plan ↓</div>
-    <div onclick="sortFil('bajarildi')" style="cursor:pointer">Bajarildi</div>
-    <div onclick="sortFil('foiz')" style="cursor:pointer">Foiz</div>
-    <div onclick="sortFil('prognoz')" style="cursor:pointer">Prognoz</div>
-    <div onclick="sortFil('qarz_fakt')" style="cursor:pointer">Qarz</div>
+    <div data-sort="plan" style="cursor:pointer">Plan</div>
+    <div data-sort="bajarildi" style="cursor:pointer">Bajarildi</div>
+    <div data-sort="foiz" style="cursor:pointer">Foiz</div>
+    <div data-sort="prognoz_foiz" style="cursor:pointer">Pr.foiz</div>
+    <div data-sort="prognoz" style="cursor:pointer">Pr.summa</div>
+    <div data-sort="qarz_fakt" style="cursor:pointer">Qarz</div>
     <div>Updated</div>
   </div>
-  <div id="fil-rows">${displayed.map((f,i) => filRow(f, fils.indexOf(f))).join('')}</div>
+  <div id="fil-rows"></div>
 </div>
 `;
 
     document.getElementById('fil-search').addEventListener('input', (e) => {
       filiallarFilter.search = e.target.value;
-      filterFilRows();
+      applyFilFilters();
     });
+    document.querySelectorAll('#fil-head [data-sort]').forEach(el => {
+      el.addEventListener('click', () => sortFil(el.dataset.sort));
+    });
+
+    applyFilFilters();  // dastlabki render
   } catch(e){
     content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// Yagona filtrlash + sortlash + KPI yangilash funksiyasi
+function applyFilFilters() {
+  // 1. Profil filter
+  let filtered = allFiliallar.slice();
+  if (filiallarFilter.profil !== 'all') {
+    filtered = filtered.filter(f => {
+      if (filiallarFilter.profil === 'Franshiza') return f.is_franchise;
+      return !f.is_franchise && f.profil === filiallarFilter.profil;
+    });
+  }
+  // 2. Search filter
+  const q = (filiallarFilter.search || '').toLowerCase().trim();
+  if (q) {
+    filtered = filtered.filter(f => (f.filial || '').toLowerCase().includes(q));
+  }
+  // 3. Sort
+  filtered.sort((a, b) => {
+    let av = a[filiallarFilter.sortKey];
+    let bv = b[filiallarFilter.sortKey];
+    if (av == null) av = (typeof bv === 'string') ? '' : 0;
+    if (bv == null) bv = (typeof av === 'string') ? '' : 0;
+    if (typeof av === 'string' || typeof bv === 'string') {
+      const cmp = String(av).localeCompare(String(bv));
+      return filiallarFilter.sortDir === 'desc' ? -cmp : cmp;
+    }
+    return filiallarFilter.sortDir === 'desc' ? Number(bv) - Number(av) : Number(av) - Number(bv);
+  });
+
+  currentFiliallar = filtered;
+
+  // 4. KPI faqat filterlangan filiallar bo'yicha
+  const nonFr = filtered.filter(f => !f.is_franchise);
+  const kpi = {
+    plan: nonFr.reduce((s,f) => s + Number(f.plan||0), 0),
+    bajarildi: filtered.reduce((s,f) => s + Number(f.bajarildi||0), 0),
+    prognoz: nonFr.reduce((s,f) => s + Number(f.prognoz||0), 0),
+    qarz_fakt: filtered.reduce((s,f) => s + Number(f.qarz_fakt||0), 0),
+    muddati_utgan: filtered.reduce((s,f) => s + Number(f.muddati_utgan||0), 0),
+    active_count: filtered.filter(f => Number(f.bajarildi||0) > 0).length,
+    total_count: filtered.length,
+    on_track_count: filtered.filter(f => Number(f.prognoz_foiz||0) >= 100 && Number(f.plan||0) > 0).length,
+    at_risk_count: filtered.filter(f => Number(f.prognoz_foiz||0) < 80 && Number(f.plan||0) > 0).length
+  };
+  const planFoiz = kpi.plan > 0 ? Math.round(kpi.bajarildi/kpi.plan*100) : 0;
+  const prognozFoizJami = kpi.plan > 0 ? Math.round(kpi.prognoz/kpi.plan*100) : 0;
+
+  const kpiEl = document.getElementById('fil-kpi');
+  if (kpiEl) kpiEl.innerHTML = `
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-target"></i>Plan</div>
+  <div class="kpi-val">${fmtShort(kpi.plan)}<span class="unit"> so'm</span></div>
+  <div class="kpi-delta" style="color:var(--text-3)">${kpi.active_count}/${kpi.total_count} aktiv filial</div>
+</div>
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-check"></i>Bajarildi</div>
+  <div class="kpi-val">${fmtShort(kpi.bajarildi)}</div>
+  <div class="kpi-delta ${planFoiz>=80?'up':planFoiz>=50?'warn':'dn'}">${planFoiz}% plandan</div>
+</div>
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-chart-line"></i>Prognoz</div>
+  <div class="kpi-val">${fmtShort(kpi.prognoz)}</div>
+  <div class="kpi-delta ${prognozFoizJami>=100?'up':'warn'}">${kpi.on_track_count} normal · ${kpi.at_risk_count} xavfli</div>
+</div>
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-alert-triangle"></i>Qarzlar</div>
+  <div class="kpi-val" style="color:${kpi.qarz_fakt>0?'var(--err-text)':'var(--text)'}">${fmtShort(kpi.qarz_fakt)}</div>
+  <div class="kpi-delta dn">${fmtShort(kpi.muddati_utgan)} muddati o'tgan</div>
+</div>
+  `;
+
+  // 5. Profil pill'lar (qiymatlar barcha filiallar bo'yicha, lekin aktiv profil belgilanadi)
+  const allCount = allFiliallar.length;
+  const zapCount = allFiliallar.filter(f => !f.is_franchise && f.profil === 'Zapchast').length;
+  const aksCount = allFiliallar.filter(f => !f.is_franchise && f.profil === 'Aksessuar').length;
+  const frCount = allFiliallar.filter(f => f.is_franchise).length;
+  const profilsEl = document.getElementById('fil-profils');
+  if (profilsEl) profilsEl.innerHTML = `
+<div class="pill-sel ${filiallarFilter.profil==='all'?'active':''}" onclick="setFilProf('all')">Hammasi (${allCount})</div>
+<div class="pill-sel ${filiallarFilter.profil==='Zapchast'?'active':''}" onclick="setFilProf('Zapchast')">Zapchast (${zapCount})</div>
+<div class="pill-sel ${filiallarFilter.profil==='Aksessuar'?'active':''}" onclick="setFilProf('Aksessuar')">Aksessuar (${aksCount})</div>
+<div class="pill-sel ${filiallarFilter.profil==='Franshiza'?'active':''}" onclick="setFilProf('Franshiza')">Franshiza (${frCount})</div>
+  `;
+
+  // 6. Sort indikatorlari column header'larda
+  document.querySelectorAll('#fil-head [data-sort]').forEach(el => {
+    const key = el.dataset.sort;
+    if (!el.dataset.label) el.dataset.label = el.textContent.replace(/[↓↑]/g,'').trim();
+    const isActive = key === filiallarFilter.sortKey;
+    const arrow = isActive ? (filiallarFilter.sortDir === 'desc' ? ' ↓' : ' ↑') : '';
+    el.textContent = el.dataset.label + arrow;
+    el.style.color = isActive ? 'var(--text)' : '';
+    el.style.fontWeight = isActive ? '600' : '';
+  });
+
+  // 7. Jadval
+  const rowsEl = document.getElementById('fil-rows');
+  if (rowsEl) {
+    if (filtered.length === 0) {
+      rowsEl.innerHTML = `<div class="empty" style="padding:32px"><i class="ti ti-search-off"></i><p>Filtr bo'yicha topilmadi</p></div>`;
+    } else {
+      rowsEl.innerHTML = filtered.map((f, i) => filRow(f, i)).join('');
+    }
   }
 }
 
@@ -1166,41 +1244,32 @@ function filRow(f, idx) {
   const prognozColor = f.prognoz_foiz >= 100 ? 'var(--ok-text)' : f.prognoz_foiz >= 80 ? 'var(--warn-text)' : 'var(--err-text)';
   const profilBadge = f.is_franchise ? '<span class="badge muted">Franshiza</span>' :
     f.profil === 'Aksessuar' ? '<span class="badge info">Aksessuar</span>' : '<span class="badge ok">Zapchast</span>';
-  return `<div class="table-row" data-filial="${escapeHtml((f.filial||'').toLowerCase())}" style="grid-template-columns:2fr 100px 1fr 1fr 70px 1fr 1fr 90px;cursor:pointer" onclick="openFilDetail(${idx})">
+  return `<div class="table-row" style="grid-template-columns:2fr 100px 1fr 1fr 70px 70px 1fr 1fr 90px;cursor:pointer" onclick="openFilDetail(${idx})">
     <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(f.filial||'—')}</div>
     <div>${profilBadge}</div>
     <div style="font-variant-numeric:tabular-nums">${f.plan>0?fmtShort(f.plan):'—'}</div>
     <div style="font-variant-numeric:tabular-nums">${f.bajarildi>0?fmtShort(f.bajarildi):'—'}</div>
     <div style="color:${foizColor};font-weight:500">${f.foiz}%</div>
-    <div style="color:${prognozColor};font-variant-numeric:tabular-nums">${f.prognoz>0?fmtShort(f.prognoz)+' ('+f.prognoz_foiz+'%)':'—'}</div>
+    <div style="color:${prognozColor};font-weight:500;font-variant-numeric:tabular-nums">${f.prognoz>0?f.prognoz_foiz+'%':'—'}</div>
+    <div style="color:${prognozColor};font-variant-numeric:tabular-nums">${f.prognoz>0?fmtShort(f.prognoz):'—'}</div>
     <div style="font-variant-numeric:tabular-nums;color:${f.qarz_fakt>0?'var(--err-text)':'var(--text-3)'}">${f.qarz_fakt>0?fmtShort(f.qarz_fakt):'—'}</div>
     <div style="font-size:11px;color:var(--text-3)">${escapeHtml(f.updated_at_str||'—')}</div>
   </div>`;
 }
 
-function setFilProf(p) { filiallarFilter.profil = p; renderFiliallar(document.getElementById('screens')); }
-
-function sortFil(key) {
-  const fils = [...currentFiliallar];
-  const desc = filiallarFilter.sort === key+'_desc';
-  fils.sort((a,b) => {
-    let av = a[key], bv = b[key];
-    if (typeof av === 'string') return desc ? bv.localeCompare(av) : av.localeCompare(bv);
-    return desc ? bv - av : av - bv;
-  });
-  filiallarFilter.sort = desc ? key+'_asc' : key+'_desc';
-  const wrap = document.getElementById('fil-rows');
-  if (wrap) {
-    wrap.innerHTML = fils.map(f => filRow(f, currentFiliallar.indexOf(f))).join('');
-    filterFilRows();
-  }
+function setFilProf(p) {
+  filiallarFilter.profil = p;
+  applyFilFilters();
 }
 
-function filterFilRows() {
-  const q = filiallarFilter.search.toLowerCase();
-  document.querySelectorAll('#fil-rows .table-row').forEach(row => {
-    row.style.display = (q === '' || row.dataset.filial.includes(q)) ? '' : 'none';
-  });
+function sortFil(key) {
+  if (filiallarFilter.sortKey === key) {
+    filiallarFilter.sortDir = filiallarFilter.sortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    filiallarFilter.sortKey = key;
+    filiallarFilter.sortDir = 'desc';
+  }
+  applyFilFilters();
 }
 
 function openFilDetail(idx) {
@@ -1248,6 +1317,194 @@ function openFilDetail(idx) {
   <a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/ceo.html?uid=${UID}&wid=${f.warehouse_id}" target="_blank"><i class="ti ti-external-link"></i>To'liq sahifa</a>
 </div>
 `);
+}
+
+// =========================================================
+// SCREEN: ULANMAGAN FILIALLAR (Aros API'da bor, biznikida yo'q)
+// =========================================================
+let unlinkedData = { unlinked: [], linked: [], total_aros: 0 };
+let unlinkedSearch = '';
+
+async function renderUlanmagan(root){
+  root.innerHTML = topbar('Ulanmagan filiallar', 'Aros API\'da bor, lekin biznikida yo\'q');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="kpi-row" id="unl-kpi">
+  <div class="kpi"><div class="kpi-lbl"><i class="ti ti-database"></i>Aros'da jami</div><div class="kpi-val skeleton" style="height:24px;width:60px"></div></div>
+  <div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected"></i>Ulangan</div><div class="kpi-val skeleton" style="height:24px;width:60px"></div></div>
+  <div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected-x"></i>Ulanmagan</div><div class="kpi-val skeleton" style="height:24px;width:60px"></div></div>
+</div>
+
+<div class="audit-toolbar">
+  <input type="text" class="search-box" placeholder="Filial nomi yoki ID..." id="unl-search" style="max-width:240px" value="${escapeHtml(unlinkedSearch)}">
+  <button class="icon-btn" onclick="refreshUnlinked()" title="Yangilash"><i class="ti ti-refresh"></i></button>
+</div>
+
+<div id="unl-content"><div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  root.appendChild(content);
+  document.getElementById('unl-search').addEventListener('input', (e) => {
+    unlinkedSearch = e.target.value;
+    renderUnlinkedRows();
+  });
+  await loadUnlinked();
+}
+
+async function loadUnlinked(){
+  try {
+    const data = await api('admin-unlinked-warehouses', { uid: UID });
+    if (data.error) throw new Error(data.error);
+    unlinkedData = data;
+    
+    const kpi = document.getElementById('unl-kpi');
+    if (kpi) kpi.innerHTML = `
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-database"></i>Aros'da jami</div><div class="kpi-val">${data.total_aros||0}</div><div class="kpi-delta" style="color:var(--text-3)">warehouse</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected"></i>Ulangan</div><div class="kpi-val" style="color:var(--ok-text)">${data.linked_count||0}</div><div class="kpi-delta up">cache'da bor</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected-x"></i>Ulanmagan</div><div class="kpi-val" style="color:${(data.unlinked_count||0)>0?'var(--warn-text)':'var(--text)'}">${data.unlinked_count||0}</div><div class="kpi-delta ${(data.unlinked_count||0)>0?'warn':''}">ulash kerak</div></div>
+`;
+    
+    const badge = document.getElementById('nav-unlinked-ct');
+    if (badge) {
+      if ((data.unlinked_count||0) > 0) {
+        badge.style.display = '';
+        badge.textContent = data.unlinked_count;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+    
+    renderUnlinkedRows();
+  } catch(e){
+    document.getElementById('unl-content').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderUnlinkedRows(){
+  const wrap = document.getElementById('unl-content');
+  if (!wrap) return;
+  const q = (unlinkedSearch||'').toLowerCase().trim();
+  let list = unlinkedData.unlinked || [];
+  if (q) list = list.filter(w => 
+    (w.name||'').toLowerCase().includes(q) || 
+    String(w.id).includes(q) ||
+    (w.name_uz||'').toLowerCase().includes(q));
+  
+  if (!list.length) {
+    wrap.innerHTML = `<div class="empty"><i class="ti ti-check"></i><p>${unlinkedSearch ? 'Qidiruvga mos kelmadi' : 'Barchasi ulangan ✓'}</p></div>`;
+    return;
+  }
+  
+  wrap.innerHTML = `
+<div style="margin-bottom:10px;font-size:12px;color:var(--text-3)">
+  <b>${list.length}</b> ulanmagan filial${q?' (filtrlangan)':''}
+</div>
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:80px 2fr 2fr 100px 120px">
+    <div>ID</div>
+    <div>Nomi (Uz)</div>
+    <div>Manzil</div>
+    <div>Module</div>
+    <div>Amal</div>
+  </div>
+  ${list.map(w => `<div class="table-row" style="grid-template-columns:80px 2fr 2fr 100px 120px">
+    <div style="font-variant-numeric:tabular-nums;font-weight:600">${w.id}</div>
+    <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(w.name_uz||w.name)}">${escapeHtml(w.name_uz||w.name||'—')}</div>
+    <div style="color:var(--text-3);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(w.address)}">${escapeHtml(w.address||'—')}</div>
+    <div><span class="badge muted" style="font-size:10px">${escapeHtml(w.module||'—')}</span></div>
+    <div><button class="btn primary sm" style="width:100%" onclick='openLinkModal(${JSON.stringify(w).replace(/'/g,"&#39;")})'><i class="ti ti-link"></i> Ulash</button></div>
+  </div>`).join('')}
+</div>
+`;
+}
+
+async function refreshUnlinked(){
+  document.getElementById('unl-content').innerHTML = '<div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div>';
+  await loadUnlinked();
+}
+
+function openLinkModal(w){
+  const defaultName = w.name_uz || w.name || ('Warehouse ' + w.id);
+  openModal(`
+<div style="padding:20px;max-width:480px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <i class="ti ti-link" style="font-size:24px;color:var(--accent)"></i>
+    <div>
+      <div style="font-size:16px;font-weight:600">Filial ulash</div>
+      <div style="font-size:12px;color:var(--text-3)">ID: <b>${w.id}</b> · ${escapeHtml(defaultName)}</div>
+    </div>
+  </div>
+  
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Filial nomi *</label>
+      <input type="text" class="search-box" id="link-filial" value="${escapeHtml(defaultName)}" style="width:100%;margin-top:4px">
+    </div>
+    
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Profil *</label>
+      <select class="select" id="link-profil" style="width:100%;height:36px;margin-top:4px">
+        <option value="Zapchast">Zapchast</option>
+        <option value="Aksessuar">Aksessuar</option>
+        <option value="Franshiza">Franshiza</option>
+      </select>
+    </div>
+    
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Oylik Plan (so'm)</label>
+      <input type="number" class="search-box" id="link-plan" value="0" min="0" style="width:100%;margin-top:4px">
+      <div style="font-size:10px;color:var(--text-3);margin-top:3px">Joriy oy uchun. Keyinroq qo'shimcha oylar uchun Sheets'da to'g'rilash mumkin.</div>
+    </div>
+    
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Qarz limit (so'm)</label>
+      <input type="number" class="search-box" id="link-qarz-limit" value="0" min="0" style="width:100%;margin-top:4px">
+    </div>
+    
+    <div style="background:var(--bg-2);border-radius:8px;padding:10px;font-size:11px;color:var(--text-3);line-height:1.5">
+      <i class="ti ti-info-circle"></i> Saqlangach: <b>FilialPlanlar</b> sheet'ga qator qo'shiladi. <b>Cache Builder</b> keyingi soatda yangi filial ma'lumotini Aros'dan olib boshlaydi. <b>warehouse_id = ${w.id}</b> bo'ladi.
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+    <button class="btn" onclick="closeModal()">Bekor</button>
+    <button class="btn primary" id="link-submit" onclick='submitLink(${w.id})'><i class="ti ti-check"></i> Saqlash</button>
+  </div>
+</div>
+`);
+}
+
+async function submitLink(warehouseId){
+  const filial = document.getElementById('link-filial').value.trim();
+  const profil = document.getElementById('link-profil').value;
+  const plan = parseFloat(document.getElementById('link-plan').value) || 0;
+  const qarzLimit = parseFloat(document.getElementById('link-qarz-limit').value) || 0;
+  
+  if (!filial) { alert('Filial nomi majburiy'); return; }
+  
+  const btn = document.getElementById('link-submit');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Saqlanyapti...'; }
+  
+  try {
+    const data = await api('admin-link-warehouse', {
+      uid: UID,
+      warehouse_id: warehouseId,
+      filial: filial,
+      profil: profil,
+      plan: plan,
+      qarz_limit: qarzLimit
+    });
+    if (data.error) throw new Error(data.error);
+    
+    closeModal();
+    // Refresh
+    await refreshUnlinked();
+    // Show success toast
+    if (window.showToast) window.showToast('Filial qo\'shildi: ' + filial, 'ok');
+    else alert('✓ Filial qo\'shildi: ' + filial);
+  } catch(e){
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Saqlash'; }
+    alert('Xato: ' + e.message);
+  }
 }
 
 // =========================================================
@@ -1349,19 +1606,21 @@ async function fetchZap(){
 `;
     }
     
-    // Filial dropdown
+    // Filial dropdown — har safar yangilanadi (filterlar kaskadlanishi uchun)
     const sel = document.getElementById('zap-filial');
-    if (sel && sel.options.length <= 1) {
+    if (sel) {
+      const curVal = yukFilter.filial;
       sel.innerHTML = '<option value="">Filial · hammasi</option>' + (data.filiallar || []).map(f =>
-        `<option value="${f.warehouse_id}" ${yukFilter.filial==String(f.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('');
+        `<option value="${f.warehouse_id}" ${curVal==String(f.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('');
       sel.onchange = (e) => { yukFilter.filial = e.target.value; fetchZap(); };
     }
     
-    // Hodim dropdown
+    // Hodim dropdown — har safar yangilanadi (filterlar kaskadlanishi uchun)
     const selH = document.getElementById('zap-hodim');
-    if (selH && selH.options.length <= 1) {
+    if (selH) {
+      const curVal = yukFilter.hodim;
       selH.innerHTML = '<option value="">Hodim · hammasi</option>' + (data.hodimlar || []).map(h =>
-        `<option value="${h.telegram_id}" ${yukFilter.hodim===h.telegram_id?'selected':''}>${escapeHtml(h.ism||'@'+h.telegram_id)} (${h.count})</option>`).join('');
+        `<option value="${h.telegram_id}" ${curVal===h.telegram_id?'selected':''}>${escapeHtml(h.ism||'@'+h.telegram_id)} (${h.count})</option>`).join('');
       selH.onchange = (e) => { yukFilter.hodim = e.target.value; fetchZap(); };
     }
     
