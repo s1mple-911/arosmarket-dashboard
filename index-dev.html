@@ -389,7 +389,7 @@ function kechikishBadge(t){
     ttl='Kutilgan: '+String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
   }catch(e){}
   if(diffMs>=0){
-    return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge kech-warn" title="'+ttl+'">⏳ +'+label+' bor</span>';
+    return '<span class="tr-auto">AUTO</span> <span class="kech-ok" title="'+ttl+'">⏳ +'+label+' bor</span>';
   } else {
     var cls='kech-warn';
     if(totalSoat>=24&&totalSoat<72) cls='kech-bad';
