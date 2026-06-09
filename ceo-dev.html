@@ -808,12 +808,17 @@ function renderCard(f,idx){
     return;
   }
 
-  // Bitta birlashgan badge: yuk + kassa + qarz, bosilsa modal ochiladi
+  // Yagona "Balansi" badge: yuk + qarz + kassa + transfer (hammasi $'da, kurs 12050)
+  var USD_RATE = 12050;
   var omborUsd = parseFloat(f.ombor_summa_usd||0);
   var turganPul = parseFloat(f.filialda_turgan_pul||0);
   var qarzFakt = parseFloat(f.qarz_fakt||0);
+  var transferSom = parseFloat(f.transfer_balance||0);
+  var balansUsd = omborUsd + (qarzFakt/USD_RATE) + (turganPul/USD_RATE) + (transferSom/USD_RATE);
+  var balansColor = balansUsd >= 0 ? '#16a34a' : '#ef4444';
+  var balansSign = balansUsd < 0 ? '-' : '';
   window['_om_'+idx]=f;
-  var omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:var(--bg3);border:0.5px solid var(--border);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;cursor:pointer;margin-left:4px;color:var(--text2)">📦 $'+fmtShort(omborUsd)+' <span style="color:var(--text3);margin:0 2px">·</span> 💰 '+fmtShort(turganPul)+' <span style="color:var(--text3);margin:0 2px">·</span> ⚠️ '+fmtShort(qarzFakt)+'</span>';
+  var omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:var(--bg3);border:0.5px solid var(--border);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;cursor:pointer;margin-left:4px;color:'+balansColor+'">💎 '+balansSign+'$'+fmtShort(Math.abs(balansUsd))+'</span>';
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+omborBadge+'</div>'+
     '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan)+'</div></div>'+
@@ -1907,17 +1912,34 @@ function showTransfersModal(transfers, filialNomi){
 
 function showOmborModal(f){
   if(typeof f==='string'){ try{ f=JSON.parse(f); }catch(e){ return; } }
+  var USD_RATE = 12050;
   var omborUsd = parseFloat(f.ombor_summa_usd||0);
   var omborSoni = parseFloat(f.ombor_mahsulot_soni||0);
-  var turganPul = parseFloat(f.filialda_turgan_pul||0);
+  var turganPulSom = parseFloat(f.filialda_turgan_pul||0);
   var turganKun = parseInt(f.filialda_turgan_kun||0);
-  var qarzFakt = parseFloat(f.qarz_fakt||0);
-  var qarzMuddati = parseFloat(f.muddati_utgan||0);
+  var qarzFaktSom = parseFloat(f.qarz_fakt||0);
+  var qarzMuddatiSom = parseFloat(f.muddati_utgan||(f.summary&&f.summary.muddati_utgan)||0);
+  var transferSom = parseFloat(f.transfer_balance||0);
+
+  // USDga konversiya (kurs 1$=12050)
+  var qarzUsd = qarzFaktSom / USD_RATE;
+  var kassaUsd = turganPulSom / USD_RATE;
+  var transferUsd = transferSom / USD_RATE;
+  var balansUsd = omborUsd + qarzUsd + kassaUsd + transferUsd;
+  var balansColor = balansUsd >= 0 ? '#16a34a' : '#ef4444';
 
   var html = '';
+
+  // JAMI BALANS (top header)
+  html += '<div style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border-radius:16px;padding:16px;text-align:center;margin-bottom:12px;box-shadow:0 4px 14px rgba(59,130,246,.25)">';
+  html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.9">💎 Umumiy balans</div>';
+  html += '<div style="font-size:28px;font-weight:800;margin-top:6px">'+(balansUsd<0?'-':'')+'$'+fmt(Math.abs(Math.round(balansUsd)))+'</div>';
+  html += '<div style="font-size:10px;opacity:.75;margin-top:4px">kurs: 1$ = '+fmt(USD_RATE)+' so\'m</div>';
+  html += '</div>';
+
   html += '<div style="display:flex;flex-direction:column;gap:10px">';
 
-  // 1. Ombordagi yuk ($)
+  // 1. Ombordagi yuk
   if(omborUsd > 0){
     html += '<div style="background:#EEEDFE;border:1px solid #d6d3f5;border-radius:14px;padding:14px">';
     html += '<div style="display:flex;align-items:center;gap:10px">';
@@ -1927,54 +1949,68 @@ function showOmborModal(f){
     html += '<div style="font-size:11px;color:#8b87b5;margin-top:2px">'+(omborSoni>0?fmt(omborSoni)+' dona mahsulot':'jami qiymat')+'</div>';
     html += '</div>';
     html += '<div style="text-align:right">';
-    html += '<div style="font-size:18px;font-weight:800;color:#26215C">$'+fmt(omborUsd)+'</div>';
+    html += '<div style="font-size:18px;font-weight:800;color:#26215C">$'+fmt(Math.round(omborUsd))+'</div>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
   }
 
-  // 2. Filialda turgan pul (junatilmagan)
-  if(turganPul > 0){
+  // 2. Qarz
+  if(qarzFaktSom > 0 || qarzMuddatiSom > 0){
+    html += '<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">⚠️</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#ef4444;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mijozlardagi qarz</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+fmt(qarzFaktSom)+' so\'m'+(qarzMuddatiSom>0?' · muddati o\'tgan: '+fmt(qarzMuddatiSom):'')+'</div>';
+    html += '</div>';
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:18px;font-weight:800;color:#ef4444">$'+fmt(Math.round(qarzUsd))+'</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // 3. Filialda turgan pul (kassa)
+  if(turganPulSom > 0){
     html += '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:14px">';
     html += '<div style="display:flex;align-items:center;gap:10px">';
     html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">💰</div>';
     html += '<div style="flex:1;min-width:0">';
     html += '<div style="font-size:11px;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Filialda turgan pul</div>';
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+turganKun+' kunlik · jo\'natilmagan</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+turganKun+' kunlik · jo\'natilmagan · '+fmt(turganPulSom)+' so\'m</div>';
     html += '</div>';
     html += '<div style="text-align:right">';
-    html += '<div style="font-size:16px;font-weight:800;color:#f59e0b">'+fmt(turganPul)+'</div>';
-    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '<div style="font-size:18px;font-weight:800;color:#f59e0b">$'+fmt(Math.round(kassaUsd))+'</div>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
   }
 
-  // 3. Umumiy qarz
-  if(qarzFakt > 0 || qarzMuddati > 0){
-    html += '<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
-    html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📊</div>';
+  // 4. Transfer (YANGI) - musbat (kelayotgan) yoki manfiy (chiqayotgan)
+  if(transferSom !== 0){
+    var trColor = transferSom >= 0 ? '#378ADD' : '#ef4444';
+    var trBg = transferSom >= 0 ? 'rgba(55,138,221,.08)' : 'rgba(239,68,68,.06)';
+    var trBorder = transferSom >= 0 ? 'rgba(55,138,221,.3)' : 'rgba(239,68,68,.25)';
+    var trBgIcon = transferSom >= 0 ? 'rgba(55,138,221,.15)' : 'rgba(239,68,68,.15)';
+    var trLabel = transferSom >= 0 ? 'Kelayotgan yuk (yo\'lda)' : 'Chiqib ketadigan yuk (yaratilgan)';
+    var trIcon = transferSom >= 0 ? '📥' : '📤';
+    var trSign = transferSom >= 0 ? '+' : '-';
+    html += '<div style="background:'+trBg+';border:1px solid '+trBorder+';border-radius:14px;padding:14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:38px;height:38px;border-radius:11px;background:'+trBgIcon+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">'+trIcon+'</div>';
     html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:11px;color:#ef4444;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Umumiy qarz</div>';
+    html += '<div style="font-size:11px;color:'+trColor+';font-weight:700;text-transform:uppercase;letter-spacing:.3px">Transfer</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+trLabel+' · '+fmt(Math.abs(transferSom))+' so\'m</div>';
     html += '</div>';
-    html += '</div>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-    html += '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">';
-    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Berilgan qarz</div>';
-    html += '<div style="font-size:15px;font-weight:800;color:var(--text);margin-top:4px">'+fmt(qarzFakt)+'</div>';
-    html += '<div style="font-size:9px;color:var(--text3);margin-top:1px">so\'m</div>';
-    html += '</div>';
-    html += '<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">';
-    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Muddati o\'tgan</div>';
-    html += '<div style="font-size:15px;font-weight:800;color:'+(qarzMuddati>0?'#ef4444':'var(--text2)')+';margin-top:4px">'+fmt(qarzMuddati)+'</div>';
-    html += '<div style="font-size:9px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:18px;font-weight:800;color:'+trColor+'">'+trSign+'$'+fmt(Math.abs(Math.round(transferUsd)))+'</div>';
     html += '</div>';
     html += '</div>';
     html += '</div>';
   }
 
-  if(omborUsd<=0 && turganPul<=0 && qarzFakt<=0 && qarzMuddati<=0){
+  if(omborUsd<=0 && turganPulSom<=0 && qarzFaktSom<=0 && qarzMuddatiSom<=0 && transferSom===0){
     html += '<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Ma\'lumot yo\'q</div>';
   }
 
