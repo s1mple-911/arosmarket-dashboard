@@ -363,19 +363,39 @@ function fmt(n){
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
 function kechikishBadge(t){
   if(!t||!t.is_auto) return '';
-  var soat=t.kechikish_soat, label=t.kechikish_label||'';
-  if(soat===null||soat===undefined) return '<span class="tr-auto">AUTO</span>';
-  if(soat===0||!label) return '<span class="tr-auto">AUTO</span> <span class="kech-ok">✓ vaqtida</span>';
-  var cls='kech-warn';
-  if(soat>=24&&soat<72) cls='kech-bad';
-  if(soat>=72) cls='kech-crit';
-  var ttl='';
-  if(t.kutilgan_yetkazish){
-    try{ var dt=new Date(t.kutilgan_yetkazish);
-      ttl='Kutilgan: '+String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
-    }catch(e){}
+  if(!t.kutilgan_yetkazish) return '<span class="tr-auto">AUTO</span>';
+  var nowMs=Date.now();
+  var deadlineMs=new Date(t.kutilgan_yetkazish).getTime();
+  if(isNaN(deadlineMs)) return '<span class="tr-auto">AUTO</span>';
+  var diffMs=deadlineMs-nowMs;
+  var absMs=Math.abs(diffMs);
+  var totalMin=Math.floor(absMs/60000);
+  var totalSoat=Math.floor(totalMin/60);
+  var kun=Math.floor(totalSoat/24);
+  var soat=totalSoat%24;
+  var minut=totalMin%60;
+  var label;
+  if(kun>0){
+    label=kun+' kun';
+    if(soat>0) label+=' '+soat+' soat';
+  } else if(totalSoat>0){
+    label=totalSoat+' soat';
+    if(minut>0) label+=' '+minut+' min';
+  } else {
+    label=totalMin+' min';
   }
-  return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge '+cls+'" title="'+ttl+'">⏰ '+label+'</span>';
+  var ttl='';
+  try{ var dt=new Date(t.kutilgan_yetkazish);
+    ttl='Kutilgan: '+String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+  }catch(e){}
+  if(diffMs>=0){
+    return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge kech-warn" title="'+ttl+'">⏳ +'+label+' bor</span>';
+  } else {
+    var cls='kech-warn';
+    if(totalSoat>=24&&totalSoat<72) cls='kech-bad';
+    if(totalSoat>=72) cls='kech-crit';
+    return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge '+cls+'" title="'+ttl+'">⏰ -'+label+' kechikdi</span>';
+  }
 }
 
 function fmtShort(n){
@@ -1249,8 +1269,8 @@ function renderDash(){
       return h;
     }
 
-    if(isAks){
-      // AKSESSUAR — sodda card, faqat plan/bajardi/foiz/qarz limit
+    if(false /* AKSESSUAR Zapchast bilan birlashtirildi — har doim quyidagi to'liq versiya */){
+      // AKSESSUAR — sodda card (eski versiya, hozir ishlatilmaydi)
       html+='<div class="progress-card">';
       html+='<div class="pc-top">';
       html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+profBadgeIdx+'</div>';
