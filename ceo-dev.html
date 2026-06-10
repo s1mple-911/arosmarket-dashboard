@@ -1917,11 +1917,41 @@ function renderTransferCard(t){
   return html;
 }
 
-function trSectionHeader(title, count, color){
-  return '<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;padding-bottom:6px;border-bottom:2px solid '+color+'40">'+
-    '<span style="font-size:11px;font-weight:800;color:'+color+';text-transform:uppercase;letter-spacing:.5px">'+title+'</span>'+
-    '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+color+'20;color:'+color+'">'+count+' ta</span>'+
-    '</div>';
+var _trModalData = { aktiv: [], bekor: [], brak: [] };
+var _trModalTab = 'aktiv';
+
+function trRenderTabContent(){
+  var contentEl=document.getElementById('tr-tab-content');
+  if(!contentEl) return;
+  var items=_trModalData[_trModalTab]||[];
+  var html='';
+  if(_trModalTab==='brak'){
+    html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px;background:var(--bg3);border-radius:12px;border:1px dashed var(--border)">🔜 Tez orada</div>';
+  } else if(items.length===0){
+    html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px">Transfer yo\'q</div>';
+  } else {
+    items.forEach(function(t){ html+=renderTransferCard(t); });
+  }
+  contentEl.innerHTML=html;
+}
+
+function trSwitchTab(tab){
+  _trModalTab=tab;
+  ['aktiv','bekor','brak'].forEach(function(k){
+    var el=document.getElementById('tr-tab-'+k);
+    if(!el) return;
+    var lbl=el.querySelector('.tr-tab-lbl');
+    if(k===tab){
+      el.style.background='var(--bg2)';
+      el.style.border='1.5px solid var(--border)';
+      if(lbl) lbl.style.color='#38bdf8';
+    } else {
+      el.style.background='transparent';
+      el.style.border='1.5px solid transparent';
+      if(lbl) lbl.style.color='var(--text3)';
+    }
+  });
+  trRenderTabContent();
 }
 
 function showTransfersModal(transfers, filialNomi){
@@ -1930,8 +1960,7 @@ function showTransfersModal(transfers, filialNomi){
   var subtitle=document.getElementById('tr-subtitle');
   var all=(transfers||[]).slice();
 
-  // 1-section: Yaratilgan / Yo'lda
-  var aktiv=all.filter(function(t){return t.status==='created'||t.status==='on_way';})
+  _trModalData.aktiv=all.filter(function(t){return t.status==='created'||t.status==='on_way';})
     .sort(function(a,b){
       if(a.status!==b.status){
         if(a.status==='on_way') return -1;
@@ -1940,37 +1969,31 @@ function showTransfersModal(transfers, filialNomi){
       }
       return (b.kun_otgan||0)-(a.kun_otgan||0);
     });
-
-  // 2-section: Bekor qilingan
-  var bekor=all.filter(function(t){return t.status==='canceled';})
+  _trModalData.bekor=all.filter(function(t){return t.status==='canceled';})
     .sort(function(a,b){return (b.kun_otgan||0)-(a.kun_otgan||0);});
+  _trModalData.brak=[];
 
   subtitle.textContent=(filialNomi||'')+' · '+all.length+' ta';
 
-  var html='';
+  // Segmented pill tabs (soni tepada, label pastda)
+  var tabsHtml='<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
+  var tabs=[
+    {key:'aktiv', lbl:'Aktiv', cnt:_trModalData.aktiv.length},
+    {key:'bekor', lbl:'Bekor', cnt:_trModalData.bekor.length},
+    {key:'brak',  lbl:'Brak baza', cnt:_trModalData.brak.length}
+  ];
+  tabs.forEach(function(tb){
+    tabsHtml+='<div id="tr-tab-'+tb.key+'" onclick="trSwitchTab(\''+tb.key+'\')" style="flex:1;text-align:center;padding:7px 4px;border-radius:22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s">';
+    tabsHtml+='<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.2">'+tb.cnt+'</div>';
+    tabsHtml+='<div class="tr-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:1px">'+tb.lbl+'</div>';
+    tabsHtml+='</div>';
+  });
+  tabsHtml+='</div>';
+  tabsHtml+='<div id="tr-tab-content"></div>';
 
-  // SECTION 1: Yaratilgan / Yo'lda
-  html+=trSectionHeader("Yaratilgan / Yo'lda", aktiv.length, '#378ADD');
-  if(aktiv.length>0){
-    aktiv.forEach(function(t){ html+=renderTransferCard(t); });
-  } else {
-    html+='<div style="text-align:center;color:var(--text3);padding:14px;font-size:11px">Aktiv transfer yo\'q</div>';
-  }
-
-  // SECTION 2: Bekor qilingan
-  html+=trSectionHeader('Bekor qilingan', bekor.length, '#ef4444');
-  if(bekor.length>0){
-    bekor.forEach(function(t){ html+=renderTransferCard(t); });
-  } else {
-    html+='<div style="text-align:center;color:var(--text3);padding:14px;font-size:11px">Bekor qilingan transfer yo\'q</div>';
-  }
-
-  // SECTION 3: Brak baza (placeholder — keyinroq to'ldiriladi)
-  html+=trSectionHeader('Brak baza', 0, '#a855f7');
-  html+='<div style="text-align:center;color:var(--text3);padding:14px;font-size:11px;background:var(--bg3);border-radius:10px;border:1px dashed var(--border)">🔜 Tez orada</div>';
-
-  list.innerHTML=html;
+  list.innerHTML=tabsHtml;
   modal.style.display='flex';
+  trSwitchTab('aktiv');
 }
 
 function showOmborModal(f){
