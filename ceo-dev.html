@@ -797,17 +797,20 @@ function renderCard(f,idx){
       }
       return true;
     });
-    if(trListAks.length>0){
+    var brakListAks=f.brak_transfers||[];
+    if(trListAks.length>0||brakListAks.length>0){
       var trCA=trListAks.filter(function(t){return t.status==='created';}).length;
       var trOA=trListAks.filter(function(t){return t.status==='on_way';}).length;
       var trXA=trListAks.filter(function(t){return t.status==='canceled';}).length;
       window['_tr_'+idx]=trListAks;
       window['_tf_'+idx]=f.filial||'';
-      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+      window['_trb_'+idx]=brakListAks;
+      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
         '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
         '<span style="font-size:11px;font-weight:700">'+(trCA>0?'<span style="color:#378ADD">'+trCA+' ta</span> ':'')+
         (trOA>0?'<span style="color:#ff9f0a">'+trOA+' yo\'lda</span> ':'')+
-        (trXA>0?'<span style="color:#ef4444">'+trXA+' bekor</span>':'')+'</span>'+
+        (trXA>0?'<span style="color:#ef4444">'+trXA+' bekor</span> ':'')+
+        (brakListAks.length>0?'<span style="color:#a855f7">'+brakListAks.length+' brak</span>':'')+'</span>'+
         '</div>';
       el.innerHTML+=trHtmlAks;
     }
@@ -876,17 +879,20 @@ function renderCard(f,idx){
     return true;
   });
   var trHtmlBlock='';
-  if(trList.length>0){
+  var brakList=f.brak_transfers||[];
+  if(trList.length>0||brakList.length>0){
     var trC=trList.filter(function(t){return t.status==='created';}).length;
     var trO=trList.filter(function(t){return t.status==='on_way';}).length;
     var trX=trList.filter(function(t){return t.status==='canceled';}).length;
     window['_tr_'+idx]=trList;
     window['_tf_'+idx]=f.filial||'';
-    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+    window['_trb_'+idx]=f.brak_transfers||[];
+    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
       '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
       '<span style="font-size:11px;font-weight:700">'+(trC>0?'<span style="color:#378ADD">'+trC+' ta</span> ':'')+
       (trO>0?'<span style="color:#ff9f0a">'+trO+' yo\'lda</span> ':'')+
-      (trX>0?'<span style="color:#ef4444">'+trX+' bekor</span>':'')+'</span>'+
+      (trX>0?'<span style="color:#ef4444">'+trX+' bekor</span> ':'')+
+      (brakList.length>0?'<span style="color:#a855f7">'+brakList.length+' brak</span>':'')+'</span>'+
       '</div>';
   }
   var cardEl=document.getElementById('fc-'+idx);
@@ -1132,7 +1138,8 @@ function renderDetDash(){
       return true;
     });
     var _fn=detFilial?detFilial.filial||'':'';
-    detTrBtn.onclick=function(){showTransfersModal(_tl,_fn);};
+    var _tlBrak=detFilialCache?(detFilialCache.brak_transfers||[]):[];
+    detTrBtn.onclick=function(){showTransfersModal(_tl,_fn,_tlBrak);};
   }
 }
 
@@ -1925,9 +1932,7 @@ function trRenderTabContent(){
   if(!contentEl) return;
   var items=_trModalData[_trModalTab]||[];
   var html='';
-  if(_trModalTab==='brak'){
-    html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px;background:var(--bg3);border-radius:12px;border:1px dashed var(--border)">🔜 Tez orada</div>';
-  } else if(items.length===0){
+  if(items.length===0){
     html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px">Transfer yo\'q</div>';
   } else {
     items.forEach(function(t){ html+=renderTransferCard(t); });
@@ -1954,7 +1959,7 @@ function trSwitchTab(tab){
   trRenderTabContent();
 }
 
-function showTransfersModal(transfers, filialNomi){
+function showTransfersModal(transfers, filialNomi, brakTransfers){
   var modal=document.getElementById('tr-modal');
   var list=document.getElementById('tr-list');
   var subtitle=document.getElementById('tr-subtitle');
@@ -1971,7 +1976,17 @@ function showTransfersModal(transfers, filialNomi){
     });
   _trModalData.bekor=all.filter(function(t){return t.status==='canceled';})
     .sort(function(a,b){return (b.kun_otgan||0)-(a.kun_otgan||0);});
-  _trModalData.brak=[];
+  _trModalData.brak=(brakTransfers||[]).slice()
+    .sort(function(a,b){
+      if(a.status!==b.status){
+        if(a.status==='on_way') return -1;
+        if(b.status==='on_way') return 1;
+        if(a.status==='created') return -1;
+        if(b.status==='created') return 1;
+        return 0;
+      }
+      return (b.kun_otgan||0)-(a.kun_otgan||0);
+    });
 
   subtitle.textContent=(filialNomi||'')+' · '+all.length+' ta';
 

@@ -1326,19 +1326,22 @@ function renderDash(){
         }
         return true;
       });
-      if(trAks.length > 0){
+      var brakAks = fd.brak_transfers||[];
+      if(trAks.length > 0 || brakAks.length > 0){
         var trCA = trAks.filter(function(t){return t.status==='created';});
         var trOA = trAks.filter(function(t){return t.status==='on_way';});
         var trXA = trAks.filter(function(t){return t.status==='canceled';});
         window._dashTransfers = trAks;
         window._dashFilial = fd.filial||'';
+        window._dashBrak = brakAks;
         html+='<div style="margin-top:8px;cursor:pointer" id="tr-dash-btn">';
         html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
         html+='<div style="font-size:10px;color:#378ADD;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
-        html+='<div style="display:flex;gap:8px;align-items:center">';
+        html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
         if(trCA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCA.length+' yaratilgan</span>';
         if(trOA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOA.length+' yo\'lda</span>';
         if(trXA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ef4444">'+trXA.length+' bekor</span>';
+        if(brakAks.length>0) html+='<span style="font-size:12px;font-weight:700;color:#a855f7">'+brakAks.length+' brak</span>';
         html+='</div>';
         html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
         html+='</div></div>';
@@ -1421,16 +1424,19 @@ function renderDash(){
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(fd.tugallanmagan_savdo_son||0)+' ta</div>';
     html+='</div>';
     html+='</div>';
-    if(transfers.length>0){
+    var brakMain = fd.brak_transfers||[];
+    if(transfers.length>0||brakMain.length>0){
       window._dashTransfers=transfers;
       window._dashFilial=fd.filial||'';
+      window._dashBrak=brakMain;
       html+='<div style="margin-top:8px;cursor:pointer" id="tr-dash-btn">';
       html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
       html+='<div style="font-size:10px;color:#378ADD;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
-      html+='<div style="display:flex;gap:8px;align-items:center">';
+      html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
       if(trCreated.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCreated.length+' yaratilgan</span>';
       if(trOnWay.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOnWay.length+' yo\'lda</span>';
       if(trCanceled.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ef4444">'+trCanceled.length+' bekor</span>';
+      if(brakMain.length>0) html+='<span style="font-size:12px;font-weight:700;color:#a855f7">'+brakMain.length+' brak</span>';
       html+='</div>';
       html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
       html+='</div></div>';
@@ -1534,7 +1540,7 @@ function renderDash(){
 
   document.getElementById('page-dash').innerHTML=html;
   var trBtn=document.getElementById('tr-dash-btn');
-  if(trBtn) trBtn.onclick=function(){showTransfersModal(window._dashTransfers,window._dashFilial);};
+  if(trBtn) trBtn.onclick=function(){showTransfersModal(window._dashTransfers,window._dashFilial,window._dashBrak);};
 }
 
 // =============================================
@@ -2806,9 +2812,7 @@ function trRenderTabContent(){
   if(!contentEl) return;
   var items=_trModalData[_trModalTab]||[];
   var html='';
-  if(_trModalTab==='brak'){
-    html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px;background:var(--bg3);border-radius:12px;border:1px dashed var(--border)">🔜 Tez orada</div>';
-  } else if(items.length===0){
+  if(items.length===0){
     html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px">Transfer yo\'q</div>';
   } else {
     items.forEach(function(t){ html+=renderTransferCard(t); });
@@ -2835,7 +2839,7 @@ function trSwitchTab(tab){
   trRenderTabContent();
 }
 
-function showTransfersModal(transfers, filialNomi){
+function showTransfersModal(transfers, filialNomi, brakTransfers){
   var modal=document.getElementById('tr-modal');
   var list=document.getElementById('tr-list');
   var subtitle=document.getElementById('tr-subtitle');
@@ -2852,7 +2856,17 @@ function showTransfersModal(transfers, filialNomi){
     });
   _trModalData.bekor=all.filter(function(t){return t.status==='canceled';})
     .sort(function(a,b){return (b.kun_otgan||0)-(a.kun_otgan||0);});
-  _trModalData.brak=[];
+  _trModalData.brak=(brakTransfers||[]).slice()
+    .sort(function(a,b){
+      if(a.status!==b.status){
+        if(a.status==='on_way') return -1;
+        if(b.status==='on_way') return 1;
+        if(a.status==='created') return -1;
+        if(b.status==='created') return 1;
+        return 0;
+      }
+      return (b.kun_otgan||0)-(a.kun_otgan||0);
+    });
 
   subtitle.textContent=(filialNomi||'')+' · '+all.length+' ta';
 
