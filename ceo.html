@@ -791,17 +791,26 @@ function renderCard(f,idx){
         var toW = String(t.to_warehouse_id||'');
         return toW===fWidAks || toW===fApiWidAks;
       }
+      if(t.status==='canceled') {
+        var fromWC = String(t.from_warehouse_id||'');
+        return fromWC===fWidAks || fromWC===fApiWidAks;
+      }
       return true;
     });
-    if(trListAks.length>0){
+    var brakListAks=f.brak_transfers||[];
+    if(trListAks.length>0||brakListAks.length>0){
       var trCA=trListAks.filter(function(t){return t.status==='created';}).length;
       var trOA=trListAks.filter(function(t){return t.status==='on_way';}).length;
+      var trXA=trListAks.filter(function(t){return t.status==='canceled';}).length;
       window['_tr_'+idx]=trListAks;
       window['_tf_'+idx]=f.filial||'';
-      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+      window['_trb_'+idx]=brakListAks;
+      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
         '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
         '<span style="font-size:11px;font-weight:700">'+(trCA>0?'<span style="color:#378ADD">'+trCA+' ta</span> ':'')+
-        (trOA>0?'<span style="color:#ff9f0a">'+trOA+' yo\'lda</span>':'')+'</span>'+
+        (trOA>0?'<span style="color:#ff9f0a">'+trOA+' yo\'lda</span> ':'')+
+        (trXA>0?'<span style="color:#ef4444">'+trXA+' bekor</span> ':'')+
+        (brakListAks.length>0?'<span style="color:#a855f7">'+brakListAks.length+' brak</span>':'')+'</span>'+
         '</div>';
       el.innerHTML+=trHtmlAks;
     }
@@ -863,18 +872,27 @@ function renderCard(f,idx){
       var toW = String(t.to_warehouse_id||'');
       return toW===fWid || toW===fApiWid;
     }
+    if(t.status==='canceled') {
+      var fromWC = String(t.from_warehouse_id||'');
+      return fromWC===fWid || fromWC===fApiWid;
+    }
     return true;
   });
   var trHtmlBlock='';
-  if(trList.length>0){
+  var brakList=f.brak_transfers||[];
+  if(trList.length>0||brakList.length>0){
     var trC=trList.filter(function(t){return t.status==='created';}).length;
     var trO=trList.filter(function(t){return t.status==='on_way';}).length;
+    var trX=trList.filter(function(t){return t.status==='canceled';}).length;
     window['_tr_'+idx]=trList;
     window['_tf_'+idx]=f.filial||'';
-    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+    window['_trb_'+idx]=f.brak_transfers||[];
+    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
       '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
       '<span style="font-size:11px;font-weight:700">'+(trC>0?'<span style="color:#378ADD">'+trC+' ta</span> ':'')+
-      (trO>0?'<span style="color:#ff9f0a">'+trO+' yo\'lda</span>':'')+'</span>'+
+      (trO>0?'<span style="color:#ff9f0a">'+trO+' yo\'lda</span> ':'')+
+      (trX>0?'<span style="color:#ef4444">'+trX+' bekor</span> ':'')+
+      (brakList.length>0?'<span style="color:#a855f7">'+brakList.length+' brak</span>':'')+'</span>'+
       '</div>';
   }
   var cardEl=document.getElementById('fc-'+idx);
@@ -1066,17 +1084,23 @@ function renderDetDash(){
       var toW = String(t.to_warehouse_id||'');
       return toW===detWid || toW===detApiWid;
     }
+    if(t.status==='canceled') {
+      var fromWC = String(t.from_warehouse_id||'');
+      return fromWC===detWid || fromWC===detApiWid;
+    }
     return true;
   });
   if(trAll.length>0){
     var trCreated=trAll.filter(function(t){return t.status==='created';});
     var trOnWay=trAll.filter(function(t){return t.status==='on_way';});
+    var trCancl=trAll.filter(function(t){return t.status==='canceled';});
     html+='<div style="margin-top:8px;cursor:pointer" id="det-tr-btn">';
     html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
     html+='<div style="font-size:10px;color:#378ADD;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
     html+='<div style="display:flex;gap:8px;align-items:center">';
     if(trCreated.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCreated.length+' yaratilgan</span>';
     if(trOnWay.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOnWay.length+' yo\'lda</span>';
+    if(trCancl.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ef4444">'+trCancl.length+' bekor</span>';
     html+='</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
     html+='</div></div>';
   }
@@ -1107,10 +1131,15 @@ function renderDetDash(){
         var toW = String(t.to_warehouse_id||'');
         return toW===_tlWid || toW===_tlApiWid;
       }
+      if(t.status==='canceled') {
+        var fromWC = String(t.from_warehouse_id||'');
+        return fromWC===_tlWid || fromWC===_tlApiWid;
+      }
       return true;
     });
     var _fn=detFilial?detFilial.filial||'':'';
-    detTrBtn.onclick=function(){showTransfersModal(_tl,_fn);};
+    var _tlBrak=detFilialCache?(detFilialCache.brak_transfers||[]):[];
+    detTrBtn.onclick=function(){showTransfersModal(_tl,_fn,_tlBrak);};
   }
 }
 
@@ -1852,62 +1881,134 @@ function downloadMmlBatch(){
   next();
 }
 
-function showTransfersModal(transfers, filialNomi){
+function renderTransferCard(t){
+  var sLabels={created:'Yaratilgan',on_way:"Yo'lda",canceled:'Bekor qilingan'};
+  var sColors={created:'#378ADD',on_way:'#ff9f0a',canceled:'#ef4444'};
+  var color=sColors[t.status]||'var(--text2)';
+  var label=sLabels[t.status]||t.status;
+  var pulseClass=t.status==='on_way'?'tr-onway':(t.status==='canceled'?'':'tr-created');
+  var link='https://admin.aros.uz/products-actions/product-transfer/'+t.id;
+  var sana=t.status==='created'?t.created_date:t.send_date;
+  var sanaLabel=t.status==='created'?'Yaratilgan':'Yuborilgan';
+  var kun=t.kun_otgan||0;
+  var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
+  var html='';
+  html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
+  html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D'+(t.status==='canceled'?';opacity:.85':'')+'">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  html+='<div style="display:flex;align-items:center;gap:5px">';
+  html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
+  html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
+  if(t.status!=='canceled') html+=kechikishBadge(t);
+  html+='</div>';
+  html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
+  html+='</div>';
+  html+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:10px">';
+  html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.from_warehouse||'—')+'</span>';
+  html+='<span style="color:var(--text3);flex-shrink:0;font-size:9px">→</span>';
+  html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.to_warehouse||'—')+'</span>';
+  html+='</div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Summa</span>';
+  html+='<div style="display:flex;align-items:center;gap:6px">';
+  html+='<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</span>';
+  if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:2px 7px;font-size:10px;text-decoration:none;flex-shrink:0">📞</a>';
+  html+='</div>';
+  html+='</div>';
+  if(t.comment) html+='<div style="margin-bottom:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--text3);font-style:italic">💬 '+t.comment+'</div>';
+  html+='<div style="padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
+  html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+sanaLabel+'</span>';
+  html+='<span style="font-size:10px;font-weight:600;color:var(--text2)">'+(sana||'—')+'</span>';
+  html+='</div>';
+  html+='</div></a>';
+  return html;
+}
+
+var _trModalData = { aktiv: [], bekor: [], brak: [] };
+var _trModalTab = 'aktiv';
+
+function trRenderTabContent(){
+  var contentEl=document.getElementById('tr-tab-content');
+  if(!contentEl) return;
+  var items=_trModalData[_trModalTab]||[];
+  var html='';
+  if(items.length===0){
+    html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px">Transfer yo\'q</div>';
+  } else {
+    items.forEach(function(t){ html+=renderTransferCard(t); });
+  }
+  contentEl.innerHTML=html;
+}
+
+function trSwitchTab(tab){
+  _trModalTab=tab;
+  ['aktiv','bekor','brak'].forEach(function(k){
+    var el=document.getElementById('tr-tab-'+k);
+    if(!el) return;
+    var lbl=el.querySelector('.tr-tab-lbl');
+    if(k===tab){
+      el.style.background='var(--bg2)';
+      el.style.border='1.5px solid var(--border)';
+      if(lbl) lbl.style.color='#38bdf8';
+    } else {
+      el.style.background='transparent';
+      el.style.border='1.5px solid transparent';
+      if(lbl) lbl.style.color='var(--text3)';
+    }
+  });
+  trRenderTabContent();
+}
+
+function showTransfersModal(transfers, filialNomi, brakTransfers){
   var modal=document.getElementById('tr-modal');
   var list=document.getElementById('tr-list');
   var subtitle=document.getElementById('tr-subtitle');
-  var sorted=(transfers||[]).slice().sort(function(a,b){
-    if(a.status!==b.status){
-      if(a.status==='on_way') return -1;
-      if(b.status==='on_way') return 1;
-      return 0;
-    }
-    return (b.kun_otgan||0)-(a.kun_otgan||0);
+  var all=(transfers||[]).slice();
+
+  _trModalData.aktiv=all.filter(function(t){return t.status==='created'||t.status==='on_way';})
+    .sort(function(a,b){
+      if(a.status!==b.status){
+        if(a.status==='on_way') return -1;
+        if(b.status==='on_way') return 1;
+        return 0;
+      }
+      return (b.kun_otgan||0)-(a.kun_otgan||0);
+    });
+  _trModalData.bekor=all.filter(function(t){return t.status==='canceled';})
+    .sort(function(a,b){return (b.kun_otgan||0)-(a.kun_otgan||0);});
+  _trModalData.brak=(brakTransfers||[]).slice()
+    .sort(function(a,b){
+      if(a.status!==b.status){
+        if(a.status==='on_way') return -1;
+        if(b.status==='on_way') return 1;
+        if(a.status==='created') return -1;
+        if(b.status==='created') return 1;
+        return 0;
+      }
+      return (b.kun_otgan||0)-(a.kun_otgan||0);
+    });
+
+  subtitle.textContent=(filialNomi||'')+' · '+all.length+' ta';
+
+  // Segmented pill tabs (soni tepada, label pastda)
+  var tabsHtml='<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
+  var tabs=[
+    {key:'aktiv', lbl:'Aktiv', cnt:_trModalData.aktiv.length},
+    {key:'bekor', lbl:'Bekor', cnt:_trModalData.bekor.length},
+    {key:'brak',  lbl:'Brak baza', cnt:_trModalData.brak.length}
+  ];
+  tabs.forEach(function(tb){
+    tabsHtml+='<div id="tr-tab-'+tb.key+'" onclick="trSwitchTab(\''+tb.key+'\')" style="flex:1;text-align:center;padding:7px 4px;border-radius:22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s">';
+    tabsHtml+='<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.2">'+tb.cnt+'</div>';
+    tabsHtml+='<div class="tr-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:1px">'+tb.lbl+'</div>';
+    tabsHtml+='</div>';
   });
-  subtitle.textContent=(filialNomi||'')+' · '+sorted.length+' ta';
-  var sLabels={created:'Yaratilgan',on_way:"Yo'lda"};
-  var sColors={created:'#378ADD',on_way:'#ff9f0a'};
-  var html='';
-  sorted.forEach(function(t){
-    var color=sColors[t.status]||'var(--text2)';
-    var label=sLabels[t.status]||t.status;
-    var pulseClass=t.status==='on_way'?'tr-onway':'tr-created';
-    var link='https://admin.aros.uz/products-actions/product-transfer/'+t.id;
-    var sana=t.status==='created'?t.created_date:t.send_date;
-    var sanaLabel=t.status==='created'?'Yaratilgan':'Yuborilgan';
-    var kun=t.kun_otgan||0;
-    var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
-    html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
-    html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html+='<div style="display:flex;align-items:center;gap:5px">';
-    html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
-    html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
-    html+=kechikishBadge(t);
-    html+='</div>';
-    html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
-    html+='</div>';
-    html+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:10px">';
-    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.from_warehouse||'—')+'</span>';
-    html+='<span style="color:var(--text3);flex-shrink:0;font-size:9px">→</span>';
-    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.to_warehouse||'—')+'</span>';
-    html+='</div>';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Summa</span>';
-    html+='<div style="display:flex;align-items:center;gap:6px">';
-    html+='<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</span>';
-    if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:2px 7px;font-size:10px;text-decoration:none;flex-shrink:0">📞</a>';
-    html+='</div>';
-    html+='</div>';
-    if(t.comment) html+='<div style="margin-bottom:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--text3);font-style:italic">💬 '+t.comment+'</div>';
-    html+='<div style="padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
-    html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+sanaLabel+'</span>';
-    html+='<span style="font-size:10px;font-weight:600;color:var(--text2)">'+(sana||'—')+'</span>';
-    html+='</div>';
-    html+='</div></a>';
-  });
-  list.innerHTML=html||'<div style="text-align:center;color:var(--text3);padding:20px">Transfer yo\'q</div>';
+  tabsHtml+='</div>';
+  tabsHtml+='<div id="tr-tab-content"></div>';
+
+  list.innerHTML=tabsHtml;
   modal.style.display='flex';
+  trSwitchTab('aktiv');
 }
 
 function showOmborModal(f){
