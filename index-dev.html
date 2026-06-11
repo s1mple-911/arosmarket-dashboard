@@ -1838,53 +1838,85 @@ function renderOchiq(confirmedOrders){
     }
     return s;
   }
-  // Savdo oyna - sortlangan + kun_otgan + sana + soat
-  if(filialData&&(filialData.tugallanmagan_savdo_son||0)>0){
-    var swItems=(filialData.swItems||[]).slice();
-    swItems.forEach(function(sw){ sw._kun = kunHisob(sw.created_datetime || sw.sana); });
-    swItems.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
-    
-    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
-    html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Savdo oyna ('+(filialData.tugallanmagan_savdo_son||0)+' ta)</div>';
-    if(swItems.length){
-      swItems.forEach(function(sw){
-        var swUrl='https://admin.aros.uz/orders/sales-window-list/'+sw.id;
-        var kun = sw._kun || 0;
-        var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
-        var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
-        var custName = sw.customer || '';
-        var clientIdBadge = sw.client_id ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD;margin-left:6px">ID '+sw.client_id+'</span>' : '';
-        // Usertype badge (M / BP)
-        var swUtypeBadge = '';
-        if(sw.usertype==='master') swUtypeBadge = '<span class="c-b c-b-m" style="margin-left:6px">M</span>';
-        else if(sw.usertype==='business_partner') swUtypeBadge = '<span class="c-b c-b-bp" style="margin-left:6px">BP</span>';
-        html+='<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
-        html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px">';
-        html+='<div style="flex:1;min-width:0">';
-        if(custName){
-          html+='<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:13px;font-weight:700;color:var(--text)">'+custName+'</div>'+swUtypeBadge+clientIdBadge+'</div>';
-        }
-        html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
-        html+='<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
-        html+='</div>';
-        html+='<div style="font-size:13px;color:var(--text3);flex-shrink:0;margin-left:8px">→</div>';
-        html+='</div></a>';
-      });
-    } else {
-      html+='<a href="https://admin.aros.uz/sales-window/" style="display:block;text-decoration:none;color:inherit">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px">';
-      html+='<div><div style="font-size:17px;font-weight:800;color:var(--amber)">'+fmt(filialData.tugallanmagan_savdo||0)+'</div>';
-      html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(filialData.tugallanmagan_savdo_son||0)+' ta savdo</div></div>';
-      html+='<div style="font-size:13px;color:var(--text3)">→</div>';
-      html+='</div></a>';
+  // Savdo oyna - 2 ta pill tab: Aktiv (saved+sent) / Qaytarilgan (returned)
+  var swAllItems = (filialData && filialData.swItems) ? filialData.swItems.slice() : [];
+  swAllItems.forEach(function(sw){ sw._kun = kunHisob(sw.created_datetime || sw.sana); });
+  var swAktiv = swAllItems.filter(function(s){ return s.status !== 'returned'; })
+    .sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
+  var swQaytarilgan = swAllItems.filter(function(s){ return s.status === 'returned'; })
+    .sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
+
+  function renderSwCard(sw){
+    var swUrl = 'https://admin.aros.uz/orders/sales-window-list/'+sw.id;
+    var kun = sw._kun || 0;
+    var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
+    var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
+    var custName = sw.customer || '';
+    var clientIdBadge = sw.client_id ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD;margin-left:6px">ID '+sw.client_id+'</span>' : '';
+    var swUtypeBadge = '';
+    if(sw.usertype==='master') swUtypeBadge = '<span class="c-b c-b-m" style="margin-left:6px">M</span>';
+    else if(sw.usertype==='business_partner') swUtypeBadge = '<span class="c-b c-b-bp" style="margin-left:6px">BP</span>';
+    // Status badge
+    var stLabels = { saved:'Saqlangan', sent:'Yuborilgan', returned:'Qaytarilgan' };
+    var stColors = { saved:'#ff9f0a', sent:'#378ADD', returned:'#ef4444' };
+    var stLbl = stLabels[sw.status] || sw.status || '';
+    var stClr = stColors[sw.status] || 'var(--text3)';
+    var stBadge = stLbl ? '<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+stClr+'26;color:'+stClr+';margin-left:6px">'+stLbl+'</span>' : '';
+    var priceColor = sw.status === 'returned' ? '#ef4444' : 'var(--amber)';
+    var cardOpacity = sw.status === 'returned' ? ';opacity:.9' : '';
+    var html = '';
+    html += '<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px'+cardOpacity+'">';
+    html += '<div style="flex:1;min-width:0">';
+    if(custName){
+      html += '<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:13px;font-weight:700;color:var(--text)">'+custName+'</div>'+swUtypeBadge+clientIdBadge+stBadge+'</div>';
+    } else if(stBadge){
+      html += '<div style="margin-bottom:4px">'+stBadge.replace('margin-left:6px','')+'</div>';
     }
-    html+='</div>';
+    html += '<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:'+priceColor+'">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
+    html += '</div>';
+    html += '<div style="font-size:13px;color:var(--text3);flex-shrink:0;margin-left:8px">→</div>';
+    html += '</div></a>';
+    return html;
+  }
+
+  // Section: faqat kerak bo'lsa ko'rsatish
+  if(swAktiv.length > 0 || swQaytarilgan.length > 0){
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
+    html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Savdo oyna ('+(swAktiv.length+swQaytarilgan.length)+' ta)</div>';
+
+    // Pill tabs — faqat data bor pill'lar
+    var swPills = [];
+    if(swAktiv.length > 0) swPills.push({ key:'aktiv', lbl:'Aktiv', cnt:swAktiv.length });
+    if(swQaytarilgan.length > 0) swPills.push({ key:'qaytarilgan', lbl:'Qaytarilgan', cnt:swQaytarilgan.length });
+
+    if(swPills.length > 1){
+      // 2 ta pill bo'lsa segmented switcher
+      html += '<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
+      swPills.forEach(function(p){
+        html += '<div id="sw-tab-'+p.key+'" onclick="swSwitchTab(\''+p.key+'\')" style="flex:1;text-align:center;padding:7px 4px;border-radius:22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s">';
+        html += '<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.2">'+p.cnt+'</div>';
+        html += '<div class="sw-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:1px">'+p.lbl+'</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '<div id="sw-tab-content"></div>';
+    html += '</div>';
+
+    // Globals
+    window._swModalData = { aktiv: swAktiv, qaytarilgan: swQaytarilgan };
+    window._swModalRender = renderSwCard;
+    window._swInitTab = swAktiv.length > 0 ? 'aktiv' : 'qaytarilgan';
   }
   if(!confirmedOrders.length){
-    if(!filialData||!filialData.tugallanmagan_savdo_son){
+    if(swAktiv.length === 0 && swQaytarilgan.length === 0){
       html+='<div class="empty"><div class="et">Ochiq order yoq</div></div>';
     }
-    el.innerHTML=html;return;
+    el.innerHTML=html;
+    if(window._swInitTab) swSwitchTab(window._swInitTab);
+    return;
   }
   // Confirmed orders: sort + kun + soat
   var sortedOrders = confirmedOrders.slice();
@@ -1928,6 +1960,36 @@ function renderOchiq(confirmedOrders){
     html+='</div></a>';
   });
   el.innerHTML=html;
+  if(window._swInitTab) swSwitchTab(window._swInitTab);
+}
+
+// Savdo oyna pill tab switch
+function swSwitchTab(tab){
+  var data = window._swModalData || { aktiv:[], qaytarilgan:[] };
+  var render = window._swModalRender;
+  if(!render) return;
+  ['aktiv','qaytarilgan'].forEach(function(k){
+    var el = document.getElementById('sw-tab-'+k);
+    if(!el) return;
+    var lbl = el.querySelector('.sw-tab-lbl');
+    if(k===tab){
+      el.style.background = 'var(--bg2)';
+      el.style.border = '1.5px solid var(--border)';
+      if(lbl) lbl.style.color = '#38bdf8';
+    } else {
+      el.style.background = 'transparent';
+      el.style.border = '1.5px solid transparent';
+      if(lbl) lbl.style.color = 'var(--text3)';
+    }
+  });
+  var contentEl = document.getElementById('sw-tab-content');
+  if(!contentEl) return;
+  var items = data[tab] || [];
+  if(items.length === 0){
+    contentEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;font-size:11px">Bo\'sh</div>';
+  } else {
+    contentEl.innerHTML = items.map(render).join('');
+  }
 }
 
 var isDark=true;
