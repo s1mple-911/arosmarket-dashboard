@@ -349,14 +349,21 @@ function renderHodim(d){
   // KPI bonus
   var filialFoizTxt = isArchive ? d.filial_foiz : d.filial_foiz;
   html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
-  html += '<span style="color:var(--text2)">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(filial '+filialFoizTxt+'% → '+(d.kpi_foiz||0)+'%)</span></span>';
+  html += '<span style="color:var(--text2)">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(shaxsiy savdo × '+(d.kpi_foiz||0)+'%, filial '+filialFoizTxt+'%)</span></span>';
   html += '<span style="font-weight:700;color:'+((d.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+(d.kpi_bonus>0?'+':'')+fmt(d.kpi_bonus||0)+' so\'m</span>';
   html += '</div>';
-  // Boshqaruv bonus (faqat boshliq)
+  // Boshqaruv bonus (faqat boshliq) — endi FILIAL savdo'ga ko'paytiriladi
   if(isBoshliq){
     html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
-    html += '<span style="color:var(--text2)">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">('+(d.boshqaruv_foiz||0)+'%)</span></span>';
+    html += '<span style="color:var(--text2)">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">(filial savdo × '+(d.boshqaruv_foiz||0)+'%)</span></span>';
     html += '<span style="font-weight:700;color:'+((d.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+(d.boshqaruv_bonus>0?'+':'')+fmt(d.boshqaruv_bonus||0)+' so\'m</span>';
+    html += '</div>';
+  }
+  // Fidoyilik bonusi — faqat > 0 bo'lsa
+  if((d.fidoyilik||0) > 0){
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+    html += '<span style="color:var(--text2)">💎 Fidoyilik bonusi</span>';
+    html += '<span style="font-weight:700;color:#fbbf24">+'+fmt(d.fidoyilik)+' so\'m</span>';
     html += '</div>';
   }
   html += '</div>';
