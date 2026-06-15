@@ -334,6 +334,7 @@ var isCeo = CEO_IDS.includes(String(uid));
 var isOk = OK_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
+var walletSummaryCache={};  // userId -> { total_in, total_out, full } | 'loading' | null
 var walletInfoCache={}; // user_id -> {debt_limit, debt_allowed_days}
 var allUsers=[]
 var pageDeadlines={};
@@ -448,6 +449,8 @@ function toggleOrders(id, userId, walletBalance, userName){
   if(ar){ar.textContent='▴';ar.classList.add('open');}
   // Yozuvlarni ham yuklaymiz
   loadRecordings(userId);
+  // Wallet summary'ni parallel yuklaymiz (60 kunlik kirim/chiqim) — agar hamyon balansi > 0 bo'lsa
+  if(walletBalance > 0) loadWalletSummary(userId);
   // faqat strictly o'tgan: deadline strictly < bugunStr
   function showOtgan(orders){
     var otg=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
@@ -470,6 +473,45 @@ function toggleOrders(id, userId, walletBalance, userName){
       showOtgan(ordersCache[userId]);
     })
     .catch(function(e){el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';});
+}
+
+// ============ WALLET SUMMARY (60 kunlik kirim/chiqim) ============
+// Qarzdor bosilgan zahoti parallel chaqiriladi. Hamyon balansi tagida kichik shriftda ko'rsatadi.
+function loadWalletSummary(userId){
+  if(!userId) return;
+  // Allaqachon yuklangan yoki yuklanmoqda — qayta yuklamaymiz
+  if(walletSummaryCache[userId] !== undefined) {
+    if(walletSummaryCache[userId] && walletSummaryCache[userId] !== 'loading'){
+      updateWalletSummaryUI(userId);
+    }
+    return;
+  }
+  walletSummaryCache[userId] = 'loading';
+  fetch(WALLET_TX_API+'?user_id='+userId)
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d=null;
+      try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){}
+      if(!d){ walletSummaryCache[userId] = null; return; }
+      walletSummaryCache[userId] = {
+        total_in: parseFloat(d.total_in) || 0,
+        total_out: parseFloat(d.total_out) || 0,
+        full: d
+      };
+      updateWalletSummaryUI(userId);
+    })
+    .catch(function(){ walletSummaryCache[userId] = null; });
+}
+
+function updateWalletSummaryUI(userId){
+  var s = walletSummaryCache[userId];
+  if(!s || s === 'loading') return;
+  var inStr = '60 kun kirim: +' + fmtFull(s.total_in) + ' so\'m';
+  var rows = document.querySelectorAll('[data-wallet-uid="'+userId+'"]');
+  for(var i=0;i<rows.length;i++){
+    var sub = rows[i].querySelector('.wallet-sub-line');
+    if(sub) sub.textContent = inStr;
+  }
 }
 
 function toggleInline(id, userId){
@@ -496,9 +538,14 @@ function fillOrders(el, orders, walletBalance, userId, userName){
   }
   var html='';
   if(walletBalance&&walletBalance>0){
-    html+='<div class="order-row" onclick="event.stopPropagation();showWalletTxModal('+(userId||0)+',\''+(userName||'').replace(/\'/g,"\\\\'")+'\','+walletBalance+')" style="background:rgba(34,197,94,.07);cursor:pointer">';
+    var cached = walletSummaryCache[userId];
+    var subText = 'Tranzaksiyalar →';
+    if(cached && cached !== 'loading'){
+      subText = '60 kun kirim: +' + fmtFull(cached.total_in||0) + ' so\'m';
+    }
+    html+='<div class="order-row" data-wallet-uid="'+userId+'" onclick="event.stopPropagation();showWalletTxModal('+(userId||0)+',\''+(userName||'').replace(/\'/g,"\\\\'")+'\','+walletBalance+')" style="background:rgba(34,197,94,.07);cursor:pointer">';
     html+='<div class="o-left"><div class="o-id" style="color:var(--green);font-weight:700">💰 Hamyon balansi</div>';
-    html+='<div class="o-deadline" style="color:var(--green)">Tranzaksiyalar →</div></div>';
+    html+='<div class="o-deadline wallet-sub-line" style="color:var(--green)">'+subText+'</div></div>';
     html+='<div class="o-amt" style="color:var(--green)">'+fmtFull(walletBalance)+' so\'m</div></div>';
   }
   orders.forEach(function(o){
@@ -662,9 +709,14 @@ function buildCard(r,id,color,lazy,orders){
     // Hamyon balansi qatori (agar bor bo'lsa) — clickable, tranzaksiyalar
     var wallet=Number(r.wallet_balance)||0;
     if(wallet>0){
-      ordersHtml+='<div onclick="event.stopPropagation();showWalletTxModal('+r.user_id+',\''+safeName+'\','+wallet+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);background:rgba(34,197,94,.05);margin:0 -16px 0 -70px;padding-left:70px;padding-right:16px">';
+      var cachedW = walletSummaryCache[r.user_id];
+      var subTextW = 'Tranzaksiyalar →';
+      if(cachedW && cachedW !== 'loading'){
+        subTextW = '60 kun kirim: +' + fmtFull(cachedW.total_in||0) + ' so\'m';
+      }
+      ordersHtml+='<div data-wallet-uid="'+r.user_id+'" onclick="event.stopPropagation();showWalletTxModal('+r.user_id+',\''+safeName+'\','+wallet+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);background:rgba(34,197,94,.05);margin:0 -16px 0 -70px;padding-left:70px;padding-right:16px">';
       ordersHtml+='<div><div style="font-size:11px;color:var(--green);font-weight:700">💰 Hamyon balansi</div>';
-      ordersHtml+='<div style="font-size:10px;color:var(--green);opacity:.85">Tranzaksiyalar →</div></div>';
+      ordersHtml+='<div class="wallet-sub-line" style="font-size:10px;color:var(--green);opacity:.85">'+subTextW+'</div></div>';
       ordersHtml+='<div style="font-size:12px;font-weight:700;color:var(--green)">'+fmtFull(wallet)+'</div></div>';
     }
     orders.forEach(function(o){
@@ -910,14 +962,23 @@ function loadKassaInfo(){
     .then(function(r){return r.json();})
     .then(function(data){
       var d = Array.isArray(data) ? data[0] : data;
+      window._kassaInfo = d || {};
+      var ph = document.getElementById('kassa-cards-placeholder');
+      if(!ph) return;
       if(d && !d.error){
-        window._kassaInfo = d;
-        // Agar dashboard render qilingan bo'lsa - placeholder'ga inject qilamiz
-        var ph = document.getElementById('kassa-cards-placeholder');
-        if(ph){ ph.outerHTML = renderKassaCards(d); }
+        ph.outerHTML = renderKassaCards(d);
+      } else {
+        // KASSA_API xato qaytardi (filial_not_found va h.k.) — 
+        // kamida transferlar tarixini ko'rsatamiz (mustaqil endpoint)
+        ph.outerHTML = renderKassaHistoryCard();
       }
     })
-    .catch(function(e){ console.error('Kassa info xato:', e); });
+    .catch(function(e){
+      // Tarmoq/CORS xato — fallback: kamida transferlar tarixi
+      console.error('Kassa info xato:', e);
+      var ph = document.getElementById('kassa-cards-placeholder');
+      if(ph) ph.outerHTML = renderKassaHistoryCard();
+    });
 }
 
 function renderKassaCards(d){
@@ -1771,6 +1832,8 @@ function load(){
         _hsOyTxt = new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
       }
       document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+_hsOyTxt;
+      // Agar URL'da wid yo'q bo'lsa, STATS_API javobidan userData.warehouse_id ni global wid ga olamiz
+      if(!wid && userData.warehouse_id) wid = String(userData.warehouse_id);
       // Filial stats yuklanyapti
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
@@ -1838,53 +1901,85 @@ function renderOchiq(confirmedOrders){
     }
     return s;
   }
-  // Savdo oyna - sortlangan + kun_otgan + sana + soat
-  if(filialData&&(filialData.tugallanmagan_savdo_son||0)>0){
-    var swItems=(filialData.swItems||[]).slice();
-    swItems.forEach(function(sw){ sw._kun = kunHisob(sw.created_datetime || sw.sana); });
-    swItems.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
-    
-    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
-    html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Savdo oyna ('+(filialData.tugallanmagan_savdo_son||0)+' ta)</div>';
-    if(swItems.length){
-      swItems.forEach(function(sw){
-        var swUrl='https://admin.aros.uz/orders/sales-window-list/'+sw.id;
-        var kun = sw._kun || 0;
-        var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
-        var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
-        var custName = sw.customer || '';
-        var clientIdBadge = sw.client_id ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD;margin-left:6px">ID '+sw.client_id+'</span>' : '';
-        // Usertype badge (M / BP)
-        var swUtypeBadge = '';
-        if(sw.usertype==='master') swUtypeBadge = '<span class="c-b c-b-m" style="margin-left:6px">M</span>';
-        else if(sw.usertype==='business_partner') swUtypeBadge = '<span class="c-b c-b-bp" style="margin-left:6px">BP</span>';
-        html+='<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
-        html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px">';
-        html+='<div style="flex:1;min-width:0">';
-        if(custName){
-          html+='<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:13px;font-weight:700;color:var(--text)">'+custName+'</div>'+swUtypeBadge+clientIdBadge+'</div>';
-        }
-        html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
-        html+='<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
-        html+='</div>';
-        html+='<div style="font-size:13px;color:var(--text3);flex-shrink:0;margin-left:8px">→</div>';
-        html+='</div></a>';
-      });
-    } else {
-      html+='<a href="https://admin.aros.uz/sales-window/" style="display:block;text-decoration:none;color:inherit">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px">';
-      html+='<div><div style="font-size:17px;font-weight:800;color:var(--amber)">'+fmt(filialData.tugallanmagan_savdo||0)+'</div>';
-      html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(filialData.tugallanmagan_savdo_son||0)+' ta savdo</div></div>';
-      html+='<div style="font-size:13px;color:var(--text3)">→</div>';
-      html+='</div></a>';
+  // Savdo oyna - 2 ta pill tab: Aktiv (saved+sent) / Qaytarilgan (returned)
+  var swAllItems = (filialData && filialData.swItems) ? filialData.swItems.slice() : [];
+  swAllItems.forEach(function(sw){ sw._kun = kunHisob(sw.created_datetime || sw.sana); });
+  var swAktiv = swAllItems.filter(function(s){ return s.status !== 'returned'; })
+    .sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
+  var swQaytarilgan = swAllItems.filter(function(s){ return s.status === 'returned'; })
+    .sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
+
+  function renderSwCard(sw){
+    var swUrl = 'https://admin.aros.uz/orders/sales-window-list/'+sw.id;
+    var kun = sw._kun || 0;
+    var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
+    var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
+    var custName = sw.customer || '';
+    var clientIdBadge = sw.client_id ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD;margin-left:6px">ID '+sw.client_id+'</span>' : '';
+    var swUtypeBadge = '';
+    if(sw.usertype==='master') swUtypeBadge = '<span class="c-b c-b-m" style="margin-left:6px">M</span>';
+    else if(sw.usertype==='business_partner') swUtypeBadge = '<span class="c-b c-b-bp" style="margin-left:6px">BP</span>';
+    // Status badge
+    var stLabels = { saved:'Saqlangan', sent:'Yuborilgan', returned:'Qaytarilgan' };
+    var stColors = { saved:'#ff9f0a', sent:'#378ADD', returned:'#ef4444' };
+    var stLbl = stLabels[sw.status] || sw.status || '';
+    var stClr = stColors[sw.status] || 'var(--text3)';
+    var stBadge = stLbl ? '<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+stClr+'26;color:'+stClr+';margin-left:6px">'+stLbl+'</span>' : '';
+    var priceColor = sw.status === 'returned' ? '#ef4444' : 'var(--amber)';
+    var cardOpacity = sw.status === 'returned' ? ';opacity:.9' : '';
+    var html = '';
+    html += '<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px'+cardOpacity+'">';
+    html += '<div style="flex:1;min-width:0">';
+    if(custName){
+      html += '<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:13px;font-weight:700;color:var(--text)">'+custName+'</div>'+swUtypeBadge+clientIdBadge+stBadge+'</div>';
+    } else if(stBadge){
+      html += '<div style="margin-bottom:4px">'+stBadge.replace('margin-left:6px','')+'</div>';
     }
-    html+='</div>';
+    html += '<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:'+priceColor+'">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
+    html += '</div>';
+    html += '<div style="font-size:13px;color:var(--text3);flex-shrink:0;margin-left:8px">→</div>';
+    html += '</div></a>';
+    return html;
+  }
+
+  // Section: faqat kerak bo'lsa ko'rsatish
+  if(swAktiv.length > 0 || swQaytarilgan.length > 0){
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
+    html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Savdo oyna ('+(swAktiv.length+swQaytarilgan.length)+' ta)</div>';
+
+    // Pill tabs — faqat data bor pill'lar
+    var swPills = [];
+    if(swAktiv.length > 0) swPills.push({ key:'aktiv', lbl:'Aktiv', cnt:swAktiv.length });
+    if(swQaytarilgan.length > 0) swPills.push({ key:'qaytarilgan', lbl:'Qaytarilgan', cnt:swQaytarilgan.length });
+
+    if(swPills.length > 1){
+      // 2 ta pill bo'lsa segmented switcher
+      html += '<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
+      swPills.forEach(function(p){
+        html += '<div id="sw-tab-'+p.key+'" onclick="swSwitchTab(\''+p.key+'\')" style="flex:1;text-align:center;padding:7px 4px;border-radius:22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s">';
+        html += '<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.2">'+p.cnt+'</div>';
+        html += '<div class="sw-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:1px">'+p.lbl+'</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '<div id="sw-tab-content"></div>';
+    html += '</div>';
+
+    // Globals
+    window._swModalData = { aktiv: swAktiv, qaytarilgan: swQaytarilgan };
+    window._swModalRender = renderSwCard;
+    window._swInitTab = swAktiv.length > 0 ? 'aktiv' : 'qaytarilgan';
   }
   if(!confirmedOrders.length){
-    if(!filialData||!filialData.tugallanmagan_savdo_son){
+    if(swAktiv.length === 0 && swQaytarilgan.length === 0){
       html+='<div class="empty"><div class="et">Ochiq order yoq</div></div>';
     }
-    el.innerHTML=html;return;
+    el.innerHTML=html;
+    if(window._swInitTab) swSwitchTab(window._swInitTab);
+    return;
   }
   // Confirmed orders: sort + kun + soat
   var sortedOrders = confirmedOrders.slice();
@@ -1928,6 +2023,36 @@ function renderOchiq(confirmedOrders){
     html+='</div></a>';
   });
   el.innerHTML=html;
+  if(window._swInitTab) swSwitchTab(window._swInitTab);
+}
+
+// Savdo oyna pill tab switch
+function swSwitchTab(tab){
+  var data = window._swModalData || { aktiv:[], qaytarilgan:[] };
+  var render = window._swModalRender;
+  if(!render) return;
+  ['aktiv','qaytarilgan'].forEach(function(k){
+    var el = document.getElementById('sw-tab-'+k);
+    if(!el) return;
+    var lbl = el.querySelector('.sw-tab-lbl');
+    if(k===tab){
+      el.style.background = 'var(--bg2)';
+      el.style.border = '1.5px solid var(--border)';
+      if(lbl) lbl.style.color = '#38bdf8';
+    } else {
+      el.style.background = 'transparent';
+      el.style.border = '1.5px solid transparent';
+      if(lbl) lbl.style.color = 'var(--text3)';
+    }
+  });
+  var contentEl = document.getElementById('sw-tab-content');
+  if(!contentEl) return;
+  var items = data[tab] || [];
+  if(items.length === 0){
+    contentEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;font-size:11px">Bo\'sh</div>';
+  } else {
+    contentEl.innerHTML = items.map(render).join('');
+  }
 }
 
 var isDark=true;
@@ -2372,13 +2497,26 @@ function showWalletTxModal(userId, userName, currentBalance){
   if(!modal) return;
   title.textContent = '💰 ' + (userName || 'Foydalanuvchi');
   subtitle.textContent = 'Hamyon balansi: ' + fmtFull(currentBalance||0) + ' so\'m';
-  body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
   modal.style.display = 'flex';
+  // Cache'da to'liq ma'lumot bor bo'lsa darhol ishlatamiz
+  var cached = walletSummaryCache[userId];
+  if(cached && cached !== 'loading' && cached.full){
+    renderWalletTx(cached.full);
+    return;
+  }
+  body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
   fetch(WALLET_TX_API+'?user_id='+userId)
     .then(function(r){return r.text();})
     .then(function(txt){
       var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
       if(!d){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Ma\'lumot yuklanmadi</div>'; return; }
+      // Cache'ga ham saqlaymiz, keyingi safar tezroq
+      walletSummaryCache[userId] = {
+        total_in: parseFloat(d.total_in)||0,
+        total_out: parseFloat(d.total_out)||0,
+        full: d
+      };
+      updateWalletSummaryUI(userId);
       renderWalletTx(d);
     })
     .catch(function(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
