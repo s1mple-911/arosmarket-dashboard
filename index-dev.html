@@ -962,14 +962,23 @@ function loadKassaInfo(){
     .then(function(r){return r.json();})
     .then(function(data){
       var d = Array.isArray(data) ? data[0] : data;
+      window._kassaInfo = d || {};
+      var ph = document.getElementById('kassa-cards-placeholder');
+      if(!ph) return;
       if(d && !d.error){
-        window._kassaInfo = d;
-        // Agar dashboard render qilingan bo'lsa - placeholder'ga inject qilamiz
-        var ph = document.getElementById('kassa-cards-placeholder');
-        if(ph){ ph.outerHTML = renderKassaCards(d); }
+        ph.outerHTML = renderKassaCards(d);
+      } else {
+        // KASSA_API xato qaytardi (filial_not_found va h.k.) — 
+        // kamida transferlar tarixini ko'rsatamiz (mustaqil endpoint)
+        ph.outerHTML = renderKassaHistoryCard();
       }
     })
-    .catch(function(e){ console.error('Kassa info xato:', e); });
+    .catch(function(e){
+      // Tarmoq/CORS xato — fallback: kamida transferlar tarixi
+      console.error('Kassa info xato:', e);
+      var ph = document.getElementById('kassa-cards-placeholder');
+      if(ph) ph.outerHTML = renderKassaHistoryCard();
+    });
 }
 
 function renderKassaCards(d){
