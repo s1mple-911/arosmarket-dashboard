@@ -957,39 +957,26 @@ function loadAllFiliallar(cb){
 // KASSA INFO (yopilmagan, junatilmagan, yo'lda)
 // =============================================
 function loadKassaInfo(){
-  console.log('[KASSA] loadKassaInfo chaqirildi, wid =', wid);
-  if(!wid){
-    console.warn('[KASSA] wid bosh — return');
-    return;
-  }
-  console.log('[KASSA] fetch:', KASSA_API+'?wid='+wid);
+  if(!wid) return;
   fetch(KASSA_API+'?wid='+wid+'&_='+Date.now())
-    .then(function(r){
-      console.log('[KASSA] javob status:', r.status);
-      return r.json();
-    })
+    .then(function(r){return r.json();})
     .then(function(data){
       var d = Array.isArray(data) ? data[0] : data;
-      console.log('[KASSA] javob ma\'lumoti:', d);
       window._kassaInfo = d || {};
       var ph = document.getElementById('kassa-cards-placeholder');
-      console.log('[KASSA] placeholder element:', ph);
-      if(!ph){
-        console.warn('[KASSA] placeholder topilmadi — DOM da yoq');
-        return;
-      }
+      if(!ph) return;
       if(d && !d.error){
-        console.log('[KASSA] success, renderKassaCards chaqirildi');
         ph.outerHTML = renderKassaCards(d);
       } else {
-        console.log('[KASSA] error/empty, fallback renderKassaHistoryCard');
+        // KASSA_API xato qaytardi (filial_not_found va h.k.) — 
+        // kamida transferlar tarixini ko'rsatamiz (mustaqil endpoint)
         ph.outerHTML = renderKassaHistoryCard();
       }
     })
     .catch(function(e){
-      console.error('[KASSA] fetch xato:', e);
+      // Tarmoq/CORS xato — fallback: kamida transferlar tarixi
+      console.error('Kassa info xato:', e);
       var ph = document.getElementById('kassa-cards-placeholder');
-      console.log('[KASSA] catch — placeholder:', ph);
       if(ph) ph.outerHTML = renderKassaHistoryCard();
     });
 }
@@ -1845,6 +1832,8 @@ function load(){
         _hsOyTxt = new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
       }
       document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+_hsOyTxt;
+      // Agar URL'da wid yo'q bo'lsa, STATS_API javobidan userData.warehouse_id ni global wid ga olamiz
+      if(!wid && userData.warehouse_id) wid = String(userData.warehouse_id);
       // Filial stats yuklanyapti
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
