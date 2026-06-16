@@ -461,7 +461,7 @@ function toggleOrders(id, userId, walletBalance, userName){
   if(ar){ar.textContent='▴';ar.classList.add('open');}
   // Yozuvlarni ham yuklaymiz
   loadRecordings(userId);
-  // Wallet summary'ni parallel yuklaymiz (60 kunlik kirim/chiqim) — agar hamyon balansi > 0 bo'lsa
+  // Wallet summary'ni parallel yuklaymiz (15 kunlik kirim/chiqim) — agar hamyon balansi > 0 bo'lsa
   if(walletBalance > 0) loadWalletSummary(userId);
   // faqat strictly o'tgan: deadline strictly < bugunStr
   function showOtgan(orders){
@@ -487,7 +487,7 @@ function toggleOrders(id, userId, walletBalance, userName){
     .catch(function(e){el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';});
 }
 
-// ============ WALLET SUMMARY (60 kunlik kirim/chiqim) ============
+// ============ WALLET SUMMARY (15 kunlik kirim/chiqim) ============
 // Qarzdor bosilgan zahoti parallel chaqiriladi. Hamyon balansi tagida kichik shriftda ko'rsatadi.
 function loadWalletSummary(userId){
   if(!userId) return;
@@ -518,7 +518,7 @@ function loadWalletSummary(userId){
 function updateWalletSummaryUI(userId){
   var s = walletSummaryCache[userId];
   if(!s || s === 'loading') return;
-  var inStr = '60 kun kirim: +' + fmtFull(s.total_in) + ' so\'m';
+  var inStr = '15 kun kirim: +' + fmtFull(s.total_in) + ' so\'m';
   var rows = document.querySelectorAll('[data-wallet-uid="'+userId+'"]');
   for(var i=0;i<rows.length;i++){
     var sub = rows[i].querySelector('.wallet-sub-line');
@@ -553,7 +553,7 @@ function fillOrders(el, orders, walletBalance, userId, userName){
     var cached = walletSummaryCache[userId];
     var subText = 'Tranzaksiyalar →';
     if(cached && cached !== 'loading'){
-      subText = '60 kun kirim: +' + fmtFull(cached.total_in||0) + ' so\'m';
+      subText = '15 kun kirim: +' + fmtFull(cached.total_in||0) + ' so\'m';
     }
     html+='<div class="order-row" data-wallet-uid="'+userId+'" onclick="event.stopPropagation();showWalletTxModal('+(userId||0)+',\''+(userName||'').replace(/\'/g,"\\\\'")+'\','+walletBalance+')" style="background:rgba(34,197,94,.07);cursor:pointer">';
     html+='<div class="o-left"><div class="o-id" style="color:var(--green);font-weight:700">💰 Hamyon balansi</div>';
@@ -724,7 +724,7 @@ function buildCard(r,id,color,lazy,orders){
       var cachedW = walletSummaryCache[r.user_id];
       var subTextW = 'Tranzaksiyalar →';
       if(cachedW && cachedW !== 'loading'){
-        subTextW = '60 kun kirim: +' + fmtFull(cachedW.total_in||0) + ' so\'m';
+        subTextW = '15 kun kirim: +' + fmtFull(cachedW.total_in||0) + ' so\'m';
       }
       ordersHtml+='<div data-wallet-uid="'+r.user_id+'" onclick="event.stopPropagation();showWalletTxModal('+r.user_id+',\''+safeName+'\','+wallet+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);background:rgba(34,197,94,.05);margin:0 -16px 0 -70px;padding-left:70px;padding-right:16px">';
       ordersHtml+='<div><div style="font-size:11px;color:var(--green);font-weight:700">💰 Hamyon balansi</div>';
@@ -1351,7 +1351,7 @@ function renderDash(){
       html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+profBadgeIdx+'</div>';
       html+='<div class="pc-plan">'+fmt(fd.plan)+' so\'m</div></div>';
       html+='<div style="display:flex;align-items:center;gap:10px">';
-      html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||(new Date().getMonth()+1))+'\',\''+(fd.yil||new Date().getFullYear())+'\')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
+      html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
       html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'%</div>';
       html+='</div>';
       html+='</div>';
@@ -1429,7 +1429,7 @@ function renderDash(){
     html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+profBadgeIdx+'</div>';
     html+='<div class="pc-plan">'+fmt(fd.plan)+' so\'m</div></div>';
     html+='<div style="display:flex;align-items:center;gap:10px">';
-    html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||(new Date().getMonth()+1))+'\',\''+(fd.yil||new Date().getFullYear())+'\')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
+    html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
     html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'%</div>';
     html+='</div>';
     html+='</div>';
@@ -2555,8 +2555,8 @@ function renderWalletTx(d){
     if(parts.length===3) return parts[2]+'.'+parts[1]+'.'+parts[0]+(timePart?' '+timePart:'');
     return s;
   }
-  // Sarlavha (oxirgi 60 kun)
-  var html = '<div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.3px">Oxirgi 60 kun</div>';
+  // Sarlavha (oxirgi 15 kun)
+  var html = '<div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.3px">Oxirgi 15 kun</div>';
   // Summary
   html += '<div style="display:flex;gap:8px;margin-bottom:14px">';
   html += '<div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:10px 12px">';
@@ -2568,7 +2568,7 @@ function renderWalletTx(d){
   html += '<div style="font-size:14px;font-weight:800;color:var(--red)">-'+fmtFull(totalOut)+'</div>';
   html += '</div></div>';
   if(!transactions.length){
-    html += '<div style="text-align:center;padding:30px;color:var(--text3)">Oxirgi 60 kunda tranzaksiya yo\'q</div>';
+    html += '<div style="text-align:center;padding:30px;color:var(--text3)">Oxirgi 15 kunda tranzaksiya yo\'q</div>';
     body.innerHTML = html;
     return;
   }
@@ -2598,20 +2598,24 @@ function renderWalletTx(d){
 }
 
 // ===================== CALENDAR =====================
-function openCalendar(wid, filialNomi, oy, yil){
+function openCalendar(wid, filialNomi, oy, yil, yarim){
   var modal = document.getElementById('cal-modal');
   var title = document.getElementById('cal-title');
   var subtitle = document.getElementById('cal-subtitle');
   var body = document.getElementById('cal-body');
   title.textContent = '📅 ' + (filialNomi||'Kalendar');
-  subtitle.textContent = (OY[parseInt(oy)-1]||'') + ' ' + yil;
+  var ySuffix = yarim ? ' ' + yarim + '-yarim' : '';
+  subtitle.textContent = (OY[parseInt(oy)-1]||'') + ySuffix + ' ' + yil;
   body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
   modal.style.display = 'flex';
   // Wid ni global saqlaymiz (MML uchun)
   window._calWid = parseInt(wid) || 0;
   window._calOy = parseInt(oy) || 0;
   window._calYil = parseInt(yil) || 0;
-  fetch(CALENDAR_API+'?wid='+wid+'&oy='+oy+'&yil='+yil)
+  window._calYarim = parseInt(yarim) || 0;
+  var url = CALENDAR_API+'?wid='+wid+'&oy='+oy+'&yil='+yil;
+  if(yarim) url += '&yarim='+yarim;
+  fetch(url)
     .then(function(r){return r.text();})
     .then(function(txt){
       var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
