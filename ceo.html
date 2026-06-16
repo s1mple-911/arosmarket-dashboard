@@ -312,7 +312,7 @@ function doLogout(){
   window.location.href = 'login.html';
 }
 
-var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247','262679293','1865951955'];
+var CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247','262679293'];
 var isCeo   = CEO_IDS.includes(String(uid));
 
 var BUGALTER_IDS = ['1255605633','1432724','1373701411','262679293'];
@@ -855,8 +855,7 @@ function renderCard(f,idx){
     '</div>'+
     '<div class="fc-mini" style="margin-top:0">'+
     '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</span></div></div>'+
-    '<div class="fc-m"><div class="fc-m-lbl">Savdo oyna</div><div class="fc-m-val" style="color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div></div>'+
-    '<div class="fc-m"><div class="fc-m-lbl">Savdo soni</div><div class="fc-m-val" style="color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>'+
+    '<div class="fc-m"><div class="fc-m-lbl">Savdo oyna</div><div class="fc-m-val" style="color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+(f.tugallanmagan_savdo_son||0)+' ta</span></div></div>'+
     '</div>'+
     buildQarzLimitBar()+
     ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
@@ -940,7 +939,8 @@ function openDetail(f){
   var isDev = curPage.indexOf('-dev') !== -1;
   var indexFile = isDev ? 'index-dev.html' : 'index.html';
   var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
-  var indexUrl = basePath + indexFile + '?uid=' + uid + '&wid=' + f.warehouse_id;
+  var indexUrl = basePath + indexFile + '?uid=' + uid + '&wid=' + f.warehouse_id
+    + '&oy=' + curOy + '&yil=' + curYil + '&yarim=' + (curYarim||0);
   console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
   if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
     window.Telegram.WebApp.openLink(indexUrl);
@@ -1069,8 +1069,7 @@ function renderDetDash(){
   var dConfOrders = detFilialCache ? (detFilialCache.confirmedOrders||[]) : (f.confirmedOrders||[]);
   var dConfSum = dConfOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
   html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px;cursor:pointer" onclick="showConfirmedModal()"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Ochiq buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(dConfSum)+'</div><div style="font-size:10px;color:var(--text3);margin-top:2px">'+dConfOrders.length+' ta →</div></div>';
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo oyna</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div></div>';
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo soni</div><div style="font-size:13px;font-weight:800;color:var(--text2)">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>';
+  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo oyna</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div><div style="font-size:10px;color:var(--text3);margin-top:2px">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>';
   html+='</div>';
   var allTrAll=detFilialCache?(detFilialCache.transfers||[]):[];
   var detWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : String(f.warehouse_id || '');
