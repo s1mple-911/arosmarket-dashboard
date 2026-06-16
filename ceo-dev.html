@@ -939,7 +939,8 @@ function openDetail(f){
   var isDev = curPage.indexOf('-dev') !== -1;
   var indexFile = isDev ? 'index-dev.html' : 'index.html';
   var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
-  var indexUrl = basePath + indexFile + '?uid=' + uid + '&wid=' + f.warehouse_id;
+  var indexUrl = basePath + indexFile + '?uid=' + uid + '&wid=' + f.warehouse_id
+    + '&oy=' + curOy + '&yil=' + curYil + '&yarim=' + (curYarim||0);
   console.log('openDetail wid='+f.warehouse_id+' url='+indexUrl);
   if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
     window.Telegram.WebApp.openLink(indexUrl);

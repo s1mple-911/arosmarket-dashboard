@@ -243,7 +243,19 @@ function defaultYarim(y, m){
   }
   return 1;
 }
-var curYarim = defaultYarim(_bmNow.getUTCFullYear(), _bmNow.getUTCMonth()+1);
+// URL'dan oy/yil/yarim — CEO sahifasidan o'tilsa shu davrni saqlaymiz
+var _urlParams = new URLSearchParams(window.location.search);
+var _urlOy = parseInt(_urlParams.get('oy'));
+var _urlYil = parseInt(_urlParams.get('yil'));
+var _urlYarim = _urlParams.get('yarim');
+var curOy = (!isNaN(_urlOy) && _urlOy >= 1 && _urlOy <= 12) ? _urlOy : (_bmNow.getUTCMonth()+1);
+var curYil = (!isNaN(_urlYil) && _urlYil >= 2020) ? _urlYil : _bmNow.getUTCFullYear();
+var curYarim;
+if(_urlYarim !== null && _urlYarim !== '') {
+  curYarim = parseInt(_urlYarim) || 0;
+} else {
+  curYarim = defaultYarim(curYil, curOy);
+}
 function getOyNomi(m, y, yarim){
   var base = OY[m-1] + ' ' + y;
   if(!yarim) return base;
@@ -927,7 +939,9 @@ function onPageTypeFilter(pageId, type){
 function loadFilialStats(cb){
   var wid2 = wid || userData.warehouse_id || '';
   if(!wid2){ filialData=null; if(cb) cb(); return; }
-  fetch(FILIAL_API+'?wid='+wid2)
+  var url = FILIAL_API + '?wid=' + wid2 + '&oy=' + curOy + '&yil=' + curYil;
+  if(curYarim) url += '&yarim=' + curYarim;
+  fetch(url)
     .then(function(r){return r.text();})
     .then(function(txt){
       try{var raw=JSON.parse(txt);filialData=Array.isArray(raw)?raw[0]:raw;}catch(e){filialData=null;}
@@ -1827,9 +1841,9 @@ function load(){
       document.getElementById('hn').textContent=userData.ism||'Hodim';
       var _hsOyTxt;
       if(curYarim){
-        _hsOyTxt = OY[_bmNow.getUTCMonth()] + ' ' + curYarim + '-yarim ' + _bmNow.getUTCFullYear();
+        _hsOyTxt = OY[curOy-1] + ' ' + curYarim + '-yarim ' + curYil;
       } else {
-        _hsOyTxt = new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
+        _hsOyTxt = OY[curOy-1] + ' ' + curYil;
       }
       document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+_hsOyTxt;
       // Agar URL'da wid yo'q bo'lsa, STATS_API javobidan userData.warehouse_id ni global wid ga olamiz
