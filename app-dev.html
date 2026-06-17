@@ -145,7 +145,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="scr" id="screen-signup">
     <div class="back" onclick="go('welcome')"><div class="b">←</div>Orqaga</div>
     <div class="auth-wrap">
-      <div class="logo"><div class="m">A</div><b>Ro'yxatdan o'tish</b><small id="signupSub">Telefon raqam va parol kiriting</small></div>
+      <div class="logo"><div class="m">A</div><b>Ro'yxatdan o'tish</b><small id="signupSub">Ma'lumotlaringizni tasdiqlang</small></div>
+      <div class="fld"><label>Telegram ID</label><input class="inp" id="suUid" inputmode="numeric" placeholder="masalan 1255605633"></div>
       <div class="fld"><label>Telefon raqam</label><input class="inp" id="suPhone" inputmode="tel" placeholder="+998 90 123 45 67"></div>
       <div class="fld"><label>Parol yarating</label><input class="inp" id="suParol" type="password" placeholder="kamida 4 ta belgi"></div>
       <div class="fld"><label>Parolni takrorlang</label><input class="inp" id="suParol2" type="password" placeholder="••••••"></div>
@@ -283,7 +284,7 @@ async function init(){
 
 // ===== Signup prep =====
 function prepSignup(){
-  // ism/filial oldindan STATS dan (uid Telegram'dan avtomatik)
+  document.getElementById('suUid').value = uid||'';  // default qiymat (avtomatik), tahrirlasa ham bo'ladi
   if(uid) fetch(STATS_API+'?uid='+uid).then(function(r){return r.json();}).then(function(d){
     var u=(d&&d.user)?d.user:(Array.isArray(d)&&d[0]&&d[0].user?d[0].user:null);
     if(u){ prefill={ism:u.ism||'', wid:(u.warehouse_id||wid||null), warehouse_name:u.warehouse_name||''};
@@ -313,17 +314,19 @@ async function doLogin(){
 
 // ===== Signup =====
 async function doSignup(){
+  var su=(document.getElementById('suUid').value||'').trim() || uid;
   var phone=document.getElementById('suPhone').value.trim();
   var p1=document.getElementById('suParol').value.trim();
   var p2=document.getElementById('suParol2').value.trim();
   var err=document.getElementById('suErr'); err.textContent='';
-  if(!uid){ err.textContent='Telegram orqali oching (ID aniqlanmadi)'; return; }
+  if(!su){ err.textContent='Telegram ID kiriting'; return; }
   if(!phone || digits(phone).length<7){ err.textContent='Telefon raqamni to\'g\'ri kiriting'; return; }
   if(p1.length<4){ err.textContent='Parol kamida 4 ta belgi'; return; }
   if(p1!==p2){ err.textContent='Parollar mos kelmadi'; return; }
+  uid=su;
   var btn=document.getElementById('suBtn'); btn.disabled=true; var old=btn.textContent; btn.innerHTML='<span class="spin"></span>';
   try{
-    var r=await postForm(SIGNUP_API,{uid:uid, telefon:digits(phone), parol:p1, ism:prefill.ism||'', wid:(prefill.wid||(wid?parseInt(wid):'')), warehouse_name:prefill.warehouse_name||''});
+    var r=await postForm(SIGNUP_API,{uid:su, telefon:digits(phone), parol:p1, ism:prefill.ism||'', wid:(prefill.wid||(wid?parseInt(wid):'')), warehouse_name:prefill.warehouse_name||''});
     var d=await r.json();
     if(d && d.success && d.token){ saveSession(d); go('hub'); }
     else { err.textContent=(d&&d.message)||'Xatolik'; btn.disabled=false; btn.textContent=old; }
