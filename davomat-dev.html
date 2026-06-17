@@ -152,7 +152,7 @@ var running = false;
 var stream = null;
 var modelsReady = false;
 var gps = { lat:null, lng:null, ok:false };
-var blinkSeen = false, eyeWasOpen = false, blinkAt = 0;
+var blinkSeen = false, eyeWasOpen = false, blinkAt = 0, earOpenMax = 0, scanStartedAt = 0;
 var lastDescriptor = null, lastFaceScore = 0;
 var enrollSamples = [];
 var nextAction = 'kirish';
@@ -270,7 +270,7 @@ document.getElementById('mainBtn').addEventListener('click', function(){
 
 async function startScan(){
   if(!modelsReady){ return; }
-  blinkSeen=false; eyeWasOpen=false; blinkAt=0; lastDescriptor=null; enrollSamples=[];
+  blinkSeen=false; eyeWasOpen=false; blinkAt=0; earOpenMax=0; scanStartedAt=Date.now(); lastDescriptor=null; enrollSamples=[];
   // kamera
   try{
     stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:480, height:480 }, audio:false });
@@ -310,10 +310,11 @@ async function loop(){
   lastFaceScore = det.detection.score;
   lastDescriptor = Array.from(det.descriptor);
 
-  // blink (liveness)
+  // blink (liveness) — nisbiy aniqlash: har kishining ochiq ko'ziga moslashadi
   var e = (ear(det.landmarks.getLeftEye()) + ear(det.landmarks.getRightEye())) / 2;
-  if(e > EAR_OPEN){ eyeWasOpen = true; }
-  if(eyeWasOpen && e < EAR_CLOSED){ blinkSeen = true; }
+  if(e > earOpenMax){ earOpenMax = e; }
+  if(e >= 0.24){ eyeWasOpen = true; }
+  if(eyeWasOpen && (e < 0.21 || (earOpenMax >= 0.24 && e < earOpenMax*0.74))){ blinkSeen = true; }
   renderChips();
 
   if(mode==='enroll'){
@@ -326,9 +327,13 @@ async function loop(){
 
   // checkin
   if(!blinkSeen){
-    setRing('wait');
-    setTitle('Tiriklik tekshiruvi','👁 Iltimos, bir marta ko\'zingizni pirpirating');
-    return schedule();
+    if(scanStartedAt && (Date.now()-scanStartedAt) > 15000){
+      blinkSeen = true;  // 15s zaxira — qotib qolmaslik uchun
+    } else {
+      setRing('wait');
+      setTitle('Tiriklik tekshiruvi','👁 Iltimos, sekin bir marta ko\'zingizni yuming va oching');
+      return schedule();
+    }
   }
   if(!blinkAt) blinkAt = Date.now();
   if(mode==='checkin' && !gps.ok && (Date.now()-blinkAt) < 3500){
