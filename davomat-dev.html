@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Davomat — Aros Market</title>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.min.js"></script>
+<style>
+:root{
+  --bg:#f4f5f7; --bg2:#ffffff; --bg3:#eceef1;
+  --text:#1a1d21; --text2:#5b6470; --text3:#9aa3ad;
+  --line:#e3e6ea; --accent:#378ADD;
+  --green:#1faa59; --amber:#e8a33d; --red:#e0524b;
+  --ring:#d4d9df;
+}
+[data-theme="dark"]{
+  --bg:#0f1216; --bg2:#171b20; --bg3:#21262d;
+  --text:#e8ebee; --text2:#9aa3ad; --text3:#5b6470;
+  --line:#262b32; --accent:#4f9ae6;
+  --ring:#2c333b;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; display:flex; flex-direction:column;
+  padding:16px; max-width:480px; margin:0 auto;
+}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.top h1{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.top .sub{font-size:12px;color:var(--text3);margin-top:2px}
+.icon-btn{width:38px;height:38px;border-radius:11px;background:var(--bg3);border:none;
+  display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;color:var(--text2)}
+
+/* Camera */
+.cam-wrap{position:relative;width:240px;height:240px;margin:8px auto 0;}
+.cam-ring{position:absolute;inset:-6px;border-radius:50%;border:4px solid var(--ring);
+  transition:border-color .25s ease, box-shadow .25s ease;}
+.cam-ring.scan{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+.cam-ring.wait{border-color:var(--amber);box-shadow:0 0 0 4px color-mix(in srgb,var(--amber) 18%,transparent)}
+.cam-ring.ok{border-color:var(--green);box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 20%,transparent)}
+.cam-ring.fail{border-color:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 20%,transparent)}
+.cam-circle{position:absolute;inset:0;border-radius:50%;overflow:hidden;background:#000}
+video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam-emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:60px;background:var(--bg3);color:var(--text3)}
+
+/* Status */
+.status{text-align:center;margin-top:22px}
+.status .big{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.status .small{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.45;min-height:18px}
+
+/* Chips */
+.chips{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.chip{font-size:12px;padding:6px 11px;border-radius:9px;background:var(--bg3);color:var(--text2);
+  display:flex;align-items:center;gap:5px}
+.chip b{color:var(--text)}
+.chip.on{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+.chip.off{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
+
+/* Button */
+.btn{width:100%;margin-top:24px;padding:16px;border-radius:14px;border:none;font-size:16px;
+  font-weight:700;cursor:pointer;background:var(--accent);color:#fff;transition:opacity .15s, transform .1s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:var(--bg3);color:var(--text)}
+
+/* Records */
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:18px}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:12px;font-weight:700}
+.rec{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+.rec:last-child{border-bottom:none}
+.rec .l{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600}
+.rec .dot{width:9px;height:9px;border-radius:50%}
+.rec .t{font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums}
+.empty{font-size:13px;color:var(--text3);text-align:center;padding:6px 0}
+
+.admin{margin-top:14px}
+.admin .btn{margin-top:0;font-size:14px;padding:13px}
+
+.flex-grow{flex:1}
+.foot{text-align:center;font-size:11px;color:var(--text3);margin-top:18px}
+.hidden{display:none!important}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;
+  border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div>
+    <h1>Davomat</h1>
+    <div class="sub" id="userline">Yuklanmoqda…</div>
+  </div>
+  <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+</div>
+
+<div class="cam-wrap">
+  <div class="cam-ring" id="ring"></div>
+  <div class="cam-circle">
+    <video id="video" autoplay muted playsinline></video>
+    <div class="cam-emoji" id="camEmoji">📷</div>
+  </div>
+</div>
+
+<div class="status">
+  <div class="big" id="stTitle">Tayyorlanmoqda…</div>
+  <div class="small" id="stSub">Modellar yuklanmoqda</div>
+</div>
+
+<div class="chips" id="chips"></div>
+
+<button class="btn" id="mainBtn" disabled>Kuting…</button>
+
+<div class="card hidden" id="recCard">
+  <h3>Bugungi davomat</h3>
+  <div id="recList"><div class="empty">Hali yozuv yo'q</div></div>
+</div>
+
+<div class="admin hidden" id="adminBox">
+  <button class="btn ghost" id="locBtn" onclick="setBranchLocation()">📍 Shu joyni filial lokatsiyasi qilib belgilash</button>
+</div>
+
+<div class="flex-grow"></div>
+<div class="foot">Yuz + GPS tasdiqlash · Aros Market</div>
+
+<script>
+// ---------- Config ----------
+var API = 'https://n8n.arosmarket.com/webhook';
+var ENROLL_API = API + '/aros-davomat-enroll';
+var CHECKIN_API = API + '/aros-davomat-checkin';
+var STATUS_API  = API + '/aros-davomat-status';
+var SETLOC_API  = API + '/aros-davomat-setloc';
+var STATS_API   = API + '/aros-cache-stats';
+function postForm(url,obj){ var b=Object.keys(obj).map(function(k){ var v=obj[k]; return encodeURIComponent(k)+'='+encodeURIComponent(v==null?'':v); }).join('&'); return fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}); }
+var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model';
+var CEO_IDS = ['1255605633','8236030365','1432724','1373701411','331245247'];
+var FACE_MATCH_THRESHOLD = 0.5;  // past = qattiqroq
+var EAR_CLOSED = 0.21, EAR_OPEN = 0.27;  // blink chegaralari
+
+// ---------- State ----------
+var tg = window.Telegram && window.Telegram.WebApp;
+if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
+var qp = new URLSearchParams(location.search);
+var uid = qp.get('uid') || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? String(tg.initDataUnsafe.user.id) : '');
+var wid = qp.get('wid') || '';
+var ism = '', warehouseName = '';
+var mode = 'checkin';      // 'enroll' | 'checkin'
+var phase = 'init';        // init|ready|scanning|blink|busy|done
+var running = false;
+var stream = null;
+var modelsReady = false;
+var gps = { lat:null, lng:null, ok:false };
+var blinkSeen = false, eyeWasOpen = false;
+var lastDescriptor = null, lastFaceScore = 0;
+var enrollSamples = [];
+var nextAction = 'kirish';
+
+// ---------- Theme ----------
+function toggleTheme(){
+  var d = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', d?'light':'dark');
+  document.getElementById('themeBtn').textContent = d?'🌙':'☀️';
+  try{ localStorage.setItem('aros-theme', d?'light':'dark'); }catch(e){}
+}
+(function(){ try{ var t=localStorage.getItem('aros-theme'); if(t){ document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').textContent = t==='dark'?'☀️':'🌙'; } }catch(e){} })();
+
+// ---------- UI helpers ----------
+function setTitle(t,s){ document.getElementById('stTitle').textContent=t; if(s!==undefined) document.getElementById('stSub').innerHTML=s; }
+function setRing(c){ document.getElementById('ring').className='cam-ring'+(c?' '+c:''); }
+function setBtn(txt,enabled){ var b=document.getElementById('mainBtn'); b.innerHTML=txt; b.disabled=!enabled; }
+function renderChips(){
+  var el=document.getElementById('chips'); var h='';
+  h+='<div class="chip '+(gps.ok?'on':'off')+'">📍 '+(gps.ok?'GPS bor':'GPS yo\'q')+'</div>';
+  h+='<div class="chip '+(blinkSeen?'on':'')+'">👁 '+(blinkSeen?'Tiriklik OK':'Pirpiratish')+'</div>';
+  el.innerHTML=h;
+}
+
+// ---------- Init ----------
+window.addEventListener('load', init);
+async function init(){
+  if(!uid){ setTitle('Xato','Foydalanuvchi aniqlanmadi'); return; }
+  // user info (ism, warehouse) — enrollment uchun
+  fetchUser();
+  // GPS
+  requestGPS();
+  // CEO admin box
+  if(CEO_IDS.indexOf(String(uid))!==-1){ document.getElementById('adminBox').classList.remove('hidden'); }
+  // Models
+  try{
+    setTitle('Tayyorlanmoqda…','Yuz modellari yuklanmoqda');
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+    modelsReady = true;
+  }catch(e){
+    setTitle('Model xatosi','Internetni tekshiring va sahifani qayta oching');
+    return;
+  }
+  // Status — ro'yxatdan o'tganmi?
+  await loadStatus();
+}
+
+function fetchUser(){
+  fetch(STATS_API+'?uid='+uid).then(function(r){return r.json();}).then(function(d){
+    var u = (d && d.user) ? d.user : (Array.isArray(d)&&d[0]&&d[0].user?d[0].user:null);
+    if(u){
+      ism = u.ism || '';
+      warehouseName = u.warehouse_name || '';
+      if(!wid && u.warehouse_id) wid = String(u.warehouse_id);
+      document.getElementById('userline').textContent = (ism||'Hodim') + (warehouseName?(' · '+warehouseName):'');
+    }
+  }).catch(function(){});
+}
+
+function requestGPS(){
+  if(!navigator.geolocation){ gps.ok=false; renderChips(); return; }
+  navigator.geolocation.getCurrentPosition(function(p){
+    gps.lat=p.coords.latitude; gps.lng=p.coords.longitude; gps.ok=true; renderChips();
+  }, function(){ gps.ok=false; renderChips(); }, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
+}
+
+async function loadStatus(){
+  try{
+    var r = await fetch(STATUS_API+'?uid='+uid);
+    var d = await r.json();
+    if(Array.isArray(d)) d=d[0];
+    if(d && d.ism && !ism){ ism=d.ism; document.getElementById('userline').textContent=ism; }
+    if(d && !d.enrolled){
+      mode='enroll';
+      setTitle('Ro\'yxatdan o\'tish','Avval yuzingizni ro\'yxatdan o\'tkazamiz');
+      setBtn('Yuzni ro\'yxatdan o\'tkazish', true);
+      document.getElementById('camEmoji').textContent='🙂';
+    } else {
+      mode='checkin';
+      nextAction = (d && d.keyingi_amal) ? d.keyingi_amal : 'kirish';
+      renderRecords(d ? d.bugun : []);
+      document.getElementById('recCard').classList.remove('hidden');
+      setTitle('Tayyor', 'Tugmani bosing va yuzingizni kameraga to\'g\'rilang');
+      setBtn(nextAction==='kirish'?'✅ Kirish (ishni boshlash)':'🏁 Chiqish (ishni tugatish)', true);
+      document.getElementById('camEmoji').textContent='📷';
+    }
+    phase='ready'; renderChips();
+  }catch(e){
+    setTitle('Server xatosi','Status yuklanmadi, qayta urinib ko\'ring');
+    setBtn('Qayta urinish', true);
+    document.getElementById('mainBtn').onclick=function(){ location.reload(); };
+  }
+}
+
+function renderRecords(list){
+  var el=document.getElementById('recList');
+  if(!list || !list.length){ el.innerHTML='<div class="empty">Bugun hali yozuv yo\'q</div>'; return; }
+  var h='';
+  list.forEach(function(r){
+    var kir = r.turi==='kirish';
+    var t = r.vaqt ? new Date(r.vaqt).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}) : '';
+    h+='<div class="rec"><div class="l"><span class="dot" style="background:'+(kir?'var(--green)':'var(--amber)')+'"></span>'
+      +(kir?'Kirish':'Chiqish')+'</div><div class="t">'+t+'</div></div>';
+  });
+  el.innerHTML=h;
+}
+
+// ---------- Main button ----------
+document.getElementById('mainBtn').addEventListener('click', function(){
+  if(phase==='ready' || phase==='done') startScan();
+});
+
+async function startScan(){
+  if(!modelsReady){ return; }
+  blinkSeen=false; eyeWasOpen=false; lastDescriptor=null; enrollSamples=[];
+  // kamera
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:480, height:480 }, audio:false });
+    var v=document.getElementById('video'); v.srcObject=stream; await v.play();
+    document.getElementById('camEmoji').classList.add('hidden');
+  }catch(e){
+    setTitle('Kamera ochilmadi','Brauzerda kameraga ruxsat bering');
+    return;
+  }
+  if(mode==='checkin' && !gps.ok){ requestGPS(); }
+  phase = (mode==='enroll') ? 'scanning' : 'scanning';
+  setBtn('<span class="spin"></span> Tekshirilmoqda…', false);
+  setRing('scan');
+  if(mode==='enroll'){ setTitle('Yuzni skanerlash','Yuzingizni doira ichida ushlab turing'); }
+  else { setTitle('Yuzni skanerlash','Yuzingizni doira ichida ushlang'); }
+  running=true; loop();
+}
+
+function ear(eye){
+  function d(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+  return (d(eye[1],eye[5]) + d(eye[2],eye[4])) / (2*d(eye[0],eye[3]));
+}
+
+async function loop(){
+  if(!running) return;
+  var v=document.getElementById('video');
+  var det=null;
+  try{
+    det = await faceapi.detectSingleFace(v, new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5}))
+      .withFaceLandmarks().withFaceDescriptor();
+  }catch(e){}
+
+  if(!det){
+    setRing('scan'); document.getElementById('stSub').textContent='Yuz topilmadi — kameraga qarang';
+    return schedule();
+  }
+  lastFaceScore = det.detection.score;
+  lastDescriptor = Array.from(det.descriptor);
+
+  // blink (liveness)
+  var e = (ear(det.landmarks.getLeftEye()) + ear(det.landmarks.getRightEye())) / 2;
+  if(e > EAR_OPEN){ eyeWasOpen = true; }
+  if(eyeWasOpen && e < EAR_CLOSED){ blinkSeen = true; }
+  renderChips();
+
+  if(mode==='enroll'){
+    // 3 ta yaxshi namuna yig'amiz
+    if(lastFaceScore > 0.6){ enrollSamples.push(lastDescriptor); }
+    setTitle('Yuzni skanerlash','Namuna: '+Math.min(enrollSamples.length,3)+'/3');
+    if(enrollSamples.length>=3){ running=false; return submitEnroll(); }
+    return schedule();
+  }
+
+  // checkin
+  if(!blinkSeen){
+    setRing('wait');
+    setTitle('Tiriklik tekshiruvi','👁 Iltimos, bir marta ko\'zingizni pirpirating');
+    return schedule();
+  }
+  if(mode==='checkin' && !gps.ok){
+    setTitle('GPS kutilmoqda','Joylashuv aniqlanmoqda…');
+    return schedule();
+  }
+  // hammasi tayyor — yuborish
+  running=false;
+  return submitCheckin();
+}
+
+function schedule(){ if(running) setTimeout(loop, 160); }
+
+function stopCam(){
+  running=false;
+  if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
+}
+
+// ---------- Enroll ----------
+function avgDesc(samples){
+  var n=samples.length, len=samples[0].length, out=new Array(len).fill(0);
+  for(var i=0;i<n;i++){ for(var j=0;j<len;j++){ out[j]+=samples[i][j]; } }
+  for(var j=0;j<len;j++){ out[j]/=n; }
+  return out;
+}
+async function submitEnroll(){
+  stopCam();
+  setRing('ok'); setTitle('Saqlanmoqda…','<span class="spin"></span> Yuz ma\'lumoti yuborilmoqda');
+  var desc = avgDesc(enrollSamples);
+  try{
+    var r = await postForm(ENROLL_API,{ uid:uid, ism:ism, warehouse_id:(wid?parseInt(wid):''), descriptor:JSON.stringify(desc), sample_count:enrollSamples.length });
+    var d = await r.json();
+    if(d && d.success){
+      setRing('ok'); document.getElementById('camEmoji').classList.remove('hidden');
+      document.getElementById('camEmoji').textContent='✅';
+      setTitle('Tayyor!','Yuzingiz ro\'yxatdan o\'tdi. Endi kirish/chiqish qila olasiz');
+      mode='checkin'; phase='ready';
+      setBtn('✅ Kirish (ishni boshlash)', true);
+      document.getElementById('recCard').classList.remove('hidden');
+      loadStatus();
+    } else { throw new Error('fail'); }
+  }catch(e){
+    setRing('fail'); setTitle('Saqlanmadi','Qaytadan urinib ko\'ring');
+    setBtn('Qayta urinish', true); phase='ready';
+  }
+}
+
+// ---------- Checkin ----------
+async function submitCheckin(){
+  stopCam();
+  setRing('ok'); setTitle('Tasdiqlanmoqda…','<span class="spin"></span> Ma\'lumot yuborilmoqda');
+  try{
+    var r = await postForm(CHECKIN_API,{ uid:uid, wid:(wid?parseInt(wid):''), descriptor:JSON.stringify(lastDescriptor), lat:gps.lat, lng:gps.lng, liveness:'1' });
+    var d = await r.json();
+    document.getElementById('camEmoji').classList.remove('hidden');
+    if(d && d.success){
+      setRing('ok'); document.getElementById('camEmoji').textContent = d.turi==='kirish'?'✅':'🏁';
+      setTitle(d.turi==='kirish'?'Kirish qayd etildi':'Chiqish qayd etildi',
+        (d.ism?d.ism+', ':'')+'davomat saqlandi. Rahmat!');
+      phase='done'; setBtn('Yopish', true);
+      document.getElementById('mainBtn').onclick=function(){ if(tg&&tg.close) tg.close(); else setBtn('Tayyor',false); };
+      loadStatus();
+    } else {
+      setRing('fail'); document.getElementById('camEmoji').textContent='⚠️';
+      var msg = d && d.message ? d.message : 'Tasdiqlanmadi';
+      setTitle('Tasdiqlanmadi', msg + ' — qaytadan urinib ko\'ring');
+      phase='ready'; setBtn('Qayta urinish', true);
+      document.getElementById('mainBtn').onclick=function(){ startScan(); };
+    }
+  }catch(e){
+    setRing('fail'); setTitle('Server xatosi','Qaytadan urinib ko\'ring');
+    phase='ready'; setBtn('Qayta urinish', true);
+    document.getElementById('mainBtn').onclick=function(){ startScan(); };
+  }
+}
+
+// ---------- Admin: filial lokatsiyasi ----------
+function setBranchLocation(){
+  if(!navigator.geolocation){ alert('GPS mavjud emas'); return; }
+  var b=document.getElementById('locBtn'); b.innerHTML='<span class="spin"></span> Joylashuv olinmoqda…'; b.disabled=true;
+  navigator.geolocation.getCurrentPosition(function(p){
+    postForm(SETLOC_API,{ uid:uid, warehouse_id:(wid?parseInt(wid):''), filial:warehouseName, lat:p.coords.latitude, lng:p.coords.longitude, radius_m:150 })
+      .then(function(r){return r.json();}).then(function(d){
+        b.disabled=false;
+        b.innerHTML = (d&&d.success) ? '✅ Lokatsiya saqlandi (150m)' : '⚠️ '+((d&&d.message)||'Xato');
+      }).catch(function(){ b.disabled=false; b.innerHTML='⚠️ Server xatosi'; });
+  }, function(){ b.disabled=false; b.innerHTML='⚠️ GPS rad etildi'; }, { enableHighAccuracy:true });
+}
+</script>
+</body>
+</html>
