@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<!-- AROS Admin v8 — Filiallar filtrlari birga ishlaydi + KPI filterga moslashadi -->
+<html lang="uz" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>AROS Admin</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fff;--bg-2:#f7f7f5;--bg-3:#efeee9;
+  --text:#1a1a19;--text-2:#5f5e5a;--text-3:#888780;
+  --border:#e8e7e2;--border-2:#d3d1c7;
+  --info-bg:#E6F1FB;--info-text:#0C447C;--info-line:#185FA5;
+  --ok-bg:#E1F5EE;--ok-text:#0F6E56;--ok-line:#1D9E75;
+  --warn-bg:#FAEEDA;--warn-text:#854F0B;--warn-line:#BA7517;
+  --err-bg:#FCEBEB;--err-text:#A32D2D;--err-line:#E24B4A;
+  --pink-bg:#FBEAF0;--pink-text:#993556;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 2px rgba(0,0,0,0.03);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
+  --mono:"SF Mono",ui-monospace,Menlo,monospace;
+}
+[data-theme="dark"]{
+  --bg:#0e0e0c;--bg-2:#1a1a18;--bg-3:#222220;
+  --text:#f4f3ee;--text-2:#a8a7a1;--text-3:#7a7975;
+  --border:#2b2b29;--border-2:#3a3a37;
+  --info-bg:#0c2540;--info-text:#85B7EB;--info-line:#378ADD;
+  --ok-bg:#0a2a22;--ok-text:#5DCAA5;--ok-line:#1D9E75;
+  --warn-bg:#2e1f08;--warn-text:#FAC775;--warn-line:#EF9F27;
+  --err-bg:#2e1313;--err-text:#F09595;--err-line:#E24B4A;
+  --pink-bg:#2c1118;--pink-text:#ED93B1;
+}
+html,body{height:100%;width:100%}
+body{font-family:var(--font);font-size:14px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+
+/* === Loading & Forbidden === */
+#loading,#forbidden{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:1000;padding:24px;text-align:center}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.forbidden-icon{width:56px;height:56px;border-radius:14px;background:var(--err-bg);color:var(--err-text);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px}
+
+/* === App layout (FLEX, full screen) === */
+#app{display:flex;width:100%;min-height:100vh}
+#app.app-hidden{display:none}
+.sidebar{flex:0 0 200px;width:200px;background:var(--bg-2);border-right:0.5px solid var(--border);padding:16px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:10;transition:flex-basis 0.2s,width 0.2s,padding 0.2s}
+
+/* === Sidebar COLLAPSED state (desktop) === */
+.sidebar.collapsed{flex:0 0 56px;width:56px;padding:16px 6px}
+.sidebar.collapsed .brand{justify-content:center;padding:6px 0 20px}
+.sidebar.collapsed .brand-text{display:none}
+.sidebar.collapsed .sb-grp{display:none}
+.sidebar.collapsed .nav-item{justify-content:center;padding:8px 0}
+.sidebar.collapsed .nav-item .nav-label,
+.sidebar.collapsed .nav-item .ct{display:none}
+.sidebar.collapsed .sb-foot{padding:12px 0 8px;flex-direction:column;gap:8px}
+.sidebar.collapsed .sb-foot .foot-info{display:none}
+.sidebar.collapsed .sb-foot .av{margin:0 auto}
+.sidebar.collapsed .theme-btn{margin-left:0}
+.sidebar.collapsed .sb-toggle{align-self:center}
+.sb-toggle{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:14px;cursor:pointer;margin-left:auto;transition:transform 0.2s}
+.sb-toggle:hover{background:var(--bg-3);color:var(--text)}
+.sidebar.collapsed .sb-toggle{transform:rotate(180deg);margin-left:0}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 10px 20px;font-size:14px;font-weight:500}
+.brand-dot{width:22px;height:22px;border-radius:6px;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.sb-grp{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;padding:14px 10px 6px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px;color:var(--text-2);border-radius:var(--radius);line-height:1;transition:all 0.12s}
+.nav-item:hover{background:var(--bg-3)}
+.nav-item.active{background:var(--bg);color:var(--text);font-weight:500;box-shadow:var(--shadow)}
+.nav-item i{font-size:16px}
+.nav-item .ct{margin-left:auto;font-size:11px;color:var(--text-3);background:var(--bg-3);padding:1px 7px;border-radius:9px;min-width:18px;text-align:center}
+.nav-item.active .ct{background:var(--info-bg);color:var(--info-text)}
+.nav-sub{padding-left:26px;display:flex;flex-direction:column;gap:1px;margin:2px 0 6px}
+.nav-sub .nav-item{padding:6px 10px;font-size:13px}
+.sb-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 8px;font-size:12px;border-top:0.5px solid var(--border);margin-top:auto}
+.av{width:30px;height:30px;border-radius:50%;background:var(--info-bg);color:var(--info-text);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.theme-btn{margin-left:auto;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:15px}
+.theme-btn:hover{background:var(--bg-3);color:var(--text)}
+
+/* === Main area === */
+.main{flex:1;min-width:0;width:100%;padding:24px 28px;max-width:100%}
+.topbar{display:flex;align-items:flex-end;gap:12px;margin-bottom:20px}
+.topbar .crumb{font-size:12px;color:var(--text-3);margin-bottom:3px}
+.topbar h1{font-size:22px;font-weight:500;line-height:1.2}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icon-btn{width:34px;height:34px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:16px;transition:all 0.12s}
+.icon-btn:hover{background:var(--bg-2);color:var(--text)}
+
+/* === Buttons === */
+.btn{height:34px;padding:0 16px;border-radius:var(--radius);font-size:13px;font-weight:500;border:0.5px solid var(--border);background:var(--bg);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all 0.12s;white-space:nowrap}
+.btn:hover{background:var(--bg-2)}
+.btn:active{transform:scale(0.97)}
+.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn.primary:hover{opacity:0.88}
+.btn.danger{color:var(--err-text);border-color:var(--err-bg)}
+.btn.danger:hover{background:var(--err-bg)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--text-2)}
+.btn.ghost:hover{background:var(--bg-2)}
+.btn i{font-size:15px}
+.btn.sm{height:28px;padding:0 12px;font-size:12px}
+.btn.sm i{font-size:13px}
+
+/* === Inputs === */
+.input,.select{height:36px;padding:0 12px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);font-size:13.5px;color:var(--text);width:100%;outline:none;transition:all 0.12s;font-family:var(--font)}
+.input:focus,.select:focus{border-color:var(--info-line);box-shadow:0 0 0 3px var(--info-bg)}
+.input::placeholder{color:var(--text-3)}
+.select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f5e5a' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.ff{display:flex;flex-direction:column;gap:5px}
+.ff label{font-size:11.5px;color:var(--text-2);font-weight:500}
+
+/* === Cards === */
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.card-h{display:flex;align-items:center;margin-bottom:12px}
+.card-h h3{font-size:14px;font-weight:500}
+.card-h .link{margin-left:auto;font-size:12px;color:var(--info-text);cursor:pointer}
+
+/* === KPI === */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--bg-2);border-radius:var(--radius);padding:12px 14px}
+.kpi-lbl{font-size:11.5px;color:var(--text-2);display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.kpi-lbl i{font-size:13px}
+.kpi-val{font-size:24px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.kpi-val .unit{font-size:13px;color:var(--text-2);margin-left:3px;font-weight:400}
+.kpi-delta{font-size:11px;margin-top:5px}
+.kpi-delta.up{color:var(--ok-text)}
+.kpi-delta.dn{color:var(--err-text)}
+.kpi-delta.warn{color:var(--warn-text)}
+
+/* === Badges === */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.badge.ok{background:var(--ok-bg);color:var(--ok-text)}
+.badge.warn{background:var(--warn-bg);color:var(--warn-text)}
+.badge.err{background:var(--err-bg);color:var(--err-text)}
+.badge.info{background:var(--info-bg);color:var(--info-text)}
+.badge.muted{background:var(--bg-3);color:var(--text-2)}
+
+/* === Pills === */
+.pill-sel{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);font-size:12.5px;cursor:pointer;color:var(--text)}
+.pill-sel i{font-size:12px;color:var(--text-3)}
+.pill-sel.active{background:var(--info-bg);color:var(--info-text);border-color:transparent}
+
+/* === Tables === */
+.table-wrap{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg)}
+.table-head{display:grid;padding:10px 16px;background:var(--bg-2);font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;gap:12px}
+.table-row{display:grid;padding:12px 16px;font-size:13px;border-top:0.5px solid var(--border);align-items:center;gap:12px}
+.table-row:hover{background:var(--bg-2)}
+
+/* === Feed === */
+.feed{display:flex;flex-direction:column;gap:11px}
+.feed-item{display:flex;gap:10px;font-size:13px;line-height:1.45}
+.feed-ic{width:26px;height:26px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-2);flex-shrink:0;margin-top:1px}
+.feed-meta{font-size:11px;color:var(--text-3);margin-top:2px}
+
+/* === Top filiallar list === */
+.lboard{display:flex;flex-direction:column;gap:9px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+.lb-num{font-size:10.5px;color:var(--text-3);width:14px;text-align:right;font-variant-numeric:tabular-nums}
+.lb-name{font-size:13px;color:var(--text);min-width:90px}
+.lb-bar{flex:1;height:5px;background:var(--bg-3);border-radius:3px;overflow:hidden;position:relative}
+.lb-bar-fill{height:100%;border-radius:3px;transition:width 0.5s}
+.lb-pct{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;min-width:40px;text-align:right}
+
+/* === User card (pending) === */
+.user-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px}
+.uc-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.uc-name{font-size:14px;font-weight:500}
+.uc-meta{font-size:11.5px;color:var(--text-3);margin-top:1px;font-family:var(--mono)}
+.uc-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.uc-acts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* === Roles layout === */
+.roles-layout{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:start}
+.roles-list{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:6px;display:flex;flex-direction:column;gap:1px}
+.role-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;color:var(--text-2);line-height:1}
+.role-item:hover{background:var(--bg-2)}
+.role-item.active{background:var(--bg-2);color:var(--text);font-weight:500}
+.role-item i{font-size:15px}
+.role-ct{margin-left:auto;font-size:11px;color:var(--text-3)}
+.role-detail{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
+.rd-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--border)}
+.rd-head h3{font-size:16px;font-weight:500}
+.rd-head p{margin-top:3px;font-size:12px;color:var(--text-3)}
+.perm-grp{margin-bottom:18px}
+.perm-grp-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;margin-bottom:8px}
+.perm-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:0.5px solid var(--border)}
+.perm-row:last-child{border-bottom:none}
+.toggle{width:32px;height:18px;border-radius:9px;background:var(--bg-3);position:relative;flex-shrink:0;border:0.5px solid var(--border-2);cursor:pointer;transition:all 0.12s}
+.toggle.on{background:var(--ok-line);border-color:var(--ok-line)}
+.toggle-knob{width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:1px;transition:left 0.15s}
+.toggle.on .toggle-knob{left:15px}
+.toggle.disabled{opacity:0.5;cursor:not-allowed}
+.perm-name{font-size:13px;color:var(--text);flex:1}
+.perm-desc{font-size:11px;color:var(--text-3);margin-top:1px}
+
+/* === Audit log === */
+.audit-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;height:34px;padding:0 12px 0 36px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);font-size:13px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f5e5a' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");background-repeat:no-repeat;background-position:12px center}
+
+/* === Modal === */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:100;overflow-y:auto;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg);border-radius:14px;width:100%;max-width:500px;padding:24px;border:0.5px solid var(--border)}
+.modal-h{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.modal-h h3{font-size:18px;font-weight:500}
+.modal-h p{font-size:12.5px;color:var(--text-3);margin-top:3px}
+.modal-close{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:16px;cursor:pointer}
+.modal-close:hover{background:var(--bg-2)}
+.modal-body{display:flex;flex-direction:column;gap:12px}
+.modal-foot{display:flex;gap:8px;margin-top:18px;padding-top:16px;border-top:0.5px solid var(--border)}
+.modal-foot .btn{flex:1}
+
+/* === Toast === */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px;z-index:200;opacity:0;transition:opacity 0.2s;pointer-events:none}
+#toast.show{opacity:1}
+#toast.err{background:var(--err-text)}
+#toast.ok{background:var(--ok-line)}
+
+/* === Empty states === */
+.empty{padding:48px 24px;text-align:center;color:var(--text-3)}
+.empty i{font-size:36px;margin-bottom:12px;display:block;opacity:0.5}
+.empty p{font-size:13px}
+
+/* === Mobile === */
+.menu-toggle{display:none;width:34px;height:34px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg);align-items:center;justify-content:center;font-size:18px}
+@media (max-width:768px){
+  #app{display:flex}
+  .sidebar{position:fixed;left:-220px;top:0;width:220px;flex:0 0 220px;z-index:50;transition:left 0.25s;box-shadow:8px 0 24px rgba(0,0,0,0.08)}
+  .sidebar.open{left:0}
+  .sb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:40;display:none;backdrop-filter:blur(2px)}
+  .sb-backdrop.open{display:block}
+  .menu-toggle{display:flex}
+  .main{padding:16px 18px;width:100%;flex:1}
+  .topbar{margin-bottom:14px}
+  .topbar h1{font-size:18px}
+  .uc-form{grid-template-columns:1fr}
+  .roles-layout{grid-template-columns:1fr}
+  .audit-toolbar{flex-direction:column;align-items:stretch}
+  .search-box{width:100%}
+  .table-row,.table-head{padding:10px 12px}
+}
+
+/* === Misc === */
+.hide{display:none!important}
+code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);padding:2px 6px;border-radius:4px}
+.divider{height:0.5px;background:var(--border);margin:12px 0}
+.spark{height:24px;width:100%}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok-line);margin-right:5px;vertical-align:middle}
+.dot.warn{background:var(--warn-line)}
+.dot.err{background:var(--err-line)}
+.dot.off{background:var(--text-3)}
+
+/* === Mini audio player (inline) === */
+.mini-audio{width:100%;max-width:220px;height:30px;border-radius:15px;outline:none}
+.mini-audio::-webkit-media-controls-panel{background:var(--bg-2)}
+.mini-audio::-webkit-media-controls-current-time-display,
+.mini-audio::-webkit-media-controls-time-remaining-display{font-size:10px;color:var(--text-2)}
+.audio-cell{display:flex;align-items:center;gap:6px;min-width:0}
+.audio-cell .open-drive{font-size:11px;color:var(--text-3);cursor:pointer;flex-shrink:0}
+.audio-cell .open-drive:hover{color:var(--info-text)}
+
+/* === Stats card === */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.stat-card{background:var(--bg-2);padding:12px 14px;border-radius:var(--radius)}
+.stat-lbl{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.stat-val{font-size:20px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:11px;color:var(--text-3);margin-top:4px}
+
+.role-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--bg-2);border-radius:8px;font-size:11px;color:var(--text-2);margin:1px 3px 1px 0}
+.role-tag i{font-size:11px}
+.role-tag.super_admin{background:var(--warn-bg);color:var(--warn-text)}
+.role-tag.ceo{background:var(--info-bg);color:var(--info-text)}
+.role-tag.bugalter{background:var(--ok-bg);color:var(--ok-text)}
+.skeleton{background:linear-gradient(90deg,var(--bg-2) 0%,var(--bg-3) 50%,var(--bg-2) 100%);background-size:200% 100%;animation:skel 1.5s infinite;border-radius:var(--radius);height:14px}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+<div class="spinner"></div>
+<div style="font-size:13px;color:var(--text-2)">Yuklanmoqda...</div>
+</div>
+
+<!-- FORBIDDEN -->
+<div id="forbidden" style="display:none">
+<div class="forbidden-icon"><i class="ti ti-lock"></i></div>
+<h2 style="font-size:18px;font-weight:500;margin-bottom:8px">Kirish rad etildi</h2>
+<p style="font-size:13px;color:var(--text-2);max-width:300px;line-height:1.5">Sizda admin panelga kirish ruxsati yo'q. Super admin bilan bog'laning.</p>
+<p style="font-size:11px;color:var(--text-3);margin-top:16px">UID: <code class="mono" id="forbidden-uid"></code></p>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app-hidden">
+
+<!-- Sidebar backdrop (mobile) -->
+<div class="sb-backdrop" id="backdrop" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+<div class="brand"><span class="brand-dot">A</span><span class="brand-text">AROS Admin</span><button class="sb-toggle" onclick="toggleCollapse()" title="Yopish/ochish"><i class="ti ti-chevron-left"></i></button></div>
+<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')" title="Bosh sahifa"><i class="ti ti-layout-dashboard"></i><span class="nav-label">Bosh sahifa</span></a>
+<div class="sb-grp">Boshqaruv</div>
+<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')" title="Yangi userlar"><i class="ti ti-user-plus"></i><span class="nav-label">Yangi</span><span class="ct" id="nav-pending-ct">0</span></a>
+<a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users"></i><span class="nav-label">Hammasi</span></a>
+<a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock"></i><span class="nav-label">Rollar</span></a>
+<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store"></i><span class="nav-label">Filiallar</span></a>
+<a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
+<a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder"></i><span class="nav-label">Yuklanmalar</span></a>
+<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register"></i><span class="nav-label">Bugalter</span></a>
+<a class="nav-item" data-screen="davomat-hodimlar" onclick="goto('davomat-hodimlar')" title="Davomat hodimlar"><i class="ti ti-user-check"></i><span class="nav-label">Davomat</span></a>
+<a class="nav-item" data-screen="davomat-tarix" onclick="goto('davomat-tarix')" title="Davomat tarixi"><i class="ti ti-clock-hour-4"></i><span class="nav-label">Davomat tarixi</span></a>
+<div class="sb-grp">Sistema</div>
+<a class="nav-item" data-screen="audit" onclick="goto('audit')" title="Kuzatuv"><i class="ti ti-history"></i><span class="nav-label">Kuzatuv</span></a>
+<a class="nav-item" data-screen="workflows" onclick="goto('workflows')" title="Workflow'lar"><i class="ti ti-circuit-bulb"></i><span class="nav-label">Workflow'lar</span></a>
+<a class="nav-item" data-screen="settings" onclick="goto('settings')" title="Sozlamalar"><i class="ti ti-settings"></i><span class="nav-label">Sozlamalar</span></a>
+<div class="sb-foot">
+<span class="av" id="footer-av">?</span>
+<div class="foot-info" style="flex:1;min-width:0">
+<div style="font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="footer-name">User</div>
+<div style="font-size:10.5px;color:var(--text-3)" id="footer-role">Loading</div>
+</div>
+<button class="theme-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="theme-icon"></i></button>
+</div>
+</aside>
+
+<!-- Main content -->
+<main class="main">
+<div id="screens"></div>
+</main>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg">
+<div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// =========================================================
+// CONFIG & GLOBAL STATE
+// =========================================================
+const API_BASE = 'https://n8n.arosmarket.com/webhook';
+const tg = window.Telegram?.WebApp;
+
+let UID = null;
+let me = null;        // user info from admin-check
+let myPerms = [];     // permission keys
+let myRoles = [];     // role objects
+let currentScreen = 'dashboard';
+
+// Cached data
+let cache = {
+  dashboard: null,
+  users: { pending: null, all: null },
+  rbac: null,
+  audit: null
+};
+
+// =========================================================
+// INIT
+// =========================================================
+async function init(){
+  // Theme
+  const savedTheme = localStorage.getItem('aros-admin-theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  } else if (tg?.colorScheme) {
+    document.documentElement.setAttribute('data-theme', tg.colorScheme);
+  }
+  updateThemeIcon();
+
+  // Sidebar collapse state
+  if (localStorage.getItem('aros-admin-sb') === '1') {
+    document.getElementById('sidebar').classList.add('collapsed');
+  }
+
+  // Get UID
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    UID = tg.initDataUnsafe?.user?.id?.toString();
+  }
+  if (!UID) {
+    const params = new URLSearchParams(location.search);
+    UID = params.get('uid');
+  }
+  if (!UID) {
+    showForbidden('UID topilmadi');
+    return;
+  }
+
+  // Check admin access
+  try {
+    const data = await api('admin-check', { uid: UID });
+    if (!data.has_admin_access) {
+      showForbidden(UID);
+      return;
+    }
+    me = data.user || { telegram_id: UID, ism: 'User' };
+    myPerms = data.permissions || [];
+    myRoles = data.roles || [];
+
+    // Update footer
+    const initials = (me.ism || 'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('footer-av').textContent = initials;
+    document.getElementById('footer-name').textContent = me.ism || 'User';
+    document.getElementById('footer-role').textContent = myRoles.map(r=>r.label).join(', ') || 'No role';
+
+    // Show app
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').classList.remove('app-hidden');
+
+    // Load initial screen
+    goto('dashboard');
+  } catch(e){
+    showForbidden('API xato: ' + e.message);
+  }
+}
+
+function showForbidden(uid){
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('forbidden-uid').textContent = uid || '—';
+  document.getElementById('forbidden').style.display = 'flex';
+}
+
+// =========================================================
+// API CLIENT
+// =========================================================
+async function api(endpoint, params, opts={}){
+  let url = `${API_BASE}/${endpoint}`;
+  // Hammasi GET — POST CORS preflight'ni o'tkazib yuborish uchun
+  if (params) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        qs.append(k, v.join(','));
+      } else if (v !== null && v !== undefined) {
+        qs.append(k, v);
+      }
+    });
+    const qsStr = qs.toString();
+    if (qsStr) url += '?' + qsStr;
+  }
+  const r = await fetch(url);
+  if (!r.ok) {
+    let txt = '';
+    try { txt = (await r.text()).slice(0,150); } catch(e){}
+    throw new Error('HTTP ' + r.status + (txt?' · '+txt:''));
+  }
+  return await r.json();
+}
+
+function hasPerm(key){
+  return myPerms.includes(key);
+}
+
+// =========================================================
+// NAVIGATION
+// =========================================================
+function goto(screen){
+  currentScreen = screen;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.screen === screen);
+  });
+  closeSidebar();
+  renderScreen(screen);
+}
+
+function renderScreen(s){
+  const root = document.getElementById('screens');
+  root.innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto 12px"></div></div>';
+  switch(s){
+    case 'dashboard': return renderDashboard(root);
+    case 'users-pending': return renderUsersPending(root);
+    case 'users-all': return renderUsersAll(root);
+    case 'roles': return renderRoles(root);
+    case 'filiallar': return renderFiliallar(root);
+    case 'ulanmagan': return renderUlanmagan(root);
+    case 'yuklanmalar': return renderYuklanmalar(root);
+    case 'bugalter': return renderBugalter(root);
+    case 'davomat-hodimlar': return renderDavomatHodimlar(root);
+    case 'davomat-tarix': return renderDavomatTarix(root);
+    case 'audit': return renderAudit(root);
+    case 'workflows': return renderWorkflows(root);
+    case 'settings': return renderSettings(root);
+  }
+}
+
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('backdrop').classList.toggle('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('backdrop').classList.remove('open'); }
+
+function toggleCollapse(){
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('aros-admin-sb', sb.classList.contains('collapsed') ? '1' : '0');
+}
+
+// =========================================================
+// THEME
+// =========================================================
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('aros-admin-theme', next);
+  updateThemeIcon();
+}
+function updateThemeIcon(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.getElementById('theme-icon').className = cur === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+}
+
+// =========================================================
+// TOAST
+// =========================================================
+let toastTimer;
+function toast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.className = type === 'err' ? 'show err' : 'show ok';
+  t.innerHTML = `<i class="ti ti-${type==='err'?'alert-circle':'check'}"></i> ${msg}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.className = '', 2400);
+}
+
+// =========================================================
+// MODAL
+// =========================================================
+function openModal(html){
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-bg').classList.remove('open');
+}
+document.getElementById('modal-bg').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-bg') closeModal();
+});
+
+// =========================================================
+// HELPERS
+// =========================================================
+const fmt = n => Math.round(Number(n)||0).toLocaleString('en-US').replaceAll(',', ' ');
+const fmtShort = n => {
+  n = Number(n)||0;
+  if (n >= 1e9) return (n/1e9).toFixed(2).replace('.00','') + ' mlrd';
+  if (n >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + ' mln';
+  if (n >= 1e3) return Math.round(n/1e3) + 'k';
+  return n.toString();
+};
+const tagOf = role => `<span class="role-tag ${role.key||''}">${role.icon?`<i class="ti ${role.icon}"></i>`:''}${role.label}</span>`;
+const initials = name => (name || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const escapeHtml = s => (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const topbar = (crumb, title, actions='') => `
+<div class="topbar">
+<button class="menu-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+<div><div class="crumb">${escapeHtml(crumb)}</div><h1>${escapeHtml(title)}</h1></div>
+<div class="topbar-actions">${actions}</div>
+</div>`;
+
+const timeAgo = isoStr => {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60) return diff + ' soniya oldin';
+  if (diff < 3600) return Math.floor(diff/60) + ' daqiqa oldin';
+  if (diff < 86400) return Math.floor(diff/3600) + ' soat oldin';
+  const days = Math.floor(diff/86400);
+  if (days === 1) return 'kecha';
+  if (days < 7) return days + ' kun oldin';
+  return d.toLocaleDateString('uz-UZ');
+};
+
+const actionLabel = a => ({
+  'admin.init': 'Sistema yaratildi',
+  'user.create': 'User yaratdi',
+  'user.update': 'User yangiladi',
+  'user.delete': 'User o\'chirdi',
+  'role.save': 'Rol saqladi',
+  'role.assign': 'Rol berdi'
+}[a] || a);
+
+// =========================================================
+// SCREEN: DASHBOARD
+// =========================================================
+async function renderDashboard(root){
+  root.innerHTML = topbar('Boshqaruv', 'Bosh sahifa', '<button class="icon-btn" onclick="renderDashboard(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="kpi-row"><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div></div>`;
+  root.appendChild(content);
+
+  try {
+    const data = await api('admin-dashboard', { uid: UID });
+    if (data.error) throw new Error(data.error);
+    cache.dashboard = data;
+
+    // Update pending count in nav
+    const pendingCt = data.kpi?.pending_users || 0;
+    document.getElementById('nav-pending-ct').textContent = pendingCt;
+
+    const k = data.kpi || {};
+    const top = data.top_filiallar || [];
+    const recent = data.recent_activity || [];
+
+    const maxBajarildi = Math.max(...top.map(f => Number(f.bajarildi)||0), 1);
+
+    content.innerHTML = `
+<div class="kpi-row">
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-users"></i>Userlar</div>
+<div class="kpi-val">${k.total_users || 0}</div>
+<div class="kpi-delta" style="color:var(--text-3)">jami ro'yxatdan o'tgan</div>
+</div>
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-building"></i>Aktiv filiallar</div>
+<div class="kpi-val">${k.active_filiallar || 0}</div>
+<div class="kpi-delta" style="color:var(--text-3)">joriy yarim oy</div>
+</div>
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-clock"></i>Kutilmoqda</div>
+<div class="kpi-val" style="color:${pendingCt > 0 ? 'var(--warn-text)' : 'var(--text)'}">${pendingCt}</div>
+<div class="kpi-delta ${pendingCt > 0 ? 'warn' : ''}">${pendingCt > 0 ? "yangi user tasdiqlash kerak" : "hammasi tasdiqlangan"}</div>
+</div>
+<div class="kpi">
+<div class="kpi-lbl"><i class="ti ti-history"></i>Bugungi hodisalar</div>
+<div class="kpi-val">${k.audit_today || 0}</div>
+<div class="kpi-delta" style="color:var(--text-3)">audit log</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px" class="dash-grid">
+
+<div class="card">
+<div class="card-h"><h3>Top filiallar · prognoz</h3><span class="link" onclick="goto('filiallar')">Hammasi →</span></div>
+${top.length ? `<div class="lboard">${top.map((f, i) => {
+  const pct = f.prognoz_foiz || 0;
+  const color = pct >= 100 ? 'var(--ok-line)' : pct >= 80 ? 'var(--warn-line)' : 'var(--err-line)';
+  const textColor = pct >= 100 ? 'var(--ok-text)' : pct >= 80 ? 'var(--warn-text)' : 'var(--err-text)';
+  return `<div class="lb-row">
+<span class="lb-num">${i+1}</span>
+<span class="lb-name">${escapeHtml(f.filial || '—')}</span>
+<div class="lb-bar"><div class="lb-bar-fill" style="width:${Math.min(pct, 150)*0.66}%;background:${color}"></div></div>
+<span class="lb-pct" style="color:${textColor}">${pct}%</span>
+</div>`;
+}).join('')}</div>` : `<div class="empty"><i class="ti ti-building-off"></i><p>Filial ma'lumoti yo'q</p></div>`}
+</div>
+
+<div class="card">
+<div class="card-h"><h3>So'nggi faollik</h3><span class="link" onclick="goto('audit')">Audit →</span></div>
+${recent.length ? `<div class="feed">${recent.slice(0,6).map(a => `
+<div class="feed-item">
+<div class="feed-ic"><i class="ti ti-${a.action.startsWith('user.')?'user':a.action.startsWith('role.')?'shield':'history'}"></i></div>
+<div style="flex:1;min-width:0">
+<span style="color:var(--text)">${escapeHtml(a.actor_name || 'Sistema')}</span>
+<span style="color:var(--text-2)"> · ${escapeHtml(actionLabel(a.action))}</span>
+${a.target_label ? `<span style="color:var(--text)"> ${escapeHtml(a.target_label)}</span>` : ''}
+<div class="feed-meta">${timeAgo(a.created_at)}</div>
+</div>
+</div>`).join('')}</div>` : `<div class="empty"><i class="ti ti-history-off"></i><p>Faollik yo'q</p></div>`}
+</div>
+
+</div>
+
+<div class="card" style="margin-top:14px">
+<div class="card-h"><h3>Sistema holati</h3></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">n8n</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">Postgres</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">Aros API</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+<div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius);display:flex;align-items:center;gap:8px"><span class="dot"></span><div><div style="font-size:11px;color:var(--text-3)">Bot</div><div style="font-size:12px;font-weight:500">Online</div></div></div>
+</div>
+</div>
+`;
+
+    // Mobile: stack columns
+    if (window.innerWidth <= 768) {
+      content.querySelector('.dash-grid').style.gridTemplateColumns = '1fr';
+    }
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// =========================================================
+// SCREEN: USERS PENDING
+// =========================================================
+async function renderUsersPending(root){
+  root.innerHTML = topbar('Userlar', 'Yangi · tasdiqlash kutmoqda');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="skeleton" style="height:120px;margin-bottom:10px"></div><div class="skeleton" style="height:120px"></div>`;
+  root.appendChild(content);
+
+  try {
+    const [usersData, rbacData] = await Promise.all([
+      api('admin-users', { uid: UID, status: 'pending' }),
+      cache.rbac ? Promise.resolve(cache.rbac) : api('admin-rbac', { uid: UID })
+    ]);
+    if (!cache.rbac) cache.rbac = rbacData;
+
+    const users = usersData.users || [];
+    document.getElementById('nav-pending-ct').textContent = users.length;
+
+    if (users.length === 0) {
+      content.innerHTML = `<div class="empty"><i class="ti ti-checks"></i><p>Hammasi tasdiqlangan! Yangi user yo'q.</p></div>`;
+      return;
+    }
+
+    const filiallar = rbacData.filiallar || [];
+    const roles = (rbacData.roles || []).filter(r => r.key !== 'super_admin');
+
+    content.innerHTML = users.map(u => {
+      const waitingName = u.status === 'waiting_name';
+      return `
+<div class="user-card" id="pc-${u.telegram_id}">
+<div class="uc-head">
+<div class="av" style="background:${waitingName?'var(--bg-3)':'var(--info-bg)'};color:${waitingName?'var(--text-3)':'var(--info-text)'};width:38px;height:38px;font-size:13px">${waitingName?'?':initials(u.ism)}</div>
+<div style="flex:1;min-width:0">
+<div class="uc-name">${escapeHtml(u.ism || 'Ism kutilmoqda')}</div>
+<div class="uc-meta">@${u.telegram_id}</div>
+</div>
+<span class="badge ${waitingName?'muted':'warn'}">${waitingName?'ISM YO\'Q':'PENDING'}</span>
+</div>
+${waitingName ? `
+<div style="padding:8px 0;color:var(--text-3);font-size:12.5px">Bu user botda <code class="mono">/start</code> bosgan lekin hali ismini yozmagan.</div>
+<div class="uc-acts">
+<button class="btn ghost sm" onclick="alert('Botga eslatma yuborish hali Phase 3 da')"><i class="ti ti-message"></i>Eslatma yubor</button>
+<button class="btn danger sm" onclick="confirmDeleteUser('${u.telegram_id}', '${escapeHtml(u.ism||'')}')"><i class="ti ti-trash"></i>O'chirish</button>
+</div>
+` : `
+<div class="uc-form">
+<div class="ff"><label>Filial</label><select class="select" id="pc-fil-${u.telegram_id}"><option value="">— tanlang —</option>${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}">${escapeHtml(f.filial)}</option>`).join('')}</select></div>
+<div class="ff"><label>Rol</label><select class="select" id="pc-role-${u.telegram_id}"><option value="">— tanlang —</option>${roles.map(r=>`<option value="${r.key}">${escapeHtml(r.label)}</option>`).join('')}</select></div>
+<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="pc-plan-${u.telegram_id}" placeholder="0" value="${u.oylik_plan||''}"></div>
+<div class="ff"><label>Status</label><select class="select" id="pc-stat-${u.telegram_id}"><option value="active" selected>Aktiv</option><option value="ceo">CEO</option></select></div>
+</div>
+<div class="uc-acts">
+<button class="btn primary" onclick="approveUser('${u.telegram_id}', '${escapeHtml(u.ism||'')}')"><i class="ti ti-check"></i>Tasdiqlash</button>
+<button class="btn danger ghost" onclick="confirmDeleteUser('${u.telegram_id}', '${escapeHtml(u.ism||'')}')"><i class="ti ti-x"></i>Rad etish</button>
+</div>
+`}
+</div>`;
+    }).join('');
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function approveUser(telegramId, ism){
+  const filVal = document.getElementById(`pc-fil-${telegramId}`).value;
+  const roleKey = document.getElementById(`pc-role-${telegramId}`).value;
+  const plan = document.getElementById(`pc-plan-${telegramId}`).value;
+  const stat = document.getElementById(`pc-stat-${telegramId}`).value;
+  if (!filVal || !roleKey) { toast('Filial va rol tanlang', 'err'); return; }
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  try {
+    const saveRes = await api('admin-user-save', {
+      uid: UID, telegram_id: telegramId, ism, warehouse_id, warehouse_name,
+      oylik_plan: plan || '0', status: stat
+    });
+    if (saveRes.error) throw new Error(saveRes.error);
+    const assignRes = await api('admin-role-assign', {
+      uid: UID, telegram_id: telegramId, role_keys: [roleKey]
+    });
+    if (assignRes.error) throw new Error(assignRes.error);
+    toast(`${ism} tasdiqlandi`);
+    renderUsersPending(document.getElementById('screens'));
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+function confirmDeleteUser(telegramId, ism){
+  openModal(`
+<div class="modal-h">
+<div><h3>O'chirilsinmi?</h3><p>${escapeHtml(ism || 'Ushbu user')} ma'lumotlari va rollari butunlay o'chiriladi.</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor qilish</button>
+<button class="btn danger primary" style="background:var(--err-text);border-color:var(--err-text);color:white" onclick="toast('Phase 3 da kelayotgan funktsiya', 'err');closeModal()">O'chirish</button>
+</div>
+`);
+}
+
+// =========================================================
+// SCREEN: USERS ALL
+// =========================================================
+let usersFilters = { status: 'all', search: '' };
+
+async function renderUsersAll(root){
+  root.innerHTML = topbar('Userlar', 'Hammasi · barcha foydalanuvchilar');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<input type="text" class="search-box" placeholder="Qidiruv · ism yoki telegram ID" id="users-search" value="${escapeHtml(usersFilters.search)}">
+<div class="pill-sel ${usersFilters.status==='all'?'active':''}" onclick="setUsersFilter('all')">Hammasi</div>
+<div class="pill-sel ${usersFilters.status==='active'?'active':''}" onclick="setUsersFilter('active')">Aktiv</div>
+<div class="pill-sel ${usersFilters.status==='pending'?'active':''}" onclick="setUsersFilter('pending')">Pending</div>
+</div>
+<div id="users-table-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>
+`;
+  root.appendChild(content);
+
+  // Wire up search
+  document.getElementById('users-search').addEventListener('input', (e) => {
+    usersFilters.search = e.target.value;
+    clearTimeout(window._usearch);
+    window._usearch = setTimeout(loadUsersTable, 300);
+  });
+
+  loadUsersTable();
+}
+
+function setUsersFilter(status){
+  usersFilters.status = status;
+  renderUsersAll(document.getElementById('screens'));
+}
+
+async function loadUsersTable(){
+  try {
+    const data = await api('admin-users', {
+      uid: UID,
+      status: usersFilters.status,
+      search: usersFilters.search
+    });
+    const users = data.users || [];
+    const wrap = document.getElementById('users-table-wrap');
+    if (!users.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-users-off"></i><p>User topilmadi</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:1.8fr 1.5fr 1fr 90px">
+<div>User</div><div>Filial</div><div>Rollar</div><div>Status</div>
+</div>
+${users.map(u => {
+  const statBadge = u.status === 'active' ? '<span class="badge ok">Aktiv</span>' :
+    u.status === 'ceo' ? '<span class="badge info">CEO</span>' :
+    u.status === 'pending' ? '<span class="badge warn">Pending</span>' :
+    u.status === 'waiting_name' ? '<span class="badge muted">No name</span>' :
+    `<span class="badge muted">${escapeHtml(u.status||'')}</span>`;
+  return `
+<div class="table-row" style="grid-template-columns:1.8fr 1.5fr 1fr 90px;cursor:pointer" onclick="editUser('${u.telegram_id}')">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
+<div style="min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">@${u.telegram_id}</div>
+</div>
+</div>
+<div style="color:var(--text-2)">${escapeHtml(u.warehouse_name || '—')}</div>
+<div style="display:flex;flex-wrap:wrap;gap:3px">${(u.roles||[]).slice(0,2).map(tagOf).join('')}${u.roles?.length > 2 ? `<span style="font-size:10.5px;color:var(--text-3)">+${u.roles.length-2}</span>` : ''}</div>
+<div>${statBadge}</div>
+</div>`;
+}).join('')}
+</div>
+`;
+  } catch(e){
+    document.getElementById('users-table-wrap').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function editUser(telegramId){
+  if (!cache.rbac) cache.rbac = await api('admin-rbac', { uid: UID });
+  const allUsers = await api('admin-users', { uid: UID, search: telegramId });
+  const u = allUsers.users?.find(x => x.telegram_id === telegramId);
+  if (!u) { toast('User topilmadi', 'err'); return; }
+  const filiallar = cache.rbac.filiallar || [];
+  const roles = cache.rbac.roles || [];
+  const userRoleKeys = (u.roles || []).map(r => r.key);
+
+  openModal(`
+<div class="modal-h">
+<div><h3>${escapeHtml(u.ism||'User')}</h3><p>@${u.telegram_id} · ${escapeHtml(u.warehouse_name||'filial yo\'q')}</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Ism</label><input type="text" class="input" id="ed-ism" value="${escapeHtml(u.ism||'')}"></div>
+<div class="ff"><label>Filial</label><select class="select" id="ed-fil">
+<option value="">— filial yo'q —</option>
+${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}" ${String(f.warehouse_id)===String(u.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('')}
+</select></div>
+<div class="ff"><label>Oylik plan</label><input type="number" class="input" id="ed-plan" value="${u.oylik_plan||''}"></div>
+<div class="ff"><label>Status</label><select class="select" id="ed-stat">
+<option value="active" ${u.status==='active'?'selected':''}>Aktiv</option>
+<option value="ceo" ${u.status==='ceo'?'selected':''}>CEO</option>
+<option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
+</select></div>
+<div class="ff"><label>Rollar</label>
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${roles.map(r => `
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+<input type="checkbox" class="role-cb" value="${r.key}" ${userRoleKeys.includes(r.key)?'checked':''}>
+${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
+<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
+</label>`).join('')}
+</div>
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" onclick="saveUserEdit('${u.telegram_id}')"><i class="ti ti-check"></i>Saqlash</button>
+</div>
+`);
+}
+
+async function saveUserEdit(telegramId){
+  const ism = document.getElementById('ed-ism').value.trim();
+  const filVal = document.getElementById('ed-fil').value;
+  const plan = document.getElementById('ed-plan').value;
+  const stat = document.getElementById('ed-stat').value;
+  const roleKeys = Array.from(document.querySelectorAll('.role-cb:checked')).map(cb => cb.value);
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  try {
+    const r1 = await api('admin-user-save', {
+      uid: UID, telegram_id: telegramId, ism,
+      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
+      oylik_plan: plan || '0', status: stat
+    });
+    if (r1.error) throw new Error(r1.error);
+    const r2 = await api('admin-role-assign', {
+      uid: UID, telegram_id: telegramId, role_keys: roleKeys
+    });
+    if (r2.error) throw new Error(r2.error);
+    toast('Saqlandi');
+    closeModal();
+    loadUsersTable();
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: ROLES
+// =========================================================
+let selectedRoleKey = null;
+let editingPerms = new Set();
+
+async function renderRoles(root){
+  root.innerHTML = topbar('Userlar', 'Rollar va ruxsatlar', '<button class="btn primary" onclick="newRole()"><i class="ti ti-plus"></i>Yangi rol</button>');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="skeleton" style="height:300px"></div>`;
+  root.appendChild(content);
+
+  try {
+    const data = await api('admin-rbac', { uid: UID });
+    if (data.error) throw new Error(data.error);
+    cache.rbac = data;
+    if (!selectedRoleKey && data.roles?.length) selectedRoleKey = data.roles[0].key;
+    renderRolesUI(content, data);
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderRolesUI(content, data){
+  const roles = data.roles || [];
+  const perms = data.permissions || [];
+  const selected = roles.find(r => r.key === selectedRoleKey) || roles[0];
+  if (!selected) {
+    content.innerHTML = `<div class="empty"><i class="ti ti-shield-off"></i><p>Rol yo'q</p></div>`;
+    return;
+  }
+  editingPerms = new Set(selected.permission_keys || []);
+  const byCategory = {};
+  perms.forEach(p => { (byCategory[p.category] = byCategory[p.category] || []).push(p); });
+
+  content.innerHTML = `
+<div class="roles-layout">
+<div class="roles-list">
+${roles.map(r => `
+<div class="role-item ${r.key===selected.key?'active':''}" onclick="selectRole('${r.key}')">
+<i class="ti ${r.icon||'ti-shield'}"></i>
+<span style="flex:1;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.label)}</span>
+<span class="role-ct">${r.user_count}</span>
+</div>`).join('')}
+</div>
+<div class="role-detail">
+<div class="rd-head">
+<div><h3>${escapeHtml(selected.label)}</h3><p>${escapeHtml(selected.description||'')} · ${selected.user_count} user · ${selected.permission_count} ruxsat${selected.is_system?' · sistema roli':''}</p></div>
+<div style="display:flex;gap:6px">
+<button class="btn sm" onclick="saveRolePerms('${selected.key}', '${escapeHtml(selected.label)}', '${escapeHtml(selected.description||'')}', '${selected.icon||''}')"><i class="ti ti-check"></i>Saqlash</button>
+${!selected.is_system?`<button class="btn sm danger" onclick="toast('Phase 3 da kelayotgan funktsiya', 'err')"><i class="ti ti-trash"></i></button>`:''}
+</div>
+</div>
+${Object.entries(byCategory).map(([cat, items]) => `
+<div class="perm-grp">
+<div class="perm-grp-lbl">${escapeHtml(cat)}</div>
+${items.map(p => `
+<div class="perm-row">
+<span class="toggle ${editingPerms.has(p.key)?'on':''} ${selected.key==='super_admin'?'disabled':''}" onclick="${selected.key==='super_admin'?'':"togglePerm('"+p.key+"')"}"><span class="toggle-knob"></span></span>
+<div class="perm-name">${escapeHtml(p.label)}${p.description?`<div class="perm-desc">${escapeHtml(p.description)}</div>`:''}</div>
+</div>`).join('')}
+</div>`).join('')}
+</div>
+</div>
+`;
+}
+
+function selectRole(key){ selectedRoleKey = key; renderRolesUI(document.getElementById('screens').querySelector('.roles-layout').parentElement, cache.rbac); }
+
+function togglePerm(key){
+  if (editingPerms.has(key)) editingPerms.delete(key); else editingPerms.add(key);
+  document.querySelectorAll('.perm-row').forEach(row => {
+    const toggle = row.querySelector('.toggle');
+    const name = row.querySelector('.perm-name').textContent;
+    // We need to find which key corresponds to which row — re-render
+  });
+  // Just toggle the clicked one
+  event.target.closest('.toggle').classList.toggle('on');
+}
+
+async function saveRolePerms(roleKey, label, description, icon){
+  try {
+    const r = await api('admin-role-save', {
+      uid: UID, key: roleKey, label, description, icon,
+      permissions: Array.from(editingPerms)
+    });
+    if (r.error) throw new Error(r.error);
+    toast(`Rol saqlandi · ${r.permissions_set} ruxsat`);
+    cache.rbac = null;
+    renderRoles(document.getElementById('screens'));
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+function newRole(){
+  openModal(`
+<div class="modal-h">
+<div><h3>Yangi rol</h3><p>Yangi rol yaratish — keyin ruxsatlar tanlanadi</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Kalit (lowercase, _ bilan)</label><input type="text" class="input" id="nr-key" placeholder="masalan: junior_seller"></div>
+<div class="ff"><label>Nomi (display)</label><input type="text" class="input" id="nr-label" placeholder="masalan: Junior sotuvchi"></div>
+<div class="ff"><label>Tavsif</label><input type="text" class="input" id="nr-desc" placeholder="ixtiyoriy"></div>
+<div class="ff"><label>Ikonka (Tabler)</label><input type="text" class="input" id="nr-icon" placeholder="ti-user" value="ti-user"></div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" onclick="createRole()"><i class="ti ti-check"></i>Yaratish</button>
+</div>
+`);
+}
+
+async function createRole(){
+  const key = document.getElementById('nr-key').value.trim().toLowerCase();
+  const label = document.getElementById('nr-label').value.trim();
+  const desc = document.getElementById('nr-desc').value.trim();
+  const icon = document.getElementById('nr-icon').value.trim();
+  if (!key || !label) { toast('Kalit va nomi kerak', 'err'); return; }
+  try {
+    const r = await api('admin-role-save', {
+      uid: UID, key, label, description: desc, icon, permissions: []
+    });
+    if (r.error) throw new Error(r.error);
+    toast('Rol yaratildi · ruxsatlar tanlang');
+    closeModal();
+    cache.rbac = null;
+    selectedRoleKey = key;
+    renderRoles(document.getElementById('screens'));
+  } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: FILIALLAR (embedded CEO view, desktop)
+// Barcha filtrlar bir-birga ishlaydi, KPI har filterda yangilanadi
+// =========================================================
+let filiallarFilter = { yarim: (new Date().getDate() <= 15 ? 1 : 2), profil: 'all', search: '', sortKey: 'prognoz_foiz', sortDir: 'desc' };
+let allFiliallar = [];      // API'dan kelgan to'liq ro'yxat
+let currentFiliallar = [];  // hozir ko'rsatilayotgan (filterlangan + sortlangan), openFilDetail uchun
+
+async function renderFiliallar(root){
+  root.innerHTML = topbar('Filiallar', 'CEO Dashboard', `
+    <select class="select" style="height:34px;width:auto;min-width:110px" id="fil-yarim-sel">
+      <option value="1" ${filiallarFilter.yarim===1?'selected':''}>Yarim 1 (1–15)</option>
+      <option value="2" ${filiallarFilter.yarim===2?'selected':''}>Yarim 2 (16+)</option>
+    </select>
+    <button class="icon-btn" onclick="renderFiliallar(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+  `);
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="kpi-row" id="fil-kpi"><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div></div><div class="skeleton" style="height:400px"></div>`;
+  root.appendChild(content);
+
+  document.getElementById('fil-yarim-sel').addEventListener('change', (e) => {
+    filiallarFilter.yarim = parseInt(e.target.value);
+    renderFiliallar(document.getElementById('screens'));
+  });
+
+  try {
+    const data = await api('admin-ceo-data', { uid: UID, yarim: filiallarFilter.yarim });
+    if (data.error) throw new Error(data.error);
+    allFiliallar = data.filiallar || [];
+
+    content.innerHTML = `
+<div class="kpi-row" id="fil-kpi"></div>
+
+<div class="audit-toolbar">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center" id="fil-profils"></div>
+  <input type="text" class="search-box" placeholder="Filial nomi..." id="fil-search" style="max-width:240px" value="${escapeHtml(filiallarFilter.search)}">
+</div>
+
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:2fr 100px 1fr 1fr 70px 70px 1fr 1fr 90px" id="fil-head">
+    <div data-sort="filial" style="cursor:pointer">Filial</div>
+    <div>Profil</div>
+    <div data-sort="plan" style="cursor:pointer">Plan</div>
+    <div data-sort="bajarildi" style="cursor:pointer">Bajarildi</div>
+    <div data-sort="foiz" style="cursor:pointer">Foiz</div>
+    <div data-sort="prognoz_foiz" style="cursor:pointer">Pr.foiz</div>
+    <div data-sort="prognoz" style="cursor:pointer">Pr.summa</div>
+    <div data-sort="qarz_fakt" style="cursor:pointer">Qarz</div>
+    <div>Updated</div>
+  </div>
+  <div id="fil-rows"></div>
+</div>
+`;
+
+    document.getElementById('fil-search').addEventListener('input', (e) => {
+      filiallarFilter.search = e.target.value;
+      applyFilFilters();
+    });
+    document.querySelectorAll('#fil-head [data-sort]').forEach(el => {
+      el.addEventListener('click', () => sortFil(el.dataset.sort));
+    });
+
+    applyFilFilters();  // dastlabki render
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// Yagona filtrlash + sortlash + KPI yangilash funksiyasi
+function applyFilFilters() {
+  // 1. Profil filter
+  let filtered = allFiliallar.slice();
+  if (filiallarFilter.profil !== 'all') {
+    filtered = filtered.filter(f => {
+      if (filiallarFilter.profil === 'Franshiza') return f.is_franchise;
+      return !f.is_franchise && f.profil === filiallarFilter.profil;
+    });
+  }
+  // 2. Search filter
+  const q = (filiallarFilter.search || '').toLowerCase().trim();
+  if (q) {
+    filtered = filtered.filter(f => (f.filial || '').toLowerCase().includes(q));
+  }
+  // 3. Sort
+  filtered.sort((a, b) => {
+    let av = a[filiallarFilter.sortKey];
+    let bv = b[filiallarFilter.sortKey];
+    if (av == null) av = (typeof bv === 'string') ? '' : 0;
+    if (bv == null) bv = (typeof av === 'string') ? '' : 0;
+    if (typeof av === 'string' || typeof bv === 'string') {
+      const cmp = String(av).localeCompare(String(bv));
+      return filiallarFilter.sortDir === 'desc' ? -cmp : cmp;
+    }
+    return filiallarFilter.sortDir === 'desc' ? Number(bv) - Number(av) : Number(av) - Number(bv);
+  });
+
+  currentFiliallar = filtered;
+
+  // 4. KPI faqat filterlangan filiallar bo'yicha
+  const nonFr = filtered.filter(f => !f.is_franchise);
+  const kpi = {
+    plan: nonFr.reduce((s,f) => s + Number(f.plan||0), 0),
+    bajarildi: filtered.reduce((s,f) => s + Number(f.bajarildi||0), 0),
+    prognoz: nonFr.reduce((s,f) => s + Number(f.prognoz||0), 0),
+    qarz_fakt: filtered.reduce((s,f) => s + Number(f.qarz_fakt||0), 0),
+    muddati_utgan: filtered.reduce((s,f) => s + Number(f.muddati_utgan||0), 0),
+    active_count: filtered.filter(f => Number(f.bajarildi||0) > 0).length,
+    total_count: filtered.length,
+    on_track_count: filtered.filter(f => Number(f.prognoz_foiz||0) >= 100 && Number(f.plan||0) > 0).length,
+    at_risk_count: filtered.filter(f => Number(f.prognoz_foiz||0) < 80 && Number(f.plan||0) > 0).length
+  };
+  const planFoiz = kpi.plan > 0 ? Math.round(kpi.bajarildi/kpi.plan*100) : 0;
+  const prognozFoizJami = kpi.plan > 0 ? Math.round(kpi.prognoz/kpi.plan*100) : 0;
+
+  const kpiEl = document.getElementById('fil-kpi');
+  if (kpiEl) kpiEl.innerHTML = `
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-target"></i>Plan</div>
+  <div class="kpi-val">${fmtShort(kpi.plan)}<span class="unit"> so'm</span></div>
+  <div class="kpi-delta" style="color:var(--text-3)">${kpi.active_count}/${kpi.total_count} aktiv filial</div>
+</div>
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-check"></i>Bajarildi</div>
+  <div class="kpi-val">${fmtShort(kpi.bajarildi)}</div>
+  <div class="kpi-delta ${planFoiz>=80?'up':planFoiz>=50?'warn':'dn'}">${planFoiz}% plandan</div>
+</div>
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-chart-line"></i>Prognoz</div>
+  <div class="kpi-val">${fmtShort(kpi.prognoz)}</div>
+  <div class="kpi-delta ${prognozFoizJami>=100?'up':'warn'}">${kpi.on_track_count} normal · ${kpi.at_risk_count} xavfli</div>
+</div>
+<div class="kpi">
+  <div class="kpi-lbl"><i class="ti ti-alert-triangle"></i>Qarzlar</div>
+  <div class="kpi-val" style="color:${kpi.qarz_fakt>0?'var(--err-text)':'var(--text)'}">${fmtShort(kpi.qarz_fakt)}</div>
+  <div class="kpi-delta dn">${fmtShort(kpi.muddati_utgan)} muddati o'tgan</div>
+</div>
+  `;
+
+  // 5. Profil pill'lar (qiymatlar barcha filiallar bo'yicha, lekin aktiv profil belgilanadi)
+  const allCount = allFiliallar.length;
+  const zapCount = allFiliallar.filter(f => !f.is_franchise && f.profil === 'Zapchast').length;
+  const aksCount = allFiliallar.filter(f => !f.is_franchise && f.profil === 'Aksessuar').length;
+  const frCount = allFiliallar.filter(f => f.is_franchise).length;
+  const profilsEl = document.getElementById('fil-profils');
+  if (profilsEl) profilsEl.innerHTML = `
+<div class="pill-sel ${filiallarFilter.profil==='all'?'active':''}" onclick="setFilProf('all')">Hammasi (${allCount})</div>
+<div class="pill-sel ${filiallarFilter.profil==='Zapchast'?'active':''}" onclick="setFilProf('Zapchast')">Zapchast (${zapCount})</div>
+<div class="pill-sel ${filiallarFilter.profil==='Aksessuar'?'active':''}" onclick="setFilProf('Aksessuar')">Aksessuar (${aksCount})</div>
+<div class="pill-sel ${filiallarFilter.profil==='Franshiza'?'active':''}" onclick="setFilProf('Franshiza')">Franshiza (${frCount})</div>
+  `;
+
+  // 6. Sort indikatorlari column header'larda
+  document.querySelectorAll('#fil-head [data-sort]').forEach(el => {
+    const key = el.dataset.sort;
+    if (!el.dataset.label) el.dataset.label = el.textContent.replace(/[↓↑]/g,'').trim();
+    const isActive = key === filiallarFilter.sortKey;
+    const arrow = isActive ? (filiallarFilter.sortDir === 'desc' ? ' ↓' : ' ↑') : '';
+    el.textContent = el.dataset.label + arrow;
+    el.style.color = isActive ? 'var(--text)' : '';
+    el.style.fontWeight = isActive ? '600' : '';
+  });
+
+  // 7. Jadval
+  const rowsEl = document.getElementById('fil-rows');
+  if (rowsEl) {
+    if (filtered.length === 0) {
+      rowsEl.innerHTML = `<div class="empty" style="padding:32px"><i class="ti ti-search-off"></i><p>Filtr bo'yicha topilmadi</p></div>`;
+    } else {
+      rowsEl.innerHTML = filtered.map((f, i) => filRow(f, i)).join('');
+    }
+  }
+}
+
+function filRow(f, idx) {
+  const foizColor = f.foiz >= 80 ? 'var(--ok-text)' : f.foiz >= 50 ? 'var(--warn-text)' : 'var(--err-text)';
+  const prognozColor = f.prognoz_foiz >= 100 ? 'var(--ok-text)' : f.prognoz_foiz >= 80 ? 'var(--warn-text)' : 'var(--err-text)';
+  const profilBadge = f.is_franchise ? '<span class="badge muted">Franshiza</span>' :
+    f.profil === 'Aksessuar' ? '<span class="badge info">Aksessuar</span>' : '<span class="badge ok">Zapchast</span>';
+  return `<div class="table-row" style="grid-template-columns:2fr 100px 1fr 1fr 70px 70px 1fr 1fr 90px;cursor:pointer" onclick="openFilDetail(${idx})">
+    <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(f.filial||'—')}</div>
+    <div>${profilBadge}</div>
+    <div style="font-variant-numeric:tabular-nums">${f.plan>0?fmtShort(f.plan):'—'}</div>
+    <div style="font-variant-numeric:tabular-nums">${f.bajarildi>0?fmtShort(f.bajarildi):'—'}</div>
+    <div style="color:${foizColor};font-weight:500">${f.foiz}%</div>
+    <div style="color:${prognozColor};font-weight:500;font-variant-numeric:tabular-nums">${f.prognoz>0?f.prognoz_foiz+'%':'—'}</div>
+    <div style="color:${prognozColor};font-variant-numeric:tabular-nums">${f.prognoz>0?fmtShort(f.prognoz):'—'}</div>
+    <div style="font-variant-numeric:tabular-nums;color:${f.qarz_fakt>0?'var(--err-text)':'var(--text-3)'}">${f.qarz_fakt>0?fmtShort(f.qarz_fakt):'—'}</div>
+    <div style="font-size:11px;color:var(--text-3)">${escapeHtml(f.updated_at_str||'—')}</div>
+  </div>`;
+}
+
+function setFilProf(p) {
+  filiallarFilter.profil = p;
+  applyFilFilters();
+}
+
+function sortFil(key) {
+  if (filiallarFilter.sortKey === key) {
+    filiallarFilter.sortDir = filiallarFilter.sortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    filiallarFilter.sortKey = key;
+    filiallarFilter.sortDir = 'desc';
+  }
+  applyFilFilters();
+}
+
+function openFilDetail(idx) {
+  const f = currentFiliallar[idx];
+  if (!f) return;
+  const planFoiz = f.plan > 0 ? Math.round(f.bajarildi/f.plan*100) : 0;
+  openModal(`
+<div class="modal-h">
+  <div>
+    <h3>${escapeHtml(f.filial)}</h3>
+    <p>${f.is_franchise?'Franshiza':escapeHtml(f.profil||'—')} · warehouse_id: ${f.warehouse_id} · ${escapeHtml(f.oy||'')} ${f.yil}</p>
+  </div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Plan</div>
+      <div style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">${f.plan>0?fmt(f.plan):'—'}</div>
+    </div>
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Bajarildi · ${planFoiz}%</div>
+      <div style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">${fmt(f.bajarildi)}</div>
+    </div>
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Prognoz · ${f.prognoz_foiz}%</div>
+      <div style="font-size:16px;font-weight:500;font-variant-numeric:tabular-nums;color:${f.prognoz_foiz>=100?'var(--ok-text)':'var(--warn-text)'}">${fmt(f.prognoz)}</div>
+    </div>
+    <div style="background:var(--bg-2);padding:12px;border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text-3)">Qarz · ${fmtShort(f.muddati_utgan)} m.o'tgan</div>
+      <div style="font-size:16px;font-weight:500;font-variant-numeric:tabular-nums;color:${f.qarz_fakt>0?'var(--err-text)':'var(--text)'}">${fmt(f.qarz_fakt)}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;font-size:12.5px;padding:12px 0">
+    <div style="color:var(--text-3)">Qoldi planga</div><div style="font-variant-numeric:tabular-nums">${fmt(f.qoldi)} so'm</div>
+    <div style="color:var(--text-3)">Tug. savdo</div><div style="font-variant-numeric:tabular-nums">${fmt(f.tugallanmagan_savdo)} so'm · ${f.tugallanmagan_savdo_son} ta</div>
+    <div style="color:var(--text-3)">Jami mijoz</div><div>${f.jami_mijoz} ta</div>
+    <div style="color:var(--text-3)">Transferlar</div><div>${f.transfers_count} ta yo'lda</div>
+    <div style="color:var(--text-3)">Ochiq buyurtmalar</div><div>${f.confirmed_count} ta</div>
+    <div style="color:var(--text-3)">Updated</div><div>${escapeHtml(f.updated_at_str||'—')}</div>
+  </div>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Yopish</button>
+  <a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/ceo.html?uid=${UID}&wid=${f.warehouse_id}" target="_blank"><i class="ti ti-external-link"></i>To'liq sahifa</a>
+</div>
+`);
+}
+
+// =========================================================
+// SCREEN: ULANMAGAN FILIALLAR (Aros API'da bor, biznikida yo'q)
+// =========================================================
+let unlinkedData = { unlinked: [], linked: [], total_aros: 0 };
+let unlinkedSearch = '';
+
+async function renderUlanmagan(root){
+  root.innerHTML = topbar('Ulanmagan filiallar', 'Aros API\'da bor, lekin biznikida yo\'q');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="kpi-row" id="unl-kpi">
+  <div class="kpi"><div class="kpi-lbl"><i class="ti ti-database"></i>Aros'da jami</div><div class="kpi-val skeleton" style="height:24px;width:60px"></div></div>
+  <div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected"></i>Ulangan</div><div class="kpi-val skeleton" style="height:24px;width:60px"></div></div>
+  <div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected-x"></i>Ulanmagan</div><div class="kpi-val skeleton" style="height:24px;width:60px"></div></div>
+</div>
+
+<div class="audit-toolbar">
+  <input type="text" class="search-box" placeholder="Filial nomi yoki ID..." id="unl-search" style="max-width:240px" value="${escapeHtml(unlinkedSearch)}">
+  <button class="icon-btn" onclick="refreshUnlinked()" title="Yangilash"><i class="ti ti-refresh"></i></button>
+</div>
+
+<div id="unl-content"><div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  root.appendChild(content);
+  document.getElementById('unl-search').addEventListener('input', (e) => {
+    unlinkedSearch = e.target.value;
+    renderUnlinkedRows();
+  });
+  await loadUnlinked();
+}
+
+async function loadUnlinked(){
+  try {
+    const data = await api('admin-unlinked-warehouses', { uid: UID });
+    if (data.error) throw new Error(data.error);
+    unlinkedData = data;
+    
+    const kpi = document.getElementById('unl-kpi');
+    if (kpi) kpi.innerHTML = `
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-database"></i>Aros'da jami</div><div class="kpi-val">${data.total_aros||0}</div><div class="kpi-delta" style="color:var(--text-3)">warehouse</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected"></i>Ulangan</div><div class="kpi-val" style="color:var(--ok-text)">${data.linked_count||0}</div><div class="kpi-delta up">cache'da bor</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-plug-connected-x"></i>Ulanmagan</div><div class="kpi-val" style="color:${(data.unlinked_count||0)>0?'var(--warn-text)':'var(--text)'}">${data.unlinked_count||0}</div><div class="kpi-delta ${(data.unlinked_count||0)>0?'warn':''}">ulash kerak</div></div>
+`;
+    
+    const badge = document.getElementById('nav-unlinked-ct');
+    if (badge) {
+      if ((data.unlinked_count||0) > 0) {
+        badge.style.display = '';
+        badge.textContent = data.unlinked_count;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+    
+    renderUnlinkedRows();
+  } catch(e){
+    document.getElementById('unl-content').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderUnlinkedRows(){
+  const wrap = document.getElementById('unl-content');
+  if (!wrap) return;
+  const q = (unlinkedSearch||'').toLowerCase().trim();
+  let list = unlinkedData.unlinked || [];
+  if (q) list = list.filter(w => 
+    (w.name||'').toLowerCase().includes(q) || 
+    String(w.id).includes(q) ||
+    (w.name_uz||'').toLowerCase().includes(q));
+  
+  if (!list.length) {
+    wrap.innerHTML = `<div class="empty"><i class="ti ti-check"></i><p>${unlinkedSearch ? 'Qidiruvga mos kelmadi' : 'Barchasi ulangan ✓'}</p></div>`;
+    return;
+  }
+  
+  wrap.innerHTML = `
+<div style="margin-bottom:10px;font-size:12px;color:var(--text-3)">
+  <b>${list.length}</b> ulanmagan filial${q?' (filtrlangan)':''}
+</div>
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:80px 2fr 2fr 100px 120px">
+    <div>ID</div>
+    <div>Nomi (Uz)</div>
+    <div>Manzil</div>
+    <div>Module</div>
+    <div>Amal</div>
+  </div>
+  ${list.map(w => `<div class="table-row" style="grid-template-columns:80px 2fr 2fr 100px 120px">
+    <div style="font-variant-numeric:tabular-nums;font-weight:600">${w.id}</div>
+    <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(w.name_uz||w.name)}">${escapeHtml(w.name_uz||w.name||'—')}</div>
+    <div style="color:var(--text-3);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(w.address)}">${escapeHtml(w.address||'—')}</div>
+    <div><span class="badge muted" style="font-size:10px">${escapeHtml(w.module||'—')}</span></div>
+    <div><button class="btn primary sm" style="width:100%" onclick='openLinkModal(${JSON.stringify(w).replace(/'/g,"&#39;")})'><i class="ti ti-link"></i> Ulash</button></div>
+  </div>`).join('')}
+</div>
+`;
+}
+
+async function refreshUnlinked(){
+  document.getElementById('unl-content').innerHTML = '<div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div>';
+  await loadUnlinked();
+}
+
+function openLinkModal(w){
+  const defaultName = w.name_uz || w.name || ('Warehouse ' + w.id);
+  openModal(`
+<div style="padding:20px;max-width:480px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <i class="ti ti-link" style="font-size:24px;color:var(--accent)"></i>
+    <div>
+      <div style="font-size:16px;font-weight:600">Filial ulash</div>
+      <div style="font-size:12px;color:var(--text-3)">ID: <b>${w.id}</b> · ${escapeHtml(defaultName)}</div>
+    </div>
+  </div>
+  
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Filial nomi *</label>
+      <input type="text" class="search-box" id="link-filial" value="${escapeHtml(defaultName)}" style="width:100%;margin-top:4px">
+    </div>
+    
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Profil *</label>
+      <select class="select" id="link-profil" style="width:100%;height:36px;margin-top:4px">
+        <option value="Zapchast">Zapchast</option>
+        <option value="Aksessuar">Aksessuar</option>
+        <option value="Franshiza">Franshiza</option>
+      </select>
+    </div>
+    
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Oylik Plan (so'm)</label>
+      <input type="number" class="search-box" id="link-plan" value="0" min="0" style="width:100%;margin-top:4px">
+      <div style="font-size:10px;color:var(--text-3);margin-top:3px">Joriy oy uchun. Keyinroq qo'shimcha oylar uchun Sheets'da to'g'rilash mumkin.</div>
+    </div>
+    
+    <div>
+      <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px">Qarz limit (so'm)</label>
+      <input type="number" class="search-box" id="link-qarz-limit" value="0" min="0" style="width:100%;margin-top:4px">
+    </div>
+    
+    <div style="background:var(--bg-2);border-radius:8px;padding:10px;font-size:11px;color:var(--text-3);line-height:1.5">
+      <i class="ti ti-info-circle"></i> Saqlangach: <b>FilialPlanlar</b> sheet'ga qator qo'shiladi. <b>Cache Builder</b> keyingi soatda yangi filial ma'lumotini Aros'dan olib boshlaydi. <b>warehouse_id = ${w.id}</b> bo'ladi.
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+    <button class="btn" onclick="closeModal()">Bekor</button>
+    <button class="btn primary" id="link-submit" onclick='submitLink(${w.id})'><i class="ti ti-check"></i> Saqlash</button>
+  </div>
+</div>
+`);
+}
+
+async function submitLink(warehouseId){
+  const filial = document.getElementById('link-filial').value.trim();
+  const profil = document.getElementById('link-profil').value;
+  const plan = parseFloat(document.getElementById('link-plan').value) || 0;
+  const qarzLimit = parseFloat(document.getElementById('link-qarz-limit').value) || 0;
+  
+  if (!filial) { alert('Filial nomi majburiy'); return; }
+  
+  const btn = document.getElementById('link-submit');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Saqlanyapti...'; }
+  
+  try {
+    const data = await api('admin-link-warehouse', {
+      uid: UID,
+      warehouse_id: warehouseId,
+      filial: filial,
+      profil: profil,
+      plan: plan,
+      qarz_limit: qarzLimit
+    });
+    if (data.error) throw new Error(data.error);
+    
+    closeModal();
+    // Refresh
+    await refreshUnlinked();
+    // Show success toast
+    if (window.showToast) window.showToast('Filial qo\'shildi: ' + filial, 'ok');
+    else alert('✓ Filial qo\'shildi: ' + filial);
+  } catch(e){
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Saqlash'; }
+    alert('Xato: ' + e.message);
+  }
+}
+
+// =========================================================
+// SCREEN: YUKLANMALAR (Zapis + Tilxat)
+// =========================================================
+let yukSubTab = 'zapis';
+let yukFilter = { search: '', filial: '', type: '', budilnik: '', since: '', hodim: '', sort: 'newest' };
+
+function renderYuklanmalar(root){
+  root.innerHTML = topbar('Yuklanmalar', yukSubTab === 'zapis' ? 'Audio yozuvlar va izohlar' : 'Tilxat hujjatlari');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div style="display:flex;gap:6px;margin-bottom:14px;border-bottom:0.5px solid var(--border);padding-bottom:8px">
+  <div class="pill-sel ${yukSubTab==='zapis'?'active':''}" onclick="setYukSubTab('zapis')"><i class="ti ti-microphone"></i>Zapislar</div>
+  <div class="pill-sel ${yukSubTab==='tilxat'?'active':''}" onclick="setYukSubTab('tilxat')"><i class="ti ti-file-text"></i>Tilxatlar</div>
+</div>
+<div id="yuk-content"><div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  root.appendChild(content);
+  if (yukSubTab === 'zapis') loadZapislar(); else loadTilxatlar();
+}
+
+function setYukSubTab(t) { yukSubTab = t; yukFilter = { search: '', filial: '', type: '', budilnik: '', since: '', hodim: '', sort: 'newest' }; renderYuklanmalar(document.getElementById('screens')); }
+function setYukType(t) { yukFilter.type = yukFilter.type === t ? '' : t; (yukSubTab==='zapis'?fetchZap:fetchTil)(); }
+function setYukBud(b) { yukFilter.budilnik = yukFilter.budilnik === b ? '' : b; fetchZap(); }
+function setYukSince(s) { yukFilter.since = yukFilter.since === s ? '' : s; fetchZap(); }
+
+async function loadZapislar(){
+  const wrap = document.getElementById('yuk-content');
+  wrap.innerHTML = `
+<div class="stats-row" id="zap-stats">
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-microphone"></i>Jami</div><div class="stat-val skeleton" style="height:20px;width:60px"></div></div>
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-volume"></i>Audio</div><div class="stat-val skeleton" style="height:20px;width:60px"></div></div>
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-bell"></i>Budilnikli</div><div class="stat-val skeleton" style="height:20px;width:60px"></div></div>
+  <div class="stat-card"><div class="stat-lbl"><i class="ti ti-cash"></i>Jami qarz</div><div class="stat-val skeleton" style="height:20px;width:80px"></div></div>
+</div>
+
+<div class="audit-toolbar">
+  <input type="text" class="search-box" placeholder="Mijoz, hodim, izoh..." id="zap-search" value="${escapeHtml(yukFilter.search)}" style="min-width:220px">
+  <select class="select" id="zap-filial" style="max-width:170px;height:34px"><option value="">Filial · hammasi</option></select>
+  <select class="select" id="zap-hodim" style="max-width:170px;height:34px"><option value="">Hodim · hammasi</option></select>
+  <select class="select" id="zap-sort" style="max-width:130px;height:34px">
+    <option value="newest" ${yukFilter.sort==='newest'?'selected':''}>Yangi avval</option>
+    <option value="oldest" ${yukFilter.sort==='oldest'?'selected':''}>Eski avval</option>
+    <option value="qarz_desc" ${yukFilter.sort==='qarz_desc'?'selected':''}>Qarz · katta</option>
+  </select>
+</div>
+
+<div class="audit-toolbar" style="margin-top:-4px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text-3);align-self:center;padding-right:4px">SANA:</span>
+    <div class="pill-sel ${yukFilter.since===''?'active':''}" onclick="setYukSince('')">Hammasi</div>
+    <div class="pill-sel ${yukFilter.since==='today'?'active':''}" onclick="setYukSince('today')">Bugun</div>
+    <div class="pill-sel ${yukFilter.since==='7days'?'active':''}" onclick="setYukSince('7days')">7 kun</div>
+    <div class="pill-sel ${yukFilter.since==='30days'?'active':''}" onclick="setYukSince('30days')">30 kun</div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text-3);align-self:center;padding-right:4px">TUR:</span>
+    <div class="pill-sel ${yukFilter.type==='audio'?'active':''}" onclick="setYukType('audio')"><i class="ti ti-volume"></i>Audio</div>
+    <div class="pill-sel ${yukFilter.type==='izoh'?'active':''}" onclick="setYukType('izoh')"><i class="ti ti-note"></i>Izoh</div>
+    <div class="pill-sel ${yukFilter.budilnik==='bilan'?'active':''}" onclick="setYukBud('bilan')"><i class="ti ti-bell"></i>Budilnik</div>
+  </div>
+</div>
+
+<div id="zap-rows"><div class="skeleton" style="height:60px;margin-bottom:4px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  document.getElementById('zap-search').addEventListener('input', (e) => {
+    yukFilter.search = e.target.value;
+    clearTimeout(window._zsearch);
+    window._zsearch = setTimeout(fetchZap, 300);
+  });
+  document.getElementById('zap-sort').addEventListener('change', (e) => {
+    yukFilter.sort = e.target.value;
+    fetchZap();
+  });
+  fetchZap();
+}
+
+async function fetchZap(){
+  try {
+    const data = await api('admin-recordings-list', {
+      uid: UID, limit: 100,
+      search: yukFilter.search, filial: yukFilter.filial,
+      type: yukFilter.type, budilnik: yukFilter.budilnik,
+      since: yukFilter.since, hodim: yukFilter.hodim, sort: yukFilter.sort
+    });
+    if (data.error) throw new Error(data.error);
+    const recs = data.recordings || [];
+    
+    // Stats card
+    const st = data.stats || {};
+    const statsRow = document.getElementById('zap-stats');
+    if (statsRow) {
+      statsRow.innerHTML = `
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-microphone"></i>Jami</div><div class="stat-val">${st.total||0}</div><div class="stat-sub">yozuv</div></div>
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-volume"></i>Audio</div><div class="stat-val">${st.audio_count||0}</div><div class="stat-sub">${Math.round((st.audio_count||0)/(st.total||1)*100)}% audio bilan</div></div>
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-bell"></i>Budilnikli</div><div class="stat-val">${st.budilnik_count||0}</div><div class="stat-sub">${Math.round((st.budilnik_count||0)/(st.total||1)*100)}% eslatma</div></div>
+<div class="stat-card"><div class="stat-lbl"><i class="ti ti-cash"></i>Jami qarz</div><div class="stat-val" style="color:var(--err-text)">${fmtShort(st.total_qarz)}</div><div class="stat-sub">so'm</div></div>
+`;
+    }
+    
+    // Filial dropdown — har safar yangilanadi (filterlar kaskadlanishi uchun)
+    const sel = document.getElementById('zap-filial');
+    if (sel) {
+      const curVal = yukFilter.filial;
+      sel.innerHTML = '<option value="">Filial · hammasi</option>' + (data.filiallar || []).map(f =>
+        `<option value="${f.warehouse_id}" ${curVal==String(f.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('');
+      sel.onchange = (e) => { yukFilter.filial = e.target.value; fetchZap(); };
+    }
+    
+    // Hodim dropdown — har safar yangilanadi (filterlar kaskadlanishi uchun)
+    const selH = document.getElementById('zap-hodim');
+    if (selH) {
+      const curVal = yukFilter.hodim;
+      selH.innerHTML = '<option value="">Hodim · hammasi</option>' + (data.hodimlar || []).map(h =>
+        `<option value="${h.telegram_id}" ${curVal===h.telegram_id?'selected':''}>${escapeHtml(h.ism||'@'+h.telegram_id)} (${h.count})</option>`).join('');
+      selH.onchange = (e) => { yukFilter.hodim = e.target.value; fetchZap(); };
+    }
+    
+    const wrap = document.getElementById('zap-rows');
+    if (!recs.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-microphone-off"></i><p>Zapis topilmadi</p></div>`;
+      return;
+    }
+    window._recs = recs;
+    wrap.innerHTML = `
+<div style="margin-bottom:10px;font-size:12px;color:var(--text-3);display:flex;justify-content:space-between;align-items:center">
+  <span><b>${data.shown}</b> / ${st.total||0} ko'rsatildi</span>
+  <span>Sahifa qarzlari: <b style="color:var(--err-text)">${fmt(recs.reduce((s,r)=>s+Number(r.umumiy_qarz||0),0))}</b> so'm</span>
+</div>
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:1.4fr 240px 1.1fr 0.9fr 100px 50px">
+    <div>Mijoz / Izoh</div><div>Audio</div><div>Hodim</div><div>Filial</div><div>Sana</div><div></div>
+  </div>
+  ${recs.map((r,i) => zapRow(r, i)).join('')}
+</div>
+`;
+  } catch(e) {
+    document.getElementById('zap-rows').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function zapRow(r, i) {
+  const isAudio = !!r.file_id;
+  return `<div class="table-row" style="grid-template-columns:1.4fr 240px 1.1fr 0.9fr 100px 50px;cursor:pointer" onclick="openZapDetail(${i})">
+    <div style="min-width:0">
+      <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px">
+        ${isAudio ? '<i class="ti ti-volume" style="font-size:13px;color:var(--info-text);flex-shrink:0"></i>' : '<i class="ti ti-note" style="font-size:13px;color:var(--text-3);flex-shrink:0"></i>'}
+        <span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.ism||'—')}</span>
+      </div>
+      ${r.izoh ? `<div style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${escapeHtml(r.izoh)}</div>` : ''}
+      ${r.umumiy_qarz > 0 ? `<div style="font-size:11px;color:var(--err-text);font-variant-numeric:tabular-nums;margin-top:2px">${fmt(r.umumiy_qarz)} so'm</div>` : ''}
+    </div>
+    <div class="audio-cell" onclick="event.stopPropagation()">
+      ${isAudio ? `
+        <audio class="mini-audio" controls preload="none" src="${r.view_link}"></audio>
+        <a class="open-drive" href="${r.drive_link}" target="_blank" title="Drive'da ochish"><i class="ti ti-external-link"></i></a>
+      ` : '<span style="font-size:11px;color:var(--text-3)">audio yo\'q</span>'}
+    </div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2)">${escapeHtml(r.hodim_ismi||'—')}</div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${escapeHtml(r.filial_nomi||'—')}</div>
+    <div style="font-size:11px;color:var(--text-3)">${timeAgo(r.created_at)}${r.budilnik_dt ? `<div style="font-size:10px;color:var(--warn-text);margin-top:2px"><i class="ti ti-bell" style="font-size:9px"></i> ${escapeHtml(r.budilnik_dt.split(' ')[0])}</div>` : ''}</div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;color:var(--text-3)"><i class="ti ti-chevron-right"></i></div>
+  </div>`;
+}
+
+function openZapDetail(i) {
+  const r = (window._recs || [])[i];
+  if (!r) return;
+  const isAudio = !!r.file_id;
+  openModal(`
+<div class="modal-h">
+  <div><h3>${escapeHtml(r.ism||'Yozuv #'+r.id)}</h3><p>${escapeHtml(r.filial_nomi||'—')} · ${timeAgo(r.created_at)}</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  ${isAudio ? `<audio controls preload="metadata" style="width:100%;border-radius:var(--radius)" src="${r.view_link}"></audio>` : ''}
+  ${r.izoh ? `<div style="background:var(--bg-2);padding:12px;border-radius:var(--radius);font-size:13px;line-height:1.55"><i class="ti ti-quote" style="color:var(--text-3);margin-right:6px"></i>${escapeHtml(r.izoh)}</div>` : ''}
+  <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:12.5px">
+    <div style="color:var(--text-3)">Mijoz</div><div>${escapeHtml(r.ism||'—')} <code class="mono">#${r.user_id}</code></div>
+    <div style="color:var(--text-3)">Hodim</div><div>${escapeHtml(r.hodim_ismi||'—')}${r.hodim_telegram_id?` <code class="mono">@${r.hodim_telegram_id}</code>`:''}</div>
+    <div style="color:var(--text-3)">Filial</div><div>${escapeHtml(r.filial_nomi||'—')} (id: ${r.warehouse_id})</div>
+    ${r.umumiy_qarz > 0 ? `<div style="color:var(--text-3)">Qarz</div><div style="font-variant-numeric:tabular-nums;color:var(--err-text);font-weight:500">${fmt(r.umumiy_qarz)} so'm</div>` : ''}
+    <div style="color:var(--text-3)">Yaratilgan</div><div>${escapeHtml((r.created_at||'').replace('T',' ').split('.')[0])}</div>
+    ${r.budilnik_dt ? `<div style="color:var(--text-3)">Budilnik</div><div>${escapeHtml(r.budilnik_dt.replace('T',' '))} <span style="color:var(--text-3)">· ${r.remind_minutes_before} daq oldin</span><br>${r.budilnik_sent_at ? `<span class="badge ok"><i class="ti ti-bell-ringing"></i>Yuborilgan ${timeAgo(r.budilnik_sent_at)}</span>` : '<span class="badge warn">Kutilmoqda</span>'}</div>` : ''}
+  </div>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Yopish</button>
+  ${isAudio && r.drive_link ? `<a class="btn" href="${r.drive_link}" target="_blank"><i class="ti ti-external-link"></i>Drive'da</a>` : ''}
+  ${isAudio ? `<a class="btn primary" href="${r.view_link}" download><i class="ti ti-download"></i>Yuklab olish</a>` : ''}
+</div>
+`);
+}
+
+// ---- TILXAT ----
+async function loadTilxatlar(){
+  const wrap = document.getElementById('yuk-content');
+  wrap.innerHTML = `
+<div class="audit-toolbar">
+  <input type="text" class="search-box" placeholder="Ism, filial, izoh..." id="til-search" value="${escapeHtml(yukFilter.search)}" style="min-width:240px">
+  <select class="select" id="til-filial" style="max-width:200px;height:34px"><option value="">Filial · hammasi</option></select>
+</div>
+<div id="til-rows"><div class="skeleton" style="height:60px"></div></div>
+`;
+  document.getElementById('til-search').addEventListener('input', (e) => {
+    yukFilter.search = e.target.value;
+    clearTimeout(window._tsearch);
+    window._tsearch = setTimeout(fetchTil, 300);
+  });
+  fetchTil();
+}
+
+async function fetchTil(){
+  try {
+    const data = await api('admin-tilxat-list', {
+      uid: UID, limit: 100,
+      search: yukFilter.search, filial: yukFilter.filial
+    });
+    if (data.error) throw new Error(data.error);
+    const tils = data.tilxatlar || [];
+    
+    const sel = document.getElementById('til-filial');
+    if (sel && sel.options.length <= 1) {
+      sel.innerHTML = '<option value="">Filial · hammasi</option>' + (data.filiallar || []).map(f =>
+        `<option value="${f.warehouse_id}" ${yukFilter.filial==String(f.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('');
+      sel.onchange = (e) => { yukFilter.filial = e.target.value; fetchTil(); };
+    }
+    
+    const wrap = document.getElementById('til-rows');
+    if (!tils.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i><p>Tilxat topilmadi</p></div>`;
+      return;
+    }
+    window._tils = tils;
+    wrap.innerHTML = `
+<div style="margin-bottom:10px;font-size:12px;color:var(--text-3);display:flex;justify-content:space-between">
+  <span><b>${data.shown}</b> / ${data.total} ko'rsatildi</span>
+  <span>Jami summa: <b style="color:var(--err-text)">${fmt(data.total_summa)}</b> so'm</span>
+</div>
+<div class="table-wrap">
+  <div class="table-head" style="grid-template-columns:1.6fr 1fr 1fr 120px 110px 80px">
+    <div>Mijoz</div><div>Filial</div><div>CEO</div><div>Summa</div><div>Sana</div><div></div>
+  </div>
+  ${tils.map((t,i) => tilRow(t, i)).join('')}
+</div>
+`;
+  } catch(e) {
+    document.getElementById('til-rows').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function tilRow(t, i) {
+  return `<div class="table-row" style="grid-template-columns:1.6fr 1fr 1fr 120px 110px 80px;cursor:pointer" onclick="openTilDetail(${i})">
+    <div style="min-width:0">
+      <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.ism||'—')}</div>
+      <div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${t.user_id}</div>
+    </div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${escapeHtml(t.filial||'—')}</div>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2)">${escapeHtml(t.ceo_ism||'@'+t.ceo_id)}</div>
+    <div style="font-variant-numeric:tabular-nums;font-weight:500;color:var(--err-text)">${fmt(t.umumiy_qarz)} so'm</div>
+    <div style="font-size:11px;color:var(--text-3)">${timeAgo(t.created_at)}</div>
+    <div style="display:flex;gap:4px;justify-content:flex-end;align-items:center">
+      ${t.view_link ? `<a class="icon-btn" href="${t.view_link}" target="_blank" title="Ko'rish" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation()"><i class="ti ti-eye"></i></a>` : ''}
+      <span class="icon-btn" style="width:28px;height:28px;font-size:13px;border:none"><i class="ti ti-chevron-right"></i></span>
+    </div>
+  </div>`;
+}
+
+function openTilDetail(i) {
+  const t = (window._tils || [])[i];
+  if (!t) return;
+  openModal(`
+<div class="modal-h">
+  <div><h3>${escapeHtml(t.ism||'Tilxat #'+t.id)}</h3><p>${escapeHtml(t.filial||'—')} · ${timeAgo(t.created_at)}</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  ${t.view_link ? `<div style="background:var(--bg-2);border-radius:var(--radius);padding:10px;text-align:center"><iframe src="${t.view_link}" style="width:100%;height:400px;border:none;border-radius:var(--radius);background:white"></iframe></div>` : '<div class="empty"><i class="ti ti-file-off"></i><p>Fayl topilmadi</p></div>'}
+  ${t.izoh ? `<div style="background:var(--bg-2);padding:12px;border-radius:var(--radius);font-size:13px;line-height:1.55"><i class="ti ti-quote" style="color:var(--text-3);margin-right:6px"></i>${escapeHtml(t.izoh)}</div>` : ''}
+  <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:12.5px">
+    <div style="color:var(--text-3)">Mijoz</div><div>${escapeHtml(t.ism||'—')} <code class="mono">#${t.user_id}</code></div>
+    <div style="color:var(--text-3)">Filial</div><div>${escapeHtml(t.filial||'—')} (id: ${t.warehouse_id})</div>
+    <div style="color:var(--text-3)">CEO</div><div>${escapeHtml(t.ceo_ism||'')} <code class="mono">@${t.ceo_id}</code></div>
+    <div style="color:var(--text-3)">Summa</div><div style="font-variant-numeric:tabular-nums;color:var(--err-text);font-weight:500">${fmt(t.umumiy_qarz)} so'm</div>
+    <div style="color:var(--text-3)">Yaratilgan</div><div>${escapeHtml((t.created_at||'').replace('T',' ').split('.')[0])}</div>
+    <div style="color:var(--text-3)">Fayl</div><div style="font-family:var(--mono);font-size:10.5px;color:var(--text-3);word-break:break-all">${escapeHtml(t.file_name||'—')}</div>
+  </div>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Yopish</button>
+  ${t.download_link ? `<a class="btn primary" href="${t.download_link}" target="_blank"><i class="ti ti-download"></i>Yuklab olish</a>` : ''}
+</div>
+`);
+}
+
+// =========================================================
+// SCREEN: BUGALTER
+// =========================================================
+function renderBugalter(root){
+  root.innerHTML = topbar('Bugalter', 'Kassa va transferlar');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="card">
+<div style="text-align:center;padding:32px 20px">
+<i class="ti ti-cash-register" style="font-size:48px;color:var(--text-3);margin-bottom:14px;display:block"></i>
+<h3 style="font-size:16px;font-weight:500;margin-bottom:6px">Bugalter dashboard</h3>
+<p style="font-size:13px;color:var(--text-2);max-width:360px;margin:0 auto 20px;line-height:1.6">Kassa balanslari, yo'ldagi transferlar, yopilmagan smenalar. Mavjud bugalter.html sahifasini ochadi.</p>
+<a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/bugalter.html?uid=${UID}" target="_blank"><i class="ti ti-external-link"></i>Bugalter'ni ochish</a>
+</div>
+</div>
+`;
+  root.appendChild(content);
+}
+
+// =========================================================
+// SCREEN: AUDIT LOG
+// =========================================================
+async function renderAudit(root){
+  root.innerHTML = topbar('Sistema', 'Kuzatuv · audit log');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<input type="text" class="search-box" placeholder="Qidiruv · user, action, target" id="au-search">
+<div class="pill-sel" onclick="toast('Filterlar Phase 3 da', 'err')"><i class="ti ti-filter"></i>Hammasi</div>
+<button class="icon-btn" onclick="loadAuditLog()"><i class="ti ti-refresh"></i></button>
+</div>
+<div id="audit-table-wrap"><div class="skeleton" style="height:50px;margin-bottom:4px"></div><div class="skeleton" style="height:50px;margin-bottom:4px"></div><div class="skeleton" style="height:50px"></div></div>
+`;
+  root.appendChild(content);
+  loadAuditLog();
+}
+
+async function loadAuditLog(){
+  try {
+    const data = await api('admin-audit-log', { uid: UID, limit: 50 });
+    if (data.error) throw new Error(data.error);
+    const entries = data.entries || [];
+    const wrap = document.getElementById('audit-table-wrap');
+    if (!entries.length) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-history-off"></i><p>Hodisalar yo'q</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:100px 130px 1fr 90px"><div>Vaqt</div><div>User</div><div>Hodisa</div><div>Natija</div></div>
+${entries.map(a => `
+<div class="table-row" style="grid-template-columns:100px 130px 1fr 90px">
+<div style="font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums">${escapeHtml(timeAgo(a.created_at))}</div>
+<div style="display:flex;align-items:center;gap:6px;min-width:0">
+<div class="av" style="width:22px;height:22px;font-size:10px">${initials(a.actor_name)}</div>
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(a.actor_name||'Sistema')}</div>
+</div>
+<div>
+<span style="font-weight:500">${escapeHtml(actionLabel(a.action))}</span>
+${a.target_label ? `<span style="color:var(--text-2)"> · ${escapeHtml(a.target_label)}</span>` : ''}
+${a.meta && Object.keys(a.meta).length ? `<div style="font-size:10.5px;color:var(--text-3);margin-top:2px">${Object.entries(a.meta).filter(([k,v])=>v).slice(0,3).map(([k,v])=>`${k}: ${typeof v==='object'?JSON.stringify(v):v}`).join(' · ')}</div>` : ''}
+</div>
+<div><span class="badge ${a.result==='ok'?'ok':a.result==='error'?'err':'muted'}">${escapeHtml(a.result||'—')}</span></div>
+</div>`).join('')}
+</div>
+`;
+  } catch(e){
+    document.getElementById('audit-table-wrap').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// =========================================================
+// SCREEN: WORKFLOWS (placeholder)
+// =========================================================
+function renderWorkflows(root){
+  root.innerHTML = topbar('Sistema', 'Workflow\'lar', '<a class="btn" href="https://n8n.arosmarket.com" target="_blank"><i class="ti ti-external-link"></i>n8n</a>');
+  const content = document.createElement('div');
+  const workflows = [
+    { name: 'Cache Builder', id: 'xgfB2F52mXZ5tJJk', desc: 'Aros → PG, har soatda', status: 'ok' },
+    { name: 'Cache API', id: 'qEsBNa7FRUkraYjZ', desc: '6 ta webhook (CEO/Filial/Calendar)', status: 'ok' },
+    { name: 'Bugalter Sync', id: 't6nBWXXlC7NQiGfu', desc: 'Kassa balanslari, har soatda', status: 'warn' },
+    { name: 'Bugalter API', id: '3AqD76zvhI76nByf', desc: 'Bugalter dashboard endpoint\'lari', status: 'ok' },
+    { name: 'SLA Sync', id: 'wKrngMVzHq7MYhb6', desc: 'warehouse_sla_outbound', status: 'ok' },
+    { name: 'AROS - Admin API', id: 'hgfueNHEIfdMCGFb', desc: 'Admin panel API (yangi)', status: 'ok' },
+    { name: 'Hodim Sync', id: 'MYRCp6cMuMjczufF', desc: 'Xodim KPI, hozir o\'chirilgan', status: 'off' }
+  ];
+  content.innerHTML = `
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-lbl">Aktiv</div><div class="kpi-val">${workflows.filter(w=>w.status==='ok').length}</div></div>
+<div class="kpi"><div class="kpi-lbl">Ogohlantirish</div><div class="kpi-val" style="color:var(--warn-text)">${workflows.filter(w=>w.status==='warn').length}</div></div>
+<div class="kpi"><div class="kpi-lbl">O'chiq</div><div class="kpi-val" style="color:var(--text-3)">${workflows.filter(w=>w.status==='off').length}</div></div>
+</div>
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:1.8fr 1fr 60px"><div>Workflow</div><div>Status</div><div></div></div>
+${workflows.map(w => `
+<div class="table-row" style="grid-template-columns:1.8fr 1fr 60px">
+<div style="display:flex;align-items:center;gap:10px">
+<span class="dot ${w.status==='warn'?'warn':w.status==='off'?'off':''}"></span>
+<div><div style="font-weight:500">${escapeHtml(w.name)}</div><div style="font-size:11px;color:var(--text-3)">${escapeHtml(w.desc)}</div></div>
+</div>
+<div>${w.status==='ok'?'<span class="badge ok">Online</span>':w.status==='warn'?'<span class="badge warn">Diqqat</span>':'<span class="badge muted">O\'chiq</span>'}</div>
+<div><a class="icon-btn" href="https://n8n.arosmarket.com/workflow/${w.id}" target="_blank" title="n8n'da ochish"><i class="ti ti-external-link"></i></a></div>
+</div>`).join('')}
+</div>
+<div style="margin-top:14px;padding:12px;background:var(--bg-2);border-radius:var(--radius);font-size:11.5px;color:var(--text-3);text-align:center">N8n bilan to'liq integratsiya (real-time status, manual run, execution history) Phase 4 da rejalashtirilgan</div>
+`;
+  root.appendChild(content);
+}
+
+// =========================================================
+// SCREEN: SETTINGS (placeholder)
+// =========================================================
+function renderSettings(root){
+  root.innerHTML = topbar('Sistema', 'Sozlamalar');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="card">
+<div class="card-h"><h3>Telegram bot</h3></div>
+<div style="display:grid;gap:10px">
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="font-size:12px;color:var(--text-2)">Bot username</div><code class="mono">@arosmarket_dashboard_bot</code></div>
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="font-size:12px;color:var(--text-2)">Mini App URL</div><code class="mono" style="font-size:10.5px">s1mple-911.github.io/arosmarket-dashboard/</code></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<div class="card-h"><h3>API endpoint'lari</h3></div>
+<div style="display:grid;gap:8px;font-size:12px">
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="color:var(--text-2)">n8n base</div><code class="mono">n8n.arosmarket.com</code></div>
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="color:var(--text-2)">Aros API</div><code class="mono">api.aros.uz</code></div>
+<div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center"><div style="color:var(--text-2)">PostgreSQL</div><span class="badge ok">Postgres account 3</span></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<div class="card-h"><h3>Rejalashtirilgan</h3></div>
+<div style="font-size:13px;color:var(--text-2);line-height:1.7">
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Telegram bot token o'zgartirish (Phase 3)</div>
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Aros API credentials boshqarish (Phase 3)</div>
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Maxsus ID'lar (CEO_IDS, BUGALTER_IDS, DEV_IDS) tahrirlash (Phase 3)</div>
+<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">⚪ Bildirishnomalar sozlamalari (Phase 4)</div>
+<div style="padding:8px 0">⚪ Backup va restore (Phase 4)</div>
+</div>
+</div>
+`;
+  root.appendChild(content);
+}
+
+// =========================================================
+// START
+// =========================================================
+
+// =========================================================
+// DAVOMAT ADMIN
+// =========================================================
+let davWarehousesCache = null;
+async function davLoadWarehouses(){
+  if(davWarehousesCache) return davWarehousesCache;
+  const d = await api('aros-admin-dav-warehouses', { uid: UID });
+  davWarehousesCache = (d.list||[]);
+  return davWarehousesCache;
+}
+
+async function renderDavomatHodimlar(root){
+  root.innerHTML = topbar('Davomat', 'Hodimlar', '<button class="icon-btn" onclick="renderDavomatHodimlar(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
+  const content = document.createElement('div');
+  content.innerHTML = `<div id="dav-h-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>`;
+  root.appendChild(content);
+  try{
+    const [data] = await Promise.all([ api('aros-admin-dav-hodimlar',{uid:UID}), davLoadWarehouses() ]);
+    const list = data.list||[];
+    window._davHodimlar = list;
+    const wrap = document.getElementById('dav-h-wrap');
+    if(!list.length){ wrap.innerHTML='<div class="empty"><i class="ti ti-users-off"></i><p>Hodim topilmadi</p></div>'; return; }
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:1.6fr 1.2fr 0.9fr 60px 1.6fr 56px">
+<div>Hodim</div><div>Telefon</div><div>Lavozim</div><div>Yuz</div><div>Filiallar</div><div></div>
+</div>
+${list.map(u=>`
+<div class="table-row" style="grid-template-columns:1.6fr 1.2fr 0.9fr 60px 1.6fr 56px">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
+<div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">@${u.telegram_id}</div></div>
+</div>
+<div style="color:var(--text-2)">${escapeHtml(u.telefon||'—')}</div>
+<div><span class="badge muted">${escapeHtml(u.lavozim||'')}</span></div>
+<div>${u.enrolled?'<span class="badge ok"><i class="ti ti-check"></i></span>':'<span class="badge muted">—</span>'}</div>
+<div style="display:flex;flex-wrap:wrap;gap:3px">${(u.warehouses||[]).map(w=>`<span class="badge info">${escapeHtml(w.warehouse_name||('#'+w.warehouse_id))}</span>`).join('') || '<span style="color:var(--text-3)">—</span>'}</div>
+<div><button class="btn sm" onclick="davEditWarehouses('${u.telegram_id}')"><i class="ti ti-edit"></i></button></div>
+</div>`).join('')}
+</div>`;
+  }catch(e){
+    document.getElementById('dav-h-wrap').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function davEditWarehouses(telegramId){
+  const u = (window._davHodimlar||[]).find(x=>String(x.telegram_id)===String(telegramId));
+  const whs = await davLoadWarehouses();
+  const sel = new Set((u&&u.warehouses?u.warehouses:[]).map(w=>String(w.warehouse_id)));
+  const rows = whs.map(w=>`
+<label style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:0.5px solid var(--border);cursor:pointer">
+<input type="checkbox" value="${w.warehouse_id}" ${sel.has(String(w.warehouse_id))?'checked':''} style="width:17px;height:17px;accent-color:var(--info-line)">
+<span style="flex:1">${escapeHtml(w.nomi)}</span>
+${w.has_coords?'<span class="badge ok" style="font-size:10px"><i class="ti ti-map-pin"></i> GPS</span>':'<span class="badge muted" style="font-size:10px">GPS yo\'q</span>'}
+</label>`).join('');
+  openModal(`
+<div style="font-size:16px;font-weight:600;margin-bottom:4px">${escapeHtml(u&&u.ism?u.ism:telegramId)}</div>
+<div style="font-size:12px;color:var(--text-3);margin-bottom:10px">Ishlaydigan filiallar (bir nechta tanlash mumkin)</div>
+<div style="max-height:48vh;overflow:auto;border:0.5px solid var(--border);border-radius:var(--radius)">${rows||'<div class="empty">Filial yoq</div>'}</div>
+<div class="modal-foot" style="display:flex;gap:8px;margin-top:14px">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" id="dav-save-btn" onclick="davSaveWarehouses('${telegramId}')">Saqlash</button>
+</div>`);
+}
+
+async function davSaveWarehouses(telegramId){
+  const checks = Array.from(document.querySelectorAll('#modal-content input[type=checkbox]:checked'));
+  const ids = checks.map(c=>c.value);
+  const btn = document.getElementById('dav-save-btn');
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader-2"></i>'; }
+  try{
+    await api('aros-admin-dav-set', { uid:UID, target_uid:telegramId, warehouse_ids: ids.join(',') });
+    // GPS uchun koordinatalarni Aros API dan sinxronlash (faqat hali yo'qlari)
+    const whs = await davLoadWarehouses();
+    const need = ids.filter(id=>{ const w=whs.find(x=>String(x.warehouse_id)===String(id)); return w && !w.has_coords; });
+    for(const id of need){ try{ await api('aros-admin-dav-coords', { uid:UID, warehouse_id:id }); }catch(e){} }
+    davWarehousesCache = null;
+    closeModal(); toast('Filiallar saqlandi');
+    renderDavomatHodimlar(document.getElementById('screens'));
+  }catch(e){ toast('Xato: '+e.message, 'err'); if(btn){ btn.disabled=false; btn.innerHTML='Saqlash'; } }
+}
+
+// ---- Davomat tarixi ----
+let davHistFilter = { from:'', to:'', wid:'' };
+async function renderDavomatTarix(root){
+  root.innerHTML = topbar('Davomat', 'Davomat tarixi', '<button class="btn primary sm" onclick="davExportExcel()"><i class="ti ti-file-spreadsheet"></i>Excel</button>');
+  const whs = await davLoadWarehouses().catch(()=>[]);
+  const now = new Date(Date.now()+5*3600*1000);
+  const today = now.toISOString().slice(0,10);
+  if(!davHistFilter.to) davHistFilter.to = today;
+  if(!davHistFilter.from){ const d=new Date(now); d.setDate(d.getDate()-7); davHistFilter.from=d.toISOString().slice(0,10); }
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+<input type="date" class="input" id="dav-from" value="${davHistFilter.from}" style="width:auto">
+<span style="color:var(--text-3)">—</span>
+<input type="date" class="input" id="dav-to" value="${davHistFilter.to}" style="width:auto">
+<select class="select" id="dav-wid" style="width:auto;min-width:150px">
+<option value="">Barcha filiallar</option>
+${whs.map(w=>`<option value="${w.warehouse_id}" ${String(davHistFilter.wid)===String(w.warehouse_id)?'selected':''}>${escapeHtml(w.nomi)}</option>`).join('')}
+</select>
+<button class="btn primary" onclick="davApplyHist()"><i class="ti ti-filter"></i>Ko'rsatish</button>
+</div>
+<div id="dav-t-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>`;
+  root.appendChild(content);
+  davLoadHist();
+}
+function davApplyHist(){
+  davHistFilter.from = document.getElementById('dav-from').value;
+  davHistFilter.to = document.getElementById('dav-to').value;
+  davHistFilter.wid = document.getElementById('dav-wid').value;
+  davLoadHist();
+}
+async function davLoadHist(){
+  const wrap = document.getElementById('dav-t-wrap');
+  wrap.innerHTML = '<div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div>';
+  try{
+    const d = await api('aros-admin-dav-history', { uid:UID, from:davHistFilter.from, to:davHistFilter.to, wid:davHistFilter.wid });
+    const list = d.list||[];
+    window._davHist = list;
+    if(!list.length){ wrap.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i><p>Yozuv topilmadi</p></div>'; return; }
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:0.85fr 0.6fr 1.4fr 1.3fr 0.9fr 0.7fr">
+<div>Sana</div><div>Soat</div><div>Hodim</div><div>Filial</div><div>Amal</div><div>Verif.</div>
+</div>
+${list.map(r=>{
+  const dt = new Date(r.vaqt);
+  const soat = dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+  const kir = r.turi==='kirish';
+  const verif = r.success ? '<span class="badge ok"><i class="ti ti-check"></i></span>' : '<span class="badge err"><i class="ti ti-x"></i></span>';
+  return `
+<div class="table-row" style="grid-template-columns:0.85fr 0.6fr 1.4fr 1.3fr 0.9fr 0.7fr">
+<div style="font-variant-numeric:tabular-nums">${r.sana}</div>
+<div style="font-variant-numeric:tabular-nums;color:var(--text-2)">${soat}</div>
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.hodim||'')}</div>
+<div style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.filial||'')}</div>
+<div>${kir?'<span class="badge ok">Kirish</span>':'<span class="badge warn">Chiqish</span>'}</div>
+<div>${verif}</div>
+</div>`;
+}).join('')}
+</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding:0 4px">Jami: ${list.length} ta yozuv</div>`;
+  }catch(e){
+    wrap.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+function davExportExcel(){
+  const list = window._davHist||[];
+  if(!list.length){ toast('Eksport uchun maʼlumot yoq','err'); return; }
+  if(typeof XLSX==='undefined'){ toast('Excel kutubxonasi yuklanmadi','err'); return; }
+  const rows = list.map(r=>{
+    const dt = new Date(r.vaqt);
+    return {
+      'Sana': r.sana,
+      'Soat': dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}),
+      'Hodim': r.hodim||'',
+      'Telegram ID': r.telegram_id||'',
+      'Filial': r.filial||'',
+      'Amal': r.turi==='kirish'?'Kirish':'Chiqish',
+      'Verifikatsiya': r.success?'Ha':'Yo\'q',
+      'GPS': r.gps_ok?'Ha':'Yo\'q',
+      'Tiriklik': r.liveness_ok?'Ha':'Yo\'q'
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Davomat');
+  XLSX.writeFile(wb, 'davomat_'+(davHistFilter.from||'')+'_'+(davHistFilter.to||'')+'.xlsx');
+}
+
+
+init();
+</script>
+
+</body>
+</html>
