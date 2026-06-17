@@ -132,8 +132,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="scr" id="screen-login">
     <div class="back" onclick="go('welcome')"><div class="b">←</div>Orqaga</div>
     <div class="auth-wrap">
-      <div class="logo"><div class="m">A</div><b>Kirish</b><small>Telegram ID yoki telefon bilan</small></div>
-      <div class="fld"><label>Telegram ID yoki telefon raqam</label><input class="inp" id="loginId" inputmode="text" placeholder="1255605633 yoki +99890..."></div>
+      <div class="logo"><div class="m">A</div><b>Kirish</b><small>Telefon raqam va parol bilan</small></div>
+      <div class="fld"><label>Telefon raqam</label><input class="inp" id="loginId" inputmode="tel" placeholder="+998 90 123 45 67"></div>
       <div class="fld"><label>Parol</label><input class="inp" id="loginParol" type="password" placeholder="••••••"></div>
       <button class="prim" id="loginBtn" onclick="doLogin()">Kirish</button>
       <div class="err" id="loginErr"></div>
@@ -145,8 +145,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="scr" id="screen-signup">
     <div class="back" onclick="go('welcome')"><div class="b">←</div>Orqaga</div>
     <div class="auth-wrap">
-      <div class="logo"><div class="m">A</div><b>Ro'yxatdan o'tish</b><small id="signupSub">Ma'lumotlaringizni kiriting</small></div>
-      <div class="fld"><label>Telegram ID</label><input class="inp" id="suUid" inputmode="numeric"></div>
+      <div class="logo"><div class="m">A</div><b>Ro'yxatdan o'tish</b><small id="signupSub">Telefon raqam va parol kiriting</small></div>
       <div class="fld"><label>Telefon raqam</label><input class="inp" id="suPhone" inputmode="tel" placeholder="+998 90 123 45 67"></div>
       <div class="fld"><label>Parol yarating</label><input class="inp" id="suParol" type="password" placeholder="kamida 4 ta belgi"></div>
       <div class="fld"><label>Parolni takrorlang</label><input class="inp" id="suParol2" type="password" placeholder="••••••"></div>
@@ -159,13 +158,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="scr" id="screen-forgot">
     <div class="back" onclick="go('login')"><div class="b">←</div>Orqaga</div>
     <div class="auth-wrap">
-      <div class="logo"><div class="m">A</div><b>Parolni tiklash</b><small>Yangi parol o'rnating</small></div>
-      <div class="fld"><label>Telegram ID yoki telefon</label><input class="inp" id="fgId" inputmode="text" placeholder="1255605633 yoki +99890..."></div>
+      <div class="logo"><div class="m">A</div><b>Parolni tiklash</b><small>Telefon raqam orqali tiklang</small></div>
+      <div class="fld"><label>Telefon raqam</label><input class="inp" id="fgPhone" inputmode="tel" placeholder="+998 90 123 45 67"></div>
       <div class="fld"><label>Yangi parol</label><input class="inp" id="fgParol" type="password" placeholder="kamida 4 ta belgi"></div>
       <div class="fld"><label>Yangi parolni takrorlang</label><input class="inp" id="fgParol2" type="password" placeholder="••••••"></div>
       <button class="prim" id="fgBtn" onclick="doForgot()">Parolni yangilash</button>
       <div class="err" id="fgErr"></div>
-      <p class="note">Telegram ichida ochsangiz, ID avtomatik to'ladi.</p>
     </div>
   </div>
 
@@ -259,7 +257,6 @@ function go(scr){
   var authScreens=['welcome','login','signup','forgot'];
   if(authScreens.indexOf(scr)!==-1){ show(scr); document.getElementById('bottomNav').classList.add('hidden');
     if(scr==='signup') prepSignup();
-    if(scr==='forgot'){ document.getElementById('fgId').value = uid||''; }
     return;
   }
   show(scr); document.getElementById('bottomNav').classList.remove('hidden');
@@ -275,7 +272,7 @@ async function init(){
   document.getElementById('ovqatSoon').style.display = OVQAT_BOT_URL ? 'none' : 'block';
   if(token && uid){
     try{
-      var r=await fetch(SESSION_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid,token:token})});
+      var r=await postForm(SESSION_API,{uid:uid,token:token});
       var d=await r.json();
       if(d && d.valid){ profile=d.profile||{}; go('hub'); return; }
     }catch(e){}
@@ -286,9 +283,7 @@ async function init(){
 
 // ===== Signup prep =====
 function prepSignup(){
-  document.getElementById('suUid').value = uid||'';
-  if(uid) document.getElementById('suUid').classList.add('ro'), document.getElementById('suUid').setAttribute('readonly','');
-  // ism/filial oldindan STATS dan
+  // ism/filial oldindan STATS dan (uid Telegram'dan avtomatik)
   if(uid) fetch(STATS_API+'?uid='+uid).then(function(r){return r.json();}).then(function(d){
     var u=(d&&d.user)?d.user:(Array.isArray(d)&&d[0]&&d[0].user?d[0].user:null);
     if(u){ prefill={ism:u.ism||'', wid:(u.warehouse_id||wid||null), warehouse_name:u.warehouse_name||''};
@@ -298,6 +293,7 @@ function prepSignup(){
 }
 
 function digits(s){ return String(s||'').replace(/\D/g,''); }
+function postForm(url,obj){ var b=Object.keys(obj).map(function(k){ var v=obj[k]; return encodeURIComponent(k)+'='+encodeURIComponent(v==null?'':v); }).join('&'); return fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}); }
 
 // ===== Login =====
 async function doLogin(){
@@ -308,8 +304,7 @@ async function doLogin(){
   if(!parol){ err.textContent='Parol kiriting'; return; }
   var btn=document.getElementById('loginBtn'); btn.disabled=true; var old=btn.textContent; btn.innerHTML='<span class="spin"></span>';
   try{
-    var r=await fetch(LOGIN_API,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({login:login, login_norm:digits(login), parol:parol})});
+    var r=await postForm(LOGIN_API,{login:login, login_norm:digits(login), parol:parol});
     var d=await r.json();
     if(d && d.success && d.token){ saveSession(d); go('hub'); }
     else { err.textContent=(d&&d.message)||'Xatolik'; btn.disabled=false; btn.textContent=old; }
@@ -318,20 +313,17 @@ async function doLogin(){
 
 // ===== Signup =====
 async function doSignup(){
-  var su=document.getElementById('suUid').value.trim();
   var phone=document.getElementById('suPhone').value.trim();
   var p1=document.getElementById('suParol').value.trim();
   var p2=document.getElementById('suParol2').value.trim();
   var err=document.getElementById('suErr'); err.textContent='';
-  if(!su){ err.textContent='Telegram ID kiriting'; return; }
+  if(!uid){ err.textContent='Telegram orqali oching (ID aniqlanmadi)'; return; }
   if(!phone || digits(phone).length<7){ err.textContent='Telefon raqamni to\'g\'ri kiriting'; return; }
   if(p1.length<4){ err.textContent='Parol kamida 4 ta belgi'; return; }
   if(p1!==p2){ err.textContent='Parollar mos kelmadi'; return; }
-  uid=su;
   var btn=document.getElementById('suBtn'); btn.disabled=true; var old=btn.textContent; btn.innerHTML='<span class="spin"></span>';
   try{
-    var r=await fetch(SIGNUP_API,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({uid:su, telefon:digits(phone), parol:p1, ism:prefill.ism||'', wid:prefill.wid||(wid?parseInt(wid):null), warehouse_name:prefill.warehouse_name||''})});
+    var r=await postForm(SIGNUP_API,{uid:uid, telefon:digits(phone), parol:p1, ism:prefill.ism||'', wid:(prefill.wid||(wid?parseInt(wid):'')), warehouse_name:prefill.warehouse_name||''});
     var d=await r.json();
     if(d && d.success && d.token){ saveSession(d); go('hub'); }
     else { err.textContent=(d&&d.message)||'Xatolik'; btn.disabled=false; btn.textContent=old; }
@@ -340,19 +332,18 @@ async function doSignup(){
 
 // ===== Forgot =====
 async function doForgot(){
-  var id=document.getElementById('fgId').value.trim();
+  var phone=document.getElementById('fgPhone').value.trim();
   var p1=document.getElementById('fgParol').value.trim();
   var p2=document.getElementById('fgParol2').value.trim();
   var err=document.getElementById('fgErr'); err.textContent='';
-  if(!id){ err.textContent='Telegram ID yoki telefon kiriting'; return; }
+  if(!phone){ err.textContent='Telefon raqam kiriting'; return; }
   if(p1.length<4){ err.textContent='Yangi parol kamida 4 ta belgi'; return; }
   if(p1!==p2){ err.textContent='Parollar mos kelmadi'; return; }
   var btn=document.getElementById('fgBtn'); btn.disabled=true; var old=btn.textContent; btn.innerHTML='<span class="spin"></span>';
   try{
-    var r=await fetch(RESET_API,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({uid:id, login_norm:digits(id), parol:p1})});
+    var r=await postForm(RESET_API,{uid:(uid||''), login_norm:digits(phone), parol:p1});
     var d=await r.json();
-    if(d && d.success && d.token){ uid=d.uid||id; saveSession(d); toast('Parol yangilandi'); go('hub'); }
+    if(d && d.success && d.token){ uid=d.uid||uid; saveSession(d); toast('Parol yangilandi'); go('hub'); }
     else { err.textContent=(d&&d.message)||'Xatolik'; btn.disabled=false; btn.textContent=old; }
   }catch(e){ err.textContent='Server xatosi'; btn.disabled=false; btn.textContent=old; }
 }
@@ -363,7 +354,7 @@ function saveSession(d){
 }
 
 async function doLogout(){
-  try{ await fetch(LOGOUT_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid})}); }catch(e){}
+  try{ await postForm(LOGOUT_API,{uid:uid}); }catch(e){}
   try{ localStorage.removeItem('aros-app-token'); }catch(e){} token='';
   document.getElementById('loginParol').value='';
   go('welcome');
