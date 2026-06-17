@@ -152,7 +152,7 @@ var running = false;
 var stream = null;
 var modelsReady = false;
 var gps = { lat:null, lng:null, ok:false };
-var blinkSeen = false, eyeWasOpen = false;
+var blinkSeen = false, eyeWasOpen = false, blinkAt = 0;
 var lastDescriptor = null, lastFaceScore = 0;
 var enrollSamples = [];
 var nextAction = 'kirish';
@@ -270,7 +270,7 @@ document.getElementById('mainBtn').addEventListener('click', function(){
 
 async function startScan(){
   if(!modelsReady){ return; }
-  blinkSeen=false; eyeWasOpen=false; lastDescriptor=null; enrollSamples=[];
+  blinkSeen=false; eyeWasOpen=false; blinkAt=0; lastDescriptor=null; enrollSamples=[];
   // kamera
   try{
     stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:480, height:480 }, audio:false });
@@ -330,11 +330,12 @@ async function loop(){
     setTitle('Tiriklik tekshiruvi','👁 Iltimos, bir marta ko\'zingizni pirpirating');
     return schedule();
   }
-  if(mode==='checkin' && !gps.ok){
-    setTitle('GPS kutilmoqda','Joylashuv aniqlanmoqda…');
+  if(!blinkAt) blinkAt = Date.now();
+  if(mode==='checkin' && !gps.ok && (Date.now()-blinkAt) < 3500){
+    setTitle('GPS kutilmoqda','Joylashuv aniqlanmoqda… (ixtiyoriy)');
     return schedule();
   }
-  // hammasi tayyor — yuborish
+  // hammasi tayyor — yuborish (GPS ixtiyoriy)
   running=false;
   return submitCheckin();
 }

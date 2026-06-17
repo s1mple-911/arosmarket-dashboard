@@ -234,6 +234,7 @@ if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 var qp = new URLSearchParams(location.search);
 var uid = qp.get('uid') || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? String(tg.initDataUnsafe.user.id) : '');
 var wid = qp.get('wid') || '';
+var DEV = location.pathname.indexOf('-dev')!==-1;  // -dev sahifada barcha linklar -dev ga boradi
 var token='', profile={}, prefill={};
 try{ token = localStorage.getItem('aros-app-token') || ''; }catch(e){}
 try{ if(!uid){ uid = localStorage.getItem('aros-app-uid') || ''; } }catch(e){}
@@ -391,8 +392,9 @@ function renderStatus(d){
 function openLink(url){ if(tg && tg.openLink){ tg.openLink(url); } else { window.open(url,'_blank'); } }
 function openSection(key){
   var q='?uid='+uid+(wid?('&wid='+wid):'');
-  if(key==='davomat'){ openLink(APP_BASE+'davomat-dev.html'+q); }
-  else if(key==='kpi'){ openLink(APP_BASE+'hodim.html'+q); }
+  var sfx = DEV?'-dev':'';
+  if(key==='davomat'){ openLink(APP_BASE+'davomat'+sfx+'.html'+q); }
+  else if(key==='kpi'){ openLink(APP_BASE+'hodim'+sfx+'.html'+q); }
   else if(key==='kundalik'){ if(KUNDALIK_BOT_URL) openLink(KUNDALIK_BOT_URL); else toast('Tez orada'); }
   else if(key==='ovqatbot'){ if(OVQAT_BOT_URL) openLink(OVQAT_BOT_URL); else toast('Tez orada'); }
 }
