@@ -1969,7 +1969,7 @@ async function davLoadWarehouses(){
 }
 
 async function renderDavomatHodimlar(root){
-  root.innerHTML = topbar('Davomat', 'Hodimlar', '<button class="icon-btn" onclick="renderDavomatHodimlar(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
+  root.innerHTML = topbar('Davomat', 'Hodimlar', '<button class="btn sm" onclick="davSyncCoords(this)" title="Filiallar koordinatasini Aros\'dan yangilash"><i class="ti ti-map-pin"></i>Koordinata sync</button><button class="icon-btn" onclick="renderDavomatHodimlar(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
   const content = document.createElement('div');
   content.innerHTML = `<div id="dav-h-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>`;
   root.appendChild(content);
@@ -2003,6 +2003,17 @@ ${list.map(u=>`
   }
 }
 
+async function davSyncCoords(btn){
+  const orig = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader-2"></i> Sync...'; }
+  try{
+    const d = await api('aros-admin-dav-coords-all', { uid:UID });
+    davWarehousesCache = null;
+    toast((d && d.saved!=null ? d.saved : 0)+'/'+(d && d.total!=null ? d.total : '?')+' filial koordinatasi saqlandi');
+    renderDavomatHodimlar(document.getElementById('screens'));
+  }catch(e){ toast('Xato: '+e.message,'err'); if(btn){ btn.disabled=false; btn.innerHTML=orig; } }
+}
+
 async function davEditWarehouses(telegramId){
   const u = (window._davHodimlar||[]).find(x=>String(x.telegram_id)===String(telegramId));
   const whs = await davLoadWarehouses();
@@ -2030,10 +2041,8 @@ async function davSaveWarehouses(telegramId){
   if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader-2"></i>'; }
   try{
     await api('aros-admin-dav-set', { uid:UID, target_uid:telegramId, warehouse_ids: ids.join(',') });
-    // GPS uchun koordinatalarni Aros API dan sinxronlash (faqat hali yo'qlari)
-    const whs = await davLoadWarehouses();
-    const need = ids.filter(id=>{ const w=whs.find(x=>String(x.warehouse_id)===String(id)); return w && !w.has_coords; });
-    for(const id of need){ try{ await api('aros-admin-dav-coords', { uid:UID, warehouse_id:id }); }catch(e){} }
+    // GPS uchun koordinatalarni Aros API dan sinxronlash (bulk)
+    try{ await api('aros-admin-dav-coords-all', { uid:UID }); }catch(e){}
     davWarehousesCache = null;
     closeModal(); toast('Filiallar saqlandi');
     renderDavomatHodimlar(document.getElementById('screens'));
