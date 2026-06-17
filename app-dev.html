@@ -391,7 +391,7 @@ function renderStatus(d){
 function openLink(url){ if(tg && tg.openLink){ tg.openLink(url); } else { window.open(url,'_blank'); } }
 function openSection(key){
   var q='?uid='+uid+(wid?('&wid='+wid):'');
-  if(key==='davomat'){ openLink(APP_BASE+'davomat.html'+q); }
+  if(key==='davomat'){ openLink(APP_BASE+'davomat-dev.html'+q); }
   else if(key==='kpi'){ openLink(APP_BASE+'hodim.html'+q); }
   else if(key==='kundalik'){ if(KUNDALIK_BOT_URL) openLink(KUNDALIK_BOT_URL); else toast('Tez orada'); }
   else if(key==='ovqatbot'){ if(OVQAT_BOT_URL) openLink(OVQAT_BOT_URL); else toast('Tez orada'); }
