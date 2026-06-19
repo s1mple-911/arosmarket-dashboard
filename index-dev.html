@@ -213,6 +213,7 @@ var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var STATS_API    = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
 var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
+var DEBTORS_API  = 'https://n8n.arosmarket.com/webhook/aros-debtors-cache';
 var WALLET_INFO_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-info';
 var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
@@ -349,6 +350,10 @@ var ordersCache={};
 var walletSummaryCache={};  // userId -> { total_in, total_out, full } | 'loading' | null
 var walletInfoCache={}; // user_id -> {debt_limit, debt_allowed_days}
 var allUsers=[]
+var debtorsCache=null;        // { bugun: {sana, debtors:[]}, ertaga: {sana, debtors:[]} }
+var debtorsLoaded=false;
+var debtorsLoading=false;
+var debtorsLoadCb=[];         // pending callbacks while loading
 var pageDeadlines={};
 var otganFinal=[], bugunFinal=[], ertagaFinal=[];
 var otganLoaded=false, bugunLoaded=false, ertagaLoaded=false, ochiqLoaded=false;
@@ -1619,7 +1624,69 @@ function renderDash(){
 }
 
 // =============================================
-// loadTab - ESKI KOD, o'zgartirilmagan
+// YANGI: Debtors cache (Aros Market - Debtors Cache workflow)
+// Bitta chaqiruvda barcha qarzdorlar (bugun + ertaga)
+// =============================================
+function loadDebtors(cb, force){
+  if(force){ debtorsLoaded=false; debtorsCache=null; }
+  if(debtorsLoaded){ if(cb) cb(); return; }
+  if(cb) debtorsLoadCb.push(cb);
+  if(debtorsLoading) return;
+  debtorsLoading = true;
+  var _wh = wid || userData.warehouse_id || null;
+  if(!_wh){
+    debtorsLoading=false; debtorsLoaded=true; debtorsCache=null;
+    debtorsLoadCb.forEach(function(c){try{c();}catch(e){}}); debtorsLoadCb=[];
+    return;
+  }
+  fetch(DEBTORS_API+'?wid='+_wh)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var data = Array.isArray(d) ? d[0] : d;
+      debtorsCache = data || { bugun:{debtors:[]}, ertaga:{debtors:[]} };
+      debtorsLoaded=true; debtorsLoading=false;
+      debtorsLoadCb.forEach(function(c){try{c();}catch(e){}}); debtorsLoadCb=[];
+    })
+    .catch(function(){
+      debtorsCache = { bugun:{debtors:[]}, ertaga:{debtors:[]} };
+      debtorsLoaded=true; debtorsLoading=false;
+      debtorsLoadCb.forEach(function(c){try{c();}catch(e){}}); debtorsLoadCb=[];
+    });
+}
+
+// Aros API debtor → existing card structure
+function mapDebtorFromCache(d, tab){
+  var wallet = Number(d.wallet_balance)||0;
+  var totalDebt = Number(d.total_debts)||0;
+  var outdated = Number(d.total_outdated_debts)||0;
+  var mod = Number(d.most_outdated_deadline)||0;
+  // summa - net amount net of wallet
+  // Otgan: outdated - wallet (muddati o'tgan)
+  // Bugun/Ertaga: outdated - wallet ham ishlatamiz (API queried date'da total_outdated bu kunni o'z ichiga oladi)
+  var summa = Math.max(0, outdated - wallet);
+  // max_kun = (MOD-1) for Otgan (days past deadline)
+  var maxKun = tab==='otgan' ? Math.max(0, mod-1) : 0;
+  // usertype
+  var dad = Number(d.debt_allowed_days)||0;
+  var usertype = dad===1 ? 'master' : (dad>1 ? 'business_partner' : '');
+  var name = ((d.first_name||'')+' '+(d.last_name||'')).trim() || "Noma'lum";
+  return {
+    user_id: d.id,
+    ism: name,
+    telefon: d.username || '',
+    summa: summa,
+    wallet_balance: wallet,
+    usertype: usertype,
+    max_kun: maxKun,
+    total_debt: totalDebt,
+    debt_limit: Number(d.debt_limit)||0,
+    orders: []  // lazy load via ORDERS_API on toggleOrders
+  };
+}
+
+// =============================================
+// loadTab - YANGI: bitta debtors-cache endpoint, MOD bo'yicha filter
+// Otgan = bugun + MOD>1, Bugun = bugun + MOD=1, Ertaga = ertaga + MOD=1
 // =============================================
 function loadTab(tab){
   if(tab==='otgan') otganLoading=true;
@@ -1629,97 +1696,40 @@ function loadTab(tab){
   var pageId='page-'+tab;
   document.getElementById(pageId).innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
 
-  if(!allUsers.length){
-    if(tab==='otgan'){otganLoaded=true;otganLoading=false;}
-    else if(tab==='bugun'){bugunLoaded=true;bugunLoading=false;}
-    else{ertagaLoaded=true;ertagaLoading=false;}
-    document.getElementById(pageId).innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="et">Qarz yo\'q</div></div>';
-    return;
-  }
+  loadDebtors(function(){
+    var rawList = [];
+    if(debtorsCache){
+      if(tab==='otgan'){
+        rawList = ((debtorsCache.bugun && debtorsCache.bugun.debtors) || [])
+          .filter(function(d){ return Number(d.most_outdated_deadline) > 1; });
+      } else if(tab==='bugun'){
+        rawList = ((debtorsCache.bugun && debtorsCache.bugun.debtors) || [])
+          .filter(function(d){ return Number(d.most_outdated_deadline) === 1; });
+      } else {
+        rawList = ((debtorsCache.ertaga && debtorsCache.ertaga.debtors) || [])
+          .filter(function(d){ return Number(d.most_outdated_deadline) === 1; });
+      }
+    }
+    var final = rawList.map(function(d){ return mapDebtorFromCache(d, tab); })
+                       .filter(function(r){ return r.summa > 0; });
 
-  var resMap={}, done=0, total=allUsers.length;
-
-  function check(){
-    done++;
-    if(done<total) return;
-    var final=Object.values(resMap);
     if(tab==='otgan'){
-      otganLoaded=true;otganLoading=false;otganFinal=final;
-loadPageDeadlines(userData.warehouse_id||0, function(){
-              renderList('page-otgan',final,'var(--red)','b-red',
-        '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
-        'Muddati o\'tgan qarz yo\'q!',true);
+      otganLoaded=true; otganLoading=false; otganFinal=final;
+      loadPageDeadlines(userData.warehouse_id||0, function(){
+        renderList('page-otgan',final,'var(--red)','b-red',
+          '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
+          'Muddati o\'tgan qarz yo\'q!',true);
       });
     } else if(tab==='bugun'){
-      bugunLoaded=true;bugunLoading=false;bugunFinal=final;
+      bugunLoaded=true; bugunLoading=false; bugunFinal=final;
       renderList('page-bugun',final,'var(--red)','b-red',
-        '<polyline points="20 6 9 17 4 12"/>','Bugun to\'lanadigan qarz yo\'q',false);
+        '<polyline points="20 6 9 17 4 12"/>','Bugun to\'lanadigan qarz yo\'q',true);
     } else {
-      ertagaLoaded=true;ertagaLoading=false;ertagaFinal=final;
+      ertagaLoaded=true; ertagaLoading=false; ertagaFinal=final;
       renderList('page-ertaga',final,'var(--amber)','b-amber',
-        '<polyline points="20 6 9 17 4 12"/>','Ertaga to\'lanadigan qarz yo\'q',false);
+        '<polyline points="20 6 9 17 4 12"/>','Ertaga to\'lanadigan qarz yo\'q',true);
     }
     renderDash();
-  }
-
-  allUsers.forEach(function(debtor){
-    // Cache bor bo'lsa - to'g'ridan ishlatamiz (otgan/bugun/ertaga barchasi)
-    var cached=ordersCache[debtor.user_id];
-    if(cached!==undefined){
-      // debt_limit'ni ham cache'dan olamiz (otgan tab uchun)
-      if(tab==='otgan' && walletInfoCache[debtor.user_id]){
-        debtor.debt_limit = walletInfoCache[debtor.user_id].debt_limit || 0;
-      }
-      proc(debtor,cached,tab,resMap);check();return;
-    }
-    // Cache yo'q - API dan olish (otgan tab uchun ham!)
-    var _wh=wid||userData.warehouse_id||null;
-    var url=ORDERS_API+'?user_id='+debtor.user_id;
-    if(_wh) url+='&warehouse_id='+_wh;
-    
-    // Bir paytda 2 ta so'rov yuboramiz: orders + wallet-info (faqat otgan tab uchun)
-    var promises = [
-      fetch(url).then(function(r){return r.json();}).then(function(d){
-        return Array.isArray(d) ? d[0] : d;
-      }).catch(function(){ return null; })
-    ];
-    if(tab==='otgan' && debtor.telefon){
-      // Telefon raqami bo'yicha wallet info
-      var phone = String(debtor.telefon).trim();
-      // Agar walletInfoCache da bor bo'lsa, qaytadan chaqirmaymiz
-      if(walletInfoCache[debtor.user_id]!==undefined){
-        promises.push(Promise.resolve(walletInfoCache[debtor.user_id]));
-      } else {
-        promises.push(
-          fetch(WALLET_INFO_API+'?phone='+encodeURIComponent(phone))
-            .then(function(r){return r.json();})
-            .then(function(d){
-              var data = Array.isArray(d) ? d[0] : d;
-              if(data && data.ok){
-                walletInfoCache[debtor.user_id] = data;
-                return data;
-              }
-              walletInfoCache[debtor.user_id] = null;
-              return null;
-            }).catch(function(){
-              walletInfoCache[debtor.user_id] = null;
-              return null;
-            })
-        );
-      }
-    }
-    
-    Promise.all(promises).then(function(results){
-      var ordersData = results[0];
-      var walletData = results[1];
-      ordersCache[debtor.user_id] = (ordersData && ordersData.orders) || (ordersData ? [] : null);
-      // debt_limit ni debtor obyektiga qo'shamiz (otgan tab uchun)
-      if(tab==='otgan' && walletData && walletData.ok){
-        debtor.debt_limit = walletData.debt_limit || 0;
-      }
-      proc(debtor, ordersCache[debtor.user_id], tab, resMap);
-      check();
-    });
   });
 }
 
