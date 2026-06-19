@@ -1678,11 +1678,11 @@ function mapDebtorFromCache(d, tab){
   var outdated = Number(d.total_outdated_debts)||0;
   var mod = Number(d.most_outdated_deadline)||0;
   // summa - net amount net of wallet
-  // Otgan: outdated - wallet (muddati o'tgan)
-  // Bugun/Ertaga: outdated - wallet ham ishlatamiz (API queried date'da total_outdated bu kunni o'z ichiga oladi)
   var summa = Math.max(0, outdated - wallet);
-  // max_kun = (MOD-1) for Otgan (days past deadline)
-  var maxKun = tab==='otgan' ? Math.max(0, mod-1) : 0;
+  // max_kun = MOD (Otgan tab uchun, kun_otgan = days since deadline = MOD)
+  // MOD formulasi: query_date - deadline = MOD (kun)
+  // Otgan tab bugun query'dan keladi, MOD = days_overdue
+  var maxKun = tab==='otgan' ? Math.max(0, mod) : 0;
   // usertype
   var dad = Number(d.debt_allowed_days)||0;
   var usertype = dad===1 ? 'master' : (dad>1 ? 'business_partner' : '');
@@ -1702,8 +1702,11 @@ function mapDebtorFromCache(d, tab){
 }
 
 // =============================================
-// loadTab - YANGI: bitta debtors-cache endpoint, MOD bo'yicha filter
-// Otgan = bugun + MOD>1, Bugun = bugun + MOD=1, Ertaga = ertaga + MOD=1
+// loadTab - YANGI: 3 ta sana cache, MOD = (query - deadline) kun
+// API faqat MOD≥1 ni qaytaradi (overdue dan)
+// Otgan = bugun query, hammasi (deadline < bugun)
+// Bugun = ertaga query, MOD=1 (deadline = bugun)
+// Ertaga = paslozim query, MOD=1 (deadline = ertaga)
 // =============================================
 function loadTab(tab){
   if(tab==='otgan') otganLoading=true;
@@ -1717,13 +1720,15 @@ function loadTab(tab){
     var rawList = [];
     if(debtorsCache){
       if(tab==='otgan'){
-        rawList = ((debtorsCache.bugun && debtorsCache.bugun.debtors) || [])
-          .filter(function(d){ return Number(d.most_outdated_deadline) > 1; });
+        // bugun query'dagi hamma - hammasi overdue (MOD≥1 API filter)
+        rawList = ((debtorsCache.bugun && debtorsCache.bugun.debtors) || []);
       } else if(tab==='bugun'){
-        rawList = ((debtorsCache.bugun && debtorsCache.bugun.debtors) || [])
+        // ertaga query, MOD=1 → deadline = bugun
+        rawList = ((debtorsCache.ertaga && debtorsCache.ertaga.debtors) || [])
           .filter(function(d){ return Number(d.most_outdated_deadline) === 1; });
       } else {
-        rawList = ((debtorsCache.ertaga && debtorsCache.ertaga.debtors) || [])
+        // paslozim query, MOD=1 → deadline = ertaga
+        rawList = ((debtorsCache.paslozim && debtorsCache.paslozim.debtors) || [])
           .filter(function(d){ return Number(d.most_outdated_deadline) === 1; });
       }
     }
