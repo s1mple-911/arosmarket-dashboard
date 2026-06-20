@@ -929,7 +929,6 @@ function renderCard(f,idx){
 function fetchFilial(wid,filialNomi,plan,oy,idx,allData){
   fetch(FILIAL_API+'?wid='+wid+'&oy='+curOy+'&yil='+curYil+buildYarimSuffix()).then(function(r){return r.text();}).then(function(txt){
     var fd=parseSafe(txt);
-    filterFranshizaData(fd);
     if(fd&&fd.plan!==undefined){
       fd.filial=fd.filial||filialNomi;
       fd.warehouse_id=String(wid);
