@@ -396,6 +396,16 @@ function fmtDT(dt, showYear){
   }
   return s;
 }
+// Franshiza filiallari uchun ochiq buyurtmalar/transferlar/brak ko'rsatilmaydi
+function filterFranshizaData(fd){
+  if(fd && (fd.is_franchise === true || fd.profil === 'Franshiza')){
+    fd.confirmedOrders = [];
+    fd.transfers = [];
+    fd.brak_transfers = [];
+    fd.transfer_balance = 0;
+  }
+  return fd;
+}
 function kechikishBadge(t){
   if(!t||!t.is_auto) return '';
   if(!t.kutilgan_yetkazish) return '<span class="tr-auto">AUTO</span>';
@@ -967,6 +977,7 @@ function loadFilialStats(cb){
     .then(function(r){return r.text();})
     .then(function(txt){
       try{var raw=JSON.parse(txt);filialData=Array.isArray(raw)?raw[0]:raw;}catch(e){filialData=null;}
+      filterFranshizaData(filialData);
       if(cb) cb();
     })
     .catch(function(){filialData=null;if(cb) cb();});
@@ -982,6 +993,7 @@ function loadAllFiliallar(cb){
         var raw=JSON.parse(txt);
         var d=Array.isArray(raw)?raw[0]:raw;
         allFiliallar = (d && d.filiallar) ? d.filiallar : [];
+        allFiliallar.forEach(filterFranshizaData);
       }catch(e){ allFiliallar=[]; }
       if(cb) cb();
     })
