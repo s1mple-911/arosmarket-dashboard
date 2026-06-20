@@ -977,7 +977,6 @@ function loadFilialStats(cb){
     .then(function(r){return r.text();})
     .then(function(txt){
       try{var raw=JSON.parse(txt);filialData=Array.isArray(raw)?raw[0]:raw;}catch(e){filialData=null;}
-      filterFranshizaData(filialData);
       if(cb) cb();
     })
     .catch(function(){filialData=null;if(cb) cb();});
@@ -993,7 +992,6 @@ function loadAllFiliallar(cb){
         var raw=JSON.parse(txt);
         var d=Array.isArray(raw)?raw[0]:raw;
         allFiliallar = (d && d.filiallar) ? d.filiallar : [];
-        allFiliallar.forEach(filterFranshizaData);
       }catch(e){ allFiliallar=[]; }
       if(cb) cb();
     })
