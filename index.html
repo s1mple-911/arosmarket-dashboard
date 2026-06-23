@@ -149,17 +149,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .empty-icon{width:48px;height:48px;margin:0 auto 14px;opacity:.3}
 .empty-icon svg{width:100%;height:100%;stroke:var(--text2);fill:none;stroke-width:1.5}
 .et{font-size:13px;color:var(--text3)}
-.kechikish-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:600;white-space:nowrap}
-.kechikish-badge.kech-warn{background:rgba(245,158,11,.15);color:#d97706;border:1px solid rgba(245,158,11,.3)}
-.kechikish-badge.kech-bad{background:rgba(239,68,68,.15);color:#dc2626;border:1px solid rgba(239,68,68,.3)}
-.kechikish-badge.kech-crit{background:rgba(220,38,38,.25);color:#fff;border:1px solid rgba(220,38,38,.5);animation:kechPulse 1.8s infinite}
-@keyframes kechPulse{0%,100%{opacity:1}50%{opacity:.65}}
-.kech-ok{display:inline-block;padding:1px 5px;border-radius:4px;font-size:9px;background:rgba(34,197,94,.15);color:#16a34a;font-weight:600}
-.tr-auto{display:inline-block;padding:1px 4px;border-radius:3px;font-size:8px;background:rgba(99,102,241,.18);color:#6366f1;font-weight:600;letter-spacing:.3px}
-[data-theme="dark"] .kechikish-badge.kech-warn{background:rgba(245,158,11,.22);color:#fbbf24}
-[data-theme="dark"] .kechikish-badge.kech-bad{background:rgba(239,68,68,.25);color:#f87171}
-[data-theme="dark"] .kech-ok{background:rgba(34,197,94,.22);color:#4ade80}
-[data-theme="dark"] .tr-auto{background:rgba(99,102,241,.3);color:#a5b4fc}
 </style>
 </head>
 <body>
@@ -213,7 +202,6 @@ var DEADLINE_SET  = 'https://n8n.arosmarket.com/webhook/aros-deadline-set';
 var DEADLINE_OK   = 'https://n8n.arosmarket.com/webhook/aros-deadline-ok';
 var STATS_API    = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
 var ORDERS_API   = 'https://n8n.arosmarket.com/webhook/aros-orders';
-var DEBTORS_API  = 'https://n8n.arosmarket.com/webhook/aros-debtors-cache';
 var WALLET_INFO_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-info';
 var FILIAL_API   = 'https://n8n.arosmarket.com/webhook/aros-cache-filial';
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
@@ -224,57 +212,11 @@ var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions
 var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
 var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
 var KASSA_API      = 'https://n8n.arosmarket.com/webhook/aros-bugalter-filial-kassa';
-var KASSA_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-filial-kassa-history';
 var TILXAT_LIST    = 'https://n8n.arosmarket.com/webhook/aros-tilxat-list';
 var recordingsCache = {}; // user_id -> recordings list
 var tilxatIds = {};        // user_id -> tilxat soni (qaysi mijozda tilxat bor)
 var tilxatCache = {};      // user_id -> tilxatlar list (modal uchun)
 var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
-
-// BI-MONTHLY (Iyun 2026 dan): oy 2 yarimga bo'linadi (Y1=1-15, Y2=16-oy oxiri)
-var _bmNow = new Date(new Date().getTime() + 5*60*60*1000);
-var BIMONTHLY_START_YIL = 2026, BIMONTHLY_START_OY = 6;
-function isBimonthly(y, m){
-  return (y > BIMONTHLY_START_YIL) || (y === BIMONTHLY_START_YIL && m >= BIMONTHLY_START_OY);
-}
-function defaultYarim(y, m){
-  if(!isBimonthly(y, m)) return 0;
-  if(y === _bmNow.getUTCFullYear() && m === (_bmNow.getUTCMonth()+1)){
-    return _bmNow.getUTCDate() <= 15 ? 1 : 2;
-  }
-  return 1;
-}
-// URL'dan oy/yil/yarim — CEO sahifasidan o'tilsa shu davrni saqlaymiz
-var _urlParams = new URLSearchParams(window.location.search);
-var _urlOy = parseInt(_urlParams.get('oy'));
-var _urlYil = parseInt(_urlParams.get('yil'));
-var _urlYarim = _urlParams.get('yarim');
-var curOy = (!isNaN(_urlOy) && _urlOy >= 1 && _urlOy <= 12) ? _urlOy : (_bmNow.getUTCMonth()+1);
-var curYil = (!isNaN(_urlYil) && _urlYil >= 2020) ? _urlYil : _bmNow.getUTCFullYear();
-var curYarim;
-if(_urlYarim !== null && _urlYarim !== '') {
-  curYarim = parseInt(_urlYarim) || 0;
-} else {
-  curYarim = defaultYarim(curYil, curOy);
-}
-function getOyNomi(m, y, yarim){
-  var base = OY[m-1] + ' ' + y;
-  if(!yarim) return base;
-  return OY[m-1] + ' ' + yarim + '-yarim ' + y;
-}
-// BI-MONTHLY: kun display "bugun/oy_kunlari" -> "bugun_yarim/yarim_kunlari" (agar yarim bo'lsa)
-function getKunDisplay(f){
-  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
-    return (f.bugun_yarim||0)+'/'+f.yarim_kunlari;
-  }
-  return ((f&&f.bugun)||0)+'/'+((f&&f.oy_kunlari)||30);
-}
-function getQolganKun(f){
-  if(f && f.oy_yarim && f.bugun_yarim && f.yarim_kunlari){
-    return f.yarim_kunlari - (f.bugun_yarim||1);
-  }
-  return ((f&&f.oy_kunlari)||30)-((f&&f.bugun)||1);
-}
 
 var uid = new URLSearchParams(window.location.search).get('uid')||'';
 var wid = new URLSearchParams(window.location.search).get('wid')||'';
@@ -347,13 +289,8 @@ var isCeo = CEO_IDS.includes(String(uid));
 var isOk = OK_IDS.includes(String(uid));
 var userData={}, summary={};
 var ordersCache={};
-var walletSummaryCache={};  // userId -> { total_in, total_out, full } | 'loading' | null
 var walletInfoCache={}; // user_id -> {debt_limit, debt_allowed_days}
 var allUsers=[]
-var debtorsCache=null;        // { bugun: {sana, debtors:[]}, ertaga: {sana, debtors:[]} }
-var debtorsLoaded=false;
-var debtorsLoading=false;
-var debtorsLoadCb=[];         // pending callbacks while loading
 var pageDeadlines={};
 var otganFinal=[], bugunFinal=[], ertagaFinal=[];
 var otganLoaded=false, bugunLoaded=false, ertagaLoaded=false, ochiqLoaded=false;
@@ -379,70 +316,6 @@ function fmt(n){
   return Math.round(Number(n)||0).toLocaleString('uz-UZ');
 }
 function fmtFull(n){return Math.round(Number(n)||0).toLocaleString('uz-UZ');}
-// Datetime → "DD.MM HH:MM" (yoki "DD.MM.YYYY HH:MM" if showYear)
-function fmtDT(dt, showYear){
-  if(!dt) return '';
-  var s = String(dt);
-  var datePart = s.split('T')[0];
-  var timePart = '';
-  if(s.indexOf('T') !== -1){
-    var t = s.split('T')[1];
-    timePart = t.substring(0,5);
-  }
-  var p = datePart.split('-');
-  if(p.length === 3){
-    var d = p[2]+'.'+p[1] + (showYear ? '.'+p[0] : '');
-    return d + (timePart ? ' '+timePart : '');
-  }
-  return s;
-}
-// Franshiza filiallari uchun ochiq buyurtmalar/transferlar/brak ko'rsatilmaydi
-function filterFranshizaData(fd){
-  if(fd && (fd.is_franchise === true || fd.profil === 'Franshiza')){
-    fd.confirmedOrders = [];
-    fd.transfers = [];
-    fd.brak_transfers = [];
-    fd.transfer_balance = 0;
-  }
-  return fd;
-}
-function kechikishBadge(t){
-  if(!t||!t.is_auto) return '';
-  if(!t.kutilgan_yetkazish) return '<span class="tr-auto">AUTO</span>';
-  var nowMs=Date.now();
-  var deadlineMs=new Date(t.kutilgan_yetkazish).getTime();
-  if(isNaN(deadlineMs)) return '<span class="tr-auto">AUTO</span>';
-  var diffMs=deadlineMs-nowMs;
-  var absMs=Math.abs(diffMs);
-  var totalMin=Math.floor(absMs/60000);
-  var totalSoat=Math.floor(totalMin/60);
-  var kun=Math.floor(totalSoat/24);
-  var soat=totalSoat%24;
-  var minut=totalMin%60;
-  var label;
-  if(kun>0){
-    label=kun+' kun';
-    if(soat>0) label+=' '+soat+' soat';
-  } else if(totalSoat>0){
-    label=totalSoat+' soat';
-    if(minut>0) label+=' '+minut+' min';
-  } else {
-    label=totalMin+' min';
-  }
-  var ttl='';
-  try{ var dt=new Date(t.kutilgan_yetkazish);
-    ttl='Kutilgan: '+String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
-  }catch(e){}
-  if(diffMs>=0){
-    return '<span class="tr-auto">AUTO</span> <span class="kech-ok" title="'+ttl+'">⏳ +'+label+' bor</span>';
-  } else {
-    var cls='kech-warn';
-    if(totalSoat>=24&&totalSoat<72) cls='kech-bad';
-    if(totalSoat>=72) cls='kech-crit';
-    return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge '+cls+'" title="'+ttl+'">⏰ -'+label+' kechikdi</span>';
-  }
-}
-
 function fmtShort(n){
   var v = Number(n)||0;
   if(v===0) return '0';
@@ -493,8 +366,6 @@ function toggleOrders(id, userId, walletBalance, userName){
   if(ar){ar.textContent='▴';ar.classList.add('open');}
   // Yozuvlarni ham yuklaymiz
   loadRecordings(userId);
-  // Wallet summary'ni parallel yuklaymiz (15 kunlik kirim/chiqim) — agar hamyon balansi > 0 bo'lsa
-  if(walletBalance > 0) loadWalletSummary(userId);
   // faqat strictly o'tgan: deadline strictly < bugunStr
   function showOtgan(orders){
     var otg=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
@@ -517,45 +388,6 @@ function toggleOrders(id, userId, walletBalance, userName){
       showOtgan(ordersCache[userId]);
     })
     .catch(function(e){el.innerHTML='<div class="mini-spin-wrap" style="color:var(--red)">Xato: '+e.message+'</div>';});
-}
-
-// ============ WALLET SUMMARY (15 kunlik kirim/chiqim) ============
-// Qarzdor bosilgan zahoti parallel chaqiriladi. Hamyon balansi tagida kichik shriftda ko'rsatadi.
-function loadWalletSummary(userId){
-  if(!userId) return;
-  // Allaqachon yuklangan yoki yuklanmoqda — qayta yuklamaymiz
-  if(walletSummaryCache[userId] !== undefined) {
-    if(walletSummaryCache[userId] && walletSummaryCache[userId] !== 'loading'){
-      updateWalletSummaryUI(userId);
-    }
-    return;
-  }
-  walletSummaryCache[userId] = 'loading';
-  fetch(WALLET_TX_API+'?user_id='+userId)
-    .then(function(r){return r.text();})
-    .then(function(txt){
-      var d=null;
-      try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){}
-      if(!d){ walletSummaryCache[userId] = null; return; }
-      walletSummaryCache[userId] = {
-        total_in: parseFloat(d.total_in) || 0,
-        total_out: parseFloat(d.total_out) || 0,
-        full: d
-      };
-      updateWalletSummaryUI(userId);
-    })
-    .catch(function(){ walletSummaryCache[userId] = null; });
-}
-
-function updateWalletSummaryUI(userId){
-  var s = walletSummaryCache[userId];
-  if(!s || s === 'loading') return;
-  var inStr = '15 kun kirim: +' + fmtFull(s.total_in) + ' so\'m';
-  var rows = document.querySelectorAll('[data-wallet-uid="'+userId+'"]');
-  for(var i=0;i<rows.length;i++){
-    var sub = rows[i].querySelector('.wallet-sub-line');
-    if(sub) sub.textContent = inStr;
-  }
 }
 
 function toggleInline(id, userId){
@@ -582,14 +414,9 @@ function fillOrders(el, orders, walletBalance, userId, userName){
   }
   var html='';
   if(walletBalance&&walletBalance>0){
-    var cached = walletSummaryCache[userId];
-    var subText = 'Tranzaksiyalar →';
-    if(cached && cached !== 'loading'){
-      subText = '15 kun kirim: +' + fmtFull(cached.total_in||0) + ' so\'m';
-    }
-    html+='<div class="order-row" data-wallet-uid="'+userId+'" onclick="event.stopPropagation();showWalletTxModal('+(userId||0)+',\''+(userName||'').replace(/\'/g,"\\\\'")+'\','+walletBalance+')" style="background:rgba(34,197,94,.07);cursor:pointer">';
+    html+='<div class="order-row" onclick="event.stopPropagation();showWalletTxModal('+(userId||0)+',\''+(userName||'').replace(/\'/g,"\\\\'")+'\','+walletBalance+')" style="background:rgba(34,197,94,.07);cursor:pointer">';
     html+='<div class="o-left"><div class="o-id" style="color:var(--green);font-weight:700">💰 Hamyon balansi</div>';
-    html+='<div class="o-deadline wallet-sub-line" style="color:var(--green)">'+subText+'</div></div>';
+    html+='<div class="o-deadline" style="color:var(--green)">Tranzaksiyalar →</div></div>';
     html+='<div class="o-amt" style="color:var(--green)">'+fmtFull(walletBalance)+' so\'m</div></div>';
   }
   orders.forEach(function(o){
@@ -753,14 +580,9 @@ function buildCard(r,id,color,lazy,orders){
     // Hamyon balansi qatori (agar bor bo'lsa) — clickable, tranzaksiyalar
     var wallet=Number(r.wallet_balance)||0;
     if(wallet>0){
-      var cachedW = walletSummaryCache[r.user_id];
-      var subTextW = 'Tranzaksiyalar →';
-      if(cachedW && cachedW !== 'loading'){
-        subTextW = '15 kun kirim: +' + fmtFull(cachedW.total_in||0) + ' so\'m';
-      }
-      ordersHtml+='<div data-wallet-uid="'+r.user_id+'" onclick="event.stopPropagation();showWalletTxModal('+r.user_id+',\''+safeName+'\','+wallet+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);background:rgba(34,197,94,.05);margin:0 -16px 0 -70px;padding-left:70px;padding-right:16px">';
+      ordersHtml+='<div onclick="event.stopPropagation();showWalletTxModal('+r.user_id+',\''+safeName+'\','+wallet+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);background:rgba(34,197,94,.05);margin:0 -16px 0 -70px;padding-left:70px;padding-right:16px">';
       ordersHtml+='<div><div style="font-size:11px;color:var(--green);font-weight:700">💰 Hamyon balansi</div>';
-      ordersHtml+='<div class="wallet-sub-line" style="font-size:10px;color:var(--green);opacity:.85">'+subTextW+'</div></div>';
+      ordersHtml+='<div style="font-size:10px;color:var(--green);opacity:.85">Tranzaksiyalar →</div></div>';
       ordersHtml+='<div style="font-size:12px;font-weight:700;color:var(--green)">'+fmtFull(wallet)+'</div></div>';
     }
     orders.forEach(function(o){
@@ -971,9 +793,7 @@ function onPageTypeFilter(pageId, type){
 function loadFilialStats(cb){
   var wid2 = wid || userData.warehouse_id || '';
   if(!wid2){ filialData=null; if(cb) cb(); return; }
-  var url = FILIAL_API + '?wid=' + wid2 + '&oy=' + curOy + '&yil=' + curYil;
-  if(curYarim) url += '&yarim=' + curYarim;
-  fetch(url)
+  fetch(FILIAL_API+'?wid='+wid2)
     .then(function(r){return r.text();})
     .then(function(txt){
       try{var raw=JSON.parse(txt);filialData=Array.isArray(raw)?raw[0]:raw;}catch(e){filialData=null;}
@@ -1008,33 +828,23 @@ function loadKassaInfo(){
     .then(function(r){return r.json();})
     .then(function(data){
       var d = Array.isArray(data) ? data[0] : data;
-      window._kassaInfo = d || {};
-      var ph = document.getElementById('kassa-cards-placeholder');
-      if(!ph) return;
       if(d && !d.error){
-        ph.outerHTML = renderKassaCards(d);
-      } else {
-        // KASSA_API xato qaytardi (filial_not_found va h.k.) — 
-        // kamida transferlar tarixini ko'rsatamiz (mustaqil endpoint)
-        ph.outerHTML = renderKassaHistoryCard();
+        window._kassaInfo = d;
+        // Agar dashboard render qilingan bo'lsa - placeholder'ga inject qilamiz
+        var ph = document.getElementById('kassa-cards-placeholder');
+        if(ph){ ph.outerHTML = renderKassaCards(d); }
       }
     })
-    .catch(function(e){
-      // Tarmoq/CORS xato — fallback: kamida transferlar tarixi
-      console.error('Kassa info xato:', e);
-      var ph = document.getElementById('kassa-cards-placeholder');
-      if(ph) ph.outerHTML = renderKassaHistoryCard();
-    });
+    .catch(function(e){ console.error('Kassa info xato:', e); });
 }
 
 function renderKassaCards(d){
   if(!d) return '';
   var html = '';
-  var hasAny = (d.overdue && d.overdue.is_overdue) || (d.unsent && d.unsent.count_days > 0);
+  var hasAny = (d.overdue && d.overdue.is_overdue) || (d.unsent && d.unsent.count_days > 0) || (d.on_way && d.on_way.count > 0);
   
   if(!hasAny){
-    return '<div style="margin-top:10px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;text-align:center;font-size:11px;color:var(--green);font-weight:600">✓ Kassa hammasi joyida</div>'
-      + renderKassaHistoryCard();
+    return '<div style="margin-top:10px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;text-align:center;font-size:11px;color:var(--green);font-weight:600">✓ Kassa hammasi joyida</div>';
   }
   
   html += '<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">';
@@ -1079,179 +889,41 @@ function renderKassaCards(d){
     html += '</div>';
   }
   
+  // 3. Yo'lda turgan transferlar
+  if(d.on_way && d.on_way.count > 0){
+    var ow = d.on_way;
+    html += '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:12px 14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(139,92,246,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⏳</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Yo\'lda transferlar</div>';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px">'+ow.count+' ta · kassa qabul qilmagan</div>';
+    html += '</div>';
+    html += '<div style="text-align:right">';
+    html += '<div style="font-size:14px;font-weight:800;color:#8b5cf6">'+fmt(ow.total_amount)+'</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+    // Transfer ro'yxati
+    if(ow.transfers && ow.transfers.length > 0){
+      html += '<div style="margin-top:8px;padding-top:8px;border-top:0.5px dashed rgba(139,92,246,.3);display:flex;flex-direction:column;gap:4px">';
+      ow.transfers.slice(0, 3).forEach(function(t){
+        var dt = t.sent_at ? new Date(t.sent_at) : null;
+        var dtStr = dt ? (dt.getDate()+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 8px;background:rgba(139,92,246,.05);border-radius:6px">';
+        html += '<span style="color:var(--text2)">#'+t.id+' · → '+(t.receiver_title||'').replace(' Kassa','')+'</span>';
+        html += '<span style="color:var(--text);font-weight:600">'+fmt(t.total_amount)+' · '+dtStr+'</span>';
+        html += '</div>';
+      });
+      if(ow.transfers.length > 3){
+        html += '<div style="text-align:center;font-size:10px;color:var(--text3);padding-top:2px">+'+(ow.transfers.length - 3)+' ta yana</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  
   html += '</div>';
-  // Kassa transferlar tarixi
-  html += renderKassaHistoryCard();
-  return html;
-}
-
-// ============ QABUL QILINGAN TRANSFERLAR ============
-// ============ KASSA TRANSFERLAR TARIXI ============
-function nowUZBDateStr(){
-  // UZB (UTC+5) bo'yicha YYYY-MM-DD
-  var u = new Date(new Date().getTime() + 5*60*60*1000);
-  return u.toISOString().split('T')[0];
-}
-
-function renderKassaHistoryCard(){
-  var today = nowUZBDateStr();
-  var h = '';
-  h += '<div style="margin-top:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px">';
-  // Header
-  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
-  h += '<div style="width:34px;height:34px;border-radius:10px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">📊</div>';
-  h += '<div style="flex:1;min-width:0">';
-  h += '<div style="font-size:11px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Kassa transferlar tarixi</div>';
-  h += '<div style="font-size:12px;color:var(--text2);margin-top:2px">Platforma · Sotuvchi · Kassa</div>';
-  h += '</div>';
-  h += '</div>';
-  // Date filter
-  h += '<div style="display:flex;gap:5px;margin-bottom:10px;align-items:center;flex-wrap:wrap">';
-  h += '<input type="date" id="kh-start" value="'+today+'" onchange="loadKassaHistoryFromInputs()" style="flex:1;min-width:0;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit">';
-  h += '<span style="font-size:11px;color:var(--text3);padding:0 2px">→</span>';
-  h += '<input type="date" id="kh-end" value="'+today+'" onchange="loadKassaHistoryFromInputs()" style="flex:1;min-width:0;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit">';
-  h += '<button onclick="setKhBugun()" style="padding:6px 10px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:7px;color:#3b82f6;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">Bugun</button>';
-  h += '</div>';
-  // Body
-  h += '<div id="kassa-history-body" style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0">Yuklanmoqda...</div>';
-  h += '</div>';
-  // Birinchi yuklanish (ozgina kechiktirib DOM tayyor bo'lguncha)
-  setTimeout(function(){ loadKassaHistoryData(today, today); }, 50);
-  return h;
-}
-
-function setKhBugun(){
-  var today = nowUZBDateStr();
-  var s = document.getElementById('kh-start');
-  var e = document.getElementById('kh-end');
-  if(s) s.value = today;
-  if(e) e.value = today;
-  loadKassaHistoryData(today, today);
-}
-
-function loadKassaHistoryFromInputs(){
-  var s = document.getElementById('kh-start');
-  var e = document.getElementById('kh-end');
-  if(!s || !e || !s.value || !e.value) return;
-  var start = s.value, end = e.value;
-  if(start > end){ var t = start; start = end; end = t; s.value = start; e.value = end; }
-  loadKassaHistoryData(start, end);
-}
-
-function loadKassaHistoryData(start, end){
-  var widLocal = (userData && userData.warehouse_id) || wid;
-  if(!widLocal) return;
-  var body = document.getElementById('kassa-history-body');
-  if(body) body.innerHTML = '<div style="padding:14px 0">Yuklanmoqda...</div>';
-  fetch(KASSA_HISTORY_API+'?wid='+widLocal+'&start='+start+'&end='+end+'&_='+Date.now())
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var ph = document.getElementById('kassa-history-body');
-      if(ph) ph.innerHTML = renderKassaHistoryBody(d);
-    })
-    .catch(function(e){
-      var ph = document.getElementById('kassa-history-body');
-      if(ph) ph.innerHTML = '<div style="color:#ef4444;padding:8px">Xato: '+(e.message||'unknown')+'</div>';
-    });
-}
-
-function renderKhTriplet(platforma, sotuvchi, kassa, farqS, farqK){
-  var h = '<div style="display:flex;flex-direction:column;gap:5px">';
-  // Platforma
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">';
-  h += '<span style="color:var(--text2)">Platforma:</span>';
-  h += '<span style="color:var(--text);font-weight:700">'+fmt(platforma)+'</span>';
-  h += '</div>';
-  // Sotuvchi
-  var sCol = farqS === 0 ? 'var(--text3)' : (farqS > 0 ? 'var(--green)' : '#ef4444');
-  var sStr = farqS === 0 ? '' : (farqS > 0 ? '+' : '') + fmt(farqS);
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">';
-  h += '<span style="color:var(--text2)">Sotuvchi:</span>';
-  h += '<div style="text-align:right;display:flex;align-items:baseline;gap:5px">';
-  h += '<span style="color:var(--text);font-weight:700">'+fmt(sotuvchi)+'</span>';
-  if(sStr) h += '<span style="font-size:9px;color:'+sCol+';font-weight:600">('+sStr+')</span>';
-  h += '</div>';
-  h += '</div>';
-  // Kassa
-  var kCol = farqK === 0 ? 'var(--text3)' : (farqK > 0 ? 'var(--green)' : '#ef4444');
-  var kStr = farqK === 0 ? '' : (farqK > 0 ? '+' : '') + fmt(farqK);
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">';
-  h += '<span style="color:var(--text2)">Kassa:</span>';
-  h += '<div style="text-align:right;display:flex;align-items:baseline;gap:5px">';
-  h += '<span style="color:var(--text);font-weight:700">'+fmt(kassa)+'</span>';
-  if(kStr) h += '<span style="font-size:9px;color:'+kCol+';font-weight:600">('+kStr+')</span>';
-  h += '</div>';
-  h += '</div>';
-  h += '</div>';
-  return h;
-}
-
-function renderKassaHistoryBody(d){
-  if(!d || d.error) return '<div style="color:#ef4444;font-size:11px;padding:8px">Xato: '+((d&&d.error)||'unknown')+'</div>';
-  if(!d.kunlar || d.kunlar.length === 0) return '<div style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0">Bu davrda yopilgan smena yo\'q</div>';
-  
-  // Range bo'lsa (>1 kun) — faqat KASSA QABUL QILGAN (received) kunlarni ko'rsatamiz
-  // Yo'lda va junatilmaganlar ko'rsatilmaydi, JAMI ham faqat received'lardan hisoblanadi
-  var isRange = d.is_range && d.kunlar.length > 1;
-  var kunlar = d.kunlar;
-  var totals = d.totals;
-  if(isRange){
-    kunlar = d.kunlar.filter(function(k){ return k.status === 'received'; });
-    if(kunlar.length === 0){
-      return '<div style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0">Bu davrda kassa qabul qilgan smena yo\'q</div>';
-    }
-    // JAMI ni faqat received kunlardan qayta hisoblash
-    totals = kunlar.reduce(function(acc, k){
-      acc.platforma += k.platforma || 0;
-      acc.sotuvchi += k.sotuvchi || 0;
-      acc.kassa += k.kassa || 0;
-      acc.doc_count += k.doc_count || 0;
-      return acc;
-    }, { platforma: 0, sotuvchi: 0, kassa: 0, doc_count: 0 });
-    totals.farq_sotuvchi = totals.sotuvchi - totals.platforma;
-    totals.farq_kassa = totals.kassa - totals.platforma;
-  }
-  
-  var html = '';
-  // Range bo'lsa va > 1 kun → umumiy card (faqat received'lardan)
-  if(isRange){
-    html += '<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:10px 12px;margin-bottom:8px">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-    html += '<div style="font-size:10px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:.4px">JAMI · Kassa qabul qilgan</div>';
-    html += '<div style="font-size:10px;color:var(--text3)">'+kunlar.length+' kun · '+d.start+' → '+d.end+'</div>';
-    html += '</div>';
-    html += renderKhTriplet(totals.platforma, totals.sotuvchi, totals.kassa, totals.farq_sotuvchi, totals.farq_kassa);
-    html += '</div>';
-  }
-  // Har kun uchun card
-  var todayStr = nowUZBDateStr();
-  kunlar.forEach(function(k){
-    var parts = k.sana.split('-');
-    var dtStr = parts[2]+'.'+parts[1]+'.'+parts[0];
-    var dt = new Date(k.sana);
-    var weekday = ['Yak','Du','Se','Ch','Pa','Ju','Sh'][dt.getDay()];
-    var bColor = '#3b82f6', bgColor = 'rgba(59,130,246,.06)';
-    if(k.status === 'not_sent'){ bColor = '#f59e0b'; bgColor = 'rgba(245,158,11,.08)'; }
-    else if(k.status === 'partial'){ bColor = '#8b5cf6'; bgColor = 'rgba(139,92,246,.08)'; }
-    else if(k.status === 'on_way'){ bColor = '#8b5cf6'; bgColor = 'rgba(139,92,246,.08)'; }
-    else if(k.status === 'received'){ bColor = '#22c55e'; bgColor = 'rgba(34,197,94,.08)'; }
-    
-    html += '<div style="background:'+bgColor+';border:1px solid '+bColor+'40;border-radius:10px;padding:10px 12px;margin-bottom:6px">';
-    // Header
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-    html += '<div style="font-size:12px;font-weight:700;color:var(--text)">'+dtStr+' · '+weekday+'</div>';
-    html += '<div style="font-size:9px;font-weight:700;color:'+bColor+';background:'+bColor+'22;padding:2px 7px;border-radius:6px;white-space:nowrap">'+k.status_label+'</div>';
-    html += '</div>';
-    // Agar bugun va not_sent — alohida belgi
-    if(k.status === 'not_sent' && k.sana === todayStr){
-      html += '<div style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,.12);padding:5px 8px;border-radius:6px;margin-bottom:8px;text-align:center;font-weight:700">⏳ Xali junatilmagan bugunki kassa</div>';
-    } else if(k.status === 'not_sent'){
-      html += '<div style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,.12);padding:5px 8px;border-radius:6px;margin-bottom:8px;text-align:center;font-weight:700">⏳ Xali junatilmagan</div>';
-    }
-    // 3 qiymat
-    html += renderKhTriplet(k.platforma, k.sotuvchi, k.kassa, k.farq_sotuvchi, k.farq_kassa);
-    html += '</div>';
-  });
   return html;
 }
 
@@ -1333,7 +1005,7 @@ function renderDash(){
     var fpColor=ffoiz>=80?'var(--green)':ffoiz>=50?'var(--amber)':'var(--red)';
     var fprogFoiz=fd.prognoz_foiz||0;
     var fprogColor=fprogFoiz>=80?'var(--green)':fprogFoiz>=50?'var(--amber)':'var(--red)';
-    var fqolganKun=getQolganKun(fd);
+    var fqolganKun=(fd.oy_kunlari||30)-(fd.bugun||1);
     var profBadgeIdx = '';
     if(isAks) profBadgeIdx = ' · <span style="color:#06b6d4;font-weight:700;font-size:10px">AKSESSUAR</span>';
     else if(isFr) profBadgeIdx = ' · <span style="color:#a855f7;font-weight:700;font-size:10px">FRANSHIZA</span>';
@@ -1376,14 +1048,14 @@ function renderDash(){
       return h;
     }
 
-    if(false /* AKSESSUAR Zapchast bilan birlashtirildi — har doim quyidagi to'liq versiya */){
-      // AKSESSUAR — sodda card (eski versiya, hozir ishlatilmaydi)
+    if(isAks){
+      // AKSESSUAR — sodda card, faqat plan/bajardi/foiz/qarz limit
       html+='<div class="progress-card">';
       html+='<div class="pc-top">';
       html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+profBadgeIdx+'</div>';
       html+='<div class="pc-plan">'+fmt(fd.plan)+' so\'m</div></div>';
       html+='<div style="display:flex;align-items:center;gap:10px">';
-      html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
+      html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||(new Date().getMonth()+1))+'\',\''+(fd.yil||new Date().getFullYear())+'\')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
       html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'%</div>';
       html+='</div>';
       html+='</div>';
@@ -1408,7 +1080,7 @@ function renderDash(){
       html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Prognoz summa</div>';
       html+='<div style="font-size:13px;font-weight:800;color:#06b6d4">'+fmt(fd.prognoz||0)+'</div>';
       if(fqolganKun>0 || ffoiz>=100){
-        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+getKunDisplay(fd)+' kun</div>';
+        html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
       }
       html+='</div>';
       html+='</div>';
@@ -1427,28 +1099,19 @@ function renderDash(){
           var toW = String(t.to_warehouse_id||'');
           return toW===fdWidAks || toW===fdApiWidAks;
         }
-        if(t.status==='canceled') {
-          var fromWC = String(t.from_warehouse_id||'');
-          return fromWC===fdWidAks || fromWC===fdApiWidAks;
-        }
         return true;
       });
-      var brakAks = fd.brak_transfers||[];
-      if(trAks.length > 0 || brakAks.length > 0){
+      if(trAks.length > 0){
         var trCA = trAks.filter(function(t){return t.status==='created';});
         var trOA = trAks.filter(function(t){return t.status==='on_way';});
-        var trXA = trAks.filter(function(t){return t.status==='canceled';});
         window._dashTransfers = trAks;
         window._dashFilial = fd.filial||'';
-        window._dashBrak = brakAks;
         html+='<div style="margin-top:8px;cursor:pointer" id="tr-dash-btn">';
         html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
         html+='<div style="font-size:10px;color:#378ADD;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
-        html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+        html+='<div style="display:flex;gap:8px;align-items:center">';
         if(trCA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCA.length+' yaratilgan</span>';
         if(trOA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOA.length+' yo\'lda</span>';
-        if(trXA.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ef4444">'+trXA.length+' bekor</span>';
-        if(brakAks.length>0) html+='<span style="font-size:12px;font-weight:700;color:#a855f7">'+brakAks.length+' brak</span>';
         html+='</div>';
         html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
         html+='</div></div>';
@@ -1461,7 +1124,7 @@ function renderDash(){
     html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+profBadgeIdx+'</div>';
     html+='<div class="pc-plan">'+fmt(fd.plan)+' so\'m</div></div>';
     html+='<div style="display:flex;align-items:center;gap:10px">';
-    html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
+    html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||(new Date().getMonth()+1))+'\',\''+(fd.yil||new Date().getFullYear())+'\')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
     html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'%</div>';
     html+='</div>';
     html+='</div>';
@@ -1486,7 +1149,7 @@ function renderDash(){
     html+='<div style="font-size:13px;font-weight:800;color:'+fprogColor+'">'+fprogFoiz+'%</div>';
     if(fkunlik>0){
       html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+getKunDisplay(fd)+' kun</div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(fd.bugun||0)+'/'+(fd.oy_kunlari||30)+' kun</div>';
     } else if(ffoiz>=100){
       html+='<div style="font-size:9px;color:var(--green);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
     }
@@ -1510,15 +1173,10 @@ function renderDash(){
         var toW = String(t.to_warehouse_id||'');
         return toW===fdWid || toW===fdApiWid;
       }
-      if(t.status==='canceled') {
-        var fromWC = String(t.from_warehouse_id||'');
-        return fromWC===fdWid || fromWC===fdApiWid;
-      }
       return true;
     });
     var trCreated = transfers.filter(function(t){return t.status==='created';});
     var trOnWay = transfers.filter(function(t){return t.status==='on_way';});
-    var trCanceled = transfers.filter(function(t){return t.status==='canceled';});
     html+='<div style="display:flex;gap:8px;margin-top:8px">';
     html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px;cursor:pointer" onclick="showTab(\'ochiq\',document.querySelectorAll(\'.tab\')[1])">';
     html+='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Ochiq buyurtma</div>';
@@ -1531,19 +1189,15 @@ function renderDash(){
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(fd.tugallanmagan_savdo_son||0)+' ta</div>';
     html+='</div>';
     html+='</div>';
-    var brakMain = fd.brak_transfers||[];
-    if(transfers.length>0||brakMain.length>0){
+    if(transfers.length>0){
       window._dashTransfers=transfers;
       window._dashFilial=fd.filial||'';
-      window._dashBrak=brakMain;
       html+='<div style="margin-top:8px;cursor:pointer" id="tr-dash-btn">';
       html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
       html+='<div style="font-size:10px;color:#378ADD;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
-      html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+      html+='<div style="display:flex;gap:8px;align-items:center">';
       if(trCreated.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCreated.length+' yaratilgan</span>';
       if(trOnWay.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOnWay.length+' yo\'lda</span>';
-      if(trCanceled.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ef4444">'+trCanceled.length+' bekor</span>';
-      if(brakMain.length>0) html+='<span style="font-size:12px;font-weight:700;color:#a855f7">'+brakMain.length+' brak</span>';
       html+='</div>';
       html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
       html+='</div></div>';
@@ -1647,76 +1301,11 @@ function renderDash(){
 
   document.getElementById('page-dash').innerHTML=html;
   var trBtn=document.getElementById('tr-dash-btn');
-  if(trBtn) trBtn.onclick=function(){showTransfersModal(window._dashTransfers,window._dashFilial,window._dashBrak);};
+  if(trBtn) trBtn.onclick=function(){showTransfersModal(window._dashTransfers,window._dashFilial);};
 }
 
 // =============================================
-// YANGI: Debtors cache (Aros Market - Debtors Cache workflow)
-// Bitta chaqiruvda barcha qarzdorlar (bugun + ertaga)
-// =============================================
-function loadDebtors(cb, force){
-  if(force){ debtorsLoaded=false; debtorsCache=null; }
-  if(debtorsLoaded){ if(cb) cb(); return; }
-  if(cb) debtorsLoadCb.push(cb);
-  if(debtorsLoading) return;
-  debtorsLoading = true;
-  var _wh = wid || userData.warehouse_id || null;
-  if(!_wh){
-    debtorsLoading=false; debtorsLoaded=true; debtorsCache=null;
-    debtorsLoadCb.forEach(function(c){try{c();}catch(e){}}); debtorsLoadCb=[];
-    return;
-  }
-  fetch(DEBTORS_API+'?wid='+_wh)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      var data = Array.isArray(d) ? d[0] : d;
-      debtorsCache = data || { bugun:{debtors:[]}, ertaga:{debtors:[]} };
-      debtorsLoaded=true; debtorsLoading=false;
-      debtorsLoadCb.forEach(function(c){try{c();}catch(e){}}); debtorsLoadCb=[];
-    })
-    .catch(function(){
-      debtorsCache = { bugun:{debtors:[]}, ertaga:{debtors:[]} };
-      debtorsLoaded=true; debtorsLoading=false;
-      debtorsLoadCb.forEach(function(c){try{c();}catch(e){}}); debtorsLoadCb=[];
-    });
-}
-
-// Aros API debtor → existing card structure
-function mapDebtorFromCache(d, tab){
-  var wallet = Number(d.wallet_balance)||0;
-  var totalDebt = Number(d.total_debts)||0;
-  var outdated = Number(d.total_outdated_debts)||0;
-  var mod = Number(d.most_outdated_deadline)||0;
-  // summa - net amount net of wallet
-  var summa = Math.max(0, outdated - wallet);
-  // max_kun = MOD (Otgan tab uchun, kun_otgan = days since deadline = MOD)
-  // MOD formulasi: query_date - deadline = MOD (kun)
-  // Otgan tab bugun query'dan keladi, MOD = days_overdue
-  var maxKun = tab==='otgan' ? Math.max(0, mod) : 0;
-  // usertype
-  var dad = Number(d.debt_allowed_days)||0;
-  var usertype = dad===1 ? 'master' : (dad>1 ? 'business_partner' : '');
-  var name = ((d.first_name||'')+' '+(d.last_name||'')).trim() || "Noma'lum";
-  return {
-    user_id: d.id,
-    ism: name,
-    telefon: d.username || '',
-    summa: summa,
-    wallet_balance: wallet,
-    usertype: usertype,
-    max_kun: maxKun,
-    total_debt: totalDebt,
-    debt_limit: Number(d.debt_limit)||0,
-    orders: []  // lazy load via ORDERS_API on toggleOrders
-  };
-}
-
-// =============================================
-// loadTab - YANGI: 3 ta sana cache, MOD = (query - deadline) kun
-// API faqat MOD≥1 ni qaytaradi (overdue dan)
-// Otgan = bugun query, hammasi (deadline < bugun)
-// Bugun = ertaga query, MOD=1 (deadline = bugun)
-// Ertaga = paslozim query, MOD=1 (deadline = ertaga)
+// loadTab - ESKI KOD, o'zgartirilmagan
 // =============================================
 function loadTab(tab){
   if(tab==='otgan') otganLoading=true;
@@ -1726,42 +1315,97 @@ function loadTab(tab){
   var pageId='page-'+tab;
   document.getElementById(pageId).innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
 
-  loadDebtors(function(){
-    var rawList = [];
-    if(debtorsCache){
-      if(tab==='otgan'){
-        // bugun query'dagi hamma - hammasi overdue (MOD≥1 API filter)
-        rawList = ((debtorsCache.bugun && debtorsCache.bugun.debtors) || []);
-      } else if(tab==='bugun'){
-        // ertaga query, MOD=1 → deadline = bugun
-        rawList = ((debtorsCache.ertaga && debtorsCache.ertaga.debtors) || [])
-          .filter(function(d){ return Number(d.most_outdated_deadline) === 1; });
-      } else {
-        // paslozim query, MOD=1 → deadline = ertaga
-        rawList = ((debtorsCache.paslozim && debtorsCache.paslozim.debtors) || [])
-          .filter(function(d){ return Number(d.most_outdated_deadline) === 1; });
-      }
-    }
-    var final = rawList.map(function(d){ return mapDebtorFromCache(d, tab); })
-                       .filter(function(r){ return r.summa > 0; });
+  if(!allUsers.length){
+    if(tab==='otgan'){otganLoaded=true;otganLoading=false;}
+    else if(tab==='bugun'){bugunLoaded=true;bugunLoading=false;}
+    else{ertagaLoaded=true;ertagaLoading=false;}
+    document.getElementById(pageId).innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="et">Qarz yo\'q</div></div>';
+    return;
+  }
 
+  var resMap={}, done=0, total=allUsers.length;
+
+  function check(){
+    done++;
+    if(done<total) return;
+    var final=Object.values(resMap);
     if(tab==='otgan'){
-      otganLoaded=true; otganLoading=false; otganFinal=final;
-      loadPageDeadlines(userData.warehouse_id||0, function(){
-        renderList('page-otgan',final,'var(--red)','b-red',
-          '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
-          'Muddati o\'tgan qarz yo\'q!',true);
+      otganLoaded=true;otganLoading=false;otganFinal=final;
+loadPageDeadlines(userData.warehouse_id||0, function(){
+              renderList('page-otgan',final,'var(--red)','b-red',
+        '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
+        'Muddati o\'tgan qarz yo\'q!',true);
       });
     } else if(tab==='bugun'){
-      bugunLoaded=true; bugunLoading=false; bugunFinal=final;
+      bugunLoaded=true;bugunLoading=false;bugunFinal=final;
       renderList('page-bugun',final,'var(--red)','b-red',
-        '<polyline points="20 6 9 17 4 12"/>','Bugun to\'lanadigan qarz yo\'q',true);
+        '<polyline points="20 6 9 17 4 12"/>','Bugun to\'lanadigan qarz yo\'q',false);
     } else {
-      ertagaLoaded=true; ertagaLoading=false; ertagaFinal=final;
+      ertagaLoaded=true;ertagaLoading=false;ertagaFinal=final;
       renderList('page-ertaga',final,'var(--amber)','b-amber',
-        '<polyline points="20 6 9 17 4 12"/>','Ertaga to\'lanadigan qarz yo\'q',true);
+        '<polyline points="20 6 9 17 4 12"/>','Ertaga to\'lanadigan qarz yo\'q',false);
     }
     renderDash();
+  }
+
+  allUsers.forEach(function(debtor){
+    // Cache bor bo'lsa - to'g'ridan ishlatamiz (otgan/bugun/ertaga barchasi)
+    var cached=ordersCache[debtor.user_id];
+    if(cached!==undefined){
+      // debt_limit'ni ham cache'dan olamiz (otgan tab uchun)
+      if(tab==='otgan' && walletInfoCache[debtor.user_id]){
+        debtor.debt_limit = walletInfoCache[debtor.user_id].debt_limit || 0;
+      }
+      proc(debtor,cached,tab,resMap);check();return;
+    }
+    // Cache yo'q - API dan olish (otgan tab uchun ham!)
+    var _wh=wid||userData.warehouse_id||null;
+    var url=ORDERS_API+'?user_id='+debtor.user_id;
+    if(_wh) url+='&warehouse_id='+_wh;
+    
+    // Bir paytda 2 ta so'rov yuboramiz: orders + wallet-info (faqat otgan tab uchun)
+    var promises = [
+      fetch(url).then(function(r){return r.json();}).then(function(d){
+        return Array.isArray(d) ? d[0] : d;
+      }).catch(function(){ return null; })
+    ];
+    if(tab==='otgan' && debtor.telefon){
+      // Telefon raqami bo'yicha wallet info
+      var phone = String(debtor.telefon).trim();
+      // Agar walletInfoCache da bor bo'lsa, qaytadan chaqirmaymiz
+      if(walletInfoCache[debtor.user_id]!==undefined){
+        promises.push(Promise.resolve(walletInfoCache[debtor.user_id]));
+      } else {
+        promises.push(
+          fetch(WALLET_INFO_API+'?phone='+encodeURIComponent(phone))
+            .then(function(r){return r.json();})
+            .then(function(d){
+              var data = Array.isArray(d) ? d[0] : d;
+              if(data && data.ok){
+                walletInfoCache[debtor.user_id] = data;
+                return data;
+              }
+              walletInfoCache[debtor.user_id] = null;
+              return null;
+            }).catch(function(){
+              walletInfoCache[debtor.user_id] = null;
+              return null;
+            })
+        );
+      }
+    }
+    
+    Promise.all(promises).then(function(results){
+      var ordersData = results[0];
+      var walletData = results[1];
+      ordersCache[debtor.user_id] = (ordersData && ordersData.orders) || (ordersData ? [] : null);
+      // debt_limit ni debtor obyektiga qo'shamiz (otgan tab uchun)
+      if(tab==='otgan' && walletData && walletData.ok){
+        debtor.debt_limit = walletData.debt_limit || 0;
+      }
+      proc(debtor, ordersCache[debtor.user_id], tab, resMap);
+      check();
+    });
   });
 }
 
@@ -1881,15 +1525,7 @@ function load(){
       allFiliallar = d.leaderboard || [];
       document.getElementById('av').textContent=ini(userData.ism);
       document.getElementById('hn').textContent=userData.ism||'Hodim';
-      var _hsOyTxt;
-      if(curYarim){
-        _hsOyTxt = OY[curOy-1] + ' ' + curYarim + '-yarim ' + curYil;
-      } else {
-        _hsOyTxt = OY[curOy-1] + ' ' + curYil;
-      }
-      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+_hsOyTxt;
-      // Agar URL'da wid yo'q bo'lsa, STATS_API javobidan userData.warehouse_id ni global wid ga olamiz
-      if(!wid && userData.warehouse_id) wid = String(userData.warehouse_id);
+      document.getElementById('hs').textContent=(userData.warehouse_name||'AROS')+' · '+new Date().toLocaleDateString('uz-UZ',{month:'long',year:'numeric'});
       // Filial stats yuklanyapti
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
@@ -1957,85 +1593,53 @@ function renderOchiq(confirmedOrders){
     }
     return s;
   }
-  // Savdo oyna - 2 ta pill tab: Aktiv (saved+sent) / Qaytarilgan (returned)
-  var swAllItems = (filialData && filialData.swItems) ? filialData.swItems.slice() : [];
-  swAllItems.forEach(function(sw){ sw._kun = kunHisob(sw.created_datetime || sw.sana); });
-  var swAktiv = swAllItems.filter(function(s){ return s.status !== 'returned'; })
-    .sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
-  var swQaytarilgan = swAllItems.filter(function(s){ return s.status === 'returned'; })
-    .sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
-
-  function renderSwCard(sw){
-    var swUrl = 'https://admin.aros.uz/orders/sales-window-list/'+sw.id;
-    var kun = sw._kun || 0;
-    var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
-    var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
-    var custName = sw.customer || '';
-    var clientIdBadge = sw.client_id ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD;margin-left:6px">ID '+sw.client_id+'</span>' : '';
-    var swUtypeBadge = '';
-    if(sw.usertype==='master') swUtypeBadge = '<span class="c-b c-b-m" style="margin-left:6px">M</span>';
-    else if(sw.usertype==='business_partner') swUtypeBadge = '<span class="c-b c-b-bp" style="margin-left:6px">BP</span>';
-    // Status badge
-    var stLabels = { saved:'Saqlangan', sent:'Yuborilgan', returned:'Qaytarilgan' };
-    var stColors = { saved:'#ff9f0a', sent:'#378ADD', returned:'#ef4444' };
-    var stLbl = stLabels[sw.status] || sw.status || '';
-    var stClr = stColors[sw.status] || 'var(--text3)';
-    var stBadge = stLbl ? '<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+stClr+'26;color:'+stClr+';margin-left:6px">'+stLbl+'</span>' : '';
-    var priceColor = sw.status === 'returned' ? '#ef4444' : 'var(--amber)';
-    var cardOpacity = sw.status === 'returned' ? ';opacity:.9' : '';
-    var html = '';
-    html += '<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px'+cardOpacity+'">';
-    html += '<div style="flex:1;min-width:0">';
-    if(custName){
-      html += '<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:13px;font-weight:700;color:var(--text)">'+custName+'</div>'+swUtypeBadge+clientIdBadge+stBadge+'</div>';
-    } else if(stBadge){
-      html += '<div style="margin-bottom:4px">'+stBadge.replace('margin-left:6px','')+'</div>';
-    }
-    html += '<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:'+priceColor+'">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
-    html += '</div>';
-    html += '<div style="font-size:13px;color:var(--text3);flex-shrink:0;margin-left:8px">→</div>';
-    html += '</div></a>';
-    return html;
-  }
-
-  // Section: faqat kerak bo'lsa ko'rsatish
-  if(swAktiv.length > 0 || swQaytarilgan.length > 0){
-    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
-    html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Savdo oyna ('+(swAktiv.length+swQaytarilgan.length)+' ta)</div>';
-
-    // Pill tabs — faqat data bor pill'lar
-    var swPills = [];
-    if(swAktiv.length > 0) swPills.push({ key:'aktiv', lbl:'Aktiv', cnt:swAktiv.length });
-    if(swQaytarilgan.length > 0) swPills.push({ key:'qaytarilgan', lbl:'Qaytarilgan', cnt:swQaytarilgan.length });
-
-    if(swPills.length > 1){
-      // 2 ta pill bo'lsa segmented switcher
-      html += '<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
-      swPills.forEach(function(p){
-        html += '<div id="sw-tab-'+p.key+'" onclick="swSwitchTab(\''+p.key+'\')" style="flex:1;text-align:center;padding:7px 4px;border-radius:22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s">';
-        html += '<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.2">'+p.cnt+'</div>';
-        html += '<div class="sw-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:1px">'+p.lbl+'</div>';
-        html += '</div>';
+  // Savdo oyna - sortlangan + kun_otgan + sana + soat
+  if(filialData&&(filialData.tugallanmagan_savdo_son||0)>0){
+    var swItems=(filialData.swItems||[]).slice();
+    swItems.forEach(function(sw){ sw._kun = kunHisob(sw.created_datetime || sw.sana); });
+    swItems.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
+    
+    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
+    html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Savdo oyna ('+(filialData.tugallanmagan_savdo_son||0)+' ta)</div>';
+    if(swItems.length){
+      swItems.forEach(function(sw){
+        var swUrl='https://admin.aros.uz/orders/sales-window-list/'+sw.id;
+        var kun = sw._kun || 0;
+        var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:8px">'+kun+' kun</span>' : '';
+        var dtStr = fmtDateTime(sw.created_datetime || sw.sana);
+        var custName = sw.customer || '';
+        var clientIdBadge = sw.client_id ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD;margin-left:6px">ID '+sw.client_id+'</span>' : '';
+        // Usertype badge (M / BP)
+        var swUtypeBadge = '';
+        if(sw.usertype==='master') swUtypeBadge = '<span class="c-b c-b-m" style="margin-left:6px">M</span>';
+        else if(sw.usertype==='business_partner') swUtypeBadge = '<span class="c-b c-b-bp" style="margin-left:6px">BP</span>';
+        html+='<a href="'+swUrl+'" style="display:block;text-decoration:none;color:inherit">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px;background:var(--bg3);border-radius:10px;margin-bottom:6px">';
+        html+='<div style="flex:1;min-width:0">';
+        if(custName){
+          html+='<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:13px;font-weight:700;color:var(--text)">'+custName+'</div>'+swUtypeBadge+clientIdBadge+'</div>';
+        }
+        html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmtFull(sw.total_price)+'</div>'+kunBadge+'</div>';
+        html+='<div style="font-size:11px;color:var(--text3);margin-top:3px">📅 '+dtStr+'</div>';
+        html+='</div>';
+        html+='<div style="font-size:13px;color:var(--text3);flex-shrink:0;margin-left:8px">→</div>';
+        html+='</div></a>';
       });
-      html += '</div>';
+    } else {
+      html+='<a href="https://admin.aros.uz/sales-window/" style="display:block;text-decoration:none;color:inherit">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg3);border-radius:10px">';
+      html+='<div><div style="font-size:17px;font-weight:800;color:var(--amber)">'+fmt(filialData.tugallanmagan_savdo||0)+'</div>';
+      html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(filialData.tugallanmagan_savdo_son||0)+' ta savdo</div></div>';
+      html+='<div style="font-size:13px;color:var(--text3)">→</div>';
+      html+='</div></a>';
     }
-    html += '<div id="sw-tab-content"></div>';
-    html += '</div>';
-
-    // Globals
-    window._swModalData = { aktiv: swAktiv, qaytarilgan: swQaytarilgan };
-    window._swModalRender = renderSwCard;
-    window._swInitTab = swAktiv.length > 0 ? 'aktiv' : 'qaytarilgan';
+    html+='</div>';
   }
   if(!confirmedOrders.length){
-    if(swAktiv.length === 0 && swQaytarilgan.length === 0){
+    if(!filialData||!filialData.tugallanmagan_savdo_son){
       html+='<div class="empty"><div class="et">Ochiq order yoq</div></div>';
     }
-    el.innerHTML=html;
-    if(window._swInitTab) swSwitchTab(window._swInitTab);
-    return;
+    el.innerHTML=html;return;
   }
   // Confirmed orders: sort + kun + soat
   var sortedOrders = confirmedOrders.slice();
@@ -2079,36 +1683,6 @@ function renderOchiq(confirmedOrders){
     html+='</div></a>';
   });
   el.innerHTML=html;
-  if(window._swInitTab) swSwitchTab(window._swInitTab);
-}
-
-// Savdo oyna pill tab switch
-function swSwitchTab(tab){
-  var data = window._swModalData || { aktiv:[], qaytarilgan:[] };
-  var render = window._swModalRender;
-  if(!render) return;
-  ['aktiv','qaytarilgan'].forEach(function(k){
-    var el = document.getElementById('sw-tab-'+k);
-    if(!el) return;
-    var lbl = el.querySelector('.sw-tab-lbl');
-    if(k===tab){
-      el.style.background = 'var(--bg2)';
-      el.style.border = '1.5px solid var(--border)';
-      if(lbl) lbl.style.color = '#38bdf8';
-    } else {
-      el.style.background = 'transparent';
-      el.style.border = '1.5px solid transparent';
-      if(lbl) lbl.style.color = 'var(--text3)';
-    }
-  });
-  var contentEl = document.getElementById('sw-tab-content');
-  if(!contentEl) return;
-  var items = data[tab] || [];
-  if(items.length === 0){
-    contentEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;font-size:11px">Bo\'sh</div>';
-  } else {
-    contentEl.innerHTML = items.map(render).join('');
-  }
 }
 
 var isDark=true;
@@ -2553,26 +2127,13 @@ function showWalletTxModal(userId, userName, currentBalance){
   if(!modal) return;
   title.textContent = '💰 ' + (userName || 'Foydalanuvchi');
   subtitle.textContent = 'Hamyon balansi: ' + fmtFull(currentBalance||0) + ' so\'m';
-  modal.style.display = 'flex';
-  // Cache'da to'liq ma'lumot bor bo'lsa darhol ishlatamiz
-  var cached = walletSummaryCache[userId];
-  if(cached && cached !== 'loading' && cached.full){
-    renderWalletTx(cached.full);
-    return;
-  }
   body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
+  modal.style.display = 'flex';
   fetch(WALLET_TX_API+'?user_id='+userId)
     .then(function(r){return r.text();})
     .then(function(txt){
       var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
       if(!d){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Ma\'lumot yuklanmadi</div>'; return; }
-      // Cache'ga ham saqlaymiz, keyingi safar tezroq
-      walletSummaryCache[userId] = {
-        total_in: parseFloat(d.total_in)||0,
-        total_out: parseFloat(d.total_out)||0,
-        full: d
-      };
-      updateWalletSummaryUI(userId);
       renderWalletTx(d);
     })
     .catch(function(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
@@ -2597,8 +2158,8 @@ function renderWalletTx(d){
     if(parts.length===3) return parts[2]+'.'+parts[1]+'.'+parts[0]+(timePart?' '+timePart:'');
     return s;
   }
-  // Sarlavha (oxirgi 15 kun)
-  var html = '<div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.3px">Oxirgi 15 kun</div>';
+  // Sarlavha (oxirgi 60 kun)
+  var html = '<div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.3px">Oxirgi 60 kun</div>';
   // Summary
   html += '<div style="display:flex;gap:8px;margin-bottom:14px">';
   html += '<div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:10px 12px">';
@@ -2610,7 +2171,7 @@ function renderWalletTx(d){
   html += '<div style="font-size:14px;font-weight:800;color:var(--red)">-'+fmtFull(totalOut)+'</div>';
   html += '</div></div>';
   if(!transactions.length){
-    html += '<div style="text-align:center;padding:30px;color:var(--text3)">Oxirgi 15 kunda tranzaksiya yo\'q</div>';
+    html += '<div style="text-align:center;padding:30px;color:var(--text3)">Oxirgi 60 kunda tranzaksiya yo\'q</div>';
     body.innerHTML = html;
     return;
   }
@@ -2640,24 +2201,20 @@ function renderWalletTx(d){
 }
 
 // ===================== CALENDAR =====================
-function openCalendar(wid, filialNomi, oy, yil, yarim){
+function openCalendar(wid, filialNomi, oy, yil){
   var modal = document.getElementById('cal-modal');
   var title = document.getElementById('cal-title');
   var subtitle = document.getElementById('cal-subtitle');
   var body = document.getElementById('cal-body');
   title.textContent = '📅 ' + (filialNomi||'Kalendar');
-  var ySuffix = yarim ? ' ' + yarim + '-yarim' : '';
-  subtitle.textContent = (OY[parseInt(oy)-1]||'') + ySuffix + ' ' + yil;
+  subtitle.textContent = (OY[parseInt(oy)-1]||'') + ' ' + yil;
   body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
   modal.style.display = 'flex';
   // Wid ni global saqlaymiz (MML uchun)
   window._calWid = parseInt(wid) || 0;
   window._calOy = parseInt(oy) || 0;
   window._calYil = parseInt(yil) || 0;
-  window._calYarim = parseInt(yarim) || 0;
-  var url = CALENDAR_API+'?wid='+wid+'&oy='+oy+'&yil='+yil;
-  if(yarim) url += '&yarim='+yarim;
-  fetch(url)
+  fetch(CALENDAR_API+'?wid='+wid+'&oy='+oy+'&yil='+yil)
     .then(function(r){return r.text();})
     .then(function(txt){
       var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
@@ -2712,13 +2269,13 @@ function renderCalendar(d){
   html += '</div></div>';
   // Kalendar grid - hafta nomlari
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
-  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:6px;width:100%">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">';
   haftaKunlari.forEach(function(h){
     html += '<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:600;padding:4px 0">'+h+'</div>';
   });
   html += '</div>';
   // Kalendar grid - kunlar
-  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%" id="cal-grid">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="cal-grid">';
   // Boshidagi bo'sh kataklar
   for(var i=0;i<offset;i++){ html += '<div></div>'; }
   // Kunlar
@@ -2731,23 +2288,22 @@ function renderCalendar(d){
       var icon = dayOffIcon(reason);
       var bg = 'rgba(148,163,184,.18)';
       var txtColor = 'var(--text2)';
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s;min-width:0;overflow:hidden">';
-      html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="min-height:62px;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s;padding:4px 2px">';
+      html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+';line-height:1.1">'+k+'</div>';
       html += '<div style="font-size:13px;margin-top:1px;line-height:1">'+icon+'</div>';
       html += '</div>';
     } else if(dayData){
       var bg, txtColor;
-      if(dayData.status==='outofyarim'){ bg='var(--bg3)'; txtColor='var(--text3)'; }
-      else if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
+      if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
       else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
       else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
-      html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="min-height:62px;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;padding:4px 2px" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
+      html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+';line-height:1.1">'+k+'</div>';
       html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px;line-height:1">'+(dayData.foiz||0)+'%</div>';
       html += '</div>';
     } else {
       // Kelajak kun
-      html += '<div style="position:relative;aspect-ratio:1;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35;min-width:0;overflow:hidden"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
+      html += '<div style="min-height:62px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35;padding:4px 2px"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
     }
   }
   html += '</div>';
@@ -2793,11 +2349,10 @@ function loadAndApplyMmlBadges(wid, oy, yil, oyKunlari){
         if(foiz >= 100){ badgeColor='#22c55e'; badgeBg='rgba(34,197,94,.18)'; }
         else if(foiz >= 90){ badgeColor='#fbbf24'; badgeBg='rgba(251,191,36,.18)'; }
         else { badgeColor='#ff4d6d'; badgeBg='rgba(255,77,109,.18)'; }
-        // MML indikator - kichik rangli nuqta cell'ning yuqori-o'ng burchagida
-        // (cell width'ni cho'zmaydi, swipe muammosi yo'q)
+        // Badge HTML - cell ning oxiriga qo'shamiz (kompakt mobile uchun)
         var badge = document.createElement('div');
-        badge.style.cssText = 'position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:'+badgeColor+';box-shadow:0 0 0 1.5px '+badgeBg+';pointer-events:none';
-        badge.title = 'MML A: '+mml.mavjud_a+'/'+mml.total_a+' ('+foiz+'%)';
+        badge.style.cssText = 'font-size:8px;font-weight:700;color:'+badgeColor+';background:'+badgeBg+';border-radius:3px;padding:1px 3px;margin-top:2px;line-height:1.1;white-space:nowrap';
+        badge.textContent = mml.mavjud_a+'/'+mml.total_a;
         cell.appendChild(badge);
       }
     })
@@ -2959,141 +2514,61 @@ function downloadMmlExcel(){
 }
 
 
-function renderTransferCard(t){
-  var sLabels={created:'Yaratilgan',on_way:"Yo'lda",canceled:'Bekor qilingan'};
-  var sColors={created:'#378ADD',on_way:'#ff9f0a',canceled:'#ef4444'};
-  var color=sColors[t.status]||'var(--text2)';
-  var label=sLabels[t.status]||t.status;
-  var pulseClass=t.status==='on_way'?'tr-onway':(t.status==='canceled'?'':'tr-created');
-  var link='https://admin.aros.uz/products-actions/product-transfer/'+t.id;
-  // Sana + vaqt: datetime bo'lsa fmtDT bilan, bo'lmasa eski sana bilan
-  var sana, sanaLabel;
-  if(t.status==='created'){
-    sana = fmtDT(t.created_datetime) || t.created_date || '';
-    sanaLabel = 'Yaratilgan';
-  } else {
-    sana = fmtDT(t.send_datetime) || t.send_date || fmtDT(t.created_datetime) || t.created_date || '';
-    sanaLabel = 'Yuborilgan';
-  }
-  var kun=t.kun_otgan||0;
-  var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
-  var html='';
-  html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
-  html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D'+(t.status==='canceled'?';opacity:.85':'')+'">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  html+='<div style="display:flex;align-items:center;gap:5px">';
-  html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
-  html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
-  if(t.status!=='canceled') html+=kechikishBadge(t);
-  html+='</div>';
-  html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
-  html+='</div>';
-  html+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:10px">';
-  html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.from_warehouse||'—')+'</span>';
-  html+='<span style="color:var(--text3);flex-shrink:0;font-size:9px">→</span>';
-  html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.to_warehouse||'—')+'</span>';
-  html+='</div>';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Summa</span>';
-  html+='<div style="display:flex;align-items:center;gap:6px">';
-  html+='<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</span>';
-  if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:2px 7px;font-size:10px;text-decoration:none;flex-shrink:0">📞</a>';
-  html+='</div>';
-  html+='</div>';
-  if(t.comment) html+='<div style="margin-bottom:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--text3);font-style:italic">💬 '+t.comment+'</div>';
-  html+='<div style="padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
-  html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+sanaLabel+'</span>';
-  html+='<span style="font-size:10px;font-weight:600;color:var(--text2)">'+(sana||'—')+'</span>';
-  html+='</div>';
-  html+='</div></a>';
-  return html;
-}
-
-var _trModalData = { aktiv: [], bekor: [], brak: [] };
-var _trModalTab = 'aktiv';
-
-function trRenderTabContent(){
-  var contentEl=document.getElementById('tr-tab-content');
-  if(!contentEl) return;
-  var items=_trModalData[_trModalTab]||[];
-  var html='';
-  if(items.length===0){
-    html='<div style="text-align:center;color:var(--text3);padding:30px;font-size:12px">Transfer yo\'q</div>';
-  } else {
-    items.forEach(function(t){ html+=renderTransferCard(t); });
-  }
-  contentEl.innerHTML=html;
-}
-
-function trSwitchTab(tab){
-  _trModalTab=tab;
-  ['aktiv','bekor','brak'].forEach(function(k){
-    var el=document.getElementById('tr-tab-'+k);
-    if(!el) return;
-    var lbl=el.querySelector('.tr-tab-lbl');
-    if(k===tab){
-      el.style.background='var(--bg2)';
-      el.style.border='1.5px solid var(--border)';
-      if(lbl) lbl.style.color='#38bdf8';
-    } else {
-      el.style.background='transparent';
-      el.style.border='1.5px solid transparent';
-      if(lbl) lbl.style.color='var(--text3)';
-    }
-  });
-  trRenderTabContent();
-}
-
-function showTransfersModal(transfers, filialNomi, brakTransfers){
+function showTransfersModal(transfers, filialNomi){
   var modal=document.getElementById('tr-modal');
   var list=document.getElementById('tr-list');
   var subtitle=document.getElementById('tr-subtitle');
-  var all=(transfers||[]).slice();
-
-  _trModalData.aktiv=all.filter(function(t){return t.status==='created'||t.status==='on_way';})
-    .sort(function(a,b){
-      if(a.status!==b.status){
-        if(a.status==='on_way') return -1;
-        if(b.status==='on_way') return 1;
-        return 0;
-      }
-      return (b.kun_otgan||0)-(a.kun_otgan||0);
-    });
-  _trModalData.bekor=all.filter(function(t){return t.status==='canceled';})
-    .sort(function(a,b){return (b.kun_otgan||0)-(a.kun_otgan||0);});
-  _trModalData.brak=(brakTransfers||[]).slice()
-    .sort(function(a,b){
-      if(a.status!==b.status){
-        if(a.status==='on_way') return -1;
-        if(b.status==='on_way') return 1;
-        if(a.status==='created') return -1;
-        if(b.status==='created') return 1;
-        return 0;
-      }
-      return (b.kun_otgan||0)-(a.kun_otgan||0);
-    });
-
-  subtitle.textContent=(filialNomi||'')+' · '+all.length+' ta';
-
-  // Segmented pill tabs (soni tepada, label pastda)
-  var tabsHtml='<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
-  var tabs=[
-    {key:'aktiv', lbl:'Aktiv', cnt:_trModalData.aktiv.length},
-    {key:'bekor', lbl:'Bekor', cnt:_trModalData.bekor.length},
-    {key:'brak',  lbl:'Brak baza', cnt:_trModalData.brak.length}
-  ];
-  tabs.forEach(function(tb){
-    tabsHtml+='<div id="tr-tab-'+tb.key+'" onclick="trSwitchTab(\''+tb.key+'\')" style="flex:1;text-align:center;padding:7px 4px;border-radius:22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s">';
-    tabsHtml+='<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.2">'+tb.cnt+'</div>';
-    tabsHtml+='<div class="tr-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:1px">'+tb.lbl+'</div>';
-    tabsHtml+='</div>';
+  var sorted=(transfers||[]).slice().sort(function(a,b){
+    if(a.status!==b.status){
+      if(a.status==='on_way') return -1;
+      if(b.status==='on_way') return 1;
+      return 0;
+    }
+    return (b.kun_otgan||0)-(a.kun_otgan||0);
   });
-  tabsHtml+='</div>';
-  tabsHtml+='<div id="tr-tab-content"></div>';
-
-  list.innerHTML=tabsHtml;
+  subtitle.textContent=(filialNomi||'')+' · '+sorted.length+' ta';
+  var sLabels={created:'Yaratilgan',on_way:"Yo'lda"};
+  var sColors={created:'#378ADD',on_way:'#ff9f0a'};
+  var html='';
+  sorted.forEach(function(t){
+    var color=sColors[t.status]||'var(--text2)';
+    var label=sLabels[t.status]||t.status;
+    var pulseClass=t.status==='on_way'?'tr-onway':'tr-created';
+    var link='https://admin.aros.uz/products-actions/product-transfer/'+t.id;
+    var sana=t.status==='created'?t.created_date:t.send_date;
+    var sanaLabel=t.status==='created'?'Yaratilgan':'Yuborilgan';
+    var kun=t.kun_otgan||0;
+    var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
+    html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
+    html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html+='<div style="display:flex;align-items:center;gap:5px">';
+    html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
+    html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
+    html+='</div>';
+    html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:10px">';
+    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.from_warehouse||'—')+'</span>';
+    html+='<span style="color:var(--text3);flex-shrink:0;font-size:9px">→</span>';
+    html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.to_warehouse||'—')+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Summa</span>';
+    html+='<div style="display:flex;align-items:center;gap:6px">';
+    html+='<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</span>';
+    if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:2px 7px;font-size:10px;text-decoration:none;flex-shrink:0">📞</a>';
+    html+='</div>';
+    html+='</div>';
+    if(t.comment) html+='<div style="margin-bottom:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--text3);font-style:italic">💬 '+t.comment+'</div>';
+    html+='<div style="padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
+    html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+sanaLabel+'</span>';
+    html+='<span style="font-size:10px;font-weight:600;color:var(--text2)">'+(sana||'—')+'</span>';
+    html+='</div>';
+    html+='</div></a>';
+  });
+  list.innerHTML=html||'<div style="text-align:center;color:var(--text3);padding:20px">Transfer yo\'q</div>';
   modal.style.display='flex';
-  trSwitchTab('aktiv');
 }
 
 </script>
@@ -3151,7 +2626,7 @@ function showTransfersModal(transfers, filialNomi, brakTransfers){
       </div>
       <button onclick="document.getElementById('cal-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
     </div>
-    <div id="cal-body" style="padding:12px 16px 24px;overflow-x:hidden"></div>
+    <div id="cal-body" style="padding:12px 16px 24px"></div>
   </div>
 </div>
 
