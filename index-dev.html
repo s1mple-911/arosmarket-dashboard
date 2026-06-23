@@ -2972,7 +2972,7 @@ function renderTransferCard(t){
     sana = fmtDT(t.created_datetime) || t.created_date || '';
     sanaLabel = 'Yaratilgan';
   } else {
-    sana = fmtDT(t.send_datetime) || t.send_date || fmtDT(t.created_datetime) || t.created_date || '';
+    sana = fmtDT(t.send_datetime) || t.send_date || '';
     sanaLabel = 'Yuborilgan';
   }
   var kun=t.kun_otgan||0;
