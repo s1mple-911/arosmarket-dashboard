@@ -819,7 +819,7 @@ function renderCard(f,idx){
         var toW = String(t.to_warehouse_id||'');
         return toW===fWidAks || toW===fApiWidAks;
       }
-      if(t.status==='canceled') {
+      if(t.status==='canceled'||t.status==='returned') {
         var fromWC = String(t.from_warehouse_id||'');
         return fromWC===fWidAks || fromWC===fApiWidAks;
       }
@@ -829,7 +829,7 @@ function renderCard(f,idx){
     if(trListAks.length>0||brakListAks.length>0){
       var trCA=trListAks.filter(function(t){return t.status==='created';}).length;
       var trOA=trListAks.filter(function(t){return t.status==='on_way';}).length;
-      var trXA=trListAks.filter(function(t){return t.status==='canceled';}).length;
+      var trXA=trListAks.filter(function(t){return t.status==='canceled'||t.status==='returned';}).length;
       window['_tr_'+idx]=trListAks;
       window['_tf_'+idx]=f.filial||'';
       window['_trb_'+idx]=brakListAks;
@@ -899,7 +899,7 @@ function renderCard(f,idx){
       var toW = String(t.to_warehouse_id||'');
       return toW===fWid || toW===fApiWid;
     }
-    if(t.status==='canceled') {
+    if(t.status==='canceled'||t.status==='returned') {
       var fromWC = String(t.from_warehouse_id||'');
       return fromWC===fWid || fromWC===fApiWid;
     }
@@ -910,7 +910,7 @@ function renderCard(f,idx){
   if(trList.length>0||brakList.length>0){
     var trC=trList.filter(function(t){return t.status==='created';}).length;
     var trO=trList.filter(function(t){return t.status==='on_way';}).length;
-    var trX=trList.filter(function(t){return t.status==='canceled';}).length;
+    var trX=trList.filter(function(t){return t.status==='canceled'||t.status==='returned';}).length;
     window['_tr_'+idx]=trList;
     window['_tf_'+idx]=f.filial||'';
     window['_trb_'+idx]=f.brak_transfers||[];
@@ -1111,7 +1111,7 @@ function renderDetDash(){
       var toW = String(t.to_warehouse_id||'');
       return toW===detWid || toW===detApiWid;
     }
-    if(t.status==='canceled') {
+    if(t.status==='canceled'||t.status==='returned') {
       var fromWC = String(t.from_warehouse_id||'');
       return fromWC===detWid || fromWC===detApiWid;
     }
@@ -1120,7 +1120,7 @@ function renderDetDash(){
   if(trAll.length>0){
     var trCreated=trAll.filter(function(t){return t.status==='created';});
     var trOnWay=trAll.filter(function(t){return t.status==='on_way';});
-    var trCancl=trAll.filter(function(t){return t.status==='canceled';});
+    var trCancl=trAll.filter(function(t){return t.status==='canceled'||t.status==='returned';});
     html+='<div style="margin-top:8px;cursor:pointer" id="det-tr-btn">';
     html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
     html+='<div style="font-size:10px;color:#378ADD;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
@@ -1158,7 +1158,7 @@ function renderDetDash(){
         var toW = String(t.to_warehouse_id||'');
         return toW===_tlWid || toW===_tlApiWid;
       }
-      if(t.status==='canceled') {
+      if(t.status==='canceled'||t.status==='returned') {
         var fromWC = String(t.from_warehouse_id||'');
         return fromWC===_tlWid || fromWC===_tlApiWid;
       }
@@ -1909,31 +1909,34 @@ function downloadMmlBatch(){
 }
 
 function renderTransferCard(t){
-  var sLabels={created:'Yaratilgan',on_way:"Yo'lda",canceled:'Bekor qilingan'};
-  var sColors={created:'#378ADD',on_way:'#ff9f0a',canceled:'#ef4444'};
+  var sLabels={created:'Yaratilgan',on_way:"Yo'lda",canceled:'Bekor qilingan',returned:'Bekor qilingan'};
+  var sColors={created:'#378ADD',on_way:'#ff9f0a',canceled:'#ef4444',returned:'#ef4444'};
   var color=sColors[t.status]||'var(--text2)';
   var label=sLabels[t.status]||t.status;
-  var pulseClass=t.status==='on_way'?'tr-onway':(t.status==='canceled'?'':'tr-created');
+  var isCancelLike=(t.status==='canceled'||t.status==='returned');
+  var pulseClass=t.status==='on_way'?'tr-onway':(isCancelLike?'':'tr-created');
   var link='https://admin.aros.uz/products-actions/product-transfer/'+t.id;
-  // Sana + vaqt: datetime bo'lsa fmtDT bilan, bo'lmasa eski sana bilan
+  // Sana + vaqt: datetime bo'lsa fmtDT bilan, bo'lmasa eski sana bilan (object bo'lsa o'tkazib)
   var sana, sanaLabel;
   if(t.status==='created'){
-    sana = fmtDT(t.created_datetime) || t.created_date || '';
+    sana = fmtDT(t.created_datetime) || (typeof t.created_date==='string'?t.created_date:'') || '';
     sanaLabel = 'Yaratilgan';
   } else {
-    sana = fmtDT(t.send_datetime) || t.send_date || '';
+    var _sdt=(typeof t.send_datetime==='string')?t.send_datetime:'';
+    var _sd=(typeof t.send_date==='string')?t.send_date:'';
+    sana = fmtDT(_sdt) || _sd || '';
     sanaLabel = 'Yuborilgan';
   }
   var kun=t.kun_otgan||0;
   var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
   var html='';
   html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
-  html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D'+(t.status==='canceled'?';opacity:.85':'')+'">';
+  html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D'+(isCancelLike?';opacity:.85':'')+'">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
   html+='<div style="display:flex;align-items:center;gap:5px">';
   html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
   html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
-  if(t.status!=='canceled') html+=kechikishBadge(t);
+  if(!isCancelLike) html+=kechikishBadge(t);
   html+='</div>';
   html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
   html+='</div>';
@@ -2008,7 +2011,7 @@ function showTransfersModal(transfers, filialNomi, brakTransfers){
       }
       return (b.kun_otgan||0)-(a.kun_otgan||0);
     });
-  _trModalData.bekor=all.filter(function(t){return t.status==='canceled';})
+  _trModalData.bekor=all.filter(function(t){return t.status==='returned'||t.status==='canceled';})
     .sort(function(a,b){return (b.kun_otgan||0)-(a.kun_otgan||0);});
   _trModalData.brak=(brakTransfers||[]).slice()
     .sort(function(a,b){
