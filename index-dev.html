@@ -2960,7 +2960,7 @@ function downloadMmlExcel(){
 
 
 function renderTransferCard(t){
-  var sLabels={created:'Yaratilgan',on_way:"Yo'lda",canceled:'Bekor qilingan',returned:'Bekor qilingan'};
+  var sLabels={created:'Yaratilgan',on_way:"Yo'lda",canceled:'Qaytarilgan',returned:'Qaytarilgan'};
   var sColors={created:'#378ADD',on_way:'#ff9f0a',canceled:'#ef4444',returned:'#ef4444'};
   var color=sColors[t.status]||'var(--text2)';
   var label=sLabels[t.status]||t.status;
@@ -3062,7 +3062,7 @@ function showTransfersModal(transfers, filialNomi, brakTransfers){
       }
       return (b.kun_otgan||0)-(a.kun_otgan||0);
     });
-  _trModalData.bekor=all.filter(function(t){return t.status==='returned'||t.status==='canceled';})
+  _trModalData.bekor=all.filter(function(t){return t.status==='returned';})
     .sort(function(a,b){return (b.kun_otgan||0)-(a.kun_otgan||0);});
   _trModalData.brak=(brakTransfers||[]).slice()
     .sort(function(a,b){
@@ -3082,7 +3082,7 @@ function showTransfersModal(transfers, filialNomi, brakTransfers){
   var tabsHtml='<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
   var tabs=[
     {key:'aktiv', lbl:'Aktiv', cnt:_trModalData.aktiv.length},
-    {key:'bekor', lbl:'Bekor', cnt:_trModalData.bekor.length},
+    {key:'bekor', lbl:'Qaytarilgan', cnt:_trModalData.bekor.length},
     {key:'brak',  lbl:'Brak baza', cnt:_trModalData.brak.length}
   ];
   tabs.forEach(function(tb){
@@ -3097,6 +3097,25 @@ function showTransfersModal(transfers, filialNomi, brakTransfers){
   list.innerHTML=tabsHtml;
   modal.style.display='flex';
   trSwitchTab('aktiv');
+  trAttachSwipe();
+}
+
+function trAttachSwipe(){
+  var area=document.getElementById('tr-tab-content');
+  if(!area) return;
+  var order=['aktiv','bekor','brak'];
+  var x0=null, y0=null;
+  area.addEventListener('touchstart',function(e){ var t=e.changedTouches[0]; x0=t.clientX; y0=t.clientY; },{passive:true});
+  area.addEventListener('touchend',function(e){
+    if(x0===null) return;
+    var t=e.changedTouches[0];
+    var dx=t.clientX-x0, dy=t.clientY-y0;
+    x0=null;
+    if(Math.abs(dx)<50 || Math.abs(dx)<Math.abs(dy)) return;
+    var i=order.indexOf(_trModalTab);
+    if(dx<0 && i<order.length-1) trSwitchTab(order[i+1]);
+    else if(dx>0 && i>0) trSwitchTab(order[i-1]);
+  },{passive:true});
 }
 
 </script>
