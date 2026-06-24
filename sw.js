@@ -1,32 +1,27 @@
 // AROS Market Service Worker
-// Versiyani har push'da o'zgartiring (cache reset)
-const CACHE_VERSION = 'aros-v11';
+// HTML uchun NETWORK-FIRST: online bo'lsa har doim eng yangi versiya.
+// Version faqat eski cache'larni tozalash uchun (HTML freshness'ga bog'liq emas).
+const CACHE_VERSION = 'aros-v12';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 
-// Sahifalar (cache qilinadi)
+// Offline fallback uchun minimal ro'yxat (ixtiyoriy)
 const STATIC_ASSETS = [
-  './',
-  './login.html',
-  './index-dev.html',
-  './ceo-dev.html',
-  './bugalter.html',
-  './hodim-dev.html',
   './manifest.json'
 ];
 
-// Install — staticfayllarni cache'ga qo'shish
+// Install — yangi SW'ni darhol faollashtirish
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(function(cache) {
       return cache.addAll(STATIC_ASSETS).catch(function(err){
-        console.log('[SW] Cache failed for some assets:', err);
+        console.log('[SW] Cache addAll skip:', err);
       });
     })
   );
   self.skipWaiting();
 });
 
-// Activate — eski cache'larni tozalash
+// Activate — eski versiya cache'larini o'chirish + darhol nazoratga olish
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
@@ -37,54 +32,65 @@ self.addEventListener('activate', function(event) {
           return caches.delete(name);
         })
       );
+    }).then(function() {
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
-// Fetch strategiya:
-// - n8n webhook'lari: faqat tarmoq (cache qilmaymiz, fresh data kerak)
-// - HTML/JS/CSS: cache-first, keyin network (offline'da ham ishlaydi)
+// Sahifa SW'dan "darhol yangilanish"ni so'rashi uchun
+self.addEventListener('message', function(event) {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', function(event) {
   var url = event.request.url;
-  
-  // n8n va aros API — har doim network
-  if (url.indexOf('n8n.arosmarket.com') !== -1 || 
+
+  // n8n / aros / telegram API — har doim network (cache yo'q)
+  if (url.indexOf('n8n.arosmarket.com') !== -1 ||
       url.indexOf('api.aros.uz') !== -1 ||
       url.indexOf('api.telegram.org') !== -1) {
-    return; // Default browser behavior (network)
+    return; // brauzer default (network)
   }
-  
-  // Faqat GET requestlarni cache qilamiz
+
+  // Faqat GET
   if (event.request.method !== 'GET') return;
-  
-  // HTML/JS/CSS: cache-first
-  event.respondWith(
-    caches.match(event.request).then(function(cached) {
-      if (cached) {
-        // Background'da freshini olish (stale-while-revalidate)
-        fetch(event.request).then(function(response) {
-          if (response && response.ok) {
-            caches.open(STATIC_CACHE).then(function(cache) {
-              cache.put(event.request, response);
-            });
-          }
-        }).catch(function(){});
-        return cached;
-      }
-      // Cache'da yo'q — network
-      return fetch(event.request).then(function(response) {
+
+  // HTML/navigatsiya so'rovlarini aniqlash
+  var accept = event.request.headers.get('accept') || '';
+  var isHTML = event.request.mode === 'navigate'
+            || accept.indexOf('text/html') !== -1
+            || url.indexOf('.html') !== -1;
+
+  if (isHTML) {
+    // NETWORK-FIRST: avval tarmoqdan (yangi), faqat offline'da keshdan
+    event.respondWith(
+      fetch(event.request).then(function(response) {
         if (response && response.ok) {
           var clone = response.clone();
-          caches.open(STATIC_CACHE).then(function(cache) {
-            cache.put(event.request, clone);
-          });
+          caches.open(STATIC_CACHE).then(function(cache) { cache.put(event.request, clone); });
         }
         return response;
       }).catch(function() {
-        // Offline + cache'da yo'q
-        return new Response('Offline', { status: 503 });
-      });
+        return caches.match(event.request).then(function(cached) {
+          return cached || new Response('Offline', { status: 503 });
+        });
+      })
+    );
+    return;
+  }
+
+  // Boshqa statik GET (rasm, manifest, font...): cache-first + background revalidate
+  event.respondWith(
+    caches.match(event.request).then(function(cached) {
+      var net = fetch(event.request).then(function(response) {
+        if (response && response.ok) {
+          var c = response.clone();
+          caches.open(STATIC_CACHE).then(function(cache) { cache.put(event.request, c); });
+        }
+        return response;
+      }).catch(function() { return cached; });
+      return cached || net;
     })
   );
 });

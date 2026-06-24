@@ -3205,7 +3205,24 @@ function trAttachSwipe(){
 </div>
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(err){ console.log('SW failed:', err); });
+  var _swRefreshing = false;
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if (_swRefreshing) return;
+      _swRefreshing = true;
+      window.location.reload();
+    });
+  }
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage('SKIP_WAITING');
+    reg.addEventListener('updatefound', function(){
+      var nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', function(){
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage('SKIP_WAITING');
+      });
+    });
+  }).catch(function(err){ console.log('SW failed:', err); });
 }
 </script>
 </body>
