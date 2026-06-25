@@ -157,6 +157,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
     <div class="hdr-title" id="hdr-title">CEO Dashboard</div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
   </div>
+  <div id="tasksBtn" class="bug-btn" onclick="goTasks()" title="Vazifalar" style="background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.3);color:#4f8cff">📋</div>
   <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
   <div id="hodimlarBtn" class="bug-btn" onclick="goHodimlar()" title="Hodimlar KPI" style="display:none;background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--purple)">👥</div>
   <div id="tilxatBtn" class="bug-btn" onclick="openTilxatPanel()" title="Tilxatlar" style="display:none">📄</div>
@@ -342,6 +343,19 @@ function goHodimlar(){
     window.Telegram.WebApp.openLink(hodimlarUrl);
   } else {
     window.location.href = hodimlarUrl;
+  }
+}
+
+function goTasks(){
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var tasksFile = isDev ? 'tasks-dev.html' : 'tasks.html';
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var tasksUrl = basePath + tasksFile + '?uid=' + uid;
+  if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink){
+    window.Telegram.WebApp.openLink(tasksUrl);
+  } else {
+    window.location.href = tasksUrl;
   }
 }
 
