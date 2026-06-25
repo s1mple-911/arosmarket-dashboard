@@ -154,10 +154,10 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   <div class="hdr-logo">AROS</div>
   
   <div class="hdr-info">
-    <div class="hdr-title" id="hdr-title">CEO Dashboard <span style="font-size:9px;background:#4f8cff;color:#fff;padding:1px 5px;border-radius:6px;vertical-align:middle;font-weight:700">VAZIFA-v1</span></div>
+    <div class="hdr-title" id="hdr-title">CEO Dashboard <span style="font-size:9px;background:var(--green);color:#04201a;padding:1px 5px;border-radius:6px;vertical-align:middle;font-weight:700">VAZIFA-v2</span></div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
   </div>
-  <div id="tasksBtn" class="bug-btn" onclick="goTasks()" title="Vazifalar" style="background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.3);color:#4f8cff">📋</div>
+  <div id="tasksBtn" class="bug-btn" onclick="goTasks()" title="Vazifalar" style="background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:var(--green)">📋</div>
   <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
   <div id="hodimlarBtn" class="bug-btn" onclick="goHodimlar()" title="Hodimlar KPI" style="display:none;background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--purple)">👥</div>
   <div id="tilxatBtn" class="bug-btn" onclick="openTilxatPanel()" title="Tilxatlar" style="display:none">📄</div>
@@ -180,6 +180,17 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
     <option value="Franshiza">Franshiza</option>
   </select>
   <div class="refresh-btn" onclick="load()">🔄</div>
+</div>
+
+<div style="padding:10px 12px 0">
+  <div onclick="goTasks()" style="cursor:pointer;background:linear-gradient(135deg,#10b981,#059669);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(16,185,129,.3)">
+    <div style="font-size:26px">📋</div>
+    <div style="flex:1">
+      <div style="font-size:15px;font-weight:800;color:#fff">Vazifalar (Tasks)</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:1px">Xodimlarga vazifa berish va nazorat</div>
+    </div>
+    <div style="font-size:20px;color:#fff">›</div>
+  </div>
 </div>
 
 <div class="page" id="main">
@@ -250,7 +261,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <script>
-console.log("%c📋 CEO-DEV VAZIFA-v1 yuklandi (tasks tugmasi bor)","background:#4f8cff;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold");
+console.log("%c📋 CEO-DEV VAZIFA-v2 — tasks tugmasi VA katta banner bor","background:#10b981;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold");
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
 var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
 var MML_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-mml-history';
