@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
 <title>Vazifalar — Aros Market</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📋%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234f8cff'/%3E%3Ctext y='.9em' x='5' font-size='80'%3E📋%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="icons/tasks-icon-192.png">
+<link rel="apple-touch-icon" href="icons/tasks-icon-192.png">
 <meta name="theme-color" content="#4f8cff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -405,58 +405,73 @@ const TASK_NOTIFY = API_BASE + '/aros-task-notify-internal';
 
 // ============ PWA O'RNATISH ============
 let _deferredPrompt = null;
+
+// Service worker — installability (WebAPK / fullscreen) uchun shart.
+// Faqat PWA build (manifest bor) da ro'yxatdan o'tkazamiz; mavjud sw.js ni qayta ishlatamiz.
+if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]')) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function() {
+      // sw.js bo'lmasa yoki xato — install baribir menyu orqali ishlaydi
+    });
+  });
+}
+
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+      || (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches)
+      || window.navigator.standalone === true;
+}
+function isInTelegram() { return !!(tg && tg.initData && tg.initData.length > 0); }
+function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent || ''); }
+function pwaDismissedRecently() {
+  try {
+    if (localStorage.getItem('aros_pwa_installed') === '1') return true;
+    const dis = Number(localStorage.getItem('aros_pwa_dismissed') || 0);
+    return dis && (Date.now() - dis) < 24*60*60*1000;
+  } catch(e) { return false; }
+}
+
+// Android Chrome: prompt tayyor bo'lganda banner ko'rsatamiz (tugma bosilsa TO'G'RIDAN-TO'G'RI o'rnatadi)
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
   _deferredPrompt = e;
+  if (!isInTelegram() && !isStandalone() && !pwaDismissedRecently()) {
+    showPWABanner('android');
+  }
 });
 window.addEventListener('appinstalled', function() {
   _deferredPrompt = null;
-  const b = document.getElementById('pwaBanner');
-  if (b) b.remove();
+  const b = document.getElementById('pwaBanner'); if (b) b.remove();
   try { localStorage.setItem('aros_pwa_installed', '1'); } catch(e) {}
 });
 
-function isStandalone() {
-  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-}
-function isInTelegram() {
-  return !!(tg && tg.initData && tg.initData.length > 0);
-}
-function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent || '');
-}
-
 function initPWAInstall() {
-  // Telegram ichida yoki allaqachon o'rnatilgan bo'lsa — ko'rsatmaymiz
-  if (isInTelegram() || isStandalone()) return;
-  try { if (localStorage.getItem('aros_pwa_installed') === '1') return; } catch(e) {}
-  // Yaqinda yopgan bo'lsa (1 kun) — bezovta qilmaymiz
-  try {
-    const dis = Number(localStorage.getItem('aros_pwa_dismissed') || 0);
-    if (dis && (Date.now() - dis) < 24*60*60*1000) return;
-  } catch(e) {}
-  // Bir oz kutib, banner ko'rsatamiz (beforeinstallprompt ulgurishi uchun)
-  setTimeout(showPWABanner, 800);
+  if (isInTelegram() || isStandalone() || pwaDismissedRecently()) return;
+  // iOS — beforeinstallprompt yo'q, qo'llanma bilan banner
+  if (isIOS()) { setTimeout(function(){ showPWABanner('ios'); }, 1200); }
+  // Android — beforeinstallprompt event o'zi banner ko'rsatadi (yuqorida)
 }
 
-function showPWABanner() {
+function showPWABanner(mode) {
   if (document.getElementById('pwaBanner')) return;
-  const ios = isIOS();
   const banner = document.createElement('div');
   banner.id = 'pwaBanner';
   banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:var(--surface);border-top:2px solid var(--primary);box-shadow:0 -6px 24px rgba(0,0,0,.35);padding:16px 16px calc(16px + env(safe-area-inset-bottom));animation:pwaUp .25s ease';
+  const subtitle = mode === 'ios'
+    ? 'Native ilova kabi ishlashi uchun bosh ekranga qo\'shing'
+    : 'Bir bosishda telefoningizga o\'rnating — native ilova kabi';
   banner.innerHTML =
     '<div style="display:flex;align-items:center;gap:12px;max-width:520px;margin:0 auto">'
-    + '<div style="width:46px;height:46px;border-radius:12px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">📋</div>'
+    + '<img src="icons/tasks-icon-192.png" style="width:46px;height:46px;border-radius:12px;flex-shrink:0" alt="">'
     + '<div style="flex:1;min-width:0">'
-    + '<div style="font-size:14px;font-weight:700;color:var(--text)">Ilovani o\'rnatasizmi?</div>'
-    + '<div style="font-size:12px;color:var(--text-dim);margin-top:2px">Vazifalar ilovasini telefoningiz bosh ekraniga qo\'shing</div>'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text)">Vazifalar ilovasi</div>'
+    + '<div style="font-size:12px;color:var(--text-dim);margin-top:2px">' + subtitle + '</div>'
     + '</div>'
     + '</div>'
-    + '<div id="pwaIosHint" style="display:none;font-size:12px;color:var(--text-dim);margin-top:10px;line-height:1.5;background:var(--surface-2);padding:10px 12px;border-radius:10px">📲 Safari pastidagi <b>Ulashish</b> tugmasini (⬆️) bosing → <b>"Bosh ekranga qo\'shish"</b> ni tanlang</div>'
+    + '<div id="pwaIosHint" style="display:none;font-size:12.5px;color:var(--text);margin-top:10px;line-height:1.6;background:var(--surface-2);padding:11px 13px;border-radius:10px">📲 Safari pastidagi <b>Ulashish</b> (⬆️) tugmasini bosing → pastga aylantirib <b>"Bosh ekranga qo\'shish"</b> ni tanlang</div>'
     + '<div style="display:flex;gap:8px;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto">'
-    + '<button id="pwaLater" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:600;font-size:13px;cursor:pointer">Keyinroq</button>'
-    + '<button id="pwaInstall" style="flex:2;padding:11px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:13px;cursor:pointer">📲 O\'rnatish</button>'
+    + '<button id="pwaLater" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:600;font-size:13px;cursor:pointer">Keyinroq</button>'
+    + '<button id="pwaInstall" style="flex:2;padding:12px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:13px;cursor:pointer">📲 O\'rnatish</button>'
     + '</div>';
   document.body.appendChild(banner);
   if (!document.getElementById('pwaKeyframes')) {
@@ -465,24 +480,28 @@ function showPWABanner() {
     st.textContent = '@keyframes pwaUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
     document.head.appendChild(st);
   }
+  if (mode === 'ios') {
+    // iOS — darhol qo'llanmani ko'rsatamiz
+    document.getElementById('pwaIosHint').style.display = 'block';
+  }
   document.getElementById('pwaLater').onclick = function() {
     try { localStorage.setItem('aros_pwa_dismissed', String(Date.now())); } catch(e) {}
     banner.remove();
   };
   document.getElementById('pwaInstall').onclick = async function() {
     if (_deferredPrompt) {
+      // Android — TO'G'RIDAN-TO'G'RI o'rnatish oynasi
       _deferredPrompt.prompt();
       try { await _deferredPrompt.userChoice; } catch(e) {}
       _deferredPrompt = null;
       banner.remove();
-    } else if (ios) {
-      // iOS — qo'lda qo'shish qo'llanmasini ko'rsatamiz
+    } else if (isIOS()) {
       document.getElementById('pwaIosHint').style.display = 'block';
-      document.getElementById('pwaInstall').style.display = 'none';
     } else {
-      // Android prompt hali tayyor emas / boshqa brauzer — qo'llanma
-      document.getElementById('pwaIosHint').innerHTML = '📲 Brauzer menyusini (⋮) oching → <b>"Bosh ekranga qo\'shish"</b> / <b>"Install app"</b> ni tanlang';
-      document.getElementById('pwaIosHint').style.display = 'block';
+      // Prompt hali tayyor emas / desktop — menyu qo'llanmasi
+      let h = document.getElementById('pwaIosHint');
+      h.innerHTML = '📲 Brauzer menyusini (⋮) oching → <b>"Ilovani o\'rnatish"</b> / <b>"Bosh ekranga qo\'shish"</b>';
+      h.style.display = 'block';
     }
   };
 }
