@@ -98,6 +98,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <input type="password" id="login-pwd" class="input" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn" onclick="doLogin()" id="btn-login">Kirish</button>
+    <div class="help-text"><a href="#" onclick="forgotPassword();return false;">Parolni unutdingizmi?</a></div>
     <button class="btn btn-secondary" onclick="goBack()">← Orqaga</button>
   </div>
 
@@ -115,6 +116,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <input type="password" id="setpwd-pwd2" class="input" placeholder="Parolni takrorlang" autocomplete="new-password">
     </div>
     <button class="btn" onclick="doSetPassword()" id="btn-setpwd">Parolni o'rnatish va kirish</button>
+    <button class="btn btn-secondary" onclick="goBack()">← Orqaga</button>
+  </div>
+
+  <!-- STEP 4: Forgot Password (Telegram kod + yangi parol) -->
+  <div id="step-forgot" style="display:none">
+    <div id="forgot-user-info"></div>
+    <div class="step-title">Parolni tiklash</div>
+    <div class="step-desc">Telegram'ingizga yuborilgan 6 xonali kodni va yangi parolni kiriting.</div>
+    <div class="form-group">
+      <label class="label">Telegram'dagi kod</label>
+      <input type="text" id="forgot-code" class="input" placeholder="6 xonali kod" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+    </div>
+    <div class="form-group">
+      <label class="label">Yangi parol</label>
+      <input type="password" id="forgot-pwd1" class="input" placeholder="Kamida 4 belgi" autocomplete="new-password">
+    </div>
+    <div class="form-group">
+      <label class="label">Parolni qayta kiriting</label>
+      <input type="password" id="forgot-pwd2" class="input" placeholder="Parolni takrorlang" autocomplete="new-password">
+    </div>
+    <button class="btn" onclick="doResetPassword()" id="btn-forgot">Tasdiqlash va kirish</button>
+    <div class="help-text"><a href="#" onclick="forgotPassword();return false;">Kodni qayta yuborish</a></div>
     <button class="btn btn-secondary" onclick="goBack()">← Orqaga</button>
   </div>
 </div>
@@ -187,7 +210,7 @@ function showAlert(type, text){
 function clearAlert(){ document.getElementById('alert-box').innerHTML = ''; }
 
 function showStep(id){
-  ['step-id','step-login','step-setpwd'].forEach(function(s){
+  ['step-id','step-login','step-setpwd','step-forgot'].forEach(function(s){
     document.getElementById(s).style.display = (s===id ? 'block' : 'none');
   });
   clearAlert();
@@ -198,6 +221,9 @@ function goBack(){
   document.getElementById('login-pwd').value = '';
   document.getElementById('setpwd-pwd1').value = '';
   document.getElementById('setpwd-pwd2').value = '';
+  var fc=document.getElementById('forgot-code'); if(fc) fc.value='';
+  var f1=document.getElementById('forgot-pwd1'); if(f1) f1.value='';
+  var f2=document.getElementById('forgot-pwd2'); if(f2) f2.value='';
 }
 
 function makeUserInfo(ism, tgId){
@@ -328,6 +354,58 @@ function doSetPassword(){
   });
 }
 
+function forgotPassword(){
+  if(!savedTgId){ showAlert('error','Avval Telegram ID kiriting'); return; }
+  clearAlert();
+  fetch(API+'/aros-forgot-password', {
+    method:'POST',
+    body: JSON.stringify({telegram_id: savedTgId})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    if(!data || !data.ok){
+      showAlert('error', (data && data.error) || 'Xato yuz berdi');
+      return;
+    }
+    document.getElementById('forgot-user-info').innerHTML = makeUserInfo(savedIsm, savedTgId);
+    showStep('step-forgot');
+    showAlert('success', '✓ Tasdiqlash kodi Telegram\'ingizga yuborildi');
+    setTimeout(function(){ document.getElementById('forgot-code').focus(); }, 100);
+  }).catch(function(){ showAlert('error','Tarmoq xatosi. Internet aloqani tekshiring.'); });
+}
+
+function doResetPassword(){
+  var code = (document.getElementById('forgot-code').value || '').trim();
+  var pwd1 = document.getElementById('forgot-pwd1').value || '';
+  var pwd2 = document.getElementById('forgot-pwd2').value || '';
+  if(!code){ showAlert('error','Kodni kiriting'); return; }
+  if(!pwd1 || !pwd2){ showAlert('error','Yangi parolni 2 marta kiriting'); return; }
+  if(pwd1.length < 4){ showAlert('error','Parol kamida 4 belgi bo\'lishi kerak'); return; }
+  if(pwd1 !== pwd2){ showAlert('error','Parollar mos kelmadi'); return; }
+  var btn = document.getElementById('btn-forgot');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Tekshirilmoqda...';
+  fetch(API+'/aros-reset-password', {
+    method:'POST',
+    body: JSON.stringify({telegram_id: savedTgId, code: code, password: pwd1})
+  }).then(function(r){return r.json();}).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    btn.disabled = false;
+    btn.textContent = 'Tasdiqlash va kirish';
+    if(!data || !data.ok){
+      showAlert('error', (data && data.error) || 'Xato yuz berdi');
+      return;
+    }
+    localStorage.setItem('aros-token', data.token);
+    localStorage.setItem('aros-user', JSON.stringify(data.user));
+    showAlert('success', '✓ Parol yangilandi! Sahifaga o\'tilmoqda...');
+    setTimeout(function(){ redirectToDashboard(data.user); }, 600);
+  }).catch(function(){
+    btn.disabled = false;
+    btn.textContent = 'Tasdiqlash va kirish';
+    showAlert('error','Tarmoq xatosi');
+  });
+}
+
 // Enter tugma support
 document.getElementById('tg-id').addEventListener('keydown', function(e){
   if(e.key === 'Enter') checkUser();
@@ -338,11 +416,29 @@ document.getElementById('login-pwd').addEventListener('keydown', function(e){
 document.getElementById('setpwd-pwd2').addEventListener('keydown', function(e){
   if(e.key === 'Enter') doSetPassword();
 });
-// PWA Service Worker
+document.getElementById('forgot-pwd2').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') doResetPassword();
+});
+// PWA Service Worker (auto-update)
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(err){
-    console.log('SW registration failed:', err);
-  });
+  var _swRefreshing = false;
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if (_swRefreshing) return;
+      _swRefreshing = true;
+      window.location.reload();
+    });
+  }
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage('SKIP_WAITING');
+    reg.addEventListener('updatefound', function(){
+      var nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', function(){
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage('SKIP_WAITING');
+      });
+    });
+  }).catch(function(err){ console.log('SW registration failed:', err); });
 }
 </script>
 </body>
