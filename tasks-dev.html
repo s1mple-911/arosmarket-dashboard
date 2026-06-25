@@ -353,6 +353,9 @@ const TASKS_LOOKUP = API_BASE + '/aros-tasks-lookup';
 
 const CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
 const STATS_API = API_BASE + '/aros-cache-stats';
+const APP_VERSION = 'vGET-2 (2026-06-25, hammasi GET)';
+console.log('%c📋 AROS TASKS ' + APP_VERSION, 'background:#4f8cff;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold;');
+console.log('Create/Update/Comment/Notify = GET. Agar bu xabarni ko\'rmasangiz — eski versiya cache\'da.');
 
 // ============ STATE ============
 const tg = window.Telegram && window.Telegram.WebApp;
@@ -380,6 +383,15 @@ const TASK_NOTIFY = API_BASE + '/aros-task-notify-internal';
 async function init() {
   const theme = localStorage.getItem('aros-theme') || 'dark';
   document.body.setAttribute('data-theme', theme);
+  
+  // Show version badge so deploy is verifiable
+  const hdrTitle = document.querySelector('.hdr-title');
+  if (hdrTitle) {
+    const badge = document.createElement('span');
+    badge.style.cssText = 'font-size:9px;background:var(--green);color:#04201a;padding:1px 5px;border-radius:6px;margin-left:6px;font-weight:700;vertical-align:middle;';
+    badge.textContent = 'GET-2';
+    hdrTitle.appendChild(badge);
+  }
   
   if (!UID) {
     document.getElementById('root').innerHTML = '<div class="no-access"><div class="no-access-emoji">🔒</div><h2>UID kerak</h2><p>Iltimos Telegram bot orqali ochilgan tugmadan foydalaning.</p></div>';
@@ -912,15 +924,10 @@ function toggleDow(el) {
   el.classList.toggle('active');
 }
 
-// Fire-and-forget notify — DOESN'T block, DOESN'T affect create CORS
+// Fire-and-forget notify via GET — no preflight, no CORS
 function notifyTask(taskId) {
   try {
-    fetch(TASK_NOTIFY, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_id: taskId, event: 'created' }),
-      keepalive: true
-    }).catch(() => {});
+    fetch(TASK_NOTIFY + '?task_id=' + taskId + '&event=created', { keepalive: true }).catch(() => {});
   } catch (e) {}
 }
 
@@ -970,25 +977,25 @@ async function saveTask() {
   btn.textContent = 'Saqlanmoqda...';
   
   try {
-    // EDIT mode — single update
+    // EDIT mode — single update (GET to avoid CORS preflight)
     if (editingId) {
       const body = {
         uid: UID, id: editingId, title, description, priority, deadline: deadlineIso,
         assigned_to_telegram_id: assignType === 'employee' ? (assigneeList[0] || null) : null,
         assigned_to_warehouse_id: assignType === 'warehouse' ? Number(warehouseId) : null
       };
-      const r = await fetch(TASK_UPDATE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const r = await fetch(TASK_UPDATE + '?data=' + encodeURIComponent(JSON.stringify(body)));
       const d = await r.json();
       if (d.ok) { toast('✅ Yangilandi', 'success'); closeCreate(); await loadTasks(); }
       else toast('Xato: ' + (d.error || 'noma\'lum'), 'error');
       return;
     }
     
-    // CREATE mode
+    // CREATE mode (GET to avoid CORS preflight)
     if (assignType === 'warehouse') {
       // Single task → warehouse
       const body = { uid: UID, title, description: description || null, priority, deadline: deadlineIso, is_recurring: isRecurring, recurring_pattern: recurringPattern, subtasks, created_by_name: 'CEO', assigned_to_telegram_id: null, assigned_to_warehouse_id: Number(warehouseId) };
-      const r = await fetch(TASK_CREATE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const r = await fetch(TASK_CREATE + '?data=' + encodeURIComponent(JSON.stringify(body)));
       const d = await r.json();
       if (d.ok) {
         notifyTask(d.id);
@@ -1004,7 +1011,7 @@ async function saveTask() {
         btn.textContent = `Saqlanmoqda... (${i+1}/${assigneeList.length})`;
         const body = { uid: UID, title, description: description || null, priority, deadline: deadlineIso, is_recurring: isRecurring, recurring_pattern: recurringPattern, subtasks, created_by_name: 'CEO', assigned_to_telegram_id: tid, assigned_to_warehouse_id: null };
         try {
-          const r = await fetch(TASK_CREATE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const r = await fetch(TASK_CREATE + '?data=' + encodeURIComponent(JSON.stringify(body)));
           const d = await r.json();
           if (d.ok) { okCount++; createdIds.push(d.id); }
           else failCount++;
@@ -1156,7 +1163,8 @@ async function addComment(taskId) {
   const text = inp.value.trim();
   if (!text) return;
   try {
-    const r = await fetch(TASK_COMMENT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_id: taskId, uid: UID, author_name: 'CEO', comment_text: text }) });
+    const data = { task_id: taskId, uid: UID, author_name: 'CEO', comment_text: text };
+    const r = await fetch(TASK_COMMENT + '?data=' + encodeURIComponent(JSON.stringify(data)));
     const d = await r.json();
     if (d.ok) {
       inp.value = '';
