@@ -7,6 +7,11 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📋%3C/text%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234f8cff'/%3E%3Ctext y='.9em' x='5' font-size='80'%3E📋%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#4f8cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vazifalar">
+<link rel="manifest" href="tasks-manifest.json">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
@@ -374,7 +379,12 @@ const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 const urlParams = new URLSearchParams(window.location.search);
-const UID = urlParams.get('uid') || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id ? String(tg.initDataUnsafe.user.id) : '');
+let UID = urlParams.get('uid') || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id ? String(tg.initDataUnsafe.user.id) : '');
+// PWA: home screen'dan ochilganda URL'da uid bo'lmaydi — localStorage'dan olamiz
+try {
+  if (UID) { localStorage.setItem('aros_tasks_uid', UID); }
+  else { UID = localStorage.getItem('aros_tasks_uid') || ''; }
+} catch (e) {}
 const IS_CEO = CEO_IDS.indexOf(UID) !== -1;
 let MY_WAREHOUSE_ID = null;
 
@@ -393,19 +403,97 @@ let selectedEmployees = []; // [{telegram_id, ism, warehouse_name}]
 let empSearchTerm = '';
 const TASK_NOTIFY = API_BASE + '/aros-task-notify-internal';
 
+// ============ PWA O'RNATISH ============
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+});
+window.addEventListener('appinstalled', function() {
+  _deferredPrompt = null;
+  const b = document.getElementById('pwaBanner');
+  if (b) b.remove();
+  try { localStorage.setItem('aros_pwa_installed', '1'); } catch(e) {}
+});
+
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+function isInTelegram() {
+  return !!(tg && tg.initData && tg.initData.length > 0);
+}
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+}
+
+function initPWAInstall() {
+  // Telegram ichida yoki allaqachon o'rnatilgan bo'lsa — ko'rsatmaymiz
+  if (isInTelegram() || isStandalone()) return;
+  try { if (localStorage.getItem('aros_pwa_installed') === '1') return; } catch(e) {}
+  // Yaqinda yopgan bo'lsa (1 kun) — bezovta qilmaymiz
+  try {
+    const dis = Number(localStorage.getItem('aros_pwa_dismissed') || 0);
+    if (dis && (Date.now() - dis) < 24*60*60*1000) return;
+  } catch(e) {}
+  // Bir oz kutib, banner ko'rsatamiz (beforeinstallprompt ulgurishi uchun)
+  setTimeout(showPWABanner, 800);
+}
+
+function showPWABanner() {
+  if (document.getElementById('pwaBanner')) return;
+  const ios = isIOS();
+  const banner = document.createElement('div');
+  banner.id = 'pwaBanner';
+  banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:var(--surface);border-top:2px solid var(--primary);box-shadow:0 -6px 24px rgba(0,0,0,.35);padding:16px 16px calc(16px + env(safe-area-inset-bottom));animation:pwaUp .25s ease';
+  banner.innerHTML =
+    '<div style="display:flex;align-items:center;gap:12px;max-width:520px;margin:0 auto">'
+    + '<div style="width:46px;height:46px;border-radius:12px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">📋</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text)">Ilovani o\'rnatasizmi?</div>'
+    + '<div style="font-size:12px;color:var(--text-dim);margin-top:2px">Vazifalar ilovasini telefoningiz bosh ekraniga qo\'shing</div>'
+    + '</div>'
+    + '</div>'
+    + '<div id="pwaIosHint" style="display:none;font-size:12px;color:var(--text-dim);margin-top:10px;line-height:1.5;background:var(--surface-2);padding:10px 12px;border-radius:10px">📲 Safari pastidagi <b>Ulashish</b> tugmasini (⬆️) bosing → <b>"Bosh ekranga qo\'shish"</b> ni tanlang</div>'
+    + '<div style="display:flex;gap:8px;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto">'
+    + '<button id="pwaLater" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:600;font-size:13px;cursor:pointer">Keyinroq</button>'
+    + '<button id="pwaInstall" style="flex:2;padding:11px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:13px;cursor:pointer">📲 O\'rnatish</button>'
+    + '</div>';
+  document.body.appendChild(banner);
+  if (!document.getElementById('pwaKeyframes')) {
+    const st = document.createElement('style');
+    st.id = 'pwaKeyframes';
+    st.textContent = '@keyframes pwaUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
+    document.head.appendChild(st);
+  }
+  document.getElementById('pwaLater').onclick = function() {
+    try { localStorage.setItem('aros_pwa_dismissed', String(Date.now())); } catch(e) {}
+    banner.remove();
+  };
+  document.getElementById('pwaInstall').onclick = async function() {
+    if (_deferredPrompt) {
+      _deferredPrompt.prompt();
+      try { await _deferredPrompt.userChoice; } catch(e) {}
+      _deferredPrompt = null;
+      banner.remove();
+    } else if (ios) {
+      // iOS — qo'lda qo'shish qo'llanmasini ko'rsatamiz
+      document.getElementById('pwaIosHint').style.display = 'block';
+      document.getElementById('pwaInstall').style.display = 'none';
+    } else {
+      // Android prompt hali tayyor emas / boshqa brauzer — qo'llanma
+      document.getElementById('pwaIosHint').innerHTML = '📲 Brauzer menyusini (⋮) oching → <b>"Bosh ekranga qo\'shish"</b> / <b>"Install app"</b> ni tanlang';
+      document.getElementById('pwaIosHint').style.display = 'block';
+    }
+  };
+}
+
 // ============ INIT ============
 async function init() {
   const theme = localStorage.getItem('aros-theme') || 'dark';
   document.body.setAttribute('data-theme', theme);
   
-  // Show version badge so deploy is verifiable
-  const hdrTitle = document.querySelector('.hdr-title');
-  if (hdrTitle) {
-    const badge = document.createElement('span');
-    badge.style.cssText = 'font-size:9px;background:var(--green);color:#04201a;padding:1px 5px;border-radius:6px;margin-left:6px;font-weight:700;vertical-align:middle;';
-    badge.textContent = 'GET-3';
-    hdrTitle.appendChild(badge);
-  }
+  // PWA o'rnatish taklifi (faqat brauzerda, Telegram ichida emas)
+  initPWAInstall();
   
   if (!UID) {
     document.getElementById('root').innerHTML = '<div class="no-access"><div class="no-access-emoji">🔒</div><h2>UID kerak</h2><p>Iltimos Telegram bot orqali ochilgan tugmadan foydalaning.</p></div>';

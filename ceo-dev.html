@@ -154,10 +154,10 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   <div class="hdr-logo">AROS</div>
   
   <div class="hdr-info">
-    <div class="hdr-title" id="hdr-title">CEO Dashboard <span style="font-size:9px;background:var(--green);color:#04201a;padding:1px 5px;border-radius:6px;vertical-align:middle;font-weight:700">VAZIFA-v2</span></div>
+    <div class="hdr-title" id="hdr-title">CEO Dashboard</div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
   </div>
-  <div id="tasksBtn" class="bug-btn" onclick="goTasks()" title="Vazifalar" style="background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:var(--green)">📋</div>
+  <div id="tasksBtn" class="bug-btn" onclick="goTasks()" title="Vazifalar" style="display:none;background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:var(--green)">📋</div>
   <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
   <div id="hodimlarBtn" class="bug-btn" onclick="goHodimlar()" title="Hodimlar KPI" style="display:none;background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--purple)">👥</div>
   <div id="tilxatBtn" class="bug-btn" onclick="openTilxatPanel()" title="Tilxatlar" style="display:none">📄</div>
@@ -182,7 +182,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
   <div class="refresh-btn" onclick="load()">🔄</div>
 </div>
 
-<div style="padding:10px 12px 0">
+<div id="tasksBanner" style="display:none;padding:10px 12px 0">
   <div onclick="goTasks()" style="cursor:pointer;background:linear-gradient(135deg,#10b981,#059669);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(16,185,129,.3)">
     <div style="font-size:26px">📋</div>
     <div style="flex:1">
@@ -261,7 +261,6 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <script>
-console.log("%c📋 CEO-DEV VAZIFA-v2 — tasks tugmasi VA katta banner bor","background:#10b981;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold");
 var CEO_API      = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
 var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
 var MML_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-mml-history';
@@ -332,6 +331,10 @@ var isCeo   = CEO_IDS.includes(String(uid));
 var BUGALTER_IDS = ['1255605633','1432724','1373701411','262679293'];
 var canSeeBugalter = BUGALTER_IDS.includes(String(uid));
 
+// Vazifalar (Tasks) — faqat shu ID lar ko'radi. Yangi qo'shish uchun ID ni shu ro'yxatga yozing.
+var TASKS_IDS = ['1255605633','1432724'];
+var canSeeTasks = TASKS_IDS.includes(String(uid));
+
 function goBugalter(){
   var curPage = window.location.pathname.split('/').pop() || '';
   var isDev = curPage.indexOf('-dev') !== -1;
@@ -383,6 +386,14 @@ function goTasks(){
   var tbtn = document.getElementById('tilxatBtn');
   if(tbtn && isCeo){
     tbtn.style.display = 'flex';
+  }
+  var taskBtn = document.getElementById('tasksBtn');
+  if(taskBtn && canSeeTasks){
+    taskBtn.style.display = 'flex';
+  }
+  var taskBanner = document.getElementById('tasksBanner');
+  if(taskBanner && canSeeTasks){
+    taskBanner.style.display = 'block';
   }
 })();
 
