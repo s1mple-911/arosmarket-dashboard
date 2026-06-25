@@ -134,6 +134,18 @@ html, body { background: var(--bg); color: var(--text); font-family: -apple-syst
 .form-priority.active.urgent { background: var(--urgent); border-color: var(--urgent); }
 .form-priority.active.normal { background: var(--amber); border-color: var(--amber); }
 .form-priority.active.low { background: var(--low); border-color: var(--low); }
+.prio-picker { display: flex; align-items: center; gap: 12px; }
+.prio-badge { flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #fff; background: var(--amber); transition: background .15s; }
+.prio-range { flex: 1; accent-color: var(--accent); height: 6px; }
+.prio-hint { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+.tc-plevel { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #fff; }
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 14px; align-items: center; }
+.filter-bar select { padding: 7px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 12px; }
+.filter-bar .sort-btn { padding: 7px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 12px; cursor: pointer; font-weight: 600; }
+.filter-bar .sort-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.kanban-col-list.drag-over { background: rgba(79,140,255,0.12); border-radius: 10px; }
+.task-card.dragging { opacity: 0.45; }
+.kanban-col-list .task-card { cursor: grab; }
 .form-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .form-check input { width: 18px; height: 18px; }
 .subtask-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
@@ -269,12 +281,12 @@ html, body { background: var(--bg); color: var(--text); font-family: -apple-syst
       <select class="form-select" id="f_warehouse" style="display:none"></select>
     </div>
     <div class="form-row">
-      <label class="form-label">Muhimlik</label>
-      <div class="form-priority-row">
-        <div class="form-priority urgent active" data-priority="urgent" onclick="setPriority('urgent')">🔴 Urgent</div>
-        <div class="form-priority normal" data-priority="normal" onclick="setPriority('normal')">🟡 Normal</div>
-        <div class="form-priority low" data-priority="low" onclick="setPriority('low')">🔵 Past</div>
+      <label class="form-label">Muhimlik (Prioritet)</label>
+      <div class="prio-picker">
+        <span class="prio-badge" id="prioBadge">5</span>
+        <input type="range" min="1" max="10" value="5" id="f_priority_level" class="prio-range" oninput="onPriorityChange()" />
       </div>
+      <div class="prio-hint">1 = eng muhim 🔴 · 10 = eng past 🔵</div>
     </div>
     <div class="form-row">
       <label class="form-label">Deadline</label>
@@ -353,7 +365,7 @@ const TASKS_LOOKUP = API_BASE + '/aros-tasks-lookup';
 
 const CEO_IDS = ['1255605633', '8236030365', '1432724', '1373701411', '331245247'];
 const STATS_API = API_BASE + '/aros-cache-stats';
-const APP_VERSION = 'vGET-2 (2026-06-25, hammasi GET)';
+const APP_VERSION = 'vGET-3 (2026-06-25, prioritet 1-10 + kanban drag + subtasklar)';
 console.log('%c📋 AROS TASKS ' + APP_VERSION, 'background:#4f8cff;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold;');
 console.log('Create/Update/Comment/Notify = GET. Agar bu xabarni ko\'rmasangiz — eski versiya cache\'da.');
 
@@ -368,6 +380,8 @@ let MY_WAREHOUSE_ID = null;
 
 let currentTab = 'list'; // list / kanban / calendar
 let currentFilter = { status: '', priority: '', assignee: '', warehouse: '' };
+let filterEmployee = ''; // telegram_id to filter list+kanban by
+let prioritySort = 'none'; // none / asc / desc
 let allTasks = [];
 let counts = { new: 0, in_progress: 0, completed: 0, cancelled: 0, overdue: 0 };
 let hodimlar = [];
@@ -389,7 +403,7 @@ async function init() {
   if (hdrTitle) {
     const badge = document.createElement('span');
     badge.style.cssText = 'font-size:9px;background:var(--green);color:#04201a;padding:1px 5px;border-radius:6px;margin-left:6px;font-weight:700;vertical-align:middle;';
-    badge.textContent = 'GET-2';
+    badge.textContent = 'GET-3';
     hdrTitle.appendChild(badge);
   }
   
@@ -499,14 +513,37 @@ async function loadTasks() {
 }
 
 function filteredTasks() {
-  return allTasks.filter(t => {
+  let list = allTasks.filter(t => {
     if (currentFilter.status && t.status !== currentFilter.status) return false;
     if (currentFilter.priority && t.priority !== currentFilter.priority) return false;
     if (currentFilter.assignee && String(t.assigned_to_telegram_id) !== currentFilter.assignee) return false;
     if (currentFilter.warehouse && String(t.assigned_to_warehouse_id) !== currentFilter.warehouse) return false;
+    if (filterEmployee && String(t.assigned_to_telegram_id) !== filterEmployee) return false;
     return true;
   });
+  if (prioritySort === 'asc') list = list.slice().sort((a,b) => (a.priority_level||5) - (b.priority_level||5));
+  else if (prioritySort === 'desc') list = list.slice().sort((a,b) => (b.priority_level||5) - (a.priority_level||5));
+  return list;
 }
+
+// Filter bar HTML (employee dropdown + priority sort toggle) — shared by list & kanban
+function filterBarHTML() {
+  const emps = hodimlar.slice().sort((a,b) => String(a.ism||'').localeCompare(String(b.ism||'')));
+  const opts = emps.map(h => `<option value="${h.telegram_id}" ${filterEmployee===String(h.telegram_id)?'selected':''}>${escapeHtml(h.ism || ('#'+h.telegram_id))}</option>`).join('');
+  const sortLabel = prioritySort === 'asc' ? '🔼 Prioritet (1→10)' : (prioritySort === 'desc' ? '🔽 Prioritet (10→1)' : '↕️ Prioritet');
+  return `
+    <div class="filter-bar">
+      <select onchange="setFilterEmployee(this.value)">
+        <option value="">👥 Barcha hodimlar</option>
+        ${opts}
+      </select>
+      <div class="sort-btn ${prioritySort!=='none'?'active':''}" onclick="cyclePrioritySort()">${sortLabel}</div>
+      ${(filterEmployee || prioritySort!=='none') ? `<div class="sort-btn" onclick="clearTaskFilters()">✕ Tozalash</div>` : ''}
+    </div>`;
+}
+function setFilterEmployee(v) { filterEmployee = v; renderTabContent(); }
+function cyclePrioritySort() { prioritySort = prioritySort === 'none' ? 'asc' : (prioritySort === 'asc' ? 'desc' : 'none'); renderTabContent(); }
+function clearTaskFilters() { filterEmployee = ''; prioritySort = 'none'; renderTabContent(); }
 
 // ============ RENDERERS ============
 function renderTabContent() {
@@ -517,11 +554,12 @@ function renderTabContent() {
 
 function renderList() {
   const tasks = filteredTasks();
+  const bar = filterBarHTML();
   if (tasks.length === 0) {
-    document.getElementById('tabContent').innerHTML = `<div class="content"><div class="empty"><div class="empty-emoji">📭</div><div>Vazifalar yo'q</div></div></div>`;
+    document.getElementById('tabContent').innerHTML = `${bar}<div class="content"><div class="empty"><div class="empty-emoji">📭</div><div>Vazifalar yo'q</div></div></div>`;
     return;
   }
-  document.getElementById('tabContent').innerHTML = `<div class="content">${tasks.map(taskCardHTML).join('')}</div>`;
+  document.getElementById('tabContent').innerHTML = `${bar}<div class="content">${tasks.map(taskCardHTML).join('')}</div>`;
 }
 
 function renderKanban() {
@@ -533,6 +571,7 @@ function renderKanban() {
     { key: 'cancelled', title: '❌ Bekor' }
   ];
   document.getElementById('tabContent').innerHTML = `
+    ${filterBarHTML()}
     <div class="kanban-wrap">
       <div class="kanban">
         ${cols.map(col => {
@@ -543,7 +582,7 @@ function renderKanban() {
                 <div class="kanban-col-title">${col.title}</div>
                 <div class="kanban-col-cnt">${colTasks.length}</div>
               </div>
-              <div class="kanban-col-list">
+              <div class="kanban-col-list" data-status="${col.key}" ondragover="onColDragOver(event)" ondragleave="onColDragLeave(event)" ondrop="onColDrop(event,'${col.key}')">
                 ${colTasks.length === 0 ? '<div style="text-align:center; padding:20px; color:var(--text-dim); font-size:12px;">—</div>' : colTasks.map(taskCardHTML).join('')}
               </div>
             </div>
@@ -552,6 +591,57 @@ function renderKanban() {
       </div>
     </div>
   `;
+}
+
+// ============ KANBAN DRAG & DROP ============
+let draggedTaskId = null;
+function onCardDragStart(e, id) {
+  draggedTaskId = id;
+  if (e.currentTarget) e.currentTarget.classList.add('dragging');
+  if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(id)); } catch(_){} }
+}
+function onCardDragEnd(e) {
+  if (e.currentTarget) e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col-list.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+function onColDragOver(e) {
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  const col = e.currentTarget;
+  if (col && !col.classList.contains('drag-over')) col.classList.add('drag-over');
+}
+function onColDragLeave(e) {
+  const col = e.currentTarget;
+  if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+}
+async function onColDrop(e, newStatus) {
+  e.preventDefault();
+  const col = e.currentTarget;
+  if (col) col.classList.remove('drag-over');
+  const id = draggedTaskId;
+  draggedTaskId = null;
+  if (!id) return;
+  const task = allTasks.find(t => t.id === id);
+  if (!task || task.status === newStatus) return;
+  if (newStatus === 'cancelled' && !IS_CEO) { toast('Bekor qilish faqat CEO huquqi', 'error'); return; }
+  // Optimistic UI: update locally then re-render
+  const prevStatus = task.status;
+  task.status = newStatus;
+  renderKanban();
+  try {
+    const r = await fetch(TASK_STATUS + '?id=' + id + '&uid=' + UID + '&status=' + newStatus);
+    const d = await r.json();
+    if (d.ok) {
+      toast('✅ Holat o\'zgardi', 'success');
+      await loadTasks();
+    } else {
+      task.status = prevStatus; renderKanban();
+      toast('Xato: ' + (d.error || 'noma\'lum'), 'error');
+    }
+  } catch (err) {
+    task.status = prevStatus; renderKanban();
+    toast('Server bilan aloqa yo\'q', 'error');
+  }
 }
 
 function renderCalendar() {
@@ -661,8 +751,9 @@ function taskCardHTML(t) {
     ? '👤 ' + escapeHtml(getHodimName(t.assigned_to_telegram_id))
     : (t.assigned_to_warehouse_id ? '🏪 ' + escapeHtml(getFilialName(t.assigned_to_warehouse_id)) : '');
   const progress = t.subtask_total > 0 ? Math.round(t.subtask_done / t.subtask_total * 100) : 0;
+  const pl = t.priority_level || 5;
   return `
-    <div class="task-card ${t.priority} ${isOverdue ? 'overdue' : ''}" onclick="openDetail(${t.id})">
+    <div class="task-card ${t.priority} ${isOverdue ? 'overdue' : ''}" data-id="${t.id}" data-status="${t.status}" draggable="true" ondragstart="onCardDragStart(event,${t.id})" ondragend="onCardDragEnd(event)" onclick="openDetail(${t.id})">
       <div class="tc-head">
         <div class="tc-title">${escapeHtml(t.title)}</div>
         <span class="tc-status ${t.status}">${sname[t.status] || t.status}</span>
@@ -670,7 +761,7 @@ function taskCardHTML(t) {
       ${t.description ? `<div style="font-size:12px; color:var(--text-dim); margin-bottom:4px;">${escapeHtml(t.description.substring(0,80))}${t.description.length>80?'...':''}</div>` : ''}
       <div class="tc-assigned">${assignee}</div>
       <div class="tc-meta">
-        <span class="tc-meta-item"><span class="tc-priority ${t.priority}"></span>${t.priority}</span>
+        <span class="tc-meta-item"><span class="tc-plevel" style="background:${plevelColor(pl)}">${pl}</span></span>
         ${dlInfo ? `<span class="tc-meta-item tc-deadline ${dlInfo.cls}">⏰ ${dlInfo.text}</span>` : ''}
         ${t.subtask_total > 0 ? `<span class="tc-meta-item">☑️ ${t.subtask_done}/${t.subtask_total}</span>` : ''}
         ${t.comment_count > 0 ? `<span class="tc-meta-item">💬 ${t.comment_count}</span>` : ''}
@@ -720,9 +811,10 @@ function openCreate(editTask) {
   toggleRecurring();
   updateDlPreview();
   
-  // Priority
-  const prio = editTask ? editTask.priority : 'normal';
-  setPriority(prio);
+  // Priority (1-10)
+  const plevel = editTask ? (editTask.priority_level || 5) : 5;
+  document.getElementById('f_priority_level').value = plevel;
+  onPriorityChange();
   
   // Recurring + multi-select only for NEW tasks; edit keeps single assignee
   if (editTask) {
@@ -894,8 +986,17 @@ function updateDlPreview() {
   el.textContent = '⏰ ' + v.replace('T', ' ') + rel;
 }
 
-function setPriority(p) {
-  document.querySelectorAll('.form-priority').forEach(el => el.classList.toggle('active', el.dataset.priority === p));
+function plevelColor(pl) {
+  pl = Number(pl) || 5;
+  if (pl <= 3) return 'var(--urgent)';
+  if (pl <= 6) return 'var(--amber)';
+  return 'var(--low)';
+}
+function onPriorityChange() {
+  const pl = Number(document.getElementById('f_priority_level').value) || 5;
+  const badge = document.getElementById('prioBadge');
+  badge.textContent = pl;
+  badge.style.background = plevelColor(pl);
 }
 
 function addSubtaskInput(value) {
@@ -946,7 +1047,7 @@ async function saveTask() {
     if (!warehouseId) { toast('Filialni tanlang', 'error'); return; }
   }
   
-  const priority = document.querySelector('.form-priority.active').dataset.priority;
+  const priorityLevel = Number(document.getElementById('f_priority_level').value) || 5;
   const deadline = document.getElementById('f_deadline').value;
   const description = document.getElementById('f_description').value.trim();
   const isRecurring = document.getElementById('f_is_recurring').checked;
@@ -980,7 +1081,7 @@ async function saveTask() {
     // EDIT mode — single update (GET to avoid CORS preflight)
     if (editingId) {
       const body = {
-        uid: UID, id: editingId, title, description, priority, deadline: deadlineIso,
+        uid: UID, id: editingId, title, description, priority_level: priorityLevel, deadline: deadlineIso,
         assigned_to_telegram_id: assignType === 'employee' ? (assigneeList[0] || null) : null,
         assigned_to_warehouse_id: assignType === 'warehouse' ? Number(warehouseId) : null
       };
@@ -994,7 +1095,7 @@ async function saveTask() {
     // CREATE mode (GET to avoid CORS preflight)
     if (assignType === 'warehouse') {
       // Single task → warehouse
-      const body = { uid: UID, title, description: description || null, priority, deadline: deadlineIso, is_recurring: isRecurring, recurring_pattern: recurringPattern, subtasks, created_by_name: 'CEO', assigned_to_telegram_id: null, assigned_to_warehouse_id: Number(warehouseId) };
+      const body = { uid: UID, title, description: description || null, priority_level: priorityLevel, deadline: deadlineIso, is_recurring: isRecurring, recurring_pattern: recurringPattern, subtasks, created_by_name: 'CEO', assigned_to_telegram_id: null, assigned_to_warehouse_id: Number(warehouseId) };
       const r = await fetch(TASK_CREATE + '?data=' + encodeURIComponent(JSON.stringify(body)));
       const d = await r.json();
       if (d.ok) {
@@ -1009,7 +1110,7 @@ async function saveTask() {
       for (let i = 0; i < assigneeList.length; i++) {
         const tid = assigneeList[i];
         btn.textContent = `Saqlanmoqda... (${i+1}/${assigneeList.length})`;
-        const body = { uid: UID, title, description: description || null, priority, deadline: deadlineIso, is_recurring: isRecurring, recurring_pattern: recurringPattern, subtasks, created_by_name: 'CEO', assigned_to_telegram_id: tid, assigned_to_warehouse_id: null };
+        const body = { uid: UID, title, description: description || null, priority_level: priorityLevel, deadline: deadlineIso, is_recurring: isRecurring, recurring_pattern: recurringPattern, subtasks, created_by_name: 'CEO', assigned_to_telegram_id: tid, assigned_to_warehouse_id: null };
         try {
           const r = await fetch(TASK_CREATE + '?data=' + encodeURIComponent(JSON.stringify(body)));
           const d = await r.json();
@@ -1105,8 +1206,8 @@ function renderDetail(d) {
         <div class="detail-meta-val"><span class="tc-status ${t.status}">${sname[t.status]}</span></div>
       </div>
       <div class="detail-meta-item">
-        <div class="detail-meta-label">Muhimlik</div>
-        <div class="detail-meta-val">${priorityIcon(t.priority)} ${t.priority}</div>
+        <div class="detail-meta-label">Prioritet</div>
+        <div class="detail-meta-val"><span class="tc-plevel" style="background:${plevelColor(t.priority_level||5)}">${t.priority_level||5}</span> / 10</div>
       </div>
       <div class="detail-meta-item">
         <div class="detail-meta-label">Biriktirildi</div>
@@ -1168,6 +1269,9 @@ async function addComment(taskId) {
     const d = await r.json();
     if (d.ok) {
       inp.value = '';
+      // Notify assigned employee + creator about the new comment (fire-and-forget)
+      try { fetch(TASK_NOTIFY + '?task_id=' + taskId + '&event=comment&changed_by=' + UID, { keepalive: true }).catch(() => {}); } catch (e) {}
+      toast('✅ Izoh yuborildi', 'success');
       await openDetail(taskId);
       loadTasks();
     }
