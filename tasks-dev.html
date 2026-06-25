@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Vazifalar">
-<link rel="manifest" href="tasks-manifest.json">
+<link rel="manifest" href="tasks-manifest.json?v=3">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
@@ -426,8 +426,7 @@ function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent || ''); }
 function pwaDismissedRecently() {
   try {
     if (localStorage.getItem('aros_pwa_installed') === '1') return true;
-    const dis = Number(localStorage.getItem('aros_pwa_dismissed') || 0);
-    return dis && (Date.now() - dis) < 24*60*60*1000;
+    return sessionStorage.getItem('aros_pwa_dismissed') === '1';
   } catch(e) { return false; }
 }
 
@@ -447,9 +446,13 @@ window.addEventListener('appinstalled', function() {
 
 function initPWAInstall() {
   if (isInTelegram() || isStandalone() || pwaDismissedRecently()) return;
-  // iOS — beforeinstallprompt yo'q, qo'llanma bilan banner
-  if (isIOS()) { setTimeout(function(){ showPWABanner('ios'); }, 1200); }
-  // Android — beforeinstallprompt event o'zi banner ko'rsatadi (yuqorida)
+  // Bannerni har doim ko'rsatamiz (Android + iOS). Tugma _deferredPrompt bo'lsa to'g'ridan-to'g'ri,
+  // bo'lmasa qo'lda o'rnatish qo'llanmasini ko'rsatadi.
+  setTimeout(function() {
+    if (!isInTelegram() && !isStandalone() && !pwaDismissedRecently()) {
+      showPWABanner(isIOS() ? 'ios' : 'android');
+    }
+  }, 1800);
 }
 
 function showPWABanner(mode) {
@@ -485,7 +488,7 @@ function showPWABanner(mode) {
     document.getElementById('pwaIosHint').style.display = 'block';
   }
   document.getElementById('pwaLater').onclick = function() {
-    try { localStorage.setItem('aros_pwa_dismissed', String(Date.now())); } catch(e) {}
+    try { sessionStorage.setItem('aros_pwa_dismissed', '1'); } catch(e) {}
     banner.remove();
   };
   document.getElementById('pwaInstall').onclick = async function() {
