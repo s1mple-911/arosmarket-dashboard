@@ -1220,15 +1220,21 @@ function renderModalAttachGrid() {
     return `<div class="attach-file"><span style="font-size:18px">${attachIcon(f.type)}</span><span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escapeHtml(f.name)}</span><div class="attach-del" onclick="removePendingFile(${i})">×</div></div>`;
   }).join('');
 }
-async function uploadPendingFiles(taskId) {
-  if (!pendingFiles.length) return;
-  for (const f of pendingFiles) {
+// Bitta vazifaga fayllarni yuklash. Birinchi fayl primary=1 (to'liq vazifa xabari + tugmalar bilan boradi)
+async function uploadFilesToTask(taskId, files) {
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    const primary = i === 0 ? 1 : 0;
     try {
       const fd = new FormData();
       fd.append('file', f, f.name);
-      await fetch(TASK_FILE_UPLOAD + '?task_id=' + taskId + '&uid=' + UID + '&file_name=' + encodeURIComponent(f.name), { method: 'POST', body: fd });
+      await fetch(TASK_FILE_UPLOAD + '?task_id=' + taskId + '&uid=' + UID + '&primary=' + primary + '&file_name=' + encodeURIComponent(f.name), { method: 'POST', body: fd });
     } catch (e) {}
   }
+}
+async function uploadPendingFiles(taskId) {
+  if (!pendingFiles.length) return;
+  await uploadFilesToTask(taskId, pendingFiles);
   pendingFiles = [];
 }
 
@@ -1356,8 +1362,8 @@ async function saveTask() {
       const r = await fetch(TASK_CREATE + '?data=' + encodeURIComponent(JSON.stringify(body)));
       const d = await r.json();
       if (d.ok) {
-        await uploadPendingFiles(d.id);
-        notifyTask(d.id);
+        if (pendingFiles.length) { await uploadPendingFiles(d.id); }
+        else { notifyTask(d.id); }
         toast('✅ Vazifa yaratildi', 'success');
         closeCreate(); await loadTasks();
       } else toast('Xato: ' + (d.error || 'noma\'lum'), 'error');
@@ -1376,18 +1382,14 @@ async function saveTask() {
           else failCount++;
         } catch (e) { failCount++; }
       }
-      // Fire notifications after all creates done (doesn't block UI)
-      // Pending fayllarni har bir yaratilgan vazifaga yuklash
-      if (pendingFiles.length && createdIds.length) {
+      // Fayl bo'lsa: har vazifaga yuklaymiz (birinchi fayl = to'liq xabar), alohida matn notify yubormaymiz
+      const hadFiles = pendingFiles.length > 0;
+      if (hadFiles && createdIds.length) {
         const filesCopy = pendingFiles.slice();
-        for (const cid of createdIds) {
-          for (const f of filesCopy) {
-            try { const fd = new FormData(); fd.append('file', f, f.name); await fetch(TASK_FILE_UPLOAD + '?task_id=' + cid + '&uid=' + UID + '&file_name=' + encodeURIComponent(f.name), { method: 'POST', body: fd }); } catch (e) {}
-          }
-        }
+        for (const cid of createdIds) { await uploadFilesToTask(cid, filesCopy); }
         pendingFiles = [];
       }
-      createdIds.forEach(id => notifyTask(id));
+      if (!hadFiles) { createdIds.forEach(id => notifyTask(id)); }
       if (okCount > 0) {
         toast(`✅ ${okCount} ta vazifa yaratildi${failCount > 0 ? ` (${failCount} ta xato)` : ''}`, failCount > 0 ? 'error' : 'success');
         closeCreate(); await loadTasks();
