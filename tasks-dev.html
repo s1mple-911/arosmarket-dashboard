@@ -326,12 +326,8 @@ html, body { background: var(--bg); color: var(--text); font-family: -apple-syst
     <div class="form-row">
       <label class="form-label">Rasm / Fayl</label>
       <div class="attach-grid" id="modalAttachGrid"></div>
-      <input type="file" id="modalImgInput" accept="image/*" style="display:none" onchange="onModalFilePick(this)" multiple />
       <input type="file" id="modalFileInput" style="display:none" onchange="onModalFilePick(this)" multiple />
-      <div style="display:flex; gap:8px">
-        <button type="button" class="btn-upload-file" style="flex:1" onclick="document.getElementById('modalImgInput').click()">🖼 Rasm</button>
-        <button type="button" class="btn-upload-file" style="flex:1" onclick="document.getElementById('modalFileInput').click()">📎 Fayl</button>
-      </div>
+      <button type="button" class="btn-upload-file" onclick="document.getElementById('modalFileInput').click()">📎 Rasm / fayl tanlash (papkalardan)</button>
     </div>
     <div class="form-row">
       <label class="form-check">
@@ -1497,12 +1493,8 @@ function renderDetail(d) {
     <div class="detail-section">
       <div class="detail-section-title">Fayllar / Rasmlar ${(d.attachments||[]).length ? '(' + d.attachments.length + ')' : ''}</div>
       <div class="attach-grid">${attachsHtml}</div>
-      <input type="file" id="taskImgInput_${t.id}" accept="image/*" style="display:none" onchange="uploadTaskFile(${t.id}, this)" multiple />
       <input type="file" id="taskFileInput_${t.id}" style="display:none" onchange="uploadTaskFile(${t.id}, this)" multiple />
-      <div style="display:flex; gap:8px">
-        <button class="btn-upload-file" style="flex:1" onclick="document.getElementById('taskImgInput_${t.id}').click()">🖼 Rasm</button>
-        <button class="btn-upload-file" style="flex:1" onclick="document.getElementById('taskFileInput_${t.id}').click()">📎 Fayl</button>
-      </div>
+      <button class="btn-upload-file" onclick="document.getElementById('taskFileInput_${t.id}').click()">📎 Rasm / fayl tanlash (papkalardan)</button>
       <div id="uploadProgress_${t.id}" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px">Yuklanmoqda...</div>
     </div>
     
@@ -1618,8 +1610,7 @@ async function uploadTaskFile(taskId, input) {
   }
   input.value = '';
   if (okCount > 0) {
-    toast('✅ ' + okCount + ' ta fayl yuklandi', 'success');
-    try { fetch(TASK_NOTIFY + '?task_id=' + taskId + '&event=updated&changed_by=' + UID, { keepalive: true }).catch(() => {}); } catch (e) {}
+    toast('✅ ' + okCount + ' ta fayl yuklandi — Telegramga yuborildi', 'success');
     await openDetail(taskId);
   } else if (prog) { prog.style.display = 'none'; }
 }
