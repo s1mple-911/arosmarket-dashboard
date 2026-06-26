@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Boshqaruv — kirish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #F6F5F1;
+    --surface: #FFFFFF;
+    --ink: #16181D;
+    --ink-soft: #2A2D36;
+    --muted: #6B6F76;
+    --line: #E5E3DC;
+    --accent: #1FA968;
+    --accent-ink: #0F7A49;
+    --danger: #C0392B;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(20,22,28,.04), 0 12px 32px -12px rgba(20,22,28,.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .shell {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* ---------- Brand panel (signature) ---------- */
+  .brand {
+    position: relative;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 0) 0 0 / 22px 22px,
+      linear-gradient(155deg, #1A1D26 0%, #121319 70%);
+    color: #EDEDE9;
+    padding: 48px 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .brand::after {
+    content: '';
+    position: absolute;
+    right: -120px; bottom: -120px;
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, rgba(31,169,104,.22), transparent 65%);
+    pointer-events: none;
+  }
+  .wordmark {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 22px; letter-spacing: -.02em;
+  }
+  .wordmark .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(31,169,104,.18);
+  }
+  .brand-hero { max-width: 460px; }
+  .brand-hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: clamp(30px, 3.4vw, 44px);
+    line-height: 1.05; letter-spacing: -.03em;
+    margin: 0 0 18px;
+  }
+  .brand-hero p { color: #A6A8AF; font-size: 16px; line-height: 1.6; margin: 0; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    font-size: 12.5px; font-weight: 500; color: #C9CBD1;
+    border: 1px solid rgba(255,255,255,.14); border-radius: 999px;
+    padding: 6px 12px; background: rgba(255,255,255,.03);
+  }
+
+  /* ---------- Auth panel ---------- */
+  .auth { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+  .card {
+    width: 100%; max-width: 392px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 30px 30px 26px;
+  }
+  .card h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 21px; letter-spacing: -.02em;
+    margin: 0 0 4px;
+  }
+  .card .sub { color: var(--muted); font-size: 13.5px; margin: 0 0 22px; }
+
+  .tabs { display: flex; gap: 4px; background: #F0EFEA; border-radius: 10px; padding: 4px; margin-bottom: 22px; }
+  .tab {
+    flex: 1; text-align: center; padding: 9px 0; border-radius: 7px;
+    font-size: 13.5px; font-weight: 600; color: var(--muted);
+    cursor: pointer; border: none; background: transparent; transition: all .15s;
+  }
+  .tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 11px 13px;
+    border: 1px solid var(--line); border-radius: 10px;
+    font-size: 14.5px; font-family: inherit; color: var(--ink);
+    background: #FCFCFB; transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(31,169,104,.14);
+  }
+
+  .btn {
+    width: 100%; padding: 12px 16px; border: none; border-radius: 10px;
+    font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #fff; transition: background .15s, transform .05s;
+    margin-top: 6px;
+  }
+  .btn:hover { background: var(--accent-ink); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .6; cursor: default; }
+  .btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn.secondary:hover { background: #F4F3EF; }
+
+  .msg { font-size: 13px; margin-top: 14px; padding: 10px 12px; border-radius: 9px; display: none; line-height: 1.45; }
+  .msg.show { display: block; }
+  .msg.err { background: #FCEEEC; color: var(--danger); }
+  .msg.ok { background: #ECF7F1; color: var(--accent-ink); }
+
+  .config-warn {
+    background: #FFF7E6; border: 1px solid #F0D78A; color: #7A5A12;
+    font-size: 13px; padding: 12px 14px; border-radius: 10px; margin-bottom: 18px; line-height: 1.5; display: none;
+  }
+  .config-warn.show { display: block; }
+  .config-warn code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  /* ---------- Dashboard stub ---------- */
+  .dash { display: none; max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+  .dash.show { display: block; }
+  .dash-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .dash-co { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 24px; letter-spacing: -.02em; }
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .stat .k { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .stat .v { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 22px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #ECF7F1; color: var(--accent-ink); }
+  .next-card { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 22px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .link-btn { background: none; border: none; color: var(--muted); font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .link-btn:hover { color: var(--ink); }
+
+  .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; min-height: 100dvh; color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    .brand { padding: 30px 26px; gap: 26px; min-height: auto; }
+    .brand-hero h1 { font-size: 26px; }
+    .brand-hero p { font-size: 14.5px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="loadingView" class="loading">Yuklanmoqda…</div>
+
+<!-- ============ AUTH ============ -->
+<div class="shell" id="authShell" style="display:none">
+  <aside class="brand">
+    <div class="wordmark"><span class="dot"></span> Boshqaruv</div>
+    <div class="brand-hero">
+      <h1>Biznesingiz bitta oynada.</h1>
+      <p>Vazifalar, filiallar va jamoa — Telegram orqali, bitta joyda boshqariladi. Ko'p filialli biznes uchun qurilgan.</p>
+    </div>
+    <div class="pills">
+      <span class="pill">Telegram bilan ishlaydi</span>
+      <span class="pill">Ko'p filial</span>
+      <span class="pill">14 kun bepul</span>
+    </div>
+  </aside>
+
+  <main class="auth">
+    <div class="card">
+      <div class="config-warn" id="configWarn">
+        Supabase ulanmagan. Faylning yuqorisidagi <code>SUPABASE_URL</code> va <code>SUPABASE_ANON_KEY</code> ni to'ldiring.
+      </div>
+
+      <!-- LOGIN / SIGNUP -->
+      <div id="authStep">
+        <h2 id="authTitle">Xush kelibsiz</h2>
+        <p class="sub" id="authSub">Hisobingizga kiring yoki yangi hisob oching.</p>
+        <div class="tabs">
+          <button class="tab active" id="tabLogin" onclick="setMode('login')">Kirish</button>
+          <button class="tab" id="tabSignup" onclick="setMode('signup')">Ro'yxatdan o'tish</button>
+        </div>
+        <div class="field" id="nameField" style="display:none">
+          <label for="fullName">Ismingiz</label>
+          <input id="fullName" type="text" autocomplete="name" placeholder="Asilbek" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="siz@kompaniya.uz" />
+        </div>
+        <div class="field">
+          <label for="password">Parol</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="Kamida 6 belgi" />
+        </div>
+        <button class="btn" id="authBtn" onclick="submitAuth()">Kirish</button>
+        <div class="msg" id="authMsg"></div>
+      </div>
+
+      <!-- CREATE COMPANY -->
+      <div id="companyStep" style="display:none">
+        <h2>Kompaniyangizni yarating</h2>
+        <p class="sub">Bu sizning ish maydoningiz. Keyin xodimlarni taklif qilasiz.</p>
+        <div class="field">
+          <label for="coName">Kompaniya nomi</label>
+          <input id="coName" type="text" placeholder="Masalan: Aros Market" />
+        </div>
+        <button class="btn" id="coBtn" onclick="createCompany()">Yaratish va boshlash</button>
+        <div class="msg" id="coMsg"></div>
+        <div style="text-align:center; margin-top:14px;">
+          <button class="link-btn" onclick="doLogout()">Chiqish</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ DASHBOARD STUB ============ -->
+<div class="dash" id="dashView">
+  <div class="dash-top">
+    <div class="dash-co" id="dashCoName">—</div>
+    <button class="link-btn" onclick="doLogout()">Chiqish</button>
+  </div>
+  <div class="dash-grid">
+    <div class="stat"><div class="k">Holat</div><div class="v"><span class="badge" id="dashPlan">—</span></div></div>
+    <div class="stat"><div class="k">Sizning rolingiz</div><div class="v" id="dashRole" style="font-size:18px">—</div></div>
+    <div class="stat"><div class="k">Sinov tugaydi</div><div class="v" id="dashTrial" style="font-size:18px">—</div></div>
+  </div>
+  <div class="next-card">
+    ✅ Poydevor ishlayapti — siz tizimga kirdingiz, kompaniyangiz yaratildi va faqat o'z ma'lumotingizni ko'ryapsiz (RLS).<br><br>
+    Keyingi qadam: <b>vazifalar moduli</b> — yaratish, biriktirish, deadline, fayl, Telegram bildirishnoma.
+  </div>
+</div>
+
+<!-- Supabase JS (brauzerda ishlaydi) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ====================== CONFIG ======================
+// Supabase → Settings → API dan oling (bular maxfiy emas, frontend ishlatadi):
+const SUPABASE_URL = 'https://nnpsbwsppgxbytlfloth.supabase.co';        // masalan: https://abcd1234.supabase.co
+const SUPABASE_ANON_KEY = 'sb_publishable_ouA6pp3DwJjQkDJrWPi8QQ_30CUo51t';   // "anon public" kalit
+// ====================================================
+
+let sb = null;
+let mode = 'login';
+
+const $ = id => document.getElementById(id);
+function showMsg(el, text, kind) { el.textContent = text; el.className = 'msg show ' + (kind || ''); }
+function hideMsg(el) { el.className = 'msg'; }
+
+function setMode(m) {
+  mode = m;
+  $('tabLogin').classList.toggle('active', m === 'login');
+  $('tabSignup').classList.toggle('active', m === 'signup');
+  $('nameField').style.display = m === 'signup' ? 'block' : 'none';
+  $('authBtn').textContent = m === 'signup' ? "Ro'yxatdan o'tish" : 'Kirish';
+  $('password').setAttribute('autocomplete', m === 'signup' ? 'new-password' : 'current-password');
+  hideMsg($('authMsg'));
+}
+
+function showView(which) {
+  $('loadingView').style.display = 'none';
+  $('authShell').style.display = which === 'auth' ? 'grid' : 'none';
+  $('dashView').classList.toggle('show', which === 'dash');
+  if (which === 'auth') {
+    $('authStep').style.display = 'block';
+    $('companyStep').style.display = 'none';
+  }
+}
+function showCompanyStep() {
+  $('loadingView').style.display = 'none';
+  $('authShell').style.display = 'grid';
+  $('authStep').style.display = 'none';
+  $('companyStep').style.display = 'block';
+  $('dashView').classList.remove('show');
+}
+
+async function submitAuth() {
+  const email = $('email').value.trim();
+  const password = $('password').value;
+  const btn = $('authBtn');
+  if (!email || !password) { showMsg($('authMsg'), 'Email va parolni kiriting.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Tekshirilmoqda…';
+  try {
+    if (mode === 'signup') {
+      const fullName = $('fullName').value.trim();
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { full_name: fullName } }
+      });
+      if (error) throw error;
+      if (!data.session) {
+        showMsg($('authMsg'), 'Hisob yaratildi. Agar email tasdiqlash yoqilgan bo\'lsa, pochtangizni tekshiring. (Sinov uchun Supabase\'da email tasdiqlashni o\'chirib qo\'ying.)', 'ok');
+        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
+        return;
+      }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+    await routeAfterAuth();
+  } catch (e) {
+    showMsg($('authMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = mode === 'signup' ? "Ro'yxatdan o'tish" : 'Kirish';
+  }
+}
+
+async function createCompany() {
+  const name = $('coName').value.trim();
+  const btn = $('coBtn');
+  if (!name) { showMsg($('coMsg'), 'Kompaniya nomini kiriting.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    const { error } = await sb.from('companies').insert({ name, owner_id: user.id }).select().single();
+    if (error) throw error;
+    await loadDashboard();
+  } catch (e) {
+    showMsg($('coMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Yaratish va boshlash';
+  }
+}
+
+async function routeAfterAuth() {
+  const { data: companies, error } = await sb.from('companies').select('*').limit(1);
+  if (error) { showMsg($('authMsg'), translateErr(error.message), 'err'); return; }
+  if (companies && companies.length) { await loadDashboard(); }
+  else { showCompanyStep(); }
+}
+
+async function loadDashboard() {
+  const { data: companies } = await sb.from('companies').select('*').limit(1);
+  if (!companies || !companies.length) { showCompanyStep(); return; }
+  const co = companies[0];
+  const { data: { user } } = await sb.auth.getUser();
+  const { data: member } = await sb.from('company_members').select('role').eq('company_id', co.id).eq('user_id', user.id).single();
+  const { data: sub } = await sb.from('subscriptions').select('*').eq('company_id', co.id).single();
+
+  $('dashCoName').textContent = co.name;
+  const roleMap = { owner: 'Egasi', admin: 'Administrator', manager: 'Menejer', employee: 'Xodim' };
+  $('dashRole').textContent = roleMap[member ? member.role : 'employee'] || '—';
+  if (sub) {
+    const planMap = { free: 'Bepul', pro: 'Pro', business: 'Business' };
+    const statusMap = { trialing: 'Sinov', active: 'Faol', past_due: 'To\'lov kutilmoqda', canceled: 'Bekor' };
+    $('dashPlan').textContent = (planMap[sub.plan] || sub.plan) + ' · ' + (statusMap[sub.status] || sub.status);
+    if (sub.trial_ends_at) {
+      const d = new Date(sub.trial_ends_at);
+      const left = Math.max(0, Math.ceil((d - Date.now()) / 86400000));
+      $('dashTrial').textContent = left + ' kun';
+    } else $('dashTrial').textContent = '—';
+  }
+  showView('dash');
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  setMode('login');
+  $('email').value = ''; $('password').value = '';
+  showView('auth');
+}
+
+function translateErr(m) {
+  if (!m) return 'Xatolik yuz berdi.';
+  if (/invalid login credentials/i.test(m)) return 'Email yoki parol noto\'g\'ri.';
+  if (/already registered/i.test(m)) return 'Bu email allaqachon ro\'yxatdan o\'tgan. Kiring.';
+  if (/password should be at least/i.test(m)) return 'Parol kamida 6 belgidan iborat bo\'lsin.';
+  if (/email/i.test(m) && /valid/i.test(m)) return 'Email manzili noto\'g\'ri.';
+  return m;
+}
+
+async function init() {
+  if (SUPABASE_URL.startsWith('YOUR_') || SUPABASE_ANON_KEY.startsWith('YOUR_')) {
+    $('configWarn').classList.add('show');
+    showView('auth');
+    $('authBtn').disabled = true;
+    return;
+  }
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { await routeAfterAuth(); }
+  else { setMode('login'); showView('auth'); }
+}
+init();
+</script>
+</body>
+</html>
