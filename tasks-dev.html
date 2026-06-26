@@ -807,7 +807,7 @@ function renderCalendar() {
   // Group tasks by date
   const byDate = {};
   tasks.forEach(t => {
-    const d = new Date(new Date(t.deadline).getTime() + 5*60*60*1000);
+    const d = new Date(pUTC(t.deadline).getTime() + 5*60*60*1000);
     const y = d.getUTCFullYear(), m = d.getUTCMonth(), dom = d.getUTCDate();
     if (y === calYear && m === calMonth) {
       const key = dom;
@@ -875,7 +875,7 @@ function changeMonth(delta) {
 function showDayTasks(d) {
   const tasks = filteredTasks().filter(t => {
     if (!t.deadline) return false;
-    const dt = new Date(new Date(t.deadline).getTime() + 5*60*60*1000);
+    const dt = new Date(pUTC(t.deadline).getTime() + 5*60*60*1000);
     return dt.getUTCDate() === d && dt.getUTCMonth() === calMonth && dt.getUTCFullYear() === calYear;
   });
   if (tasks.length === 0) return;
@@ -922,10 +922,19 @@ function taskCardHTML(t) {
   `;
 }
 
+// Saqlangan deadline doim UTC (Z'siz bo'lsa ham UTC deb o'qiymiz) — brauzer timezone'iga bog'liq emas
+function pUTC(s) {
+  if (!s) return null;
+  s = String(s).replace(' ', 'T');
+  if (!/[Zz]|[+-]\d\d:?\d\d$/.test(s)) s += 'Z';
+  return new Date(s);
+}
 function formatDeadline(iso) {
   if (!iso) return null;
-  const d = new Date(new Date(iso).getTime() + 5*60*60*1000);
-  const now = new Date(new Date().getTime() + 5*60*60*1000);
+  const base = pUTC(iso);
+  if (!base || isNaN(base.getTime())) return null;
+  const d = new Date(base.getTime() + 5*60*60*1000);
+  const now = new Date(Date.now() + 5*60*60*1000);
   const diffMs = d.getTime() - now.getTime();
   const diffH = diffMs / 3600000;
   const pad = n => n < 10 ? '0' + n : '' + n;
@@ -1134,9 +1143,9 @@ function updateDlPreview() {
   const v = document.getElementById('f_deadline').value;
   const el = document.getElementById('dlPreview');
   if (!v) { el.textContent = ''; return; }
-  const d = new Date(v);
-  const now = new Date(new Date().getTime() + 5*60*60*1000);
-  const diffMs = new Date(v).getTime() - now.getTime();
+  const dl = v.length === 16 ? v + ':00' : v;
+  const target = new Date(dl + '+05:00').getTime();
+  const diffMs = target - Date.now();
   const days = Math.round(diffMs / 86400000);
   let rel = '';
   if (diffMs < 0) rel = ' (o\'tib ketgan)';
@@ -1300,7 +1309,13 @@ async function saveTask() {
     }
   }
   
-  const deadlineIso = deadline ? new Date(deadline).toISOString() : null;
+  // f_deadline = UZB devor-soati. Aniq +05:00 bilan UTC ga aylantiramiz (brauzer timezone'iga bog'liq emas)
+  let deadlineIso = null;
+  if (deadline) {
+    const dl = deadline.length === 16 ? deadline + ':00' : deadline;
+    const parsed = new Date(dl + '+05:00');
+    deadlineIso = isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
   
   const btn = document.getElementById('btnSave');
   btn.disabled = true;
@@ -1677,7 +1692,9 @@ function formatDate(iso) {
 
 function toLocalDatetime(iso) {
   if (!iso) return '';
-  const d = new Date(new Date(iso).getTime() + 5*60*60*1000);
+  const base = pUTC(iso);
+  if (!base || isNaN(base.getTime())) return '';
+  const d = new Date(base.getTime() + 5*60*60*1000);
   const pad = n => n < 10 ? '0' + n : '' + n;
   return d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
 }
