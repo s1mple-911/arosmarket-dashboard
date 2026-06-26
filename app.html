@@ -684,6 +684,9 @@ async function bootstrap() {
   showApp();
   goPage('dashboard');
   loadNotifs();
+  // Bell'ni har 30 sekundда yangilab turamiz (yangi taklif kelганини sezish)
+  if (window._bellTimer) clearInterval(window._bellTimer);
+  window._bellTimer = setInterval(loadNotifs, 30000);
 }
 
 async function loadWorkspaces() {
@@ -1066,8 +1069,9 @@ async function sendInvite() {
       departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending'
     });
     if (error) { if (/duplicate|unique/i.test(error.message)) { showMsg($('iMsg'), 'Bu emailga allaqachon taklif yuborilgan.', 'err'); } else { showMsg($('iMsg'), translateErr(error.message), 'err'); } btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
-    const link = window.location.origin + window.location.pathname;
-    showMsg($('iMsg'), '✅ Taklif yaratildi. Quyidagi havolani xodimga yuboring (Telegram/email):\n' + link + '\nXodim ushbu email bilan ro\'yxatdan o\'tsa, avtomatik a\'zo bo\'ladi.', 'ok');
+    showMsg($('iMsg'),
+      '✅ Taklif yuborildi. Agar xodim allaqachon ro\'yxatdan o\'tgan bo\'lsa, 🔔 bell orqali ko\'radi (Qabul/Rad tugmasi bilan). Ro\'yxatdan o\'tmagan bo\'lsa, signup qilgach avtomatik xabarni oladi.',
+      'ok');
     await loadTeam();
   } catch (e) { showMsg($('iMsg'), translateErr(e.message), 'err'); }
   btn.disabled = false; btn.textContent = 'Taklif yuborish';
@@ -1087,7 +1091,7 @@ async function removeMember(uid) {
 // ============ NOTIFICATIONS ============
 async function loadNotifs() {
   if (!me) return;
-  const { data } = await sb.from('notifications').select('*').eq('user_id', me.id).order('created_at', { ascending: false }).limit(20);
+  const { data } = await sb.from('notifications').select('*').eq('user_id', me.id).order('created_at', { ascending: false }).limit(30);
   notifs = data || [];
   const unread = notifs.filter(n => !n.read_at).length;
   $('bellDot').style.display = unread > 0 ? 'block' : 'none';
@@ -1097,10 +1101,20 @@ function renderNotifs() {
   const list = $('notifList');
   if (!notifs.length) { list.innerHTML = '<div class="notif-item"><div class="notif-body">Bildirishnomalar yo\'q.</div></div>'; return; }
   list.innerHTML = notifs.map(function(n){
+    const meta = n.meta || {};
+    const isInvite = n.kind === 'invitation' && meta.invitation_id && !n.read_at;
+    const actions = isInvite
+      ? '<div class="notif-actions" style="margin-top:8px">' +
+          '<button class="btn sm" onclick="acceptInvite(\''+meta.invitation_id+'\')">✓ Qabul</button>' +
+          '<button class="btn sm secondary" onclick="declineInvite(\''+meta.invitation_id+'\')">Rad</button>' +
+        '</div>'
+      : '';
+    const from = meta.invited_by_name ? '<div style="font-size:11.5px; color: var(--muted); margin-top:4px;">Kim: ' + escapeHtml(meta.invited_by_name) + '</div>' : '';
     return '<div class="notif-item ' + (n.read_at ? '' : 'unread') + '">' +
       '<div class="notif-title">' + escapeHtml(n.title) + '</div>' +
       (n.body ? '<div class="notif-body">' + escapeHtml(n.body) + '</div>' : '') +
-      '</div>';
+      from + actions +
+    '</div>';
   }).join('');
 }
 function toggleNotif(e) {
@@ -1108,13 +1122,45 @@ function toggleNotif(e) {
   const p = $('notifPanel');
   p.classList.toggle('show');
   $('wsDrop').classList.remove('show');
-  if (p.classList.contains('show')) markAllRead();
+  // Bell ochilganda — faqat NON-INVITE notif'larni o'qildi qilamiz
+  // (taklif uchun foydalanuvchi Qabul/Rad tugmasini bosishi shart)
+  if (p.classList.contains('show')) markNonInviteRead();
+}
+async function markNonInviteRead() {
+  const ids = notifs.filter(n => !n.read_at && n.kind !== 'invitation').map(n => n.id);
+  if (!ids.length) return;
+  await sb.from('notifications').update({ read_at: new Date().toISOString() }).in('id', ids);
+  await loadNotifs();
 }
 async function markAllRead() {
   const ids = notifs.filter(n => !n.read_at).map(n => n.id);
   if (!ids.length) return;
   await sb.from('notifications').update({ read_at: new Date().toISOString() }).in('id', ids);
   await loadNotifs();
+}
+async function acceptInvite(invId) {
+  try {
+    const { data, error } = await sb.rpc('accept_invitation', { inv_id: invId });
+    if (error) throw error;
+    if (!data.ok) { toast(data.error || 'Xato', 'err'); return; }
+    toast('✅ Taklif qabul qilindi', 'ok');
+    $('notifPanel').classList.remove('show');
+    // Workspace ro'yxatini yangilab, yangi joyga o'tamiz
+    await loadWorkspaces();
+    const targetWs = workspaces.find(w => w.id === data.workspace_id);
+    if (targetWs) { currentWs = targetWs; await loadCurrentContext(); goPage('dashboard'); }
+    await loadNotifs();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function declineInvite(invId) {
+  if (!confirm('Taklifni rad etasizmi?')) return;
+  try {
+    const { data, error } = await sb.rpc('decline_invitation', { inv_id: invId });
+    if (error) throw error;
+    if (!data.ok) { toast(data.error || 'Xato', 'err'); return; }
+    toast('Taklif rad etildi', 'ok');
+    await loadNotifs();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
 // ============ INIT ============
