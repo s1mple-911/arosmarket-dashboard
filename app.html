@@ -237,8 +237,32 @@
         </div>
         <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="siz@kompaniya.uz" /></div>
         <div class="field"><label for="password">Parol</label><input id="password" type="password" autocomplete="current-password" placeholder="Kamida 6 belgi" /></div>
+        <div id="forgotRow" style="text-align:right; margin: -6px 0 10px;">
+          <button class="link-btn" type="button" onclick="goForgot()">Parolni unutdingizmi?</button>
+        </div>
         <button class="btn block" id="authBtn" onclick="submitAuth()">Kirish</button>
         <div class="msg" id="authMsg"></div>
+        <div id="switchToLogin" style="text-align:center; margin-top:10px; display:none">
+          <button class="link-btn" type="button" onclick="switchToLoginKeepEmail()">→ Kirish formasiga o'tish</button>
+        </div>
+      </div>
+
+      <div id="forgotStep" style="display:none">
+        <h2>Parolni tiklash</h2>
+        <p class="sub">Emailingizni yozing — tiklash havolasini yuboramiz.</p>
+        <div class="field"><label for="fEmail">Email</label><input id="fEmail" type="email" placeholder="siz@kompaniya.uz" /></div>
+        <button class="btn block" id="fBtn" onclick="sendReset()">Havola yuborish</button>
+        <div class="msg" id="fMsg"></div>
+        <div style="text-align:center; margin-top:14px;"><button class="link-btn" type="button" onclick="backToLogin()">← Kirishga qaytish</button></div>
+      </div>
+
+      <div id="resetStep" style="display:none">
+        <h2>Yangi parol</h2>
+        <p class="sub">Yangi parolingizni kiriting.</p>
+        <div class="field"><label for="rPwd">Yangi parol</label><input id="rPwd" type="password" placeholder="Kamida 6 belgi" /></div>
+        <div class="field"><label for="rPwd2">Takror</label><input id="rPwd2" type="password" placeholder="Yana bir bor" /></div>
+        <button class="btn block" id="rBtn" onclick="saveNewPassword()">Saqlash va kirish</button>
+        <div class="msg" id="rMsg"></div>
       </div>
       <div id="companyStep" style="display:none">
         <h2>Kompaniyangizni yarating</h2>
@@ -261,6 +285,7 @@
     <nav class="nav">
       <button class="nav-btn active" data-page="dashboard" onclick="goPage('dashboard')">Dashboard</button>
       <button class="nav-btn" data-page="tasks" onclick="goPage('tasks')">Vazifalar</button>
+      <button class="nav-btn" data-page="team" onclick="goPage('team')">Jamoa</button>
     </nav>
     <div class="topbar-right">
       <span class="who" id="topWho">—</span>
@@ -299,6 +324,19 @@
         Birinchi vazifani yarating va boshlang.
       </div>
     </section>
+
+    <section id="page-team" style="display:none">
+      <div class="row-head">
+        <h2 class="h2" style="margin:0">Jamoa</h2>
+        <button class="btn" id="inviteBtn" onclick="openInvite()" style="display:none">+ Xodim taklif qilish</button>
+      </div>
+      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Faol a'zolar</div>
+      <div id="membersList" class="task-list"></div>
+      <div id="invitesWrap" style="margin-top: 28px; display:none;">
+        <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Yuborilgan takliflar</div>
+        <div id="invitesList" class="task-list"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -332,6 +370,37 @@
     <div class="modal-foot">
       <button class="btn danger" id="dDelete" onclick="deleteCurrent()" style="margin-right:auto">O'chirish</button>
       <button class="btn secondary" onclick="closeDetail()">Yopish</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="inviteBd">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Xodim taklif qilish</h3>
+      <button class="x-btn" onclick="closeInvite()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="iEmail">Xodim email *</label>
+        <input id="iEmail" type="email" placeholder="xodim@kompaniya.uz" />
+      </div>
+      <div class="field">
+        <label for="iRole">Rol</label>
+        <select id="iRole">
+          <option value="employee">Xodim</option>
+          <option value="manager">Menejer</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+      <div style="font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 6px;">
+        Bu emailga taklif yuboriladi. Xodim ro'yxatdan o'tgach, avtomatik kompaniyangizga qo'shiladi.
+      </div>
+      <div class="msg" id="iMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeInvite()">Bekor</button>
+      <button class="btn" id="iBtn" onclick="sendInvite()">Taklif yuborish</button>
     </div>
   </div>
 </div>
@@ -377,19 +446,43 @@ function setMode(m) {
   $('tabLogin').classList.toggle('active', m === 'login');
   $('tabSignup').classList.toggle('active', m === 'signup');
   $('nameField').style.display = m === 'signup' ? 'block' : 'none';
+  $('forgotRow').style.display = m === 'login' ? 'block' : 'none';
+  $('switchToLogin').style.display = 'none';
   $('authBtn').textContent = m === 'signup' ? "Ro'yxatdan o'tish" : 'Kirish';
   $('password').setAttribute('autocomplete', m === 'signup' ? 'new-password' : 'current-password');
   hideMsg($('authMsg'));
 }
-function showAuth() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show'); $('authStep').style.display = 'block'; $('companyStep').style.display = 'none'; }
-function showCompanyStep() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('authStep').style.display = 'none'; $('companyStep').style.display = 'block'; $('appView').classList.remove('show'); }
+function switchToLoginKeepEmail() {
+  setMode('login');
+  $('password').value = '';
+  $('password').focus();
+}
+function showAuth() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show'); $('authStep').style.display = 'block'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'none'; $('companyStep').style.display = 'none'; }
+function showCompanyStep() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('authStep').style.display = 'none'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'none'; $('companyStep').style.display = 'block'; $('appView').classList.remove('show'); }
 function showApp() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'none'; $('appView').classList.add('show'); }
+
+function goForgot() {
+  $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show');
+  $('authStep').style.display = 'none'; $('forgotStep').style.display = 'block'; $('resetStep').style.display = 'none'; $('companyStep').style.display = 'none';
+  $('fEmail').value = $('email').value.trim();
+  hideMsg($('fMsg'));
+  setTimeout(() => $('fEmail').focus(), 50);
+}
+function backToLogin() { setMode('login'); showAuth(); }
+function showResetStep() {
+  $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show');
+  $('authStep').style.display = 'none'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'block'; $('companyStep').style.display = 'none';
+  hideMsg($('rMsg'));
+  setTimeout(() => $('rPwd').focus(), 50);
+}
 
 function goPage(p) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === p));
   $('page-dashboard').style.display = p === 'dashboard' ? 'block' : 'none';
   $('page-tasks').style.display = p === 'tasks' ? 'block' : 'none';
+  $('page-team').style.display = p === 'team' ? 'block' : 'none';
   if (p === 'tasks') loadTasks();
+  if (p === 'team') loadTeam();
 }
 
 async function submitAuth() {
@@ -397,14 +490,42 @@ async function submitAuth() {
   const password = $('password').value;
   const btn = $('authBtn');
   if (!email || !password) { showMsg($('authMsg'), 'Email va parolni kiriting.', 'err'); return; }
+  $('switchToLogin').style.display = 'none';
   btn.disabled = true; btn.textContent = 'Tekshirilmoqda…';
   try {
     if (mode === 'signup') {
+      if (password.length < 6) {
+        showMsg($('authMsg'), 'Parol kamida 6 belgidan iborat bo\'lsin.', 'err');
+        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish"; return;
+      }
       const fullName = $('fullName').value.trim();
-      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
-      if (error) throw error;
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: window.location.origin + window.location.pathname
+        }
+      });
+      if (error) {
+        // "already registered" yoki shunga o'xshash xato
+        if (/already|registered|exists/i.test(error.message)) {
+          showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan.', 'err');
+          $('switchToLogin').style.display = 'block';
+        } else { showMsg($('authMsg'), translateErr(error.message), 'err'); }
+        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
+        return;
+      }
+      // Supabase MUHIM nuqta: mavjud email bo'lsa error qaytarmaydi (email enumeration himoyasi),
+      // lekin data.user.identities massivi BO'SH bo'ladi. Shu orqali aniqlaymiz.
+      const identities = (data && data.user && data.user.identities) || [];
+      if (identities.length === 0 && !data.session) {
+        showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan. Quyidagi havola orqali kiring.', 'err');
+        $('switchToLogin').style.display = 'block';
+        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
+        return;
+      }
       if (!data.session) {
-        showMsg($('authMsg'), 'Hisob yaratildi. Pochtangizni tekshiring.', 'ok');
+        showMsg($('authMsg'), 'Hisob yaratildi. Pochtangizga tasdiqlash havolasi yuborildi — uni bosib qaytib keling.', 'ok');
         btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
         return;
       }
@@ -416,6 +537,42 @@ async function submitAuth() {
   } catch (e) {
     showMsg($('authMsg'), translateErr(e.message), 'err');
     btn.disabled = false; btn.textContent = mode === 'signup' ? "Ro'yxatdan o'tish" : 'Kirish';
+  }
+}
+
+async function sendReset() {
+  const email = $('fEmail').value.trim();
+  const btn = $('fBtn');
+  if (!email) { showMsg($('fMsg'), 'Emailingizni kiriting.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
+  try {
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw error;
+    showMsg($('fMsg'), 'Havola yuborildi. Pochtangizni tekshiring (spam papkasiga ham qarang).', 'ok');
+    btn.disabled = false; btn.textContent = 'Havola yuborish';
+  } catch (e) {
+    showMsg($('fMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Havola yuborish';
+  }
+}
+
+async function saveNewPassword() {
+  const p1 = $('rPwd').value; const p2 = $('rPwd2').value;
+  const btn = $('rBtn');
+  if (p1.length < 6) { showMsg($('rMsg'), 'Parol kamida 6 belgidan iborat bo\'lsin.', 'err'); return; }
+  if (p1 !== p2) { showMsg($('rMsg'), 'Parollar mos kelmadi.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
+  try {
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    if (error) throw error;
+    // Tozalash uchun URL hash'ni olib tashlaymiz
+    if (window.history.replaceState) window.history.replaceState({}, '', window.location.pathname);
+    toast('✅ Parol yangilandi', 'ok');
+    await routeAfterAuth();
+  } catch (e) {
+    showMsg($('rMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Saqlash va kirish';
   }
 }
 async function createCompany() {
@@ -613,13 +770,192 @@ async function deleteCurrent() {
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
+// ---------- TEAM ----------
+const ROLE_LBL = { owner: 'Egasi', admin: 'Administrator', manager: 'Menejer', employee: 'Xodim' };
+
+function canManageTeam() {
+  return currentRole === 'owner' || currentRole === 'admin';
+}
+
+async function loadTeam() {
+  if (!currentCompany) return;
+  $('inviteBtn').style.display = canManageTeam() ? 'inline-block' : 'none';
+  $('invitesWrap').style.display = canManageTeam() ? 'block' : 'none';
+
+  // A'zolar + ularning profillari
+  const { data: members, error: mErr } = await sb
+    .from('company_members')
+    .select('user_id, role, created_at')
+    .eq('company_id', currentCompany.id)
+    .order('created_at', { ascending: true });
+  if (mErr) { toast(translateErr(mErr.message), 'err'); return; }
+
+  const ids = (members || []).map(m => m.user_id);
+  let profilesMap = {};
+  if (ids.length) {
+    const { data: profs } = await sb.from('profiles').select('id, full_name, phone').in('id', ids);
+    (profs || []).forEach(p => { profilesMap[p.id] = p; });
+  }
+
+  const wrap = $('membersList');
+  if (!members || !members.length) {
+    wrap.innerHTML = '<div class="empty"><strong>A\'zo yo\'q</strong>Birinchi xodimni taklif qiling.</div>';
+  } else {
+    wrap.innerHTML = members.map(function(m){
+      const p = profilesMap[m.user_id] || {};
+      const isMe = m.user_id === currentUser.id;
+      const name = p.full_name || (isMe ? 'Siz' : 'Foydalanuvchi');
+      const canRemove = canManageTeam() && m.role !== 'owner' && !isMe;
+      const canChangeRole = canManageTeam() && m.role !== 'owner' && !isMe;
+      let roleHtml;
+      if (canChangeRole) {
+        roleHtml = '<select onchange="changeMemberRole(\''+m.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; font-family:inherit; background: var(--surface);">' +
+          ['employee','manager','admin'].map(function(r){
+            return '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_LBL[r]+'</option>';
+          }).join('') + '</select>';
+      } else {
+        roleHtml = '<span class="badge muted">' + ROLE_LBL[m.role] + '</span>';
+      }
+      return '<div class="task-item" style="cursor:default">' +
+        '<div class="task-status-dot ts-' + (m.role === 'owner' ? 'completed' : 'in_progress') + '"></div>' +
+        '<div class="task-mid">' +
+          '<div class="task-title">' + escapeHtml(name) + (isMe ? ' <span style="color:var(--muted); font-weight:500;">(siz)</span>' : '') + '</div>' +
+          '<div class="task-meta">' + (p.phone ? '<span>' + escapeHtml(p.phone) + '</span>' : '<span>—</span>') + '</div>' +
+        '</div>' +
+        '<div class="task-right">' +
+          roleHtml +
+          (canRemove ? '<button class="icon-btn" onclick="removeMember(\''+m.user_id+'\')" title="O\'chirish" style="color:var(--danger)">×</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Yuborilgan takliflar (faqat manage qila olganlar uchun)
+  if (canManageTeam()) {
+    const { data: invs } = await sb
+      .from('invitations')
+      .select('*')
+      .eq('company_id', currentCompany.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    const list = $('invitesList');
+    if (!invs || !invs.length) {
+      list.innerHTML = '<div class="empty" style="padding:24px"><strong>Ochiq taklif yo\'q</strong>Yuborilgan takliflar shu yerda ko\'rinadi.</div>';
+    } else {
+      list.innerHTML = invs.map(function(inv){
+        return '<div class="task-item" style="cursor:default">' +
+          '<div class="task-status-dot ts-new"></div>' +
+          '<div class="task-mid">' +
+            '<div class="task-title">' + escapeHtml(inv.email || '—') + '</div>' +
+            '<div class="task-meta"><span>' + ROLE_LBL[inv.role] + '</span><span class="dot-sep"></span><span>Kutilmoqda</span></div>' +
+          '</div>' +
+          '<div class="task-right">' +
+            '<button class="icon-btn" onclick="cancelInvite(\''+inv.id+'\')" title="Bekor qilish" style="color:var(--danger)">×</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+}
+
+function openInvite() {
+  if (!canManageTeam()) return;
+  $('iEmail').value = ''; $('iRole').value = 'employee';
+  hideMsg($('iMsg'));
+  $('inviteBd').classList.add('show');
+  setTimeout(() => $('iEmail').focus(), 50);
+}
+function closeInvite() { $('inviteBd').classList.remove('show'); }
+
+async function sendInvite() {
+  const email = $('iEmail').value.trim().toLowerCase();
+  const role = $('iRole').value;
+  const btn = $('iBtn');
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { showMsg($('iMsg'), 'Email manzili noto\'g\'ri.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
+  try {
+    // 1) invitations jadvaliga yozamiz (xodim ro'yxatdan o'tganda trigger member qiladi)
+    const { error: invErr } = await sb.from('invitations').insert({
+      company_id: currentCompany.id,
+      email: email,
+      role: role,
+      invited_by: currentUser.id,
+      invited_by_name: currentUser.email || null,
+      status: 'pending'
+    });
+    if (invErr) {
+      // unique index — bu email uchun allaqachon ochiq taklif bor
+      if (/duplicate|unique/i.test(invErr.message)) {
+        showMsg($('iMsg'), 'Bu email uchun allaqachon ochiq taklif yuborilgan.', 'err');
+      } else {
+        showMsg($('iMsg'), translateErr(invErr.message), 'err');
+      }
+      btn.disabled = false; btn.textContent = 'Taklif yuborish';
+      return;
+    }
+
+    // 2) Eslatma: hozir biz emailni Supabase signup oqimi orqali yuborolmaymiz
+    // (admin API kerak bo'ladi). Lekin xodim shu sahifaga kelib ro'yxatdan
+    // o'tsa, trigger uni avtomatik kompaniyaga qo'shadi. Demak link beramiz.
+    const inviteLink = window.location.origin + window.location.pathname;
+    showMsg($('iMsg'),
+      'Taklif yaratildi. Quyidagi havolani xodimga yuboring (Telegram/email orqali):\n' + inviteLink +
+      '\nXodim shu havola orqali ro\'yxatdan o\'tsa, kompaniyangizga avtomatik qo\'shiladi.', 'ok');
+    btn.disabled = false; btn.textContent = 'Taklif yuborish';
+    await loadTeam();
+  } catch (e) {
+    showMsg($('iMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Taklif yuborish';
+  }
+}
+
+async function cancelInvite(id) {
+  if (!confirm('Taklifni bekor qilasizmi?')) return;
+  try {
+    const { error } = await sb.from('invitations').update({ status: 'cancelled' }).eq('id', id);
+    if (error) throw error;
+    toast('Taklif bekor qilindi', 'ok');
+    await loadTeam();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+async function changeMemberRole(userId, newRole) {
+  try {
+    const { error } = await sb.from('company_members').update({ role: newRole }).eq('company_id', currentCompany.id).eq('user_id', userId);
+    if (error) throw error;
+    toast('Rol o\'zgartirildi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); await loadTeam(); }
+}
+
+async function removeMember(userId) {
+  if (!confirm('Bu a\'zoni kompaniyadan o\'chirasizmi?')) return;
+  try {
+    const { error } = await sb.from('company_members').delete().eq('company_id', currentCompany.id).eq('user_id', userId);
+    if (error) throw error;
+    toast('A\'zo o\'chirildi', 'ok');
+    await loadTeam();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
 async function init() {
   if (SUPABASE_URL.indexOf('YOUR_') === 0 || SUPABASE_ANON_KEY.indexOf('YOUR_') === 0) {
     $('configWarn').classList.add('show');
     showAuth(); $('authBtn').disabled = true; return;
   }
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Supabase auth event'ini tinglaymiz. Parolni tiklash havolasi ochilganda
+  // PASSWORD_RECOVERY hodisasi keladi -> yangi parol formasini ko'rsatamiz.
+  sb.auth.onAuthStateChange(function(event){
+    if (event === 'PASSWORD_RECOVERY') { showResetStep(); }
+  });
+
+  // URL hash'ida recovery bo'lsa ham aniqlaymiz (event kechikishi hollari uchun)
+  const h = window.location.hash || '';
+  const isRecovery = h.indexOf('type=recovery') !== -1;
+
   const { data: { session } } = await sb.auth.getSession();
+  if (isRecovery) { showResetStep(); return; }
   if (session) { await routeAfterAuth(); }
   else { setMode('login'); showAuth(); }
 }
