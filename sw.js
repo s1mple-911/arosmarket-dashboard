@@ -1,7 +1,7 @@
 // AROS Market Service Worker
 // HTML uchun NETWORK-FIRST: online bo'lsa har doim eng yangi versiya.
 // Version faqat eski cache'larni tozalash uchun (HTML freshness'ga bog'liq emas).
-const CACHE_VERSION = 'aros-v12';
+const CACHE_VERSION = 'aros-v13';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 
 // Offline fallback uchun minimal ro'yxat (ixtiyoriy)

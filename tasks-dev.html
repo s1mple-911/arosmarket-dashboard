@@ -376,6 +376,9 @@ html, body { background: var(--bg); color: var(--text); font-family: -apple-syst
 
 <script>
 // ============ CONFIG ============
+const BUILD_VERSION = '2026-06-26-T18UTC';
+console.log('%c AROS TASKS BUILD: ' + BUILD_VERSION + ' ', 'background:#16a34a;color:#fff;font-weight:bold;');
+document.addEventListener('DOMContentLoaded', function(){ try{ var b=document.createElement('div'); b.textContent='build '+BUILD_VERSION; b.style.cssText='position:fixed;bottom:2px;right:4px;font-size:9px;color:#16a34a;opacity:.6;z-index:99999;pointer-events:none;'; document.body.appendChild(b); }catch(e){} });
 const API_BASE = 'https://n8n.arosmarket.com/webhook';
 const TASKS_LIST = API_BASE + '/aros-tasks-list';
 const TASK_DETAIL = API_BASE + '/aros-task-detail';
