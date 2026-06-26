@@ -478,7 +478,8 @@ function loadPageDeadlines(warehouseId, cb){
     .catch(function(){ if(cb) cb(); });
 }
 
-function toggleOrders(id, userId, walletBalance, userName){
+function toggleOrders(id, userId, walletBalance, userName, tab){
+  tab = tab || 'otgan';
   var el=document.getElementById('ol-'+id);
   var ar=document.getElementById('ar-'+id);
   var recEl=document.getElementById('rec-'+userId);
@@ -497,14 +498,19 @@ function toggleOrders(id, userId, walletBalance, userName){
   loadRecordings(userId);
   // Wallet summary'ni parallel yuklaymiz (15 kunlik kirim/chiqim) — agar hamyon balansi > 0 bo'lsa
   if(walletBalance > 0) loadWalletSummary(userId);
-  // faqat strictly o'tgan: deadline strictly < bugunStr
+  // Tab bo'yicha order filtri: otgan = deadline<bugun, bugun = deadline==bugun, ertaga = deadline==ertaga
   function showOtgan(orders){
-    var otg=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
-    fillOrders(el,otg,walletBalance,userId,userName);
-    var maxK=0;
-    otg.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
-    var kunEl=document.getElementById('kun-'+userId);
-    if(kunEl) kunEl.textContent=maxK>0?maxK+' kun':'';
+    var flt;
+    if(tab==='bugun') flt=orders.filter(function(o){return o.deadline===bugunStr;});
+    else if(tab==='ertaga') flt=orders.filter(function(o){return o.deadline===ertagaStr;});
+    else flt=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
+    fillOrders(el,flt,walletBalance,userId,userName);
+    if(tab==='otgan'){
+      var maxK=0;
+      flt.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
+      var kunEl=document.getElementById('kun-'+userId);
+      if(kunEl) kunEl.textContent=maxK>0?maxK+' kun':'';
+    }
   }
   if(ordersCache[userId]!==undefined){showOtgan(ordersCache[userId]);return;}
   el.innerHTML='<div class="mini-spin-wrap"><div class="mini-spinner"></div>Yuklanmoqda...</div>';
@@ -701,10 +707,11 @@ function closeTilxatModal(){
   document.getElementById('tilxat-modal').style.display = 'none';
 }
 
-function buildCard(r,id,color,lazy,orders){
+function buildCard(r,id,color,lazy,orders,tab){
   var tel=(r.telefon||'').replace(/\D/g,'');
   var safeName=(r.ism||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+',\''+safeName+'\')'):('toggleInline(\''+id+'\','+r.user_id+')');
+  var _tab=tab||'otgan';
+  var clickFn=lazy?('toggleOrders(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+',\''+safeName+'\',\''+_tab+'\')'):('toggleInline(\''+id+'\','+r.user_id+')');
   var dl=pageDeadlines[String(r.user_id)];
   var hasDl=dl&&dl.quyilgan_deadline;
   // Avatar rang
@@ -879,7 +886,7 @@ function renderList(pageId,list,color,badgeClass,emptyIcon,emptyText,lazy){
         var total = list.reduce(function(s,r){return s+Number(r.summa||0);},0);
         var html = '<div class="total-bar"><div class="tb-lbl">Jami</div><div class="tb-val" style="color:'+color+'">'+fmtFull(total)+' so\'m</div></div>';
         html += '<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div><span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
-        list.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,color,lazy,r.orders||[]);});
+        list.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,color,lazy,r.orders||[],pageId.replace('page-',''));});
         el2.innerHTML = html;
       }
     } catch(e2) { console.error('Fallback render error:', e2); }
@@ -938,7 +945,7 @@ function applyPageFilter(pageId){
     html += '<div class="tb-val" style="color:'+cache.color+'">'+fmtFull(total)+' so\'m</div></div>';
     html += '<div class="sec-hdr"><div class="sec-ttl">Mijozlar</div>';
     html += '<span class="badge '+cache.badgeClass+'">'+filtered.length+' ta</span></div>';
-    filtered.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,cache.color,cache.lazy,r.orders||[]);});
+    filtered.forEach(function(r,i){html+=buildCard(r,pageId+'-'+i,cache.color,cache.lazy,r.orders||[],pageId.replace('page-',''));});
     el.innerHTML = html;
   } catch(err) {
     console.error('applyPageFilter error:', err);
