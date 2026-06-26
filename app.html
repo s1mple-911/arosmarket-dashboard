@@ -12,6 +12,11 @@
     --bg: #F6F5F1;
     --surface: #FFFFFF;
     --surface-2: #FAFAF7;
+    --side: #1A1D26;
+    --side-ink: #EDEDE9;
+    --side-muted: #8A8D95;
+    --side-hover: rgba(255,255,255,.06);
+    --side-active: rgba(255,255,255,.10);
     --ink: #16181D;
     --ink-soft: #2A2D36;
     --muted: #6B6F76;
@@ -26,6 +31,7 @@
     --danger-soft: #FCEEEC;
     --radius: 14px;
     --shadow: 0 1px 2px rgba(20,22,28,.04), 0 12px 32px -12px rgba(20,22,28,.18);
+    --sidebar-w: 248px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -34,11 +40,11 @@
     background: var(--bg);
     color: var(--ink);
     -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 100vh; min-height: 100dvh;
   }
   button { font-family: inherit; }
 
+  /* ========== AUTH ========== */
   .shell { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; min-height: 100dvh; }
   .brand {
     position: relative;
@@ -90,33 +96,79 @@
   .btn.secondary:hover { background: #F4F3EF; }
   .btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger-soft); }
   .btn.danger:hover { background: var(--danger-soft); }
-  .msg { font-size: 13px; margin-top: 14px; padding: 10px 12px; border-radius: 9px; display: none; line-height: 1.45; }
+  .btn.sm { padding: 8px 12px; font-size: 13px; }
+  .msg { font-size: 13px; margin-top: 14px; padding: 10px 12px; border-radius: 9px; display: none; line-height: 1.45; white-space: pre-line; }
   .msg.show { display: block; }
   .msg.err { background: var(--danger-soft); color: var(--danger); }
   .msg.ok { background: var(--accent-soft); color: var(--accent-ink); }
 
+  /* ========== APP (sidebar layout) ========== */
   .app { display: none; min-height: 100vh; min-height: 100dvh; }
-  .app.show { display: block; }
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 28px; background: var(--surface); border-bottom: 1px solid var(--line);
-    position: sticky; top: 0; z-index: 10;
-  }
-  .topbar-left { display: flex; align-items: center; gap: 18px; }
-  .topbar .wm { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: -.02em; color: var(--ink); display: inline-flex; align-items: center; gap: 8px; }
-  .topbar .wm-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-  .topbar .co { font-size: 13.5px; color: var(--muted); padding-left: 16px; border-left: 1px solid var(--line); }
-  .nav { display: flex; gap: 4px; }
-  .nav-btn { padding: 8px 14px; border: none; background: transparent; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--muted); cursor: pointer; }
-  .nav-btn:hover { background: #F4F3EF; color: var(--ink); }
-  .nav-btn.active { background: var(--ink); color: #fff; }
-  .topbar-right { display: flex; align-items: center; gap: 10px; }
-  .who { font-size: 13px; color: var(--muted); }
-  .icon-btn { background: none; border: 1px solid var(--line); padding: 7px 11px; border-radius: 8px; font-size: 13px; color: var(--ink-soft); cursor: pointer; }
-  .icon-btn:hover { background: #F4F3EF; }
+  .app.show { display: grid; grid-template-columns: var(--sidebar-w) 1fr; }
 
-  .content { padding: 28px; max-width: 1100px; margin: 0 auto; }
+  .sidebar {
+    background: var(--side); color: var(--side-ink);
+    padding: 16px 12px; display: flex; flex-direction: column;
+    min-height: 100vh; min-height: 100dvh;
+    position: sticky; top: 0;
+  }
+  .ws-switch {
+    position: relative;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px; padding: 10px 12px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .ws-switch:hover { background: rgba(255,255,255,.07); }
+  .ws-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .ws-avatar.personal { background: #475569; }
+  .ws-info { min-width: 0; flex: 1; }
+  .ws-name { font-size: 13.5px; font-weight: 600; color: var(--side-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ws-kind { font-size: 11.5px; color: var(--side-muted); margin-top: 1px; }
+  .ws-chev { color: var(--side-muted); font-size: 11px; }
+  .ws-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #22252F; border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px; padding: 6px; box-shadow: 0 12px 28px rgba(0,0,0,.4);
+    z-index: 20; display: none;
+  }
+  .ws-dropdown.show { display: block; }
+  .ws-item { padding: 8px 10px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+  .ws-item:hover { background: rgba(255,255,255,.06); }
+  .ws-item.active { background: rgba(31,169,104,.15); }
+  .ws-item.create { color: var(--accent); font-weight: 600; font-size: 13px; border-top: 1px solid rgba(255,255,255,.08); margin-top: 4px; padding-top: 10px; }
+
+  .side-nav { display: flex; flex-direction: column; gap: 2px; }
+  .side-section { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--side-muted); padding: 14px 12px 6px; }
+  .side-link {
+    padding: 8px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500;
+    color: var(--side-ink); cursor: pointer; display: flex; align-items: center; gap: 10px;
+    border: none; background: transparent; text-align: left; width: 100%;
+  }
+  .side-link:hover { background: var(--side-hover); }
+  .side-link.active { background: var(--side-active); }
+  .side-link .ic { width: 16px; opacity: .8; text-align: center; }
+  .side-spacer { flex: 1; }
+  .side-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; margin-top: 12px; }
+  .side-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+  .side-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: #3F4351; color: var(--side-ink); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .side-user-info { min-width: 0; flex: 1; }
+  .side-user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side-user-mail { font-size: 11px; color: var(--side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bell-btn {
+    background: none; border: none; color: var(--side-ink); padding: 6px 8px;
+    border-radius: 7px; cursor: pointer; font-size: 16px; position: relative;
+  }
+  .bell-btn:hover { background: var(--side-hover); }
+  .bell-dot { position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid var(--side); }
+
+  /* ========== MAIN ========== */
+  .main { padding: 32px 36px; max-width: 1180px; }
   .h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 24px; letter-spacing: -.02em; margin: 0 0 20px; }
+  .row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+  .filter-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .filter-btn { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .filter-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
   .stat .k { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
@@ -124,33 +176,30 @@
   .stat .v.small { font-size: 16px; }
   .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
   .badge.ok { background: var(--accent-soft); color: var(--accent-ink); }
-  .badge.warn { background: var(--warn-soft); color: var(--warn); }
   .badge.muted { background: #F0EFEA; color: var(--muted); }
   .badge.danger { background: var(--danger-soft); color: var(--danger); }
 
-  .row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
-  .filter-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .filter-btn { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
-  .filter-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .task-list { display: flex; flex-direction: column; gap: 8px; }
-  .task-item {
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .item {
     background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
     padding: 14px 16px; cursor: pointer; transition: border-color .12s, transform .05s;
     display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
   }
-  .task-item:hover { border-color: var(--line-strong); }
-  .task-item:active { transform: translateY(1px); }
-  .task-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .item:hover { border-color: var(--line-strong); }
+  .item:active { transform: translateY(1px); }
+  .item.static { cursor: default; }
+  .item.static:active { transform: none; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .ts-new { background: #94A3B8; }
   .ts-in_progress { background: #2563EB; }
   .ts-completed { background: var(--accent); }
   .ts-cancelled { background: #94A3B8; opacity: .4; }
-  .task-mid { min-width: 0; }
-  .task-title { font-weight: 600; font-size: 14.5px; color: var(--ink); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .task-meta { font-size: 12.5px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
-  .task-meta .dot-sep { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; opacity: .5; }
-  .task-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .task-completed .task-title { text-decoration: line-through; color: var(--muted); }
+  .item-mid { min-width: 0; }
+  .item-title { font-weight: 600; font-size: 14.5px; color: var(--ink); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-meta { font-size: 12.5px; color: var(--muted); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .item-meta .dot-sep { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; opacity: .5; }
+  .item-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .task-completed .item-title { text-decoration: line-through; color: var(--muted); }
   .task-overdue { color: var(--danger) !important; font-weight: 600; }
 
   .empty {
@@ -159,13 +208,14 @@
   }
   .empty strong { display: block; color: var(--ink); font-size: 15.5px; font-weight: 600; margin-bottom: 4px; }
 
+  /* ========== MODALS ========== */
   .modal-backdrop { position: fixed; inset: 0; background: rgba(20,22,28,.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
   .modal-backdrop.show { display: flex; }
   .modal { background: var(--surface); border-radius: 16px; width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto; box-shadow: 0 30px 80px -20px rgba(0,0,0,.4); }
-  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 1; }
   .modal-head h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 18px; letter-spacing: -.02em; margin: 0; }
   .modal-body { padding: 20px 22px; }
-  .modal-foot { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-foot { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; position: sticky; bottom: 0; background: var(--surface); }
   .x-btn { background: none; border: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 4px 8px; }
   .x-btn:hover { color: var(--ink); }
 
@@ -176,14 +226,30 @@
   .status-pick { display: flex; gap: 6px; flex-wrap: wrap; }
   .status-pick .filter-btn { font-size: 12.5px; padding: 6px 10px; }
 
+  /* dept multi-select chips */
+  .dept-picker { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: #FCFCFB; }
+  .dept-pick-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+  .dept-pick-item:hover { background: #F4F3EF; }
+  .dept-pick-item input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; }
+  .dept-pick-item .dept-name { flex: 1; font-size: 13.5px; font-weight: 500; }
+  .dept-pick-item select { width: auto; padding: 4px 8px; font-size: 12px; }
+
+  /* notifications dropdown */
+  .notif-panel { position: fixed; left: 8px; bottom: 64px; width: 320px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); max-height: 70vh; overflow-y: auto; z-index: 50; display: none; }
+  .notif-panel.show { display: block; }
+  .notif-head { padding: 12px 16px; font-weight: 600; font-size: 13.5px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .notif-item { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .notif-item:last-child { border-bottom: 0; }
+  .notif-item.unread { background: #FDF6E3; }
+  .notif-title { font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .notif-body { color: var(--muted); font-size: 12.5px; line-height: 1.5; margin-bottom: 8px; }
+  .notif-actions { display: flex; gap: 6px; }
+  .notif-actions .btn { padding: 5px 10px; font-size: 12px; }
+
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 11px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow); z-index: 200; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
   .toast.ok { background: #163828; color: #C5F0D9; }
   .toast.err { background: #3B1411; color: #FFC9C0; }
-
-  .config-warn { background: #FFF7E6; border: 1px solid #F0D78A; color: #7A5A12; font-size: 13px; padding: 12px 14px; border-radius: 10px; margin-bottom: 18px; line-height: 1.5; display: none; }
-  .config-warn.show { display: block; }
-  .config-warn code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 
   .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; min-height: 100dvh; color: var(--muted); font-size: 14px; }
   .link-btn { background: none; border: none; color: var(--muted); font-size: 13.5px; font-weight: 600; cursor: pointer; }
@@ -193,11 +259,14 @@
     .shell { grid-template-columns: 1fr; }
     .brand { padding: 30px 26px; gap: 26px; min-height: auto; }
     .brand-hero h1 { font-size: 26px; }
-    .topbar { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
-    .topbar .co { display: none; }
-    .content { padding: 18px; }
-    .nav-btn { padding: 7px 11px; font-size: 12.5px; }
-    .who { display: none; }
+    .app.show { grid-template-columns: 1fr; }
+    .sidebar { position: relative; min-height: auto; flex-direction: row; align-items: center; padding: 10px 12px; gap: 8px; overflow-x: auto; }
+    .ws-switch { margin: 0; flex-shrink: 0; min-width: 180px; }
+    .side-nav { flex-direction: row; gap: 4px; }
+    .side-section, .side-spacer, .side-bottom { display: none; }
+    .side-link { padding: 7px 11px; font-size: 12.5px; }
+    .main { padding: 20px 16px; }
+    .notif-panel { left: 8px; right: 8px; width: auto; bottom: auto; top: 60px; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -206,24 +275,18 @@
 
 <div id="loadingView" class="loading">Yuklanmoqda…</div>
 
+<!-- ============ AUTH ============ -->
 <div class="shell" id="authShell" style="display:none">
   <aside class="brand">
     <div class="wordmark"><span class="dot"></span> Boshqaruv</div>
     <div class="brand-hero">
       <h1>Biznesingiz bitta oynada.</h1>
-      <p>Vazifalar, filiallar va jamoa — Telegram orqali, bitta joyda boshqariladi. Ko'p filialli biznes uchun qurilgan.</p>
+      <p>Vazifalar, jamoa va bo'limlar — bitta joyda. Yakka ishlatish ham mumkin, kompaniya uchun ham.</p>
     </div>
-    <div class="pills">
-      <span class="pill">Telegram bilan ishlaydi</span>
-      <span class="pill">Ko'p filial</span>
-      <span class="pill">14 kun bepul</span>
-    </div>
+    <div class="pills"><span class="pill">14 kun bepul</span><span class="pill">Ko'p bo'lim</span><span class="pill">Telegram bilan</span></div>
   </aside>
   <main class="auth">
     <div class="card">
-      <div class="config-warn" id="configWarn">
-        Supabase ulanmagan. <code>SUPABASE_URL</code> va <code>SUPABASE_ANON_KEY</code> ni to'ldiring.
-      </div>
       <div id="authStep">
         <h2>Xush kelibsiz</h2>
         <p class="sub">Hisobingizga kiring yoki yangi hisob oching.</p>
@@ -246,66 +309,74 @@
           <button class="link-btn" type="button" onclick="switchToLoginKeepEmail()">→ Kirish formasiga o'tish</button>
         </div>
       </div>
-
       <div id="forgotStep" style="display:none">
         <h2>Parolni tiklash</h2>
-        <p class="sub">Emailingizni yozing — tiklash havolasini yuboramiz.</p>
-        <div class="field"><label for="fEmail">Email</label><input id="fEmail" type="email" placeholder="siz@kompaniya.uz" /></div>
+        <p class="sub">Emailingizni yozing — havola yuboramiz.</p>
+        <div class="field"><label for="fEmail">Email</label><input id="fEmail" type="email" /></div>
         <button class="btn block" id="fBtn" onclick="sendReset()">Havola yuborish</button>
         <div class="msg" id="fMsg"></div>
         <div style="text-align:center; margin-top:14px;"><button class="link-btn" type="button" onclick="backToLogin()">← Kirishga qaytish</button></div>
       </div>
-
       <div id="resetStep" style="display:none">
         <h2>Yangi parol</h2>
         <p class="sub">Yangi parolingizni kiriting.</p>
-        <div class="field"><label for="rPwd">Yangi parol</label><input id="rPwd" type="password" placeholder="Kamida 6 belgi" /></div>
-        <div class="field"><label for="rPwd2">Takror</label><input id="rPwd2" type="password" placeholder="Yana bir bor" /></div>
+        <div class="field"><label for="rPwd">Yangi parol</label><input id="rPwd" type="password" /></div>
+        <div class="field"><label for="rPwd2">Takror</label><input id="rPwd2" type="password" /></div>
         <button class="btn block" id="rBtn" onclick="saveNewPassword()">Saqlash va kirish</button>
         <div class="msg" id="rMsg"></div>
-      </div>
-      <div id="companyStep" style="display:none">
-        <h2>Kompaniyangizni yarating</h2>
-        <p class="sub">Bu sizning ish maydoningiz. Keyin xodimlarni taklif qilasiz.</p>
-        <div class="field"><label for="coName">Kompaniya nomi</label><input id="coName" type="text" placeholder="Masalan: Aros Market" /></div>
-        <button class="btn block" id="coBtn" onclick="createCompany()">Yaratish va boshlash</button>
-        <div class="msg" id="coMsg"></div>
-        <div style="text-align:center; margin-top:14px;"><button class="link-btn" onclick="doLogout()">Chiqish</button></div>
       </div>
     </div>
   </main>
 </div>
 
+<!-- ============ APP ============ -->
 <div class="app" id="appView">
-  <header class="topbar">
-    <div class="topbar-left">
-      <div class="wm"><span class="wm-dot"></span> Boshqaruv</div>
-      <div class="co" id="topCoName">—</div>
+  <aside class="sidebar">
+    <div class="ws-switch" onclick="toggleWsDrop(event)">
+      <div class="ws-avatar" id="wsAvatar">P</div>
+      <div class="ws-info">
+        <div class="ws-name" id="wsName">—</div>
+        <div class="ws-kind" id="wsKind">—</div>
+      </div>
+      <div class="ws-chev">▾</div>
+      <div class="ws-dropdown" id="wsDrop"></div>
     </div>
-    <nav class="nav">
-      <button class="nav-btn active" data-page="dashboard" onclick="goPage('dashboard')">Dashboard</button>
-      <button class="nav-btn" data-page="tasks" onclick="goPage('tasks')">Vazifalar</button>
-      <button class="nav-btn" data-page="team" onclick="goPage('team')">Jamoa</button>
-    </nav>
-    <div class="topbar-right">
-      <span class="who" id="topWho">—</span>
-      <button class="icon-btn" onclick="doLogout()">Chiqish</button>
+
+    <nav class="side-nav" id="sideNav"></nav>
+
+    <div class="side-spacer"></div>
+
+    <div class="side-bottom">
+      <div class="side-user">
+        <div class="side-user-avatar" id="userAv">?</div>
+        <div class="side-user-info">
+          <div class="side-user-name" id="userNm">—</div>
+          <div class="side-user-mail" id="userMl">—</div>
+        </div>
+        <button class="bell-btn" onclick="toggleNotif(event)" title="Bildirishnomalar">🔔<span class="bell-dot" id="bellDot" style="display:none"></span></button>
+      </div>
+      <button class="side-link" onclick="doLogout()" style="margin-top:4px"><span class="ic">↩</span> Chiqish</button>
     </div>
-  </header>
-  <main class="content">
+  </aside>
+
+  <main class="main">
+    <!-- Dashboard -->
     <section id="page-dashboard">
-      <h2 class="h2">Bosh sahifa</h2>
+      <h2 class="h2" id="dashTitle">Bosh sahifa</h2>
       <div class="stat-grid">
-        <div class="stat"><div class="k">Holat</div><div class="v"><span class="badge ok" id="dashPlan">—</span></div></div>
+        <div class="stat"><div class="k">Workspace turi</div><div class="v small" id="dashKind">—</div></div>
         <div class="stat"><div class="k">Sizning rolingiz</div><div class="v small" id="dashRole">—</div></div>
-        <div class="stat"><div class="k">Sinov tugaydi</div><div class="v small" id="dashTrial">—</div></div>
+        <div class="stat"><div class="k">Holat</div><div class="v"><span class="badge ok" id="dashPlan">—</span></div></div>
         <div class="stat"><div class="k">Faol vazifalar</div><div class="v" id="dashActive">0</div></div>
       </div>
       <div class="empty">
-        <strong>Multi-tenant SaaS poydevori tirik ✅</strong>
-        Vazifalar moduli yuqoridagi "Vazifalar" tab'ida. Keyingi qadamlar: xodim taklif qilish, Telegram bot ulash, fayl yuklash, to'lov (Payme/Click).
+        <strong>Yangi arxitektura tirik ✅</strong>
+        Chap tomondagi workspace switcher orqali Personal va Organization workspace'lar orasida o'ting.
+        Organization'da bo'limlar yarating va xodimlarni biriktiring.
       </div>
     </section>
+
+    <!-- Tasks -->
     <section id="page-tasks" style="display:none">
       <div class="row-head">
         <h2 class="h2" style="margin:0">Vazifalar</h2>
@@ -318,39 +389,70 @@
         <button class="filter-btn" data-filter="completed" onclick="setFilter('completed')">Tugallangan</button>
         <button class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Muddati o'tgan</button>
       </div>
-      <div id="tasksList" class="task-list"></div>
+      <div id="tasksList" class="list"></div>
       <div id="tasksEmpty" class="empty" style="display:none">
         <strong>Hali vazifa yo'q</strong>
         Birinchi vazifani yarating va boshlang.
       </div>
     </section>
 
+    <!-- Departments -->
+    <section id="page-departments" style="display:none">
+      <div class="row-head">
+        <h2 class="h2" style="margin:0">Bo'limlar</h2>
+        <button class="btn" id="newDeptBtn" onclick="openNewDept()" style="display:none">+ Yangi bo'lim</button>
+      </div>
+      <div id="deptsList" class="list"></div>
+      <div id="deptsEmpty" class="empty" style="display:none">
+        <strong>Hali bo'lim yo'q</strong>
+        Bo'limlar (IT, HR, Savdo, ...) yarating — xodimlarni keyin ularga biriktirasiz.
+      </div>
+    </section>
+
+    <!-- Team -->
     <section id="page-team" style="display:none">
       <div class="row-head">
         <h2 class="h2" style="margin:0">Jamoa</h2>
         <button class="btn" id="inviteBtn" onclick="openInvite()" style="display:none">+ Xodim taklif qilish</button>
       </div>
       <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Faol a'zolar</div>
-      <div id="membersList" class="task-list"></div>
+      <div id="membersList" class="list"></div>
       <div id="invitesWrap" style="margin-top: 28px; display:none;">
         <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Yuborilgan takliflar</div>
-        <div id="invitesList" class="task-list"></div>
+        <div id="invitesList" class="list"></div>
       </div>
     </section>
   </main>
 </div>
 
+<!-- ============ MODALS ============ -->
+<div class="modal-backdrop" id="newWsBd">
+  <div class="modal">
+    <div class="modal-head"><h3>Yangi kompaniya</h3><button class="x-btn" onclick="closeNewWs()">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Kompaniya nomi *</label><input id="newWsName" type="text" placeholder="Masalan: Aros Market" /></div>
+      <div style="font-size:12.5px;color:var(--muted);line-height:1.5;">14 kun bepul sinov. Siz egasi bo'lasiz.</div>
+      <div class="msg" id="newWsMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeNewWs()">Bekor</button>
+      <button class="btn" id="newWsBtn" onclick="createWs()">Yaratish</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="createBd">
   <div class="modal">
-    <div class="modal-head">
-      <h3>Yangi vazifa</h3>
-      <button class="x-btn" onclick="closeCreate()">×</button>
-    </div>
+    <div class="modal-head"><h3>Yangi vazifa</h3><button class="x-btn" onclick="closeCreate()">×</button></div>
     <div class="modal-body">
-      <div class="field"><label for="cTitle">Nomi *</label><input id="cTitle" type="text" placeholder="Vazifa nomi" /></div>
-      <div class="field"><label for="cDesc">Tavsif</label><textarea id="cDesc" placeholder="Batafsil (ixtiyoriy)"></textarea></div>
-      <div class="field"><label for="cDeadline">Deadline</label><input id="cDeadline" type="datetime-local" /></div>
-      <div class="field"><label for="cPriority">Prioritet (0-10)</label><input id="cPriority" type="number" min="0" max="10" value="0" /></div>
+      <div class="field"><label>Nomi *</label><input id="cTitle" type="text" /></div>
+      <div class="field"><label>Tavsif</label><textarea id="cDesc"></textarea></div>
+      <div class="field" id="cDeptField" style="display:none">
+        <label>Bo'lim</label>
+        <select id="cDept"><option value="">(Bo'limsiz)</option></select>
+      </div>
+      <div class="field"><label>Deadline</label><input id="cDeadline" type="datetime-local" /></div>
+      <div class="field"><label>Prioritet (0-10)</label><input id="cPriority" type="number" min="0" max="10" value="0" /></div>
       <div class="msg" id="cMsg"></div>
     </div>
     <div class="modal-foot">
@@ -362,10 +464,7 @@
 
 <div class="modal-backdrop" id="detailBd">
   <div class="modal">
-    <div class="modal-head">
-      <h3 id="dTitle">—</h3>
-      <button class="x-btn" onclick="closeDetail()">×</button>
-    </div>
+    <div class="modal-head"><h3 id="dTitle">—</h3><button class="x-btn" onclick="closeDetail()">×</button></div>
     <div class="modal-body" id="dBody">—</div>
     <div class="modal-foot">
       <button class="btn danger" id="dDelete" onclick="deleteCurrent()" style="margin-right:auto">O'chirish</button>
@@ -374,27 +473,36 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="deptBd">
+  <div class="modal">
+    <div class="modal-head"><h3 id="deptModalTitle">Yangi bo'lim</h3><button class="x-btn" onclick="closeDept()">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Bo'lim nomi *</label><input id="deptName" type="text" placeholder="Masalan: IT, HR, Savdo" /></div>
+      <div class="field"><label>Tavsif</label><textarea id="deptDesc"></textarea></div>
+      <div class="msg" id="deptMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeDept()">Bekor</button>
+      <button class="btn" id="deptBtn" onclick="saveDept()">Yaratish</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="inviteBd">
   <div class="modal">
-    <div class="modal-head">
-      <h3>Xodim taklif qilish</h3>
-      <button class="x-btn" onclick="closeInvite()">×</button>
-    </div>
+    <div class="modal-head"><h3>Xodim taklif qilish</h3><button class="x-btn" onclick="closeInvite()">×</button></div>
     <div class="modal-body">
+      <div class="field"><label>Xodim email *</label><input id="iEmail" type="email" placeholder="xodim@kompaniya.uz" /></div>
       <div class="field">
-        <label for="iEmail">Xodim email *</label>
-        <input id="iEmail" type="email" placeholder="xodim@kompaniya.uz" />
-      </div>
-      <div class="field">
-        <label for="iRole">Rol</label>
-        <select id="iRole">
-          <option value="employee">Xodim</option>
-          <option value="manager">Menejer</option>
-          <option value="admin">Administrator</option>
+        <label>Workspace darajasidagi rol</label>
+        <select id="iWsRole">
+          <option value="member">A'zo (oddiy)</option>
+          <option value="admin">Administrator (boshqaradi)</option>
         </select>
       </div>
-      <div style="font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 6px;">
-        Bu emailga taklif yuboriladi. Xodim ro'yxatdan o'tgach, avtomatik kompaniyangizga qo'shiladi.
+      <div class="field">
+        <label>Qaysi bo'limlarga kirishi (kamida 1) *</label>
+        <div class="dept-picker" id="iDeptPicker"></div>
       </div>
       <div class="msg" id="iMsg"></div>
     </div>
@@ -403,6 +511,12 @@
       <button class="btn" id="iBtn" onclick="sendInvite()">Taklif yuborish</button>
     </div>
   </div>
+</div>
+
+<!-- Notifications panel -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-head">Bildirishnomalar <button class="link-btn" onclick="markAllRead()">Hammasini o'qildi</button></div>
+  <div id="notifList"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -414,14 +528,24 @@ const SUPABASE_ANON_KEY = 'sb_publishable_ouA6pp3DwJjQkDJrWPi8QQ_30CUo51t';
 
 let sb = null;
 let mode = 'login';
-let currentCompany = null;
-let currentRole = null;
-let currentUser = null;
+let me = null;
+let myProfile = null;
+let workspaces = [];
+let currentWs = null;
+let myWsRole = null;
+let myDepts = [];      // [{department_id, role}]
+let departments = [];
 let tasksCache = [];
 let activeFilter = 'all';
 let currentDetailId = null;
+let currentPage = 'dashboard';
+let notifs = [];
 
 const $ = id => document.getElementById(id);
+const ROLE_WS = { owner: 'Egasi', admin: 'Administrator', member: "A'zo" };
+const ROLE_DEPT = { viewer: 'Ko\'ruvchi', editor: 'Tahrirlovchi', admin: 'Boshqaruvchi' };
+const STATUS_LBL = { new: 'Yangi', in_progress: 'Jarayonda', completed: 'Tugallangan', cancelled: 'Bekor' };
+
 function showMsg(el, t, k) { el.textContent = t; el.className = 'msg show ' + (k || ''); }
 function hideMsg(el) { el.className = 'msg'; }
 function toast(text, kind) {
@@ -433,14 +557,17 @@ function toast(text, kind) {
 function translateErr(m) {
   if (!m) return 'Xatolik yuz berdi.';
   if (/invalid login credentials/i.test(m)) return 'Email yoki parol noto\'g\'ri.';
-  if (/already registered/i.test(m)) return 'Bu email allaqachon ro\'yxatdan o\'tgan. Kiring.';
+  if (/already|registered|exists/i.test(m)) return 'Bu email allaqachon ro\'yxatdan o\'tgan.';
   if (/password should be at least/i.test(m)) return 'Parol kamida 6 belgidan iborat bo\'lsin.';
   if (/email/i.test(m) && /valid/i.test(m)) return 'Email manzili noto\'g\'ri.';
-  if (/row-level security/i.test(m)) return 'Ruxsat yo\'q (RLS). Adminga murojaat qiling.';
+  if (/row-level security/i.test(m)) return 'Ruxsat yo\'q.';
+  if (/duplicate|unique/i.test(m)) return 'Bu allaqachon mavjud.';
   return m;
 }
 function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]; }); }
+function initials(s) { const p = String(s||'?').trim().split(/\s+/); return ((p[0]||'?')[0] + (p[1]?p[1][0]:'')).toUpperCase(); }
 
+// ============ AUTH UI ============
 function setMode(m) {
   mode = m;
   $('tabLogin').classList.toggle('active', m === 'login');
@@ -452,38 +579,12 @@ function setMode(m) {
   $('password').setAttribute('autocomplete', m === 'signup' ? 'new-password' : 'current-password');
   hideMsg($('authMsg'));
 }
-function switchToLoginKeepEmail() {
-  setMode('login');
-  $('password').value = '';
-  $('password').focus();
-}
-function showAuth() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show'); $('authStep').style.display = 'block'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'none'; $('companyStep').style.display = 'none'; }
-function showCompanyStep() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('authStep').style.display = 'none'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'none'; $('companyStep').style.display = 'block'; $('appView').classList.remove('show'); }
+function switchToLoginKeepEmail() { setMode('login'); $('password').value = ''; $('password').focus(); }
+function showAuth() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show'); $('authStep').style.display = 'block'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'none'; }
 function showApp() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'none'; $('appView').classList.add('show'); }
-
-function goForgot() {
-  $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show');
-  $('authStep').style.display = 'none'; $('forgotStep').style.display = 'block'; $('resetStep').style.display = 'none'; $('companyStep').style.display = 'none';
-  $('fEmail').value = $('email').value.trim();
-  hideMsg($('fMsg'));
-  setTimeout(() => $('fEmail').focus(), 50);
-}
+function goForgot() { $('loadingView').style.display='none'; $('authShell').style.display='grid'; $('appView').classList.remove('show'); $('authStep').style.display='none'; $('forgotStep').style.display='block'; $('resetStep').style.display='none'; $('fEmail').value = $('email').value.trim(); hideMsg($('fMsg')); }
 function backToLogin() { setMode('login'); showAuth(); }
-function showResetStep() {
-  $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show');
-  $('authStep').style.display = 'none'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'block'; $('companyStep').style.display = 'none';
-  hideMsg($('rMsg'));
-  setTimeout(() => $('rPwd').focus(), 50);
-}
-
-function goPage(p) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === p));
-  $('page-dashboard').style.display = p === 'dashboard' ? 'block' : 'none';
-  $('page-tasks').style.display = p === 'tasks' ? 'block' : 'none';
-  $('page-team').style.display = p === 'team' ? 'block' : 'none';
-  if (p === 'tasks') loadTasks();
-  if (p === 'team') loadTeam();
-}
+function showResetStep() { $('loadingView').style.display='none'; $('authShell').style.display='grid'; $('appView').classList.remove('show'); $('authStep').style.display='none'; $('forgotStep').style.display='none'; $('resetStep').style.display='block'; hideMsg($('rMsg')); }
 
 async function submitAuth() {
   const email = $('email').value.trim();
@@ -494,158 +595,219 @@ async function submitAuth() {
   btn.disabled = true; btn.textContent = 'Tekshirilmoqda…';
   try {
     if (mode === 'signup') {
-      if (password.length < 6) {
-        showMsg($('authMsg'), 'Parol kamida 6 belgidan iborat bo\'lsin.', 'err');
-        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish"; return;
-      }
+      if (password.length < 6) { showMsg($('authMsg'), 'Parol kamida 6 belgi.', 'err'); btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return; }
       const fullName = $('fullName').value.trim();
-      const { data, error } = await sb.auth.signUp({
-        email, password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: window.location.origin + window.location.pathname
-        }
-      });
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin + window.location.pathname } });
       if (error) {
-        // "already registered" yoki shunga o'xshash xato
-        if (/already|registered|exists/i.test(error.message)) {
-          showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan.', 'err');
-          $('switchToLogin').style.display = 'block';
-        } else { showMsg($('authMsg'), translateErr(error.message), 'err'); }
-        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
-        return;
+        if (/already|registered|exists/i.test(error.message)) { showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan.', 'err'); $('switchToLogin').style.display='block'; }
+        else { showMsg($('authMsg'), translateErr(error.message), 'err'); }
+        btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
-      // Supabase MUHIM nuqta: mavjud email bo'lsa error qaytarmaydi (email enumeration himoyasi),
-      // lekin data.user.identities massivi BO'SH bo'ladi. Shu orqali aniqlaymiz.
-      const identities = (data && data.user && data.user.identities) || [];
-      if (identities.length === 0 && !data.session) {
-        showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan. Quyidagi havola orqali kiring.', 'err');
-        $('switchToLogin').style.display = 'block';
-        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
-        return;
+      const ids = (data && data.user && data.user.identities) || [];
+      if (ids.length === 0 && !data.session) {
+        showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan.', 'err');
+        $('switchToLogin').style.display='block';
+        btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
       if (!data.session) {
-        showMsg($('authMsg'), 'Hisob yaratildi. Pochtangizga tasdiqlash havolasi yuborildi — uni bosib qaytib keling.', 'ok');
-        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
-        return;
+        showMsg($('authMsg'), 'Hisob yaratildi. Pochtangizga tasdiqlash havolasi yuborildi.', 'ok');
+        btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
     }
-    await routeAfterAuth();
+    await bootstrap();
   } catch (e) {
     showMsg($('authMsg'), translateErr(e.message), 'err');
     btn.disabled = false; btn.textContent = mode === 'signup' ? "Ro'yxatdan o'tish" : 'Kirish';
   }
 }
-
 async function sendReset() {
   const email = $('fEmail').value.trim();
   const btn = $('fBtn');
   if (!email) { showMsg($('fMsg'), 'Emailingizni kiriting.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
   try {
-    const redirectTo = window.location.origin + window.location.pathname;
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
     if (error) throw error;
-    showMsg($('fMsg'), 'Havola yuborildi. Pochtangizni tekshiring (spam papkasiga ham qarang).', 'ok');
-    btn.disabled = false; btn.textContent = 'Havola yuborish';
-  } catch (e) {
-    showMsg($('fMsg'), translateErr(e.message), 'err');
-    btn.disabled = false; btn.textContent = 'Havola yuborish';
-  }
+    showMsg($('fMsg'), 'Havola yuborildi.', 'ok');
+  } catch (e) { showMsg($('fMsg'), translateErr(e.message), 'err'); }
+  btn.disabled = false; btn.textContent = 'Havola yuborish';
 }
-
 async function saveNewPassword() {
-  const p1 = $('rPwd').value; const p2 = $('rPwd2').value;
-  const btn = $('rBtn');
-  if (p1.length < 6) { showMsg($('rMsg'), 'Parol kamida 6 belgidan iborat bo\'lsin.', 'err'); return; }
+  const p1 = $('rPwd').value; const p2 = $('rPwd2').value; const btn = $('rBtn');
+  if (p1.length < 6) { showMsg($('rMsg'), 'Parol kamida 6 belgi.', 'err'); return; }
   if (p1 !== p2) { showMsg($('rMsg'), 'Parollar mos kelmadi.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
   try {
     const { error } = await sb.auth.updateUser({ password: p1 });
     if (error) throw error;
-    // Tozalash uchun URL hash'ni olib tashlaymiz
     if (window.history.replaceState) window.history.replaceState({}, '', window.location.pathname);
     toast('✅ Parol yangilandi', 'ok');
-    await routeAfterAuth();
-  } catch (e) {
-    showMsg($('rMsg'), translateErr(e.message), 'err');
-    btn.disabled = false; btn.textContent = 'Saqlash va kirish';
-  }
-}
-async function createCompany() {
-  const name = $('coName').value.trim();
-  const btn = $('coBtn');
-  if (!name) { showMsg($('coMsg'), 'Kompaniya nomini kiriting.', 'err'); return; }
-  btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
-  try {
-    const { data: { user } } = await sb.auth.getUser();
-    const { error } = await sb.from('companies').insert({ name, owner_id: user.id }).select().single();
-    if (error) throw error;
-    await loadAppContext();
-  } catch (e) {
-    showMsg($('coMsg'), translateErr(e.message), 'err');
-    btn.disabled = false; btn.textContent = 'Yaratish va boshlash';
-  }
-}
-async function routeAfterAuth() {
-  const { data: companies, error } = await sb.from('companies').select('*').limit(1);
-  if (error) { showMsg($('authMsg'), translateErr(error.message), 'err'); return; }
-  if (companies && companies.length) { await loadAppContext(); }
-  else { showCompanyStep(); }
+    await bootstrap();
+  } catch (e) { showMsg($('rMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Saqlash va kirish'; }
 }
 async function doLogout() {
   await sb.auth.signOut();
-  currentCompany = null; currentRole = null; currentUser = null; tasksCache = [];
-  setMode('login');
-  $('email').value = ''; $('password').value = '';
-  showAuth();
+  me = myProfile = currentWs = myWsRole = null;
+  workspaces = []; myDepts = []; departments = []; tasksCache = []; notifs = [];
+  setMode('login'); $('email').value=''; $('password').value=''; showAuth();
 }
 
-async function loadAppContext() {
-  const { data: companies } = await sb.from('companies').select('*').limit(1);
-  if (!companies || !companies.length) { showCompanyStep(); return; }
-  currentCompany = companies[0];
+// ============ BOOTSTRAP ============
+async function bootstrap() {
   const { data: { user } } = await sb.auth.getUser();
-  currentUser = user;
-  const { data: member } = await sb.from('company_members').select('role').eq('company_id', currentCompany.id).eq('user_id', user.id).single();
-  currentRole = member ? member.role : 'employee';
-  const { data: sub } = await sb.from('subscriptions').select('*').eq('company_id', currentCompany.id).single();
-  $('topCoName').textContent = currentCompany.name;
-  $('topWho').textContent = user.email || '';
-  const roleMap = { owner: 'Egasi', admin: 'Administrator', manager: 'Menejer', employee: 'Xodim' };
-  $('dashRole').textContent = roleMap[currentRole] || '—';
-  if (sub) {
-    const planMap = { free: 'Bepul', pro: 'Pro', business: 'Business' };
-    const statusMap = { trialing: 'Sinov', active: 'Faol', past_due: 'To\'lov kutilmoqda', canceled: 'Bekor' };
-    $('dashPlan').textContent = (planMap[sub.plan] || sub.plan) + ' · ' + (statusMap[sub.status] || sub.status);
-    if (sub.trial_ends_at) {
-      const d = new Date(sub.trial_ends_at);
-      const left = Math.max(0, Math.ceil((d - Date.now()) / 86400000));
-      $('dashTrial').textContent = left + ' kun';
-    } else $('dashTrial').textContent = '—';
+  me = user;
+  if (!me) { showAuth(); return; }
+
+  // Profil yuklash (mavjud bo'lmasa kut — trigger yaratayotgan bo'lishi mumkin)
+  const { data: prof } = await sb.from('profiles').select('*').eq('id', me.id).maybeSingle();
+  myProfile = prof || { id: me.id };
+
+  // Workspace'lar
+  await loadWorkspaces();
+  if (!workspaces.length) {
+    // Trigger ishlamagan bo'lishi mumkin — biroz kutamiz va yana sinab ko'ramiz
+    await new Promise(r => setTimeout(r, 800));
+    await loadWorkspaces();
   }
+  if (!workspaces.length) {
+    toast('Workspace topilmadi — qaytadan kiring', 'err'); return;
+  }
+
+  // Hozirgi workspace tanlash (oxirgi tanlangan yoki personal)
+  const stored = localStorage.getItem('current_ws_' + me.id);
+  currentWs = workspaces.find(w => w.id === stored) || workspaces.find(w => w.kind === 'personal') || workspaces[0];
+
+  await loadCurrentContext();
   showApp();
   goPage('dashboard');
-  loadTasks(true);
+  loadNotifs();
 }
 
-function setFilter(f) {
-  activeFilter = f;
-  document.querySelectorAll('[data-filter]').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
-  renderTasks();
+async function loadWorkspaces() {
+  const { data } = await sb.from('workspaces').select('*').order('kind', { ascending: true }).order('created_at', { ascending: true });
+  workspaces = data || [];
 }
-async function loadTasks(silent) {
-  if (!currentCompany) return;
-  const { data, error } = await sb.from('tasks').select('*').eq('company_id', currentCompany.id).order('created_at', { ascending: false });
-  if (error) { if (!silent) toast(translateErr(error.message), 'err'); return; }
-  tasksCache = data || [];
-  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress').length;
-  $('dashActive').textContent = active;
-  renderTasks();
+
+async function loadCurrentContext() {
+  if (!currentWs) return;
+  localStorage.setItem('current_ws_' + me.id, currentWs.id);
+
+  // Mening workspace rolim
+  const { data: m } = await sb.from('workspace_members').select('role').eq('workspace_id', currentWs.id).eq('user_id', me.id).maybeSingle();
+  myWsRole = m ? m.role : null;
+
+  // Mening bo'limlarim
+  if (currentWs.kind === 'organization') {
+    const { data: dm } = await sb.from('department_members').select('department_id, role, departments!inner(workspace_id)').eq('user_id', me.id).eq('departments.workspace_id', currentWs.id);
+    myDepts = (dm || []).map(x => ({ department_id: x.department_id, role: x.role }));
+    const { data: d } = await sb.from('departments').select('*').eq('workspace_id', currentWs.id).order('created_at', { ascending: true });
+    departments = d || [];
+  } else {
+    myDepts = []; departments = [];
+  }
+
+  // Subscription
+  const { data: sub } = await sb.from('subscriptions').select('*').eq('workspace_id', currentWs.id).maybeSingle();
+
+  // UI'ni yangilash
+  renderSidebar();
+  updateDashboard(sub);
 }
+
+function renderSidebar() {
+  // WS switcher
+  $('wsName').textContent = currentWs.name;
+  $('wsKind').textContent = currentWs.kind === 'personal' ? 'Shaxsiy' : 'Kompaniya';
+  $('wsAvatar').textContent = initials(currentWs.name);
+  $('wsAvatar').className = 'ws-avatar' + (currentWs.kind === 'personal' ? ' personal' : '');
+
+  // User
+  $('userNm').textContent = myProfile.full_name || me.email.split('@')[0];
+  $('userMl').textContent = me.email;
+  $('userAv').textContent = initials(myProfile.full_name || me.email);
+
+  // Dropdown
+  const drop = $('wsDrop');
+  drop.innerHTML = workspaces.map(function(w){
+    return '<div class="ws-item ' + (w.id === currentWs.id ? 'active' : '') + '" onclick="switchWs(\''+w.id+'\')">' +
+      '<div class="ws-avatar ' + (w.kind === 'personal' ? 'personal' : '') + '" style="width:24px;height:24px;font-size:11px;">' + initials(w.name) + '</div>' +
+      '<div style="flex:1;min-width:0;"><div class="ws-name">' + escapeHtml(w.name) + '</div><div class="ws-kind">' + (w.kind === 'personal' ? 'Shaxsiy' : 'Kompaniya') + '</div></div>' +
+      '</div>';
+  }).join('') +
+  '<div class="ws-item create" onclick="openNewWs()">+ Yangi kompaniya yaratish</div>';
+
+  // Nav
+  const isOrg = currentWs.kind === 'organization';
+  const items = [
+    { id: 'dashboard', label: 'Bosh sahifa', ic: '◐' },
+    { id: 'tasks',     label: 'Vazifalar',   ic: '✓' }
+  ];
+  if (isOrg) {
+    items.push({ id: 'departments', label: 'Bo\'limlar', ic: '◫' });
+    items.push({ id: 'team',        label: 'Jamoa',     ic: '☆' });
+  }
+  $('sideNav').innerHTML = items.map(function(it){
+    return '<button class="side-link ' + (currentPage === it.id ? 'active' : '') + '" onclick="goPage(\''+it.id+'\')"><span class="ic">'+it.ic+'</span> ' + it.label + '</button>';
+  }).join('');
+}
+
+function updateDashboard(sub) {
+  $('dashTitle').textContent = currentWs.name;
+  $('dashKind').textContent = currentWs.kind === 'personal' ? 'Shaxsiy' : 'Kompaniya';
+  $('dashRole').textContent = ROLE_WS[myWsRole] || '—';
+  if (sub) {
+    const planMap = { free: 'Bepul', pro: 'Pro', business: 'Business' };
+    const statMap = { trialing: 'Sinov', active: 'Faol', past_due: 'To\'lov kutilmoqda', canceled: 'Bekor' };
+    $('dashPlan').textContent = (planMap[sub.plan] || sub.plan) + ' · ' + (statMap[sub.status] || sub.status);
+  } else $('dashPlan').textContent = '—';
+}
+
+function toggleWsDrop(e) { e.stopPropagation(); $('wsDrop').classList.toggle('show'); $('notifPanel').classList.remove('show'); }
+document.addEventListener('click', function(){ $('wsDrop').classList.remove('show'); $('notifPanel').classList.remove('show'); });
+
+async function switchWs(id) {
+  currentWs = workspaces.find(w => w.id === id);
+  $('wsDrop').classList.remove('show');
+  await loadCurrentContext();
+  goPage('dashboard');
+}
+
+function openNewWs() { $('wsDrop').classList.remove('show'); $('newWsName').value = ''; hideMsg($('newWsMsg')); $('newWsBd').classList.add('show'); setTimeout(()=>$('newWsName').focus(), 50); }
+function closeNewWs() { $('newWsBd').classList.remove('show'); }
+async function createWs() {
+  const name = $('newWsName').value.trim();
+  const btn = $('newWsBtn');
+  if (!name) { showMsg($('newWsMsg'), 'Nomini kiriting.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
+  try {
+    const { data, error } = await sb.from('workspaces').insert({ kind: 'organization', name, owner_id: me.id }).select().single();
+    if (error) throw error;
+    await loadWorkspaces();
+    currentWs = workspaces.find(w => w.id === data.id);
+    await loadCurrentContext();
+    closeNewWs();
+    goPage('dashboard');
+    toast('✅ Kompaniya yaratildi', 'ok');
+  } catch (e) { showMsg($('newWsMsg'), translateErr(e.message), 'err'); }
+  btn.disabled = false; btn.textContent = 'Yaratish';
+}
+
+// ============ ROUTING ============
+function goPage(p) {
+  currentPage = p;
+  document.querySelectorAll('.side-link').forEach(function(b){ b.classList.remove('active'); });
+  // sidebar regen will mark active
+  renderSidebar();
+  ['dashboard','tasks','departments','team'].forEach(function(x){ $('page-'+x).style.display = (x === p ? 'block' : 'none'); });
+  if (p === 'tasks') loadTasks();
+  if (p === 'departments') renderDepts();
+  if (p === 'team') loadTeam();
+}
+
+// ============ TASKS ============
 function isOverdue(t) {
   if (!t.deadline) return false;
   if (t.status !== 'new' && t.status !== 'in_progress') return false;
@@ -657,46 +819,66 @@ function fmtDeadline(s) {
   const pad = n => String(n).padStart(2, '0');
   return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
-const STATUS_LBL = { new: 'Yangi', in_progress: 'Jarayonda', completed: 'Tugallangan', cancelled: 'Bekor' };
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('[data-filter]').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  renderTasks();
+}
+async function loadTasks(silent) {
+  if (!currentWs) return;
+  const { data, error } = await sb.from('tasks').select('*').eq('workspace_id', currentWs.id).order('created_at', { ascending: false });
+  if (error) { if (!silent) toast(translateErr(error.message), 'err'); return; }
+  tasksCache = data || [];
+  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress').length;
+  $('dashActive').textContent = active;
+  renderTasks();
+}
 function renderTasks() {
   let list = tasksCache.slice();
   if (activeFilter === 'overdue') list = list.filter(isOverdue);
   else if (activeFilter !== 'all') list = list.filter(t => t.status === activeFilter);
-  const wrap = $('tasksList');
-  const empty = $('tasksEmpty');
+  const wrap = $('tasksList'); const empty = $('tasksEmpty');
   if (!list.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  wrap.innerHTML = list.map(t => {
+  wrap.innerHTML = list.map(function(t){
     const ov = isOverdue(t);
     const completed = t.status === 'completed';
     const dlText = t.deadline ? fmtDeadline(t.deadline) : '';
-    return '<div class="task-item ' + (completed ? 'task-completed' : '') + '" onclick="openDetail(' + t.id + ')">' +
-      '<div class="task-status-dot ts-' + t.status + '" title="' + STATUS_LBL[t.status] + '"></div>' +
-      '<div class="task-mid">' +
-        '<div class="task-title">' + escapeHtml(t.title) + '</div>' +
-        '<div class="task-meta">' +
+    const dept = t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
+    return '<div class="item ' + (completed ? 'task-completed' : '') + '" onclick="openDetail(' + t.id + ')">' +
+      '<div class="dot ts-' + t.status + '"></div>' +
+      '<div class="item-mid">' +
+        '<div class="item-title">' + escapeHtml(t.title) + '</div>' +
+        '<div class="item-meta">' +
           '<span>' + STATUS_LBL[t.status] + '</span>' +
+          (dept ? '<span class="dot-sep"></span><span>' + escapeHtml(dept) + '</span>' : '') +
           (dlText ? '<span class="dot-sep"></span><span class="' + (ov ? 'task-overdue' : '') + '">⏰ ' + dlText + '</span>' : '') +
           ((t.priority_level || 0) > 0 ? '<span class="dot-sep"></span><span>P' + t.priority_level + '</span>' : '') +
         '</div>' +
       '</div>' +
-      '<div class="task-right">' + (ov ? '<span class="badge danger">o\'tgan</span>' : '') + '</div>' +
+      '<div class="item-right">' + (ov ? '<span class="badge danger">o\'tgan</span>' : '') + '</div>' +
     '</div>';
   }).join('');
 }
-
 function openCreate() {
-  $('cTitle').value = ''; $('cDesc').value = ''; $('cDeadline').value = ''; $('cPriority').value = '0';
+  $('cTitle').value=''; $('cDesc').value=''; $('cDeadline').value=''; $('cPriority').value='0';
   hideMsg($('cMsg'));
+  if (currentWs.kind === 'organization') {
+    $('cDeptField').style.display = 'block';
+    $('cDept').innerHTML = '<option value="">(Bo\'limsiz)</option>' + departments.map(function(d){ return '<option value="'+d.id+'">'+escapeHtml(d.name)+'</option>'; }).join('');
+  } else {
+    $('cDeptField').style.display = 'none';
+  }
   $('createBd').classList.add('show');
-  setTimeout(() => $('cTitle').focus(), 50);
+  setTimeout(()=>$('cTitle').focus(), 50);
 }
 function closeCreate() { $('createBd').classList.remove('show'); }
 async function saveCreate() {
   const title = $('cTitle').value.trim();
   const desc = $('cDesc').value.trim();
   const deadline = $('cDeadline').value;
-  let priority = parseInt($('cPriority').value, 10); if (isNaN(priority) || priority < 0) priority = 0; if (priority > 10) priority = 10;
+  const deptId = $('cDept').value || null;
+  let prio = parseInt($('cPriority').value, 10); if (isNaN(prio) || prio < 0) prio = 0; if (prio > 10) prio = 10;
   if (!title) { showMsg($('cMsg'), 'Nomi kerak.', 'err'); return; }
   const btn = $('cBtn');
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
@@ -707,42 +889,34 @@ async function saveCreate() {
       deadlineIso = new Date(v + '+05:00').toISOString();
     }
     const { error } = await sb.from('tasks').insert({
-      company_id: currentCompany.id,
+      workspace_id: currentWs.id,
+      department_id: deptId,
       title, description: desc || null,
-      deadline: deadlineIso,
-      priority_level: priority,
-      created_by: currentUser.id,
-      assigned_to: currentUser.id
+      deadline: deadlineIso, priority_level: prio,
+      created_by: me.id, assigned_to: me.id
     });
     if (error) throw error;
-    closeCreate();
-    toast('✅ Vazifa yaratildi', 'ok');
-    await loadTasks();
-  } catch (e) {
-    showMsg($('cMsg'), translateErr(e.message), 'err');
-    btn.disabled = false; btn.textContent = 'Yaratish';
-  }
+    closeCreate(); toast('✅ Vazifa yaratildi', 'ok'); await loadTasks();
+  } catch (e) { showMsg($('cMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Yaratish'; }
 }
-
 function openDetail(id) {
   const t = tasksCache.find(x => x.id === id);
   if (!t) return;
   currentDetailId = id;
   $('dTitle').textContent = t.title;
   const ov = isOverdue(t);
-  const body = $('dBody');
-  const statusBtns = ['new','in_progress','completed','cancelled'].map(s =>
-    '<button class="filter-btn ' + (t.status === s ? 'active' : '') + '" onclick="changeStatus(' + t.id + ',\'' + s + '\')">' + STATUS_LBL[s] + '</button>'
-  ).join('');
-  body.innerHTML =
-    (t.description ? '<div style="margin-bottom:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;">' + escapeHtml(t.description) + '</div>' : '') +
-    '<div class="detail-row"><div class="lbl">Holat</div><div class="val"><div class="status-pick">' + statusBtns + '</div></div></div>' +
-    '<div class="detail-row"><div class="lbl">Deadline</div><div class="val ' + (ov ? 'task-overdue' : '') + '">' +
-      (t.deadline ? fmtDeadline(t.deadline) + (ov ? ' (o\'tgan)' : '') : 'yo\'q') + '</div></div>' +
-    '<div class="detail-row"><div class="lbl">Prioritet</div><div class="val">' + ((t.priority_level || 0) > 0 ? 'P' + t.priority_level : '—') + '</div></div>' +
-    '<div class="detail-row"><div class="lbl">Yaratilgan</div><div class="val">' + new Date(t.created_at).toLocaleString('uz-UZ') + '</div></div>' +
-    (t.completed_at ? '<div class="detail-row"><div class="lbl">Tugatilgan</div><div class="val">' + new Date(t.completed_at).toLocaleString('uz-UZ') + '</div></div>' : '');
-  $('dDelete').style.display = (currentRole === 'owner' || currentRole === 'admin' || currentRole === 'manager') ? 'inline-block' : 'none';
+  const statusBtns = ['new','in_progress','completed','cancelled'].map(function(s){
+    return '<button class="filter-btn ' + (t.status===s?'active':'') + '" onclick="changeStatus('+t.id+',\''+s+'\')">'+STATUS_LBL[s]+'</button>';
+  }).join('');
+  const dept = t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
+  $('dBody').innerHTML =
+    (t.description ? '<div style="margin-bottom:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;">'+escapeHtml(t.description)+'</div>' : '') +
+    '<div class="detail-row"><div class="lbl">Holat</div><div class="val"><div class="status-pick">'+statusBtns+'</div></div></div>' +
+    (dept ? '<div class="detail-row"><div class="lbl">Bo\'lim</div><div class="val">'+escapeHtml(dept)+'</div></div>' : '') +
+    '<div class="detail-row"><div class="lbl">Deadline</div><div class="val '+(ov?'task-overdue':'')+'">'+(t.deadline ? fmtDeadline(t.deadline) + (ov?' (o\'tgan)':'') : 'yo\'q')+'</div></div>' +
+    '<div class="detail-row"><div class="lbl">Prioritet</div><div class="val">'+((t.priority_level||0)>0?'P'+t.priority_level:'—')+'</div></div>' +
+    '<div class="detail-row"><div class="lbl">Yaratilgan</div><div class="val">'+new Date(t.created_at).toLocaleString('uz-UZ')+'</div></div>';
+  $('dDelete').style.display = (myWsRole==='owner' || myWsRole==='admin') ? 'inline-block' : 'none';
   $('detailBd').classList.add('show');
 }
 function closeDetail() { $('detailBd').classList.remove('show'); currentDetailId = null; }
@@ -753,9 +927,7 @@ async function changeStatus(id, newStatus) {
     if (newStatus === 'completed') patch.completed_at = new Date().toISOString();
     const { error } = await sb.from('tasks').update(patch).eq('id', id);
     if (error) throw error;
-    toast('✅ Holat yangilandi', 'ok');
-    await loadTasks();
-    openDetail(id);
+    toast('✅ Holat yangilandi', 'ok'); await loadTasks(); openDetail(id);
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 async function deleteCurrent() {
@@ -764,199 +936,197 @@ async function deleteCurrent() {
   try {
     const { error } = await sb.from('tasks').delete().eq('id', currentDetailId);
     if (error) throw error;
-    closeDetail();
-    toast('🗑 O\'chirildi', 'ok');
-    await loadTasks();
+    closeDetail(); toast('🗑 O\'chirildi', 'ok'); await loadTasks();
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
-// ---------- TEAM ----------
-const ROLE_LBL = { owner: 'Egasi', admin: 'Administrator', manager: 'Menejer', employee: 'Xodim' };
-
-function canManageTeam() {
-  return currentRole === 'owner' || currentRole === 'admin';
+// ============ DEPARTMENTS ============
+function renderDepts() {
+  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  $('newDeptBtn').style.display = canManage ? 'inline-block' : 'none';
+  const wrap = $('deptsList'); const empty = $('deptsEmpty');
+  if (!departments.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  wrap.innerHTML = departments.map(function(d){
+    return '<div class="item static">' +
+      '<div class="dot ts-in_progress"></div>' +
+      '<div class="item-mid">' +
+        '<div class="item-title">' + escapeHtml(d.name) + '</div>' +
+        '<div class="item-meta">' + (d.description ? escapeHtml(d.description) : '—') + '</div>' +
+      '</div>' +
+      '<div class="item-right">' +
+        (canManage ? '<button class="icon-btn link-btn" onclick="deleteDept(\''+d.id+'\')" style="color:var(--danger)">O\'chirish</button>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+function openNewDept() { $('deptName').value=''; $('deptDesc').value=''; hideMsg($('deptMsg')); $('deptBd').classList.add('show'); setTimeout(()=>$('deptName').focus(), 50); }
+function closeDept() { $('deptBd').classList.remove('show'); }
+async function saveDept() {
+  const name = $('deptName').value.trim();
+  const desc = $('deptDesc').value.trim();
+  const btn = $('deptBtn');
+  if (!name) { showMsg($('deptMsg'), 'Nomini kiriting.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
+  try {
+    const { error } = await sb.from('departments').insert({ workspace_id: currentWs.id, name, description: desc || null, created_by: me.id });
+    if (error) throw error;
+    closeDept(); toast('✅ Bo\'lim yaratildi', 'ok');
+    await loadCurrentContext(); renderDepts();
+  } catch (e) { showMsg($('deptMsg'), translateErr(e.message), 'err'); }
+  btn.disabled = false; btn.textContent = 'Yaratish';
+}
+async function deleteDept(id) {
+  if (!confirm('Bo\'limni o\'chirasizmi? Ichidagi vazifalar "bo\'limsiz" bo\'lib qoladi.')) return;
+  try {
+    const { error } = await sb.from('departments').delete().eq('id', id);
+    if (error) throw error;
+    toast('🗑 O\'chirildi', 'ok');
+    await loadCurrentContext(); renderDepts();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
+// ============ TEAM ============
+function canManageTeam() { return myWsRole === 'owner' || myWsRole === 'admin'; }
 async function loadTeam() {
-  if (!currentCompany) return;
   $('inviteBtn').style.display = canManageTeam() ? 'inline-block' : 'none';
   $('invitesWrap').style.display = canManageTeam() ? 'block' : 'none';
-
-  // A'zolar + ularning profillari
-  const { data: members, error: mErr } = await sb
-    .from('company_members')
-    .select('user_id, role, created_at')
-    .eq('company_id', currentCompany.id)
-    .order('created_at', { ascending: true });
-  if (mErr) { toast(translateErr(mErr.message), 'err'); return; }
-
+  const { data: members } = await sb.from('workspace_members').select('user_id, role, created_at').eq('workspace_id', currentWs.id).order('created_at', { ascending: true });
   const ids = (members || []).map(m => m.user_id);
-  let profilesMap = {};
+  let profMap = {};
   if (ids.length) {
     const { data: profs } = await sb.from('profiles').select('id, full_name, phone').in('id', ids);
-    (profs || []).forEach(p => { profilesMap[p.id] = p; });
+    (profs || []).forEach(p => { profMap[p.id] = p; });
   }
-
   const wrap = $('membersList');
   if (!members || !members.length) {
-    wrap.innerHTML = '<div class="empty"><strong>A\'zo yo\'q</strong>Birinchi xodimni taklif qiling.</div>';
+    wrap.innerHTML = '<div class="empty"><strong>A\'zo yo\'q</strong></div>';
   } else {
     wrap.innerHTML = members.map(function(m){
-      const p = profilesMap[m.user_id] || {};
-      const isMe = m.user_id === currentUser.id;
+      const p = profMap[m.user_id] || {};
+      const isMe = m.user_id === me.id;
       const name = p.full_name || (isMe ? 'Siz' : 'Foydalanuvchi');
-      const canRemove = canManageTeam() && m.role !== 'owner' && !isMe;
-      const canChangeRole = canManageTeam() && m.role !== 'owner' && !isMe;
-      let roleHtml;
-      if (canChangeRole) {
-        roleHtml = '<select onchange="changeMemberRole(\''+m.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; font-family:inherit; background: var(--surface);">' +
-          ['employee','manager','admin'].map(function(r){
-            return '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_LBL[r]+'</option>';
-          }).join('') + '</select>';
-      } else {
-        roleHtml = '<span class="badge muted">' + ROLE_LBL[m.role] + '</span>';
-      }
-      return '<div class="task-item" style="cursor:default">' +
-        '<div class="task-status-dot ts-' + (m.role === 'owner' ? 'completed' : 'in_progress') + '"></div>' +
-        '<div class="task-mid">' +
-          '<div class="task-title">' + escapeHtml(name) + (isMe ? ' <span style="color:var(--muted); font-weight:500;">(siz)</span>' : '') + '</div>' +
-          '<div class="task-meta">' + (p.phone ? '<span>' + escapeHtml(p.phone) + '</span>' : '<span>—</span>') + '</div>' +
-        '</div>' +
-        '<div class="task-right">' +
-          roleHtml +
-          (canRemove ? '<button class="icon-btn" onclick="removeMember(\''+m.user_id+'\')" title="O\'chirish" style="color:var(--danger)">×</button>' : '') +
-        '</div>' +
+      const canChange = canManageTeam() && m.role !== 'owner' && !isMe;
+      let roleHtml = canChange
+        ? '<select onchange="changeMemberRole(\''+m.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; background: var(--surface);">'
+          + ['member','admin'].map(function(r){ return '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>'; }).join('') + '</select>'
+        : '<span class="badge muted">' + ROLE_WS[m.role] + '</span>';
+      return '<div class="item static">' +
+        '<div class="dot ts-' + (m.role==='owner'?'completed':'in_progress') + '"></div>' +
+        '<div class="item-mid"><div class="item-title">' + escapeHtml(name) + (isMe?' <span style="color:var(--muted); font-weight:500;">(siz)</span>':'') + '</div><div class="item-meta">' + escapeHtml(p.phone || '—') + '</div></div>' +
+        '<div class="item-right">' + roleHtml + (canChange ? ' <button class="link-btn" onclick="removeMember(\''+m.user_id+'\')" style="color:var(--danger)">×</button>' : '') + '</div>' +
       '</div>';
     }).join('');
   }
-
-  // Yuborilgan takliflar (faqat manage qila olganlar uchun)
   if (canManageTeam()) {
-    const { data: invs } = await sb
-      .from('invitations')
-      .select('*')
-      .eq('company_id', currentCompany.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+    const { data: invs } = await sb.from('invitations').select('*').eq('workspace_id', currentWs.id).eq('status', 'pending').order('created_at', { ascending: false });
     const list = $('invitesList');
     if (!invs || !invs.length) {
-      list.innerHTML = '<div class="empty" style="padding:24px"><strong>Ochiq taklif yo\'q</strong>Yuborilgan takliflar shu yerda ko\'rinadi.</div>';
+      list.innerHTML = '<div class="empty" style="padding:24px"><strong>Ochiq taklif yo\'q</strong></div>';
     } else {
       list.innerHTML = invs.map(function(inv){
-        return '<div class="task-item" style="cursor:default">' +
-          '<div class="task-status-dot ts-new"></div>' +
-          '<div class="task-mid">' +
-            '<div class="task-title">' + escapeHtml(inv.email || '—') + '</div>' +
-            '<div class="task-meta"><span>' + ROLE_LBL[inv.role] + '</span><span class="dot-sep"></span><span>Kutilmoqda</span></div>' +
-          '</div>' +
-          '<div class="task-right">' +
-            '<button class="icon-btn" onclick="cancelInvite(\''+inv.id+'\')" title="Bekor qilish" style="color:var(--danger)">×</button>' +
-          '</div>' +
+        const deptNames = (inv.departments || []).map(function(x){ const d = departments.find(z=>z.id===x.department_id); return d ? d.name+' ('+ROLE_DEPT[x.role]+')' : ''; }).filter(Boolean).join(', ');
+        return '<div class="item static">' +
+          '<div class="dot ts-new"></div>' +
+          '<div class="item-mid"><div class="item-title">' + escapeHtml(inv.email) + '</div><div class="item-meta"><span>'+ROLE_WS[inv.ws_role]+'</span>' + (deptNames ? '<span class="dot-sep"></span><span>'+escapeHtml(deptNames)+'</span>' : '') + '</div></div>' +
+          '<div class="item-right"><button class="link-btn" onclick="cancelInvite(\''+inv.id+'\')" style="color:var(--danger)">×</button></div>' +
         '</div>';
       }).join('');
     }
   }
 }
-
 function openInvite() {
   if (!canManageTeam()) return;
-  $('iEmail').value = ''; $('iRole').value = 'employee';
-  hideMsg($('iMsg'));
+  if (!departments.length) { toast('Avval kamida bitta bo\'lim yarating', 'err'); goPage('departments'); return; }
+  $('iEmail').value=''; $('iWsRole').value='member'; hideMsg($('iMsg'));
+  $('iDeptPicker').innerHTML = departments.map(function(d){
+    return '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span>' +
+      '<select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>';
+  }).join('');
   $('inviteBd').classList.add('show');
-  setTimeout(() => $('iEmail').focus(), 50);
+  setTimeout(()=>$('iEmail').focus(), 50);
 }
 function closeInvite() { $('inviteBd').classList.remove('show'); }
-
 async function sendInvite() {
   const email = $('iEmail').value.trim().toLowerCase();
-  const role = $('iRole').value;
+  const wsRole = $('iWsRole').value;
   const btn = $('iBtn');
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { showMsg($('iMsg'), 'Email manzili noto\'g\'ri.', 'err'); return; }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { showMsg($('iMsg'), 'Email noto\'g\'ri.', 'err'); return; }
+  const picks = [];
+  $('iDeptPicker').querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){
+    const id = cb.dataset.dept;
+    const role = $('iDeptPicker').querySelector('select[data-role="'+id+'"]').value;
+    picks.push({ department_id: id, role: role });
+  });
+  if (!picks.length) { showMsg($('iMsg'), 'Kamida bitta bo\'limni tanlang.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
   try {
-    // 1) invitations jadvaliga yozamiz (xodim ro'yxatdan o'tganda trigger member qiladi)
-    const { error: invErr } = await sb.from('invitations').insert({
-      company_id: currentCompany.id,
-      email: email,
-      role: role,
-      invited_by: currentUser.id,
-      invited_by_name: currentUser.email || null,
-      status: 'pending'
+    const { error } = await sb.from('invitations').insert({
+      workspace_id: currentWs.id, email, ws_role: wsRole,
+      departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending'
     });
-    if (invErr) {
-      // unique index — bu email uchun allaqachon ochiq taklif bor
-      if (/duplicate|unique/i.test(invErr.message)) {
-        showMsg($('iMsg'), 'Bu email uchun allaqachon ochiq taklif yuborilgan.', 'err');
-      } else {
-        showMsg($('iMsg'), translateErr(invErr.message), 'err');
-      }
-      btn.disabled = false; btn.textContent = 'Taklif yuborish';
-      return;
-    }
-
-    // 2) Eslatma: hozir biz emailni Supabase signup oqimi orqali yuborolmaymiz
-    // (admin API kerak bo'ladi). Lekin xodim shu sahifaga kelib ro'yxatdan
-    // o'tsa, trigger uni avtomatik kompaniyaga qo'shadi. Demak link beramiz.
-    const inviteLink = window.location.origin + window.location.pathname;
-    showMsg($('iMsg'),
-      'Taklif yaratildi. Quyidagi havolani xodimga yuboring (Telegram/email orqali):\n' + inviteLink +
-      '\nXodim shu havola orqali ro\'yxatdan o\'tsa, kompaniyangizga avtomatik qo\'shiladi.', 'ok');
-    btn.disabled = false; btn.textContent = 'Taklif yuborish';
+    if (error) { if (/duplicate|unique/i.test(error.message)) { showMsg($('iMsg'), 'Bu emailga allaqachon taklif yuborilgan.', 'err'); } else { showMsg($('iMsg'), translateErr(error.message), 'err'); } btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
+    const link = window.location.origin + window.location.pathname;
+    showMsg($('iMsg'), '✅ Taklif yaratildi. Quyidagi havolani xodimga yuboring (Telegram/email):\n' + link + '\nXodim ushbu email bilan ro\'yxatdan o\'tsa, avtomatik a\'zo bo\'ladi.', 'ok');
     await loadTeam();
-  } catch (e) {
-    showMsg($('iMsg'), translateErr(e.message), 'err');
-    btn.disabled = false; btn.textContent = 'Taklif yuborish';
-  }
+  } catch (e) { showMsg($('iMsg'), translateErr(e.message), 'err'); }
+  btn.disabled = false; btn.textContent = 'Taklif yuborish';
 }
-
 async function cancelInvite(id) {
   if (!confirm('Taklifni bekor qilasizmi?')) return;
-  try {
-    const { error } = await sb.from('invitations').update({ status: 'cancelled' }).eq('id', id);
-    if (error) throw error;
-    toast('Taklif bekor qilindi', 'ok');
-    await loadTeam();
-  } catch (e) { toast(translateErr(e.message), 'err'); }
+  try { const { error } = await sb.from('invitations').update({ status: 'cancelled' }).eq('id', id); if (error) throw error; toast('Bekor qilindi', 'ok'); await loadTeam(); } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function changeMemberRole(uid, role) {
+  try { const { error } = await sb.from('workspace_members').update({ role }).eq('workspace_id', currentWs.id).eq('user_id', uid); if (error) throw error; toast('Rol o\'zgartirildi', 'ok'); } catch (e) { toast(translateErr(e.message), 'err'); await loadTeam(); }
+}
+async function removeMember(uid) {
+  if (!confirm('A\'zoni o\'chirasizmi?')) return;
+  try { const { error } = await sb.from('workspace_members').delete().eq('workspace_id', currentWs.id).eq('user_id', uid); if (error) throw error; toast('O\'chirildi', 'ok'); await loadTeam(); } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
-async function changeMemberRole(userId, newRole) {
-  try {
-    const { error } = await sb.from('company_members').update({ role: newRole }).eq('company_id', currentCompany.id).eq('user_id', userId);
-    if (error) throw error;
-    toast('Rol o\'zgartirildi', 'ok');
-  } catch (e) { toast(translateErr(e.message), 'err'); await loadTeam(); }
+// ============ NOTIFICATIONS ============
+async function loadNotifs() {
+  if (!me) return;
+  const { data } = await sb.from('notifications').select('*').eq('user_id', me.id).order('created_at', { ascending: false }).limit(20);
+  notifs = data || [];
+  const unread = notifs.filter(n => !n.read_at).length;
+  $('bellDot').style.display = unread > 0 ? 'block' : 'none';
+  renderNotifs();
+}
+function renderNotifs() {
+  const list = $('notifList');
+  if (!notifs.length) { list.innerHTML = '<div class="notif-item"><div class="notif-body">Bildirishnomalar yo\'q.</div></div>'; return; }
+  list.innerHTML = notifs.map(function(n){
+    return '<div class="notif-item ' + (n.read_at ? '' : 'unread') + '">' +
+      '<div class="notif-title">' + escapeHtml(n.title) + '</div>' +
+      (n.body ? '<div class="notif-body">' + escapeHtml(n.body) + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+function toggleNotif(e) {
+  e.stopPropagation();
+  const p = $('notifPanel');
+  p.classList.toggle('show');
+  $('wsDrop').classList.remove('show');
+  if (p.classList.contains('show')) markAllRead();
+}
+async function markAllRead() {
+  const ids = notifs.filter(n => !n.read_at).map(n => n.id);
+  if (!ids.length) return;
+  await sb.from('notifications').update({ read_at: new Date().toISOString() }).in('id', ids);
+  await loadNotifs();
 }
 
-async function removeMember(userId) {
-  if (!confirm('Bu a\'zoni kompaniyadan o\'chirasizmi?')) return;
-  try {
-    const { error } = await sb.from('company_members').delete().eq('company_id', currentCompany.id).eq('user_id', userId);
-    if (error) throw error;
-    toast('A\'zo o\'chirildi', 'ok');
-    await loadTeam();
-  } catch (e) { toast(translateErr(e.message), 'err'); }
-}
-
+// ============ INIT ============
 async function init() {
-  if (SUPABASE_URL.indexOf('YOUR_') === 0 || SUPABASE_ANON_KEY.indexOf('YOUR_') === 0) {
-    $('configWarn').classList.add('show');
-    showAuth(); $('authBtn').disabled = true; return;
-  }
+  if (SUPABASE_URL.indexOf('YOUR_') === 0 || SUPABASE_ANON_KEY.indexOf('YOUR_') === 0) { showAuth(); return; }
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // Supabase auth event'ini tinglaymiz. Parolni tiklash havolasi ochilganda
-  // PASSWORD_RECOVERY hodisasi keladi -> yangi parol formasini ko'rsatamiz.
-  sb.auth.onAuthStateChange(function(event){
-    if (event === 'PASSWORD_RECOVERY') { showResetStep(); }
-  });
-
-  // URL hash'ida recovery bo'lsa ham aniqlaymiz (event kechikishi hollari uchun)
+  sb.auth.onAuthStateChange(function(event){ if (event === 'PASSWORD_RECOVERY') showResetStep(); });
   const h = window.location.hash || '';
   const isRecovery = h.indexOf('type=recovery') !== -1;
-
   const { data: { session } } = await sb.auth.getSession();
   if (isRecovery) { showResetStep(); return; }
-  if (session) { await routeAfterAuth(); }
+  if (session) { await bootstrap(); }
   else { setMode('login'); showAuth(); }
 }
 init();
