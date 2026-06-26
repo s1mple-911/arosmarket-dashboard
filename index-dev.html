@@ -221,6 +221,8 @@ var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
 var MML_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-mml-history';
 var MML_CHECK_API = 'https://n8n.arosmarket.com/webhook/aros-mml-check';
 var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions';
+var ORDER_DETAIL_API = 'https://n8n.arosmarket.com/webhook/aros-order-detail';
+var ORDER_TO_BOT_API = 'https://n8n.arosmarket.com/webhook/aros-order-to-bot';
 var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
 var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
 var KASSA_API      = 'https://n8n.arosmarket.com/webhook/aros-bugalter-filial-kassa';
@@ -594,8 +596,9 @@ function fillOrders(el, orders, walletBalance, userId, userName){
   }
   orders.forEach(function(o){
     var dText=o.deadline+' ('+o.kun_otgan+' kun o\'tgan)';
-    html+='<div class="order-row">';
-    html+='<div class="o-left"><div class="o-id">Order #'+o.order_id+' · '+(o.sana||'')+'</div>';
+    var _nm=(userName||'').replace(/\'/g,"\\'");
+    html+='<div class="order-row" onclick="event.stopPropagation();showOrderModal('+o.order_id+',\''+_nm+'\')" style="cursor:pointer">';
+    html+='<div class="o-left"><div class="o-id">Order #'+o.order_id+' · '+(o.sana||'')+' <span style="color:var(--text3);font-size:11px">›</span></div>';
     html+='<div class="o-deadline" style="color:var(--red)">'+dText+'</div></div>';
     html+='<div class="o-amt" style="color:var(--red)">'+fmtFull(o.summa)+'</div></div>';
   });
@@ -764,8 +767,8 @@ function buildCard(r,id,color,lazy,orders){
       ordersHtml+='<div style="font-size:12px;font-weight:700;color:var(--green)">'+fmtFull(wallet)+'</div></div>';
     }
     orders.forEach(function(o){
-      ordersHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border)">';
-      ordersHtml+='<div><div style="font-size:11px;color:var(--text3)">Order #'+o.order_id+' · '+(o.sana||'')+'</div>';
+      ordersHtml+='<div onclick="event.stopPropagation();showOrderModal('+o.order_id+',\''+safeName+'\')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border)">';
+      ordersHtml+='<div><div style="font-size:11px;color:var(--text3)">Order #'+o.order_id+' · '+(o.sana||'')+' <span style="color:var(--text3)">›</span></div>';
       ordersHtml+='<div style="font-size:11px;font-weight:600;color:'+color+'">Deadline: '+(o.deadline||'—')+'</div></div>';
       ordersHtml+='<div style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(o.summa)+'</div></div>';
     });
@@ -2545,6 +2548,82 @@ function renderRecordings(userId, recs){
   });
 })();
 
+// ===================== ORDER DETAIL MODAL =====================
+function showOrderModal(orderId, clientName){
+  var modal = document.getElementById('ord-modal');
+  var title = document.getElementById('ord-title');
+  var subtitle = document.getElementById('ord-subtitle');
+  var body = document.getElementById('ord-body');
+  var footer = document.getElementById('ord-footer');
+  if(!modal) return;
+  window._ordCurrentId = orderId;
+  title.textContent = '🧾 Buyurtma #' + orderId;
+  subtitle.textContent = clientName || '';
+  footer.innerHTML = '';
+  modal.style.display = 'flex';
+  body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
+  fetch(ORDER_DETAIL_API+'?id='+encodeURIComponent(orderId))
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(!d || !d.ok){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">'+((d&&d.error)||'Ma\'lumot yuklanmadi')+'</div>'; return; }
+      renderOrderDetail(d);
+    })
+    .catch(function(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Xato: '+e.message+'</div>'; });
+}
+
+function renderOrderDetail(d){
+  var body = document.getElementById('ord-body');
+  var footer = document.getElementById('ord-footer');
+  var kun = Number(d.kun_otgan)||0;
+  var kunText = kun>0 ? (kun+' kun o\'tgan') : (kun===0 ? 'Bugun muddati' : (Math.abs(kun)+' kundan keyin'));
+  var kunColor = kun>0 ? 'var(--red)' : (kun===0 ? 'var(--amber)' : 'var(--text3)');
+  var html='';
+  html+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px">';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:var(--text3)">Klient</span><span style="font-size:12px;font-weight:700">'+(d.client||'Noma\'lum')+(d.telefon?(' · '+d.telefon):'')+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:var(--text3)">Buyurtma sanasi</span><span style="font-size:12px;font-weight:600">'+(d.created_date||'-')+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:var(--text3)">Deadline</span><span style="font-size:12px;font-weight:600">'+(d.deadline_date||'-')+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--text3)">Holati</span><span style="font-size:12px;font-weight:700;color:'+kunColor+'">'+kunText+'</span></div>';
+  html+='</div>';
+  var prods = d.products || [];
+  html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:8px">🛒 Mahsulotlar ('+prods.length+' ta)</div>';
+  if(!prods.length){
+    html+='<div style="text-align:center;padding:20px;color:var(--text3)">Mahsulot topilmadi</div>';
+  } else {
+    prods.forEach(function(p,i){
+      var ret = p.returned ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(255,77,109,.15);color:var(--red);margin-left:6px">QAYTARILGAN</span>' : '';
+      html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+      html+='<div style="font-size:12px;font-weight:600;margin-bottom:4px">'+(i+1)+'. '+(p.name||'')+ret+'</div>';
+      html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">';
+      html+='<span>'+(p.qty||0)+' dona × '+fmtFull(p.unit||0)+'</span>';
+      html+='<span style="font-weight:700;color:var(--text)">'+fmtFull(p.total||0)+' so\'m</span>';
+      html+='</div></div>';
+    });
+  }
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">';
+  html+='<span style="font-size:13px;font-weight:700">💰 Jami</span><span style="font-size:16px;font-weight:800;color:var(--accent)">'+fmtFull(d.jami||0)+' so\'m</span></div>';
+  body.innerHTML = html;
+  footer.innerHTML = '<button id="ord-tg-btn" onclick="sendOrderToBot('+d.order_id+')" style="width:100%;background:#229ED9;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:16px">✈️</span> Telegramga yuborish</button>';
+}
+
+function sendOrderToBot(orderId){
+  var btn = document.getElementById('ord-tg-btn');
+  function reset(){ if(btn){btn.style.background='#229ED9';btn.innerHTML='<span style="font-size:16px">✈️</span> Telegramga yuborish';} }
+  if(btn){ btn.disabled=true; btn.style.opacity='.7'; btn.innerHTML='<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite"></span> Yuborilmoqda...'; }
+  fetch(ORDER_TO_BOT_API+'?id='+encodeURIComponent(orderId)+'&uid='+encodeURIComponent(uid))
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+      if(d && d.ok){
+        if(btn){ btn.style.background='var(--green)'; btn.innerHTML='✅ Botga yuborildi'; setTimeout(reset,2500); }
+      } else {
+        if(btn){ btn.style.background='var(--red)'; btn.innerHTML='⚠️ '+((d&&d.error)||'Yuborilmadi'); setTimeout(reset,3000); }
+      }
+    })
+    .catch(function(){ if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.style.background='var(--red)'; btn.innerHTML='⚠️ Tarmoq xatosi'; setTimeout(reset,3000); } });
+}
+
 function showWalletTxModal(userId, userName, currentBalance){
   var modal = document.getElementById('wtx-modal');
   var title = document.getElementById('wtx-title');
@@ -3187,6 +3266,21 @@ function trAttachSwipe(){
       <button onclick="document.getElementById('wtx-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
     </div>
     <div id="wtx-body" style="padding:14px 16px 24px"></div>
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="ord-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:650;align-items:flex-end;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border)">
+    <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);padding-bottom:12px;z-index:10">
+      <div>
+        <div style="font-size:15px;font-weight:700" id="ord-title">🧾 Buyurtma</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="ord-subtitle"></div>
+      </div>
+      <button onclick="document.getElementById('ord-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
+    </div>
+    <div id="ord-body" style="padding:14px 16px 12px"></div>
+    <div id="ord-footer" style="padding:4px 16px 24px;position:sticky;bottom:0;background:var(--bg2)"></div>
   </div>
 </div>
 
