@@ -103,7 +103,7 @@
   .bell-dot { position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid var(--side); }
 
   /* MAIN */
-  .main { padding: 32px 36px; max-width: 1280px; }
+  .main { padding: 32px 40px; width: 100%; max-width: none; }
   .h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 24px; letter-spacing: -.02em; margin: 0 0 20px; }
   .row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
   .crumbs { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
@@ -275,6 +275,32 @@
   .search-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
   .search-input { flex: 1; padding: 9px 12px 9px 36px; border: 1px solid var(--line); border-radius: 10px; font-size: 13.5px; background: var(--surface); font-family: inherit; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 11px center; background-size: 16px 16px; }
   .search-input:focus { outline: none; border-color: var(--accent); }
+
+  /* Multi-select with search (vazifa biriktirish uchun) */
+  .ms-wrap { position: relative; }
+  .ms-box { min-height: 38px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 5px 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; cursor: text; }
+  .ms-box:focus-within { border-color: var(--accent); }
+  .ms-chip { background: var(--accent-soft); color: var(--accent-ink); padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+  .ms-chip.branch { background: #FEF3C7; color: #92400E; }
+  .ms-chip.position { background: #DDEBFF; color: #1E40AF; }
+  .ms-chip-x { cursor: pointer; opacity: .6; font-weight: 700; padding: 0 2px; line-height: 1; }
+  .ms-chip-x:hover { opacity: 1; }
+  .ms-input { flex: 1; min-width: 80px; border: none; outline: none; padding: 4px 6px; font-size: 13px; background: transparent; font-family: inherit; color: var(--ink); }
+  .ms-input::placeholder { color: var(--muted); }
+  .ms-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 320px; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); z-index: 20; display: none; }
+  .ms-dropdown.show { display: block; }
+  .ms-group-head { padding: 8px 12px 4px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: var(--surface-2); position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
+  .ms-group-head .add-all { font-size: 10.5px; color: var(--accent-ink); cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .ms-group-head .add-all:hover { text-decoration: underline; }
+  .ms-opt { padding: 8px 12px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .ms-opt:hover { background: var(--accent-soft); }
+  .ms-opt.selected { background: var(--accent-soft); }
+  .ms-opt .name { flex: 1; }
+  .ms-opt .sub { font-size: 11px; color: var(--muted); }
+  .ms-opt .ic { width: 22px; text-align: center; font-size: 14px; }
+  .ms-opt.disabled { opacity: .5; cursor: default; }
+  .ms-empty { padding: 16px; text-align: center; font-size: 12.5px; color: var(--muted); }
+  .ms-summary { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
   /* Stat cards (dashboard) */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px; }
@@ -519,6 +545,9 @@
         <h2 class="h2" style="margin:0">Bo'limlar</h2>
         <button class="btn" id="newDeptBtn" onclick="openNewDept()" style="display:none">+ Yangi bo'lim</button>
       </div>
+      <div class="search-row">
+        <input type="text" class="search-input" id="deptSearch" placeholder="Bo'lim nomi yoki tavsif bo'yicha qidirish..." oninput="renderDeptsList()" />
+      </div>
       <div id="deptsList" class="list"></div>
       <div id="deptsEmpty" class="empty" style="display:none"><strong>Hali bo'lim yo'q</strong>Bo'limlar (IT, HR, Savdo, ...) yarating.</div>
     </section>
@@ -613,7 +642,16 @@
         <h2 class="h2" style="margin:0">Bot foydalanuvchilari</h2>
       </div>
       <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted); line-height: 1.5;">
-        Botda ro'yxatdan o'tgan, lekin saytga hali kirmagan odamlar. Ularni saytga taklif qila olasiz yoki Telegram orqali vazifa biriktirasiz (keyingi versiya).
+        Botda ro'yxatdan o'tgan odamlar. Saytga taklif qila olasiz yoki vazifa biriktirasiz.
+      </div>
+      <div class="search-row">
+        <input type="text" class="search-input" id="tgSearch" placeholder="Ism, telefon, lavozim, filial bo'yicha qidirish..." oninput="renderTgUsersFiltered()" />
+        <select id="tgBranchFilter" onchange="renderTgUsersFiltered()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+          <option value="all">Hamma filiallar</option>
+        </select>
+        <select id="tgPosFilter" onchange="renderTgUsersFiltered()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+          <option value="all">Hamma lavozimlar</option>
+        </select>
       </div>
       <div id="tgUsersList" class="list"></div>
       <div id="tgUsersEmpty" class="empty" style="display:none">
@@ -628,9 +666,12 @@
         <h2 class="h2" style="margin:0">Filiallar</h2>
         <button class="btn" onclick="openBranchModal()">+ Yangi filial</button>
       </div>
-      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Sizning kompaniya filiallari. Har xodim biror filialga biriktirilad i.</div>
+      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Sizning kompaniya filiallari. Har xodim biror filialga biriktiriladi.</div>
+      <div class="search-row">
+        <input type="text" class="search-input" id="branchSearch" placeholder="Filial nomi yoki manzil bo'yicha qidirish..." oninput="renderBranches()" />
+      </div>
       <div id="branchesList" class="list"></div>
-      <div id="branchesEmpty" class="empty" style="display:none"><strong>Filial yo'q</strong>+ Yangi filial bossam yarating yoki Aros PG'dан import qiling.</div>
+      <div id="branchesEmpty" class="empty" style="display:none"><strong>Filial yo'q</strong>+ Yangi filial bossam yarating yoki Aros PG'dan import qiling.</div>
     </section>
 
     <!-- Positions (lavozimlar) -->
@@ -638,9 +679,12 @@
       <div class="row-head">
         <h2 class="h2" style="margin:0">Lavozimlar</h2>
       </div>
-      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Lavozimlar bo'yicha xodimlar ro'yxati. Lavozim TG bot user'lari profilidан olinadi.</div>
+      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Lavozimlar bo'yicha xodimlar ro'yxati. Lavozim bot user'lari profilidan olinadi.</div>
+      <div class="search-row">
+        <input type="text" class="search-input" id="posSearch" placeholder="Lavozim yoki xodim ismi bo'yicha qidirish..." oninput="filterPositionsList()" />
+      </div>
       <div id="positionsList" class="list"></div>
-      <div id="positionsEmpty" class="empty" style="display:none"><strong>Lavozim ma'lumoti yo'q</strong>Avval bot foydalanuvchilarini import qiling — lavozim ma'lumotlari ham bilan keladi.</div>
+      <div id="positionsEmpty" class="empty" style="display:none"><strong>Lavozim ma'lumoti yo'q</strong>Avval bot foydalanuvchilarini import qiling.</div>
     </section>
 
     <!-- Settings (faqat owner) -->
@@ -862,7 +906,17 @@
       <div class="field"><label>Nomi *</label><input id="cTitle" type="text" /></div>
       <div class="field"><label>Tavsif</label><textarea id="cDesc"></textarea></div>
       <div class="field" id="cDeptField" style="display:none"><label>Bo'lim</label><select id="cDept"><option value="">(Bo'limsiz)</option></select></div>
-      <div class="field"><label>Biriktirish</label><select id="cAssignee"><option value="">(Mening o'zimga)</option></select></div>
+      <div class="field"><label>Biriktirish *</label>
+        <div class="ms-wrap">
+          <div class="ms-box" id="msBox" onclick="msFocus()">
+            <div id="msChips" style="display:contents"></div>
+            <input type="text" id="msInput" class="ms-input" placeholder="Ism, filial, lavozim bo'yicha qidiring..."
+              onfocus="msOpen()" oninput="msFilter()" onkeydown="msKeyDown(event)" />
+          </div>
+          <div class="ms-dropdown" id="msDropdown"></div>
+        </div>
+        <div class="ms-summary" id="msSummary"></div>
+      </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div class="field" style="margin-bottom:0"><label>Deadline</label><input id="cDeadline" type="datetime-local" /></div>
         <div class="field" style="margin-bottom:0"><label>Prioritet</label><select id="cPriority"><option value="0">Yo'q</option><option value="1">P1 (past)</option><option value="2">P2</option><option value="3">P3</option><option value="4">P4</option><option value="5">P5 (o'rta)</option><option value="6">P6</option><option value="7">P7</option><option value="8">P8 (yuqori)</option><option value="9">P9</option><option value="10">P10 (eng yuqori)</option></select></div>
@@ -1103,13 +1157,18 @@ async function loadBranches() {
 
 async function renderBranches() {
   const list = $('branchesList'); const empty = $('branchesEmpty');
-  if (!branchesCache.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  if (!branchesCache.length) { list.innerHTML = ''; empty.style.display = 'block'; empty.innerHTML = '<strong>Filial yo\'q</strong>+ Yangi filial bossam yarating.'; return; }
+
+  // Search
+  const q = ($('branchSearch')?.value || '').trim().toLowerCase();
+  let visible = branchesCache;
+  if (q) visible = visible.filter(b => (b.name||'').toLowerCase().includes(q) || (b.address||'').toLowerCase().includes(q) || (b.external_id||'').toLowerCase().includes(q));
+  if (!visible.length) { list.innerHTML = ''; empty.style.display = 'block'; empty.innerHTML = '<strong>Topilmadi</strong>Qidiruv natijasi bo\'sh.'; return; }
   empty.style.display = 'none';
 
-  // Har filial uchun xodimlar sonи (tg_bot_users dan)
+  // Har filial uchun xodimlar sonи
   const counts = {};
   try {
-    // Telegram integratsiya bormi
     const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
     if (tgIntg) {
       const { data: bus } = await sb.from('tg_bot_users').select('branch_id').eq('integration_id', tgIntg.id);
@@ -1117,7 +1176,7 @@ async function renderBranches() {
     }
   } catch (e) {}
 
-  list.innerHTML = branchesCache.map(b => {
+  list.innerHTML = visible.map(b => {
     const mgr = b.manager_user_id ? (wsMembers.find(m => m.user_id === b.manager_user_id) || {}).profile : null;
     const mgrName = mgr ? mgr.full_name : (b.manager_tg_bot_user_id ? '✈ Bot user' : null);
     const userCount = counts[b.id] || 0;
@@ -1230,32 +1289,32 @@ async function deleteBranch() {
 }
 
 // ============ POSITIONS (LAVOZIMLAR) ============
+let positionGroups = {};
 async function loadPositions() {
-  if (!currentWs || currentWs.kind !== 'organization') { renderPositions([]); return; }
-  // tg_bot_users dan position bo'yicha guruh
+  if (!currentWs || currentWs.kind !== 'organization') { positionGroups = {}; renderPositions(); return; }
   const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
-  if (!tgIntg) { renderPositions([]); return; }
+  if (!tgIntg) { positionGroups = {}; renderPositions(); return; }
   const { data, error } = await sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id);
-  if (error) { renderPositions([]); return; }
-  // Position bo'yicha guruh
-  const groups = {};
+  if (error) { positionGroups = {}; renderPositions(); return; }
+  positionGroups = {};
   (data || []).forEach(u => {
     const pos = u.position || '(lavozimsiz)';
-    if (!groups[pos]) groups[pos] = [];
-    groups[pos].push(u);
+    if (!positionGroups[pos]) positionGroups[pos] = [];
+    positionGroups[pos].push(u);
   });
-  renderPositions(groups);
+  renderPositions();
 }
 
-function renderPositions(groups) {
-  const list = $('positionsList'); const empty = $('positionsEmpty');
-  const keys = Object.keys(groups);
-  if (!keys.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
+function filterPositionsList() { renderPositions(); }
 
-  // Position ko'rsatish uchun localized labels (Aros default)
+function renderPositions() {
+  const list = $('positionsList'); const empty = $('positionsEmpty');
+  const keys = Object.keys(positionGroups);
+  if (!keys.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+
   const POS_LABELS = {
     'sotuvchi': '🛒 Sotuvchi',
+    'boshliq': '👔 Boshliq',
     'filial_boshligi': '👔 Filial boshlig\'i',
     'ceo': '👑 CEO',
     'bugalter': '📊 Bugalter',
@@ -1263,13 +1322,21 @@ function renderPositions(groups) {
     '(lavozimsiz)': '— Lavozimsiz —'
   };
 
-  // Sort positions by count desc
-  const sortedKeys = keys.sort((a, b) => groups[b].length - groups[a].length);
+  const q = ($('posSearch')?.value || '').trim().toLowerCase();
+  const sortedKeys = keys.sort((a, b) => positionGroups[b].length - positionGroups[a].length);
 
-  list.innerHTML = sortedKeys.map(pos => {
-    const users = groups[pos];
+  const sections = sortedKeys.map(pos => {
+    let users = positionGroups[pos];
+    if (q) {
+      const label = (POS_LABELS[pos] || pos).toLowerCase();
+      const posMatch = pos.toLowerCase().includes(q) || label.includes(q);
+      if (!posMatch) {
+        users = users.filter(u => (u.full_name||'').toLowerCase().includes(q) || (u.phone||'').toLowerCase().includes(q));
+      }
+    }
+    if (!users.length) return '';
     const label = POS_LABELS[pos] || pos;
-    const usersHtml = users.slice(0, 50).map(u => {
+    const usersHtml = users.slice(0, 100).map(u => {
       const phone = u.phone ? '📞 ' + escapeHtml(u.phone) : '';
       const branchName = u.branch_id ? (branchesCache.find(b => b.id === u.branch_id) || {}).name || '' : '';
       return '<div style="display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:8px;" class="pos-user-item">' +
@@ -1283,9 +1350,18 @@ function renderPositions(groups) {
     return '<div class="settings-section">' +
       '<h3 style="display:flex; align-items:center; justify-content:space-between;"><span>' + escapeHtml(label) + '</span><span class="badge muted">' + users.length + ' xodim</span></h3>' +
       '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 4px;">' + usersHtml + '</div>' +
-      (users.length > 50 ? '<div style="font-size:12px; color:var(--muted); margin-top:8px;">va yana ' + (users.length - 50) + ' nafar…</div>' : '') +
+      (users.length > 100 ? '<div style="font-size:12px; color:var(--muted); margin-top:8px;">va yana ' + (users.length - 100) + ' nafar…</div>' : '') +
     '</div>';
-  }).join('');
+  }).filter(Boolean);
+
+  if (!sections.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    empty.innerHTML = '<strong>Topilmadi</strong>Qidiruv natijasi bo\'sh.';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = sections.join('');
 }
 
 function loadSettings() {
@@ -1781,21 +1857,201 @@ function openCreateInternal(forceDeptId) {
     $('cDept').innerHTML = '<option value="">(Bo\'limsiz)</option>' + visible.map(d => '<option value="'+d.id+'">'+escapeHtml(d.name)+'</option>').join('');
     if (forceDeptId) $('cDept').value = forceDeptId;
   } else { $('cDeptField').style.display = 'none'; }
-  let assigneeHtml = '<option value="">(Mening o\'zimga)</option>';
-  wsMembers.forEach(m => { if (m.user_id !== me.id) assigneeHtml += '<option value="user:'+m.user_id+'">' + escapeHtml(m.profile.full_name || 'A\'zo') + '</option>'; });
-  if (tgUsersCache.length) {
-    assigneeHtml += '<option disabled>── Telegram bot foydalanuvchilari ──</option>';
-    tgUsersCache.forEach(u => {
-      if (!u.linked_user_id) {
-        assigneeHtml += '<option value="tg:'+u.id+'">✈ ' + escapeHtml(u.full_name || u.tg_username || 'Bot user') + '</option>';
-      }
-    });
-  }
-  $('cAssignee').innerHTML = assigneeHtml;
+  // Multi-select reset
+  msSelected = [];
+  $('msInput').value = '';
+  msRenderChips();
+  msCloseDropdown();
   $('createBd').classList.add('show');
   attachCreatePaste();
   setTimeout(()=>$('cTitle').focus(), 50);
 }
+
+// ============ MULTI-SELECT (BIRIKTIRISH) ============
+// Tanlangan elementlar — har biri shu format:
+//   { type: 'user'|'tg'|'branch'|'position'|'me', id, label }
+let msSelected = [];
+
+function msFocus() { $('msInput').focus(); }
+
+function msOpen() {
+  $('msDropdown').classList.add('show');
+  msFilter();
+}
+
+function msCloseDropdown() { $('msDropdown').classList.remove('show'); }
+
+function msFilter() {
+  const q = ($('msInput').value || '').trim().toLowerCase();
+  const selectedIds = new Set(msSelected.map(s => s.type + ':' + s.id));
+  const dd = $('msDropdown');
+  let html = '';
+
+  // 1) "Menga" option (har doim ko'rinadi)
+  if (!selectedIds.has('me:me') && ('me'.includes(q) || (myProfile?.full_name||'').toLowerCase().includes(q) || 'siz'.includes(q))) {
+    html += '<div class="ms-opt" onclick="msAdd({type:\'me\',id:\'me\',label:\'Mening o\\\'zimga\'})">' +
+      '<span class="ic">👤</span><div class="name">Mening o\'zimga</div></div>';
+  }
+
+  // 2) Filiallar (search match)
+  const branchMatches = branchesCache.filter(b => {
+    if (selectedIds.has('branch:'+b.id)) return false;
+    if (!q) return true;
+    return (b.name||'').toLowerCase().includes(q) || (b.external_id||'').toLowerCase().includes(q);
+  });
+  if (branchMatches.length) {
+    html += '<div class="ms-group-head"><span>▢ FILIAL — butun jamoasiga</span></div>';
+    branchMatches.slice(0, 30).forEach(b => {
+      const count = tgUsersCache.filter(u => u.branch_id === b.id && u.state === 'completed').length;
+      const enabled = count > 0;
+      html += '<div class="ms-opt' + (enabled ? '' : ' disabled') + '" ' +
+        (enabled ? 'onclick="msAdd({type:\'branch\',id:\''+b.id+'\',label:\''+(b.name||'').replace(/\'/g,"\\'")+'\',count:'+count+'})"' : '') +
+        '><span class="ic">▢</span><div class="name">' + escapeHtml(b.name) +
+        '</div><span class="sub">' + count + ' xodim</span></div>';
+    });
+  }
+
+  // 3) Lavozimlar (search match)
+  const positions = [...new Set(tgUsersCache.map(u => u.position).filter(Boolean))].sort();
+  const posMatches = positions.filter(p => {
+    if (selectedIds.has('position:'+p)) return false;
+    if (!q) return true;
+    return p.toLowerCase().includes(q);
+  });
+  if (posMatches.length) {
+    html += '<div class="ms-group-head"><span>⌬ LAVOZIM — barchaga</span></div>';
+    posMatches.forEach(p => {
+      const count = tgUsersCache.filter(u => u.position === p && u.state === 'completed').length;
+      const enabled = count > 0;
+      html += '<div class="ms-opt' + (enabled ? '' : ' disabled') + '" ' +
+        (enabled ? 'onclick="msAdd({type:\'position\',id:\''+p.replace(/\'/g,"\\'")+'\',label:\''+p.replace(/\'/g,"\\'")+'\',count:'+count+'})"' : '') +
+        '><span class="ic">⌬</span><div class="name">' + escapeHtml(p) +
+        '</div><span class="sub">' + count + ' xodim</span></div>';
+    });
+  }
+
+  // 4) Sayt foydalanuvchilari
+  const userMatches = wsMembers.filter(m => {
+    if (m.user_id === me.id) return false;
+    if (selectedIds.has('user:'+m.user_id)) return false;
+    if (!q) return true;
+    const name = (m.profile?.full_name||'').toLowerCase();
+    return name.includes(q);
+  });
+  if (userMatches.length) {
+    html += '<div class="ms-group-head"><span>👥 SAYT FOYDALANUVCHILARI</span></div>';
+    userMatches.slice(0, 30).forEach(m => {
+      const name = m.profile?.full_name || 'A\'zo';
+      html += '<div class="ms-opt" onclick="msAdd({type:\'user\',id:\''+m.user_id+'\',label:\''+name.replace(/\'/g,"\\'")+'\'})">' +
+        '<span class="ic">👤</span><div class="name">' + escapeHtml(name) + '</div></div>';
+    });
+  }
+
+  // 5) TG bot foydalanuvchilari (saytsiz)
+  const tgMatches = tgUsersCache.filter(u => {
+    if (u.linked_user_id) return false; // saytda bog'langanlar yuqorida
+    if (u.state !== 'completed') return false;
+    if (selectedIds.has('tg:'+u.id)) return false;
+    if (!q) return true;
+    const name = (u.full_name||'').toLowerCase();
+    return name.includes(q) || (u.phone||'').toLowerCase().includes(q) || (u.position||'').toLowerCase().includes(q);
+  });
+  if (tgMatches.length) {
+    html += '<div class="ms-group-head"><span>✈ TELEGRAM BOT FOYDALANUVCHILARI</span></div>';
+    tgMatches.slice(0, 50).forEach(u => {
+      const name = u.full_name || u.tg_username || 'Bot user';
+      const branchName = u.branch_id ? (branchesCache.find(b => b.id === u.branch_id) || {}).name || '' : '';
+      const sub = [u.position, branchName].filter(Boolean).join(' · ');
+      html += '<div class="ms-opt" onclick="msAdd({type:\'tg\',id:\''+u.id+'\',label:\''+name.replace(/\'/g,"\\'")+'\'})">' +
+        '<span class="ic">✈</span><div class="name">' + escapeHtml(name) + '</div>' +
+        (sub ? '<span class="sub">' + escapeHtml(sub) + '</span>' : '') + '</div>';
+    });
+  }
+
+  if (!html) html = '<div class="ms-empty">Hech narsa topilmadi</div>';
+  dd.innerHTML = html;
+}
+
+function msAdd(item) {
+  // me — alohida, faqat 1ta bo'lishi mumkin (va boshqalar bilan)
+  msSelected.push(item);
+  $('msInput').value = '';
+  msRenderChips();
+  msFilter();
+  $('msInput').focus();
+}
+
+function msRemove(idx) {
+  msSelected.splice(idx, 1);
+  msRenderChips();
+  msFilter();
+}
+
+function msRenderChips() {
+  const wrap = $('msChips');
+  if (!msSelected.length) {
+    wrap.innerHTML = '';
+    $('msSummary').textContent = '';
+    return;
+  }
+  wrap.innerHTML = msSelected.map((s, i) => {
+    let cls = '';
+    let icon = '👤';
+    if (s.type === 'branch') { cls = 'branch'; icon = '▢'; }
+    else if (s.type === 'position') { cls = 'position'; icon = '⌬'; }
+    else if (s.type === 'tg') icon = '✈';
+    else if (s.type === 'me') icon = '👤';
+    const countText = s.count ? ' (' + s.count + ')' : '';
+    return '<span class="ms-chip ' + cls + '">' + icon + ' ' + escapeHtml(s.label) + countText +
+      '<span class="ms-chip-x" onclick="event.stopPropagation(); msRemove('+i+')">×</span></span>';
+  }).join('');
+  // Summary
+  const totalUsers = msCountFinal();
+  $('msSummary').textContent = totalUsers > 1
+    ? '→ ' + totalUsers + ' ta vazifa yaratiladi (har bir xodim uchun alohida)'
+    : (totalUsers === 1 ? '→ 1 ta vazifa yaratiladi' : '');
+}
+
+function msCountFinal() {
+  // Tanlangan items dan haqiqiy assignee userlarni hisoblaymiz
+  const finalIds = new Set();
+  for (const s of msSelected) {
+    if (s.type === 'me') finalIds.add('me:'+me.id);
+    else if (s.type === 'user') finalIds.add('user:'+s.id);
+    else if (s.type === 'tg') finalIds.add('tg:'+s.id);
+    else if (s.type === 'branch') {
+      tgUsersCache.forEach(u => {
+        if (u.branch_id === s.id && u.state === 'completed') {
+          if (u.linked_user_id) finalIds.add('user:'+u.linked_user_id);
+          else finalIds.add('tg:'+u.id);
+        }
+      });
+    } else if (s.type === 'position') {
+      tgUsersCache.forEach(u => {
+        if (u.position === s.id && u.state === 'completed') {
+          if (u.linked_user_id) finalIds.add('user:'+u.linked_user_id);
+          else finalIds.add('tg:'+u.id);
+        }
+      });
+    }
+  }
+  return finalIds.size;
+}
+
+function msKeyDown(e) {
+  if (e.key === 'Backspace' && !$('msInput').value && msSelected.length) {
+    msSelected.pop();
+    msRenderChips();
+    msFilter();
+  }
+  if (e.key === 'Escape') { msCloseDropdown(); $('msInput').blur(); }
+}
+
+// dropdown'ни tashqi click bilan yopish
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('#createBd .ms-wrap');
+  if (wrap && !wrap.contains(e.target)) msCloseDropdown();
+});
 
 function attachCreatePaste() {
   detachCreatePaste();
@@ -1888,55 +2144,101 @@ async function saveCreate() {
   const desc = $('cDesc').value.trim();
   const deadline = $('cDeadline').value;
   const deptId = $('cDept').value || null;
-  const asgRaw = $('cAssignee').value;
   let prio = parseInt($('cPriority').value, 10); if (isNaN(prio)||prio<0) prio=0; if (prio>10) prio=10;
   if (!title) { showMsg($('cMsg'), 'Nomi kerak.', 'err'); return; }
+
+  // Tanlangan biriktirilganlardan haqiqiy assignee'lar ro'yxatini chiqaramiz
+  // Har bir element: { assigned_to (uuid) | assigned_to_tg_bot_user (uuid) }
+  const targets = msResolveAssignees();
+  if (!targets.length) { showMsg($('cMsg'), 'Kimga biriktirishni tanlang', 'err'); return; }
+
   const btn = $('cBtn');
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
   try {
     let deadlineIso = null;
     if (deadline) { const v = deadline.length === 16 ? deadline + ':00' : deadline; deadlineIso = new Date(v + '+05:00').toISOString(); }
-    let assignedTo = null, assignedTgBotUser = null;
-    if (asgRaw && asgRaw.startsWith('tg:')) {
-      assignedTgBotUser = asgRaw.slice(3);
-    } else if (asgRaw && asgRaw.startsWith('user:')) {
-      assignedTo = asgRaw.slice(5);
-    } else {
-      assignedTo = me.id;
-    }
-    const { data, error } = await sb.from('tasks').insert({
+
+    // Parallel insert qilish — har assignee uchun bittadan vazifa
+    btn.textContent = targets.length > 1 ? ('Yaratilmoqda… 0/' + targets.length) : 'Yaratilmoqda…';
+    const inserts = targets.map(t => ({
       workspace_id: currentWs.id, department_id: deptId,
       title, description: desc || null,
       deadline: deadlineIso, priority_level: prio,
       created_by: me.id,
-      assigned_to: assignedTo,
-      assigned_to_tg_bot_user: assignedTgBotUser,
+      assigned_to: t.assigned_to || null,
+      assigned_to_tg_bot_user: t.assigned_to_tg_bot_user || null,
       status: window._cQuickStatus || 'new'
-    }).select().single();
+    }));
     window._cQuickStatus = null;
+    const { data, error } = await sb.from('tasks').insert(inserts).select();
     if (error) throw error;
-    // Subtasks insert (best-effort, parallel)
-    if (cPendingSubs.length) {
+
+    // Subtasks va fayllarni faqat birinchi vazifaga qo'shamиz (yoki barchasiga? — barchasiga foydaliroq)
+    // Soddasi: birinchi vazifaga (asosiy reference)
+    const firstTask = data[0];
+    if (cPendingSubs.length && firstTask) {
       const rows = cPendingSubs.map((s, i) => ({
-        workspace_id: currentWs.id, task_id: data.id, title: s.title, sort_order: i + 1
+        workspace_id: currentWs.id, task_id: firstTask.id, title: s.title, sort_order: i + 1
       }));
       try { await sb.from('task_subtasks').insert(rows); } catch(e) {}
     }
-    // Fayllarni yuklash (parallel)
-    if (cPendingFiles.length) {
+    if (cPendingFiles.length && firstTask) {
       btn.textContent = '📎 Fayllar yuklanmoqda…';
-      await Promise.all(cPendingFiles.map(f => uploadAttachmentSilent(data.id, f)));
+      await Promise.all(cPendingFiles.map(f => uploadAttachmentSilent(firstTask.id, f)));
     }
-    tasksCache.unshift(data);
-    closeCreate(); toast('✅ Vazifa yaratildi', 'ok');
+
+    // Local cache va UI yangilash
+    data.forEach(d => tasksCache.unshift(d));
+    closeCreate();
+    toast(targets.length > 1 ? ('✅ ' + targets.length + ' ta vazifa yaratildi') : '✅ Vazifa yaratildi', 'ok');
     refreshActiveView();
-    if (data.assigned_to && data.assigned_to !== me.id) {
-      tgNotifyAssignment(data.id, { user_id: data.assigned_to });
-    } else if (data.assigned_to_tg_bot_user) {
-      tgNotifyAssignment(data.id, { tg_bot_user_id: data.assigned_to_tg_bot_user });
+
+    // Telegram + n8n notify (har vazifa uchun)
+    for (const t of data) {
+      if (t.assigned_to && t.assigned_to !== me.id) {
+        tgNotifyAssignment(t.id, { user_id: t.assigned_to });
+      } else if (t.assigned_to_tg_bot_user) {
+        tgNotifyAssignment(t.id, { tg_bot_user_id: t.assigned_to_tg_bot_user });
+      }
+      notifyN8n('task.created', { task: t });
     }
-    notifyN8n('task.created', { task: data });
-  } catch (e) { showMsg($('cMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Yaratish'; }
+  } catch (e) {
+    showMsg($('cMsg'), translateErr(e.message), 'err');
+    btn.disabled=false; btn.textContent='Yaratish';
+  }
+}
+
+// Tanlangan multi-select elementlardan oxiri assignee'lar ro'yxati
+function msResolveAssignees() {
+  const out = new Map(); // key -> {assigned_to, assigned_to_tg_bot_user}
+  for (const s of msSelected) {
+    if (s.type === 'me') {
+      out.set('user:'+me.id, { assigned_to: me.id });
+    } else if (s.type === 'user') {
+      out.set('user:'+s.id, { assigned_to: s.id });
+    } else if (s.type === 'tg') {
+      // Agar TG user saytga ulangan bo'lsa — auth user sifatida olamиz
+      const u = tgUsersCache.find(x => x.id === s.id);
+      if (u && u.linked_user_id) out.set('user:'+u.linked_user_id, { assigned_to: u.linked_user_id });
+      else out.set('tg:'+s.id, { assigned_to_tg_bot_user: s.id });
+    } else if (s.type === 'branch') {
+      // Filialdan completed bot user'lar
+      tgUsersCache.forEach(u => {
+        if (u.branch_id === s.id && u.state === 'completed') {
+          if (u.linked_user_id) out.set('user:'+u.linked_user_id, { assigned_to: u.linked_user_id });
+          else out.set('tg:'+u.id, { assigned_to_tg_bot_user: u.id });
+        }
+      });
+    } else if (s.type === 'position') {
+      tgUsersCache.forEach(u => {
+        if (u.position === s.id && u.state === 'completed') {
+          if (u.linked_user_id) out.set('user:'+u.linked_user_id, { assigned_to: u.linked_user_id });
+          else out.set('tg:'+u.id, { assigned_to_tg_bot_user: u.id });
+        }
+      });
+    }
+  }
+  return Array.from(out.values());
 }
 
 // Caches for currently open task detail
@@ -2501,12 +2803,16 @@ async function renderDeptsList() {
   $('newDeptBtn').style.display = canManage ? 'inline-block' : 'none';
   const wrap = $('deptsList'); const empty = $('deptsEmpty');
 
-  // Hamma bo'lim ko'rinadi (ism, vazifa soni, xodim soni)
-  if (!departments.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
+  // Search filter
+  const q = ($('deptSearch')?.value || '').trim().toLowerCase();
+  let visible = departments.slice();
+  if (q) visible = visible.filter(d => (d.name||'').toLowerCase().includes(q) || (d.description||'').toLowerCase().includes(q));
+
+  if (!visible.length) { wrap.innerHTML = ''; empty.style.display = 'block'; empty.innerHTML = q ? '<strong>Topilmadi</strong>Qidiruv natijasi bo\'sh.' : '<strong>Hali bo\'lim yo\'q</strong>Bo\'limlar (IT, HR, Savdo, ...) yarating.'; return; }
   empty.style.display = 'none';
 
-  // Xodim sonini olamiz
-  const deptIds = departments.map(d => d.id);
+  // Xodim sonini olamиz
+  const deptIds = visible.map(d => d.id);
   let memberCounts = {};
   if (deptIds.length) {
     const { data: dms } = await sb.from('department_members').select('department_id').in('department_id', deptIds);
@@ -2514,7 +2820,7 @@ async function renderDeptsList() {
   }
 
   const myDeptIds = new Set(myDepts.map(d => d.department_id));
-  wrap.innerHTML = departments.map(d => {
+  wrap.innerHTML = visible.map(d => {
     const taskCount = tasksCache.filter(t => t.department_id === d.id).length;
     const memCount = memberCounts[d.id] || 0;
     const isMember = myDeptIds.has(d.id);
@@ -3334,64 +3640,88 @@ async function loadTgUsers() {
   const { data, error } = await sb.from('tg_bot_users').select('*').eq('integration_id', intg.id).order('created_at', { ascending: false });
   if (error) { toast(translateErr(error.message), 'err'); return; }
   tgUsersCache = data || [];
+  window._curTgIntg = intg;
+  // Populate filter selects
+  if ($('tgBranchFilter')) {
+    let optsB = '<option value="all">Hamma filiallar</option>';
+    optsB += '<option value="none">Filialsiz</option>';
+    branchesCache.forEach(b => { optsB += '<option value="'+b.id+'">'+escapeHtml(b.name)+'</option>'; });
+    $('tgBranchFilter').innerHTML = optsB;
+  }
+  if ($('tgPosFilter')) {
+    const positions = [...new Set(tgUsersCache.map(u => u.position).filter(Boolean))].sort();
+    let optsP = '<option value="all">Hamma lavozimlar</option>';
+    positions.forEach(p => { optsP += '<option value="'+escapeHtml(p)+'">'+escapeHtml(p)+'</option>'; });
+    $('tgPosFilter').innerHTML = optsP;
+  }
   renderTgUsers(intg);
 }
+
+function renderTgUsersFiltered() { renderTgUsers(window._curTgIntg); }
 
 function renderTgUsers(intg) {
   const list = $('tgUsersList'); const empty = $('tgUsersEmpty');
   if (!tgUsersCache.length) {
     list.innerHTML = '';
     empty.style.display = 'block';
-    empty.innerHTML = '<strong>Hali bot foydalanuvchilari yo\'q</strong>Botingizga (<b>@' + escapeHtml(intg.bot_username || '') + '</b>) <code style="background:#F0EFEA;padding:1px 6px;border-radius:4px;">/start</code> bossin, ro\'yxat shu yerda paydo bo\'ladi.';
+    empty.innerHTML = '<strong>Hali bot foydalanuvchilari yo\'q</strong>Botingizga (<b>@' + escapeHtml(intg?.bot_username || '') + '</b>) <code style="background:#F0EFEA;padding:1px 6px;border-radius:4px;">/start</code> bossin, ro\'yxat shu yerda paydo bo\'ladi.';
+    return;
+  }
+  // Apply filters
+  const q = ($('tgSearch')?.value || '').trim().toLowerCase();
+  const fB = $('tgBranchFilter')?.value || 'all';
+  const fP = $('tgPosFilter')?.value || 'all';
+  let visible = tgUsersCache.slice();
+  if (q) visible = visible.filter(u =>
+    (u.full_name||'').toLowerCase().includes(q) ||
+    (u.phone||'').toLowerCase().includes(q) ||
+    (u.tg_username||'').toLowerCase().includes(q) ||
+    (u.position||'').toLowerCase().includes(q) ||
+    String(u.tg_chat_id||'').includes(q)
+  );
+  if (fB === 'none') visible = visible.filter(u => !u.branch_id);
+  else if (fB !== 'all') visible = visible.filter(u => u.branch_id === fB);
+  if (fP !== 'all') visible = visible.filter(u => u.position === fP);
+
+  if (!visible.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    empty.innerHTML = '<strong>Topilmadi</strong>Boshqa filter\'larni sinab ko\'ring.';
     return;
   }
   empty.style.display = 'none';
-  list.innerHTML = tgUsersCache.map(u => {
+  list.innerHTML = visible.map(u => {
     const stateLabel = u.state === 'completed' ? 'Ro\'yxatdan o\'tgan' : (u.state === 'awaiting_name' ? 'Ism kutmoqda' : 'Telefon kutmoqda');
     const stateBadge = u.state === 'completed' ? '<span class="badge ok">' + stateLabel + '</span>' : '<span class="badge muted">' + stateLabel + '</span>';
     const linkedBadge = u.linked_user_id ? '<span class="badge info" style="margin-left:6px;">Saytда</span>' : '';
     const phoneText = u.phone ? '📞 ' + escapeHtml(u.phone) : '';
     const userText = u.tg_username ? '@' + escapeHtml(u.tg_username) : '';
+    const posText = u.position ? '⌬ ' + escapeHtml(u.position) : '';
+    const branchName = u.branch_id ? (branchesCache.find(b => b.id === u.branch_id) || {}).name || '' : '';
+    const branchText = branchName ? '▢ ' + escapeHtml(branchName) : '';
 
     const actions = [];
     if (u.state === 'completed') {
-      // Vazifa biriktirish — TG-only (yangi modal kerakmas — create modal'дa allaqachon TG users bor)
       actions.push('<button class="btn sm secondary" onclick="quickAssignTg(\''+u.id+'\')">Vazifa berish</button>');
       if (!u.linked_user_id) {
         actions.push('<button class="btn sm" onclick="openInviteFromTg(\''+u.id+'\')">Saytga taklif</button>');
-        // Qo'lda bog'lash — agar owner shu telefon raqamiga ega bo'lsa
-        actions.push('<button class="btn sm secondary" onclick="manualLink(\''+u.id+'\', \''+(u.full_name || '').replace(/\'/g, "\\'")+'\')">Bog\'lash</button>');
       }
     }
     return '<div class="item static" style="align-items: flex-start;">' +
       '<div style="padding-right:10px; padding-top: 2px;">' + avatarHtml(u.full_name || u.tg_username || '?') + '</div>' +
       '<div class="item-mid">' +
         '<div class="item-title">' + escapeHtml(u.full_name || '(ism yo\'q)') + ' ' + linkedBadge + '</div>' +
-        '<div class="item-meta">' + (phoneText ? '<span>' + phoneText + '</span><span class="dot-sep"></span>' : '') + (userText ? '<span>' + userText + '</span><span class="dot-sep"></span>' : '') + stateBadge + '</div>' +
+        '<div class="item-meta" style="flex-wrap:wrap;">' +
+          (phoneText ? '<span>' + phoneText + '</span><span class="dot-sep"></span>' : '') +
+          (posText ? '<span>' + posText + '</span><span class="dot-sep"></span>' : '') +
+          (branchText ? '<span>' + branchText + '</span><span class="dot-sep"></span>' : '') +
+          (userText ? '<span>' + userText + '</span><span class="dot-sep"></span>' : '') +
+          stateBadge +
+        '</div>' +
       '</div>' +
       '<div class="item-right" style="display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-end;">' + actions.join('') + '</div>' +
     '</div>';
   }).join('');
-}
-
-async function manualLink(tgBotUserId, name) {
-  // Owner saytda taklif sinash uchun o'zining auth user'ига qo'lda bog'lay olsin
-  const choices = wsMembers.map(m => (m.profile.full_name || 'A\'zo') + ' (' + (m.user_id === me.id ? 'siz' : m.user_id.slice(0,8)) + ')').join('\n');
-  const chosen = prompt('Qaysi auth user\'gа bog\'laysiz?\n\nMavjud:\n' + choices + '\n\nFull name yoki UUID yozing (yoki "men" deb yozsangiz siz bilan bog\'lanadi):');
-  if (!chosen) return;
-  let userId = null;
-  if (chosen.toLowerCase() === 'men') userId = me.id;
-  else {
-    const m = wsMembers.find(x => (x.profile.full_name || '').toLowerCase() === chosen.toLowerCase() || x.user_id === chosen);
-    if (m) userId = m.user_id;
-  }
-  if (!userId) { toast('Foydalanuvchi topilmadi', 'err'); return; }
-  try {
-    const { error } = await sb.from('tg_bot_users').update({ linked_user_id: userId }).eq('id', tgBotUserId);
-    if (error) throw error;
-    toast('✓ Bog\'landi', 'ok');
-    loadTgUsers();
-  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
 async function quickAssignTg(tgBotUserId) {
