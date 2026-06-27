@@ -150,14 +150,18 @@
   .empty strong { display: block; color: var(--ink); font-size: 15.5px; font-weight: 600; margin-bottom: 4px; }
 
   /* KANBAN */
-  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: start; }
-  .kan-col { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-height: 200px; }
+  .kanban { display: flex; gap: 12px; align-items: stretch; height: calc(100vh - 220px); min-height: 500px; overflow-x: auto; padding-bottom: 8px; }
+  .kan-col { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; flex: 0 0 280px; min-width: 280px; max-height: 100%; }
   .kan-col.drop-over { background: #ECF7F1; border-color: var(--accent); }
-  .kan-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+  .kan-col.col-drop-target-left { box-shadow: -3px 0 0 var(--accent); }
+  .kan-col.col-drop-target-right { box-shadow: 3px 0 0 var(--accent); }
+  .kan-col.col-dragging { opacity: .4; }
+  .kan-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; flex-shrink: 0; cursor: grab; }
+  .kan-head:active { cursor: grabbing; }
   .kan-title { font-size: 12.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
   .kan-count { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
-  .kan-list { display: flex; flex-direction: column; gap: 8px; min-height: 50px; }
-  .kan-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: grab; transition: border-color .12s, transform .05s, opacity .15s; }
+  .kan-list { display: flex; flex-direction: column; gap: 8px; min-height: 50px; flex: 1; overflow-y: auto; padding-right: 4px; padding-bottom: 6px; }
+  .kan-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: grab; transition: border-color .12s, transform .05s, opacity .15s; flex-shrink: 0; }
   .kan-card:hover { border-color: var(--line-strong); }
   .kan-card:active { cursor: grabbing; }
   .kan-card.dragging { opacity: .4; }
@@ -357,7 +361,8 @@
   .copy-row code { flex: 1; word-break: break-all; }
 
   @media (max-width: 980px) {
-    .kanban { grid-template-columns: 1fr; }
+    .kanban { height: auto; flex-direction: column; }
+    .kan-col { flex: 1 1 auto; min-width: auto; max-height: 60vh; }
     .cal-cell { min-height: 60px; padding: 4px; }
     #dashSplit { grid-template-columns: 1fr !important; }
   }
@@ -617,6 +622,27 @@
       </div>
     </section>
 
+    <!-- Branches (filiallar) -->
+    <section id="page-branches" style="display:none">
+      <div class="row-head">
+        <h2 class="h2" style="margin:0">Filiallar</h2>
+        <button class="btn" onclick="openBranchModal()">+ Yangi filial</button>
+      </div>
+      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Sizning kompaniya filiallari. Har xodim biror filialga biriktirilad i.</div>
+      <div id="branchesList" class="list"></div>
+      <div id="branchesEmpty" class="empty" style="display:none"><strong>Filial yo'q</strong>+ Yangi filial bossam yarating yoki Aros PG'dан import qiling.</div>
+    </section>
+
+    <!-- Positions (lavozimlar) -->
+    <section id="page-positions" style="display:none">
+      <div class="row-head">
+        <h2 class="h2" style="margin:0">Lavozimlar</h2>
+      </div>
+      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Lavozimlar bo'yicha xodimlar ro'yxati. Lavozim TG bot user'lari profilidан olinadi.</div>
+      <div id="positionsList" class="list"></div>
+      <div id="positionsEmpty" class="empty" style="display:none"><strong>Lavozim ma'lumoti yo'q</strong>Avval bot foydalanuvchilarini import qiling — lavozim ma'lumotlari ham bilan keladi.</div>
+    </section>
+
     <!-- Settings (faqat owner) -->
     <section id="page-settings" style="display:none">
       <div class="row-head"><h2 class="h2" style="margin:0">Sozlamalar</h2></div>
@@ -714,6 +740,31 @@
     <div class="modal-body" id="tgConnectBody">—</div>
     <div class="modal-foot">
       <button class="btn secondary" onclick="closeTgConnect()">Yopish</button>
+    </div>
+  </div>
+</div>
+
+<!-- BRANCH MODAL -->
+<div class="modal-backdrop" id="branchBd">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-head">
+      <h3 id="branchModalTitle">Yangi filial</h3>
+      <button class="x-btn" onclick="closeBranchModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Filial nomi *</label><input id="brName" type="text" placeholder="Masalan: Yunusobod" /></div>
+      <div class="field"><label>Aros warehouse_id (ixtiyoriy)</label><input id="brExternalId" type="text" placeholder="Masalan: 37" /><div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Aros API bilan moslik uchun</div></div>
+      <div class="field"><label>Manzil (ixtiyoriy)</label><input id="brAddress" type="text" /></div>
+      <div class="field">
+        <label>Boshliq (ixtiyoriy)</label>
+        <select id="brManager"><option value="">— Tanlang —</option></select>
+      </div>
+      <div class="msg" id="brMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" id="brDeleteBtn" onclick="deleteBranch()" style="margin-right:auto; display:none">O'chirish</button>
+      <button class="btn secondary" onclick="closeBranchModal()">Bekor</button>
+      <button class="btn" id="brSaveBtn" onclick="saveBranch()">Saqlash</button>
     </div>
   </div>
 </div>
@@ -1039,6 +1090,204 @@ async function doLogout() {
 }
 
 // ============ BOOTSTRAP & WORKSPACE ============
+// ============ BRANCHES (FILIALLAR) ============
+let curBranchEdit = null;
+
+async function loadBranches() {
+  if (!currentWs || currentWs.kind !== 'organization') { branchesCache = []; renderBranches(); return; }
+  const { data, error } = await sb.from('branches').select('*').eq('workspace_id', currentWs.id).order('name', { ascending: true });
+  if (error) { toast(translateErr(error.message), 'err'); return; }
+  branchesCache = data || [];
+  renderBranches();
+}
+
+async function renderBranches() {
+  const list = $('branchesList'); const empty = $('branchesEmpty');
+  if (!branchesCache.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  // Har filial uchun xodimlar sonи (tg_bot_users dan)
+  const counts = {};
+  try {
+    // Telegram integratsiya bormi
+    const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
+    if (tgIntg) {
+      const { data: bus } = await sb.from('tg_bot_users').select('branch_id').eq('integration_id', tgIntg.id);
+      (bus || []).forEach(b => { if (b.branch_id) counts[b.branch_id] = (counts[b.branch_id] || 0) + 1; });
+    }
+  } catch (e) {}
+
+  list.innerHTML = branchesCache.map(b => {
+    const mgr = b.manager_user_id ? (wsMembers.find(m => m.user_id === b.manager_user_id) || {}).profile : null;
+    const mgrName = mgr ? mgr.full_name : (b.manager_tg_bot_user_id ? '✈ Bot user' : null);
+    const userCount = counts[b.id] || 0;
+    return '<div class="item" onclick="editBranch(\''+b.id+'\')">' +
+      '<div style="padding-right:10px;">' + avatarHtml(b.name) + '</div>' +
+      '<div class="item-mid">' +
+        '<div class="item-title">' + escapeHtml(b.name) + (b.external_id ? ' <span class="badge muted" style="font-size:11px;">#'+escapeHtml(b.external_id)+'</span>' : '') + '</div>' +
+        '<div class="item-meta">' +
+          '<span>👥 ' + userCount + ' xodim</span>' +
+          (mgrName ? '<span class="dot-sep"></span><span>👔 ' + escapeHtml(mgrName) + '</span>' : '') +
+          (b.address ? '<span class="dot-sep"></span><span>📍 ' + escapeHtml(b.address) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="item-right"><span class="badge muted">Tahrirlash →</span></div>' +
+    '</div>';
+  }).join('');
+}
+
+function openBranchModal() {
+  curBranchEdit = null;
+  $('branchModalTitle').textContent = 'Yangi filial';
+  $('brName').value = '';
+  $('brExternalId').value = '';
+  $('brAddress').value = '';
+  populateBranchManagerSelect(null);
+  $('brDeleteBtn').style.display = 'none';
+  hideMsg($('brMsg'));
+  $('branchBd').classList.add('show');
+  setTimeout(() => $('brName').focus(), 50);
+}
+
+function editBranch(id) {
+  const b = branchesCache.find(x => x.id === id); if (!b) return;
+  curBranchEdit = b;
+  $('branchModalTitle').textContent = 'Filialni tahrirlash';
+  $('brName').value = b.name || '';
+  $('brExternalId').value = b.external_id || '';
+  $('brAddress').value = b.address || '';
+  populateBranchManagerSelect(b.manager_user_id || b.manager_tg_bot_user_id);
+  $('brDeleteBtn').style.display = 'inline-block';
+  hideMsg($('brMsg'));
+  $('branchBd').classList.add('show');
+}
+
+function populateBranchManagerSelect(selectedVal) {
+  let html = '<option value="">— Tanlang —</option>';
+  if (wsMembers.length) {
+    html += '<optgroup label="Sayt foydalanuvchilari">';
+    wsMembers.forEach(m => {
+      html += '<option value="user:'+m.user_id+'" '+(selectedVal===m.user_id?'selected':'')+'>' + escapeHtml(m.profile.full_name || 'A\'zo') + '</option>';
+    });
+    html += '</optgroup>';
+  }
+  if (tgUsersCache.length) {
+    html += '<optgroup label="Bot foydalanuvchilari">';
+    tgUsersCache.forEach(u => {
+      html += '<option value="tg:'+u.id+'" '+(selectedVal===u.id?'selected':'')+'>✈ ' + escapeHtml(u.full_name || u.tg_username || 'Bot user') + '</option>';
+    });
+    html += '</optgroup>';
+  }
+  $('brManager').innerHTML = html;
+}
+
+function closeBranchModal() { $('branchBd').classList.remove('show'); curBranchEdit = null; }
+
+async function saveBranch() {
+  const name = ($('brName').value || '').trim();
+  if (!name) { showMsg($('brMsg'), 'Nomi kerak', 'err'); return; }
+  const externalId = ($('brExternalId').value || '').trim() || null;
+  const address = ($('brAddress').value || '').trim() || null;
+  const mgrRaw = $('brManager').value;
+  let manager_user_id = null, manager_tg_bot_user_id = null;
+  if (mgrRaw && mgrRaw.startsWith('user:')) manager_user_id = mgrRaw.slice(5);
+  else if (mgrRaw && mgrRaw.startsWith('tg:')) manager_tg_bot_user_id = mgrRaw.slice(3);
+  const payload = { name, external_id: externalId, address, manager_user_id, manager_tg_bot_user_id };
+  const btn = $('brSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqда…';
+  try {
+    if (curBranchEdit) {
+      const { data, error } = await sb.from('branches').update(payload).eq('id', curBranchEdit.id).select().single();
+      if (error) throw error;
+      const i = branchesCache.findIndex(b => b.id === curBranchEdit.id);
+      if (i >= 0) branchesCache[i] = data;
+    } else {
+      payload.workspace_id = currentWs.id;
+      const { data, error } = await sb.from('branches').insert(payload).select().single();
+      if (error) throw error;
+      branchesCache.push(data);
+    }
+    closeBranchModal();
+    renderBranches();
+    toast('✓ Saqlandi', 'ok');
+  } catch (e) {
+    showMsg($('brMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Saqlash';
+  }
+}
+
+async function deleteBranch() {
+  if (!curBranchEdit) return;
+  if (!confirm('"'+curBranchEdit.name+'" filialni o\'chirasizmi? Xodimlar saqlanadi, lekin filial bog\'lanmasi yo\'qoladi.')) return;
+  try {
+    const { error } = await sb.from('branches').delete().eq('id', curBranchEdit.id);
+    if (error) throw error;
+    branchesCache = branchesCache.filter(b => b.id !== curBranchEdit.id);
+    closeBranchModal();
+    renderBranches();
+    toast('O\'chirildi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// ============ POSITIONS (LAVOZIMLAR) ============
+async function loadPositions() {
+  if (!currentWs || currentWs.kind !== 'organization') { renderPositions([]); return; }
+  // tg_bot_users dan position bo'yicha guruh
+  const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
+  if (!tgIntg) { renderPositions([]); return; }
+  const { data, error } = await sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id);
+  if (error) { renderPositions([]); return; }
+  // Position bo'yicha guruh
+  const groups = {};
+  (data || []).forEach(u => {
+    const pos = u.position || '(lavozimsiz)';
+    if (!groups[pos]) groups[pos] = [];
+    groups[pos].push(u);
+  });
+  renderPositions(groups);
+}
+
+function renderPositions(groups) {
+  const list = $('positionsList'); const empty = $('positionsEmpty');
+  const keys = Object.keys(groups);
+  if (!keys.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  // Position ko'rsatish uchun localized labels (Aros default)
+  const POS_LABELS = {
+    'sotuvchi': '🛒 Sotuvchi',
+    'filial_boshligi': '👔 Filial boshlig\'i',
+    'ceo': '👑 CEO',
+    'bugalter': '📊 Bugalter',
+    'hodim': '🧑‍💼 Xodim',
+    '(lavozimsiz)': '— Lavozimsiz —'
+  };
+
+  // Sort positions by count desc
+  const sortedKeys = keys.sort((a, b) => groups[b].length - groups[a].length);
+
+  list.innerHTML = sortedKeys.map(pos => {
+    const users = groups[pos];
+    const label = POS_LABELS[pos] || pos;
+    const usersHtml = users.slice(0, 50).map(u => {
+      const phone = u.phone ? '📞 ' + escapeHtml(u.phone) : '';
+      const branchName = u.branch_id ? (branchesCache.find(b => b.id === u.branch_id) || {}).name || '' : '';
+      return '<div style="display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:8px;" class="pos-user-item">' +
+        avatarHtml(u.full_name || u.tg_username || '?', 'sm') +
+        '<div style="flex:1; min-width:0;">' +
+          '<div style="font-size:13.5px; font-weight:500;">' + escapeHtml(u.full_name || '(ism yo\'q)') + '</div>' +
+          '<div style="font-size:11.5px; color:var(--muted);">' + phone + (branchName ? (phone?' · ':'') + '▢ ' + escapeHtml(branchName) : '') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="settings-section">' +
+      '<h3 style="display:flex; align-items:center; justify-content:space-between;"><span>' + escapeHtml(label) + '</span><span class="badge muted">' + users.length + ' xodim</span></h3>' +
+      '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 4px;">' + usersHtml + '</div>' +
+      (users.length > 50 ? '<div style="font-size:12px; color:var(--muted); margin-top:8px;">va yana ' + (users.length - 50) + ' nafar…</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
 function loadSettings() {
   $('setWsName').value = currentWs.name || '';
   $('setProfName').value = myProfile.full_name || '';
@@ -1164,6 +1413,7 @@ async function loadCurrentContext() {
   // (Create task modal'да assignee sifatida ko'rinadi.) Faqat owner ko'radi (RLS).
   tgUsersCache = [];
   integrationsCache = [];
+  branchesCache = [];
   if (currentWs.kind === 'organization') {
     // Integratsiyalarni ham yuklab qo'yamиz (notifyN8n uchun kerak)
     const { data: intgs } = await sb.from('integrations_safe').select('*').eq('workspace_id', currentWs.id);
@@ -1173,6 +1423,9 @@ async function loadCurrentContext() {
       const { data: bus } = await sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id).eq('state', 'completed');
       tgUsersCache = bus || [];
     }
+    // Branches
+    const { data: brs } = await sb.from('branches').select('*').eq('workspace_id', currentWs.id).order('name');
+    branchesCache = brs || [];
   }
 
   const { data: sub } = await sb.from('subscriptions').select('*').eq('workspace_id', currentWs.id).maybeSingle();
@@ -1316,6 +1569,8 @@ function renderSidebar() {
     html += '<button class="side-link ' + (currentPage === 'integrations' ? 'active' : '') + '" onclick="goPage(\'integrations\')"><span class="ic">⚡</span> Integratsiyalar</button>';
     if (canManage) {
       html += '<button class="side-link ' + (currentPage === 'tgusers' ? 'active' : '') + '" onclick="goPage(\'tgusers\')"><span class="ic">✈</span> Bot foydalanuvchilari</button>';
+      html += '<button class="side-link ' + (currentPage === 'branches' ? 'active' : '') + '" onclick="goPage(\'branches\')"><span class="ic">▢</span> Filiallar</button>';
+      html += '<button class="side-link ' + (currentPage === 'positions' ? 'active' : '') + '" onclick="goPage(\'positions\')"><span class="ic">⌬</span> Lavozimlar</button>';
     }
   }
   if (myWsRole === 'owner') {
@@ -1405,7 +1660,7 @@ function goPage(p) {
   currentPage = p;
   if (p !== 'department') currentDeptId = null;
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations','tgusers','settings'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
   if (p === 'tasks') renderTasksList();
   if (p === 'departments') renderDeptsList();
   if (p === 'team') renderTeam();
@@ -1413,6 +1668,8 @@ function goPage(p) {
   if (p === 'tgusers') loadTgUsers();
   if (p === 'dashboard') updateDashboard(null);
   if (p === 'settings') loadSettings();
+  if (p === 'branches') loadBranches();
+  if (p === 'positions') loadPositions();
 }
 
 function goDept(deptId) {
@@ -1426,7 +1683,7 @@ function goDept(deptId) {
   currentPage = 'department';
   currentDeptView = 'kanban';
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations','tgusers','settings'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
   renderDeptHeader();
   setDeptView('kanban');
 }
@@ -1500,6 +1757,8 @@ function taskItemHtml(t, showDept) {
 let cPendingSubs = []; // [{title}]
 let cPendingFiles = []; // [File]
 let kanbanColumns = []; // [{id, name, status, color, sort_order, is_default}]
+let branchesCache = []; // workspace branches
+let integrationsCache = []; // workspace integrations (safe view)
 let kcSelectedColor = '#3B82F6';
 let _createPasteHandler = null;
 
@@ -2468,8 +2727,9 @@ function renderKanban() {
       ? ''
       : '<div class="kan-col-actions"><button class="kan-col-action-btn" title="O\'chirish" onclick="event.stopPropagation(); deleteColumn(\''+colId+'\')">×</button></div>';
 
-    return '<div class="kan-col" data-col="'+colId+'" data-status="'+col.status+'" ondragover="kanDragOver(event)" ondragleave="kanDragLeave(event)" ondrop="kanDrop(event, \''+col.status+'\')">' +
-      '<div class="kan-head">' +
+    return '<div class="kan-col" data-col="'+colId+'" data-status="'+col.status+'"' +
+      ' ondragover="kanDragOver(event)" ondragleave="kanDragLeave(event)" ondrop="kanDrop(event, \''+col.status+'\')">' +
+      '<div class="kan-head"' + (isFb ? '' : ' draggable="true" ondragstart="colDragStart(event, \''+colId+'\')" ondragend="colDragEnd(event)" ondragover="colDragOver(event)" ondragleave="colDragLeave(event)" ondrop="colDrop(event, \''+colId+'\')"') + '>' +
         '<div class="kan-col-head">' + colorDot + nameHtml + '</div>' +
         '<div style="display:flex; align-items:center; gap:6px;">' +
           actions +
@@ -2477,7 +2737,7 @@ function renderKanban() {
         '</div>' +
       '</div>' +
       '<div class="kan-list">' + (cardsHtml || '') + '</div>' +
-      (canEditWorkspace() ? '<button class="kan-add-task" onclick="quickAddToColumn(\''+col.status+'\')">+ Vazifa qo\'shish</button>' : '') +
+      (canEditWorkspace() && col.status === 'new' ? '<button class="kan-add-task" onclick="quickAddToColumn(\''+col.status+'\')">+ Vazifa qo\'shish</button>' : '') +
     '</div>';
   }).join('');
 }
@@ -2572,8 +2832,83 @@ async function deleteColumn(colId) {
 
 function kanDragStart(e, id) { dragTaskId = id; e.dataTransfer.effectAllowed = 'move'; e.target.classList.add('dragging'); }
 function kanDragEnd(e) { e.target.classList.remove('dragging'); document.querySelectorAll('.kan-col').forEach(c => c.classList.remove('drop-over')); dragTaskId = null; }
-function kanDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; e.currentTarget.classList.add('drop-over'); }
+function kanDragOver(e) {
+  // Faqat card-drag bo'lsa
+  if (!dragTaskId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drop-over');
+}
 function kanDragLeave(e) { e.currentTarget.classList.remove('drop-over'); }
+
+// ----- COLUMN REORDER -----
+let dragColId = null;
+function colDragStart(e, colId) {
+  e.stopPropagation();
+  dragColId = colId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', 'col:' + colId);
+  // Visual feedback — butun column ko'rsatkichini xira
+  const colEl = e.target.closest('.kan-col');
+  if (colEl) colEl.classList.add('col-dragging');
+}
+function colDragEnd(e) {
+  document.querySelectorAll('.kan-col').forEach(c => { c.classList.remove('col-dragging', 'col-drop-target-left', 'col-drop-target-right'); });
+  dragColId = null;
+}
+function colDragOver(e) {
+  if (!dragColId) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const colEl = e.currentTarget.closest('.kan-col');
+  if (!colEl) return;
+  const tgtId = colEl.dataset.col;
+  if (tgtId === dragColId) return;
+  document.querySelectorAll('.kan-col').forEach(c => { c.classList.remove('col-drop-target-left', 'col-drop-target-right'); });
+  // Drop'ни chap yoki o'ng tomonni aniqlash
+  const rect = colEl.getBoundingClientRect();
+  const isLeft = (e.clientX - rect.left) < rect.width / 2;
+  colEl.classList.add(isLeft ? 'col-drop-target-left' : 'col-drop-target-right');
+}
+function colDragLeave(e) {
+  // Yumshoq leave — boshqa elementga kirsak avtomatik clean bo'ladi over'дa
+}
+async function colDrop(e, tgtColId) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!dragColId || dragColId === tgtColId) return;
+  const colEl = e.currentTarget.closest('.kan-col');
+  if (!colEl) return;
+  const rect = colEl.getBoundingClientRect();
+  const isLeft = (e.clientX - rect.left) < rect.width / 2;
+  await reorderColumn(dragColId, tgtColId, isLeft);
+  dragColId = null;
+}
+
+async function reorderColumn(srcId, tgtId, before) {
+  // Yangi tartibni qurib chiqamиz
+  const sorted = kanbanColumns.slice().sort((a, b) => (a.sort_order||0) - (b.sort_order||0));
+  const srcIdx = sorted.findIndex(c => c.id === srcId);
+  const tgtIdx = sorted.findIndex(c => c.id === tgtId);
+  if (srcIdx < 0 || tgtIdx < 0) return;
+  const [moved] = sorted.splice(srcIdx, 1);
+  let insertAt = sorted.findIndex(c => c.id === tgtId);
+  if (!before) insertAt += 1;
+  sorted.splice(insertAt, 0, moved);
+  // Yangi sort_order qiymatlarini hisoblaymiz va DB'gа yozamiz
+  const updates = sorted.map((c, i) => ({ id: c.id, sort_order: i + 1 }));
+  try {
+    // Mahalliy state'ni darrov yangilaymиz
+    updates.forEach(u => {
+      const c = kanbanColumns.find(x => x.id === u.id);
+      if (c) c.sort_order = u.sort_order;
+    });
+    renderKanban();
+    // DB update parallel
+    await Promise.all(updates.map(u => sb.from('kanban_columns').update({ sort_order: u.sort_order }).eq('id', u.id)));
+    toast('✓ Tartib o\'zgartirildi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
 function kanDrop(e, newStatus) {
   e.preventDefault();
   e.currentTarget.classList.remove('drop-over');
@@ -3095,7 +3430,6 @@ function openInviteFromTg(tgBotUserId) {
   $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor" selected>Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
   $('inviteBd').classList.add('show');
 }
-let integrationsCache = [];
 let tgSetupState = { step: 1, token: '', bot: null };
 let myTgLinks = []; // foydalanuvchining bog'langan botlari (workspace bo'yicha)
 
@@ -3394,7 +3728,7 @@ async function init() {
     }
     // Escape => close any open modal
     if (e.key === 'Escape') {
-      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd','addColumnBd'].forEach(id => {
+      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd','addColumnBd','branchBd'].forEach(id => {
         const el = $(id);
         if (el && el.classList.contains('show')) el.classList.remove('show');
       });
