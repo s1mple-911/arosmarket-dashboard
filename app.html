@@ -226,6 +226,38 @@
   .icon-btn { background: none; border: 1px solid var(--line); padding: 6px 10px; border-radius: 7px; font-size: 12.5px; color: var(--ink-soft); cursor: pointer; }
   .icon-btn:hover { background: #F4F3EF; }
 
+  /* INTEGRATIONS */
+  .intg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .intg-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .intg-head { display: flex; align-items: flex-start; gap: 12px; }
+  .intg-logo { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
+  .intg-logo.tg { background: #229ED9; color: #fff; }
+  .intg-logo.n8n { background: #EA4B71; color: #fff; }
+  .intg-logo.gdrive { background: #F4F3EF; color: #5F6368; }
+  .intg-logo.soon { background: #F4F3EF; color: var(--muted); }
+  .intg-name { font-weight: 600; font-size: 14.5px; color: var(--ink); margin-bottom: 2px; }
+  .intg-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .intg-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+  .intg-status.on { background: var(--accent-soft); color: var(--accent-ink); }
+  .intg-status.off { background: #F0EFEA; color: var(--muted); }
+  .intg-status.err { background: var(--danger-soft); color: var(--danger); }
+  .intg-foot { margin-top: auto; display: flex; gap: 8px; }
+
+  /* SETUP WIZARD */
+  .step-num { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; color: var(--accent-ink); background: var(--accent-soft); display: inline-block; padding: 4px 11px; border-radius: 999px; margin-bottom: 14px; letter-spacing: .01em; }
+  .step-list { padding-left: 22px; margin: 0; font-size: 14px; line-height: 1.75; color: var(--ink-soft); }
+  .step-list li { margin-bottom: 8px; }
+  .step-list code, .kbd { background: #F0EFEA; padding: 1px 7px; border-radius: 5px; font-size: 12.5px; font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--ink); }
+  .ext-link { color: var(--accent-ink); font-weight: 600; text-decoration: none; }
+  .ext-link:hover { text-decoration: underline; }
+  .tip { background: #FFF9E6; border: 1px solid #F0E0A0; color: #7A5A12; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; margin-top: 16px; line-height: 1.5; }
+  .bot-preview { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 14px; }
+  .bot-preview .bp-av { width: 44px; height: 44px; border-radius: 50%; background: #229ED9; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
+  .bot-preview .bp-name { font-weight: 600; font-size: 15px; }
+  .bot-preview .bp-user { font-size: 13px; color: var(--muted); }
+  .copy-row { display: flex; gap: 8px; align-items: center; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; margin-top: 10px; }
+  .copy-row code { flex: 1; word-break: break-all; }
+
   @media (max-width: 980px) {
     .kanban { grid-template-columns: 1fr; }
     .cal-cell { min-height: 60px; padding: 4px; }
@@ -310,6 +342,7 @@
       <div class="side-user">
         <div class="side-user-avatar" id="userAv">?</div>
         <div class="side-user-info"><div class="side-user-name" id="userNm">—</div><div class="side-user-mail" id="userMl">—</div></div>
+        <button class="bell-btn" onclick="openTgConnect()" title="Telegram'ga ulanish" id="tgConnBtn" style="font-size:14px">✈</button>
         <button class="bell-btn" onclick="toggleNotif(event)" title="Bildirishnomalar">🔔<span class="bell-dot" id="bellDot" style="display:none"></span></button>
       </div>
       <button class="side-link" onclick="doLogout()" style="margin-top:4px"><span class="ic">↩</span> Chiqish</button>
@@ -419,7 +452,83 @@
         <div id="invitesList" class="list"></div>
       </div>
     </section>
+
+    <!-- Integrations -->
+    <section id="page-integrations" style="display:none">
+      <div class="row-head"><h2 class="h2" style="margin:0">Integratsiyalar</h2></div>
+      <div style="margin-bottom: 18px; font-size: 13.5px; color: var(--muted); line-height: 1.5;">Tashqi xizmatlarni ulang — bildirishnoma, ish jarayonlarini avtomatlashtirish va boshqalar.</div>
+      <div id="intgGrid" class="intg-grid"></div>
+    </section>
   </main>
+</div>
+
+<!-- TELEGRAM SETUP MODAL -->
+<div class="modal-backdrop" id="tgSetupBd">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-head">
+      <h3 id="tgSetupTitle">Telegram bot ulash</h3>
+      <button class="x-btn" onclick="closeTgSetup()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="tgStep1">
+        <div class="step-num">1-qadam — Yangi bot yarating</div>
+        <ol class="step-list">
+          <li>Telegram'da <a href="https://t.me/BotFather" target="_blank" class="ext-link">@BotFather</a> ni oching.</li>
+          <li>Yangi suhbat boshlab, <code class="kbd">/newbot</code> deb yozing.</li>
+          <li>Botingizning nomini bering (masalan: <b>Aros Tasks</b>).</li>
+          <li>Username bering — <b>oxiri <code>bot</code> bilan tugashi kerak</b> (masalan: <code>arostasks_bot</code>).</li>
+          <li>BotFather sizga tokenni qaytaradi — uni nusxalang, keyingi qadamga keling.</li>
+        </ol>
+        <div class="tip">
+          💡 Token shunday ko'rinishda bo'ladi: <code>7123456789:AAH...XYZ</code>. Uni hech kim bilan ulashmang — bu botingizning paroli.
+        </div>
+        <div style="margin-top: 18px; display:flex; justify-content: flex-end;">
+          <button class="btn" onclick="tgGoStep(2)">Davom etish →</button>
+        </div>
+      </div>
+
+      <div id="tgStep2" style="display:none">
+        <div class="step-num">2-qadam — Tokenni kiriting</div>
+        <p style="font-size:13.5px; color: var(--muted); margin: 0 0 14px;">BotFather bergan tokenni shu yerga joylashtiring. Biz uni Telegram orqali tekshirib, bot ma'lumotlarini olamiz.</p>
+        <div class="field">
+          <label>Bot tokeni *</label>
+          <input id="tgTokenInput" type="text" placeholder="7123456789:AAH..." autocomplete="off" />
+        </div>
+        <div class="msg" id="tgVerifyMsg"></div>
+        <div style="margin-top: 18px; display:flex; justify-content: space-between;">
+          <button class="btn secondary" onclick="tgGoStep(1)">← Orqaga</button>
+          <button class="btn" id="tgVerifyBtn" onclick="tgVerifyToken()">Tekshirish</button>
+        </div>
+      </div>
+
+      <div id="tgStep3" style="display:none">
+        <div class="step-num">3-qadam — Tasdiqlang</div>
+        <div class="bot-preview" id="tgBotPreview"></div>
+        <div style="font-size:13px; color: var(--muted); margin-top: 14px; line-height: 1.6;">
+          Saqlangach, biz botingizga webhook o'rnatamiz. Shundan keyin xodimlar botga <code>/start</code> bosib hisoblarini bog'lay oladi.
+        </div>
+        <div class="msg" id="tgSaveMsg"></div>
+        <div style="margin-top: 18px; display:flex; justify-content: space-between;">
+          <button class="btn secondary" onclick="tgGoStep(2)">← Orqaga</button>
+          <button class="btn" id="tgSaveBtn" onclick="tgSaveIntegration()">Saqlash va yoqish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TG CONNECT (foydalanuvchi profilida) -->
+<div class="modal-backdrop" id="tgConnectBd">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Hisobni Telegram'ga bog'lash</h3>
+      <button class="x-btn" onclick="closeTgConnect()">×</button>
+    </div>
+    <div class="modal-body" id="tgConnectBody">—</div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeTgConnect()">Yopish</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODALS -->
@@ -723,6 +832,8 @@ function renderSidebar() {
   $('userNm').textContent = myProfile.full_name || me.email.split('@')[0];
   $('userMl').textContent = me.email;
   $('userAv').textContent = initials(myProfile.full_name || me.email);
+  const tgBtn = $('tgConnBtn');
+  if (tgBtn) tgBtn.style.display = (currentWs.kind === 'organization') ? 'inline-block' : 'none';
 
   const drop = $('wsDrop');
   drop.innerHTML = workspaces.map(w =>
@@ -742,18 +853,23 @@ function renderSidebar() {
     html += '<div class="side-section">Bo\'limlar' + (canManage ? '<button class="add-mini" title="Yangi bo\'lim" onclick="openNewDept()">+</button>' : '') + '</div>';
     if (departments.length) {
       const myDeptIds = new Set(myDepts.map(d => d.department_id));
-      departments.forEach(d => {
-        if (canManage || myDeptIds.has(d.id)) {
+      // Qattiq xavfsizlik: faqat a'zo bo'lgan bo'limlarni ko'rsatamiz (admin ham bundan mustasno emas)
+      const visible = departments.filter(d => myDeptIds.has(d.id));
+      if (visible.length) {
+        visible.forEach(d => {
           const isActive = currentPage === 'department' && currentDeptId === d.id;
           html += '<button class="side-link ' + (isActive ? 'active' : '') + '" onclick="goDept(\''+d.id+'\')"><span class="ic">◫</span> ' + escapeHtml(d.name) + '</button>';
-        }
-      });
+        });
+      } else {
+        html += '<div style="padding: 6px 12px; font-size: 11.5px; color: var(--side-muted);">Sizga ochiq bo\'lim yo\'q</div>';
+      }
     } else {
       html += '<div style="padding: 6px 12px; font-size: 11.5px; color: var(--side-muted);">Hali yo\'q</div>';
     }
     html += '<div class="side-section">Boshqaruv</div>';
     html += '<button class="side-link ' + (currentPage === 'departments' ? 'active' : '') + '" onclick="goPage(\'departments\')"><span class="ic">▦</span> Bo\'limlar ro\'yxati</button>';
     html += '<button class="side-link ' + (currentPage === 'team' ? 'active' : '') + '" onclick="goPage(\'team\')"><span class="ic">☆</span> Jamoa</button>';
+    html += '<button class="side-link ' + (currentPage === 'integrations' ? 'active' : '') + '" onclick="goPage(\'integrations\')"><span class="ic">⚡</span> Integratsiyalar</button>';
   }
   $('sideNav').innerHTML = html;
 }
@@ -802,18 +918,25 @@ function goPage(p) {
   currentPage = p;
   if (p !== 'department') currentDeptId = null;
   renderSidebar();
-  ['dashboard','tasks','departments','department','team'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
   if (p === 'tasks') renderTasksList();
   if (p === 'departments') renderDeptsList();
   if (p === 'team') renderTeam();
+  if (p === 'integrations') loadIntegrations();
 }
 
 function goDept(deptId) {
+  // Qattiq xavfsizlik: faqat a'zo bo'lgan bo'limga kira oladi
+  const isMember = myDepts.some(d => d.department_id === deptId);
+  if (!isMember) {
+    toast('Bu bo\'limga sizning kirishingiz yo\'q', 'err');
+    return;
+  }
   currentDeptId = deptId;
   currentPage = 'department';
   currentDeptView = 'kanban';
   renderSidebar();
-  ['dashboard','tasks','departments','department','team'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
   renderDeptHeader();
   setDeptView('kanban');
 }
@@ -864,10 +987,14 @@ function openCreateInternal(forceDeptId) {
   hideMsg($('cMsg'));
   if (currentWs.kind === 'organization') {
     $('cDeptField').style.display = 'block';
-    $('cDept').innerHTML = '<option value="">(Bo\'limsiz)</option>' + departments.map(d => '<option value="'+d.id+'">'+escapeHtml(d.name)+'</option>').join('');
+    // Faqat o'zi a'zo bo'lgan bo'limlar (yoki owner/admin: hammasi)
+    const myDeptIds = new Set(myDepts.map(d => d.department_id));
+    const visible = (myWsRole==='owner' || myWsRole==='admin')
+      ? departments
+      : departments.filter(d => myDeptIds.has(d.id));
+    $('cDept').innerHTML = '<option value="">(Bo\'limsiz)</option>' + visible.map(d => '<option value="'+d.id+'">'+escapeHtml(d.name)+'</option>').join('');
     if (forceDeptId) $('cDept').value = forceDeptId;
   } else { $('cDeptField').style.display = 'none'; }
-  // Assignee dropdown — workspace a'zolari
   let assigneeHtml = '<option value="">(Mening o\'zimga)</option>';
   wsMembers.forEach(m => { if (m.user_id !== me.id) assigneeHtml += '<option value="'+m.user_id+'">' + escapeHtml(m.profile.full_name || 'A\'zo') + '</option>'; });
   $('cAssignee').innerHTML = assigneeHtml;
@@ -900,6 +1027,10 @@ async function saveCreate() {
     tasksCache.unshift(data);
     closeCreate(); toast('✅ Vazifa yaratildi', 'ok');
     refreshActiveView();
+    // Boshqa odamga biriktirilgan bo'lsa Telegram xabar
+    if (data.assigned_to && data.assigned_to !== me.id) {
+      tgNotifyAssignment(data.id, data.assigned_to);
+    }
   } catch (e) { showMsg($('cMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Yaratish'; }
 }
 
@@ -910,18 +1041,66 @@ function openDetail(id) {
   $('dTitle').textContent = t.title;
   const ov = isOverdue(t);
   const statusBtns = STATUS_ORDER.map(s => '<button class="filter-btn ' + (t.status===s?'active':'') + '" onclick="changeStatus('+t.id+',\''+s+'\')">'+STATUS_LBL[s]+'</button>').join('');
-  const dept = t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
   const asg = t.assigned_to ? (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile : null;
+
+  // Bo'lim ko'chirish: faqat foydalanuvchi a'zo bo'lgan bo'limlar + (bo'limsiz)
+  // Owner/admin esa hamma bo'limga ko'chira oladi (lekin u yerda a'zo bo'lmasa, ko'chirgandan keyin ko'rmaydi — bu sezilarli)
+  const canEditTask = (myWsRole==='owner' || myWsRole==='admin')
+    || (t.department_id && myDepts.some(x => x.department_id === t.department_id && (x.role==='editor' || x.role==='admin')))
+    || t.assigned_to === me.id || t.created_by === me.id;
+
+  const myDeptIds = new Set(myDepts.map(d => d.department_id));
+  // Workspace owner/admin hamma bo'limni ko'chira oladi; aks holda faqat a'zo bo'lgan bo'limlar
+  const transferTargets = (myWsRole==='owner' || myWsRole==='admin')
+    ? departments
+    : departments.filter(d => myDeptIds.has(d.id));
+
+  let deptHtml;
+  if (canEditTask && transferTargets.length) {
+    const opts = '<option value="">(Bo\'limsiz)</option>' + transferTargets.map(d =>
+      '<option value="'+d.id+'" '+(t.department_id===d.id?'selected':'')+'>'+escapeHtml(d.name)+'</option>'
+    ).join('');
+    deptHtml = '<div class="detail-row"><div class="lbl">Bo\'lim</div><div class="val">' +
+      '<select onchange="transferTask('+t.id+', this.value)" style="padding:7px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; background: var(--surface); font-family:inherit;">' + opts + '</select>' +
+      '</div></div>';
+  } else {
+    const dept = t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
+    deptHtml = dept ? '<div class="detail-row"><div class="lbl">Bo\'lim</div><div class="val">'+escapeHtml(dept)+'</div></div>' : '';
+  }
+
   $('dBody').innerHTML =
     (t.description ? '<div style="margin-bottom:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;">'+escapeHtml(t.description)+'</div>' : '') +
     '<div class="detail-row"><div class="lbl">Holat</div><div class="val"><div class="status-pick">'+statusBtns+'</div></div></div>' +
-    (dept ? '<div class="detail-row"><div class="lbl">Bo\'lim</div><div class="val">'+escapeHtml(dept)+'</div></div>' : '') +
+    deptHtml +
     (asg ? '<div class="detail-row"><div class="lbl">Biriktirildi</div><div class="val">'+escapeHtml(asg.full_name || 'A\'zo')+'</div></div>' : '') +
     '<div class="detail-row"><div class="lbl">Deadline</div><div class="val '+(ov?'task-overdue':'')+'">'+(t.deadline ? fmtDeadline(t.deadline) + (ov?' (o\'tgan)':'') : 'yo\'q')+'</div></div>' +
     '<div class="detail-row"><div class="lbl">Prioritet</div><div class="val">'+((t.priority_level||0)>0?'P'+t.priority_level:'—')+'</div></div>' +
     '<div class="detail-row"><div class="lbl">Yaratilgan</div><div class="val">'+new Date(t.created_at).toLocaleString('uz-UZ')+'</div></div>';
   $('dDelete').style.display = (myWsRole==='owner' || myWsRole==='admin') ? 'inline-block' : 'none';
   $('detailBd').classList.add('show');
+}
+
+async function transferTask(id, newDeptId) {
+  const newId = newDeptId || null;
+  try {
+    const { data, error } = await sb.from('tasks').update({ department_id: newId }).eq('id', id).select().single();
+    if (error) throw error;
+    const idx = tasksCache.findIndex(x => x.id === id);
+    if (idx >= 0) tasksCache[idx] = data;
+    toast('✅ Bo\'limga ko\'chirildi', 'ok');
+    refreshActiveView();
+    // Agar foydalanuvchi yangi bo'limning a'zosi bo'lmasa, vazifa modal hali ham ochiq qoladi
+    // lekin keyingi loadda RLS yashiradi. Buni darhol amalga oshirish uchun:
+    const visibleAfter = (newId === null) || myDepts.some(x => x.department_id === newId);
+    if (!visibleAfter) {
+      toast('Bu bo\'limga sizning kirishingiz yo\'q — vazifa endi ko\'rinmaydi', 'err');
+      closeDetail();
+      tasksCache = tasksCache.filter(t => t.id !== id);
+      refreshActiveView();
+    } else {
+      openDetail(id);
+    }
+  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 function closeDetail() { $('detailBd').classList.remove('show'); currentDetailId = null; }
 
@@ -972,19 +1151,41 @@ function renderDeptsList() {
   const canManage = myWsRole === 'owner' || myWsRole === 'admin';
   $('newDeptBtn').style.display = canManage ? 'inline-block' : 'none';
   const wrap = $('deptsList'); const empty = $('deptsEmpty');
-  if (!departments.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
+  // Owner/admin hamma bo'limni ko'radi (boshqarish uchun); boshqalar faqat a'zo bo'lgan
+  const myDeptIds = new Set(myDepts.map(d => d.department_id));
+  const visible = canManage ? departments : departments.filter(d => myDeptIds.has(d.id));
+  if (!visible.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  wrap.innerHTML = departments.map(d => {
+  wrap.innerHTML = visible.map(d => {
     const taskCount = tasksCache.filter(t => t.department_id === d.id).length;
-    return '<div class="item" onclick="goDept(\''+d.id+'\')">' +
+    const isMember = myDeptIds.has(d.id);
+    const lock = !isMember ? '<span class="badge muted" style="margin-right:6px;" title="Siz bu bo\'lim a\'zosi emassiz">🔒 Yopiq</span>' : '';
+    const action = isMember
+      ? '<span class="badge muted">→</span>'
+      : '<button class="link-btn" onclick="event.stopPropagation(); joinDeptAsAdmin(\''+d.id+'\')" style="color: var(--accent);">A\'zo bo\'lish</button>';
+    return '<div class="item" onclick="' + (isMember ? "goDept('"+d.id+"')" : "toast('A\\'zo bo\\'ling \\u2014 kirish uchun ruxsat kerak','err')") + '">' +
       '<div class="dot ts-in_progress"></div>' +
       '<div class="item-mid">' +
         '<div class="item-title">' + escapeHtml(d.name) + '</div>' +
-        '<div class="item-meta">' + (d.description ? escapeHtml(d.description) + '<span class="dot-sep"></span>' : '') + '<span>' + taskCount + ' vazifa</span></div>' +
+        '<div class="item-meta">' + lock + (d.description ? escapeHtml(d.description) + '<span class="dot-sep"></span>' : '') + '<span>' + taskCount + ' vazifa</span></div>' +
       '</div>' +
-      '<div class="item-right"><span class="badge muted">→</span></div>' +
+      '<div class="item-right">' + action + '</div>' +
     '</div>';
   }).join('');
+}
+
+// Owner/admin o'zini bo'limga qo'sha oladi (xavfsizlik: faqat workspace owner/admin)
+async function joinDeptAsAdmin(deptId) {
+  if (!(myWsRole==='owner' || myWsRole==='admin')) { toast('Faqat boshqaruvchi qila oladi', 'err'); return; }
+  if (!confirm('O\'zingizni bu bo\'limga "Boshqaruvchi" sifatida qo\'shasizmi?')) return;
+  try {
+    const { error } = await sb.from('department_members').insert({ department_id: deptId, user_id: me.id, role: 'admin' });
+    if (error) throw error;
+    myDepts.push({ department_id: deptId, role: 'admin' });
+    toast('✅ A\'zo bo\'ldingiz', 'ok');
+    renderSidebar();
+    renderDeptsList();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
 let editingDeptId = null;
@@ -1018,6 +1219,10 @@ async function saveDept() {
       const { data, error } = await sb.from('departments').insert({ workspace_id: currentWs.id, name, description: desc || null, created_by: me.id }).select().single();
       if (error) throw error;
       departments.push(data);
+      // Trigger meni admin sifatida qo'shdi — mahalliy state'ni ham yangilaymiz
+      if (!myDepts.some(x => x.department_id === data.id)) {
+        myDepts.push({ department_id: data.id, role: 'admin' });
+      }
       toast('✅ Bo\'lim yaratildi', 'ok');
     }
     closeDept();
@@ -1219,6 +1424,10 @@ async function addDeptMember() {
     const { data, error } = await sb.from('department_members').insert({ department_id: currentDeptId, user_id: uid, role }).select().single();
     if (error) throw error;
     deptTeamCache.push(data);
+    if (uid === me.id && !myDepts.some(x => x.department_id === currentDeptId)) {
+      myDepts.push({ department_id: currentDeptId, role });
+      renderSidebar();
+    }
     toast('✅ Qo\'shildi', 'ok');
     renderDeptTeam();
   } catch (e) { toast(translateErr(e.message), 'err'); }
@@ -1228,6 +1437,10 @@ async function changeDeptMemberRole(uid, role) {
     const { error } = await sb.from('department_members').update({ role }).eq('department_id', currentDeptId).eq('user_id', uid);
     if (error) throw error;
     const i = deptTeamCache.findIndex(x => x.user_id === uid); if (i>=0) deptTeamCache[i].role = role;
+    if (uid === me.id) {
+      const j = myDepts.findIndex(x => x.department_id === currentDeptId);
+      if (j>=0) myDepts[j].role = role;
+    }
     toast('Rol o\'zgartirildi', 'ok');
   } catch (e) { toast(translateErr(e.message), 'err'); loadDeptTeam(); }
 }
@@ -1237,6 +1450,12 @@ async function removeDeptMember(uid) {
     const { error } = await sb.from('department_members').delete().eq('department_id', currentDeptId).eq('user_id', uid);
     if (error) throw error;
     deptTeamCache = deptTeamCache.filter(x => x.user_id !== uid);
+    if (uid === me.id) {
+      myDepts = myDepts.filter(x => x.department_id !== currentDeptId);
+      toast('Bu bo\'limdan chiqarildingiz', 'ok');
+      goPage('departments');
+      return;
+    }
     toast('O\'chirildi', 'ok');
     renderDeptTeam();
   } catch (e) { toast(translateErr(e.message), 'err'); }
@@ -1391,6 +1610,226 @@ async function declineInvite(invId) {
 }
 
 // ============ INIT ============
+// ============ INTEGRATIONS ============
+let integrationsCache = [];
+let tgSetupState = { step: 1, token: '', bot: null };
+let myTgLinks = []; // foydalanuvchining bog'langan botlari (workspace bo'yicha)
+
+async function loadIntegrations() {
+  if (!currentWs || currentWs.kind !== 'organization') return;
+  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  if (!canManage) {
+    $('intgGrid').innerHTML = '<div class="empty"><strong>Faqat boshqaruvchi ko\'radi</strong>Integratsiyalarni faqat workspace egasi yoki administratori sozlaydi.</div>';
+    return;
+  }
+  const { data, error } = await sb.from('integrations_safe').select('*').eq('workspace_id', currentWs.id);
+  if (error) { toast(translateErr(error.message), 'err'); return; }
+  integrationsCache = data || [];
+  renderIntegrations();
+}
+
+const TOOL_META = {
+  telegram: { name: 'Telegram', desc: 'Vazifa, taklif va eslatmalarni botingiz orqali yetkazing.', logo: '✈', cls: 'tg', available: true },
+  n8n:      { name: 'n8n',      desc: 'Avtomatlashtirish va boshqa xizmatlarga ko\'prik.',           logo: 'n', cls: 'n8n', available: false },
+  gdrive:   { name: 'Google Drive', desc: 'Vazifa fayllarini Drive\'ga saqlash.',                    logo: 'D', cls: 'gdrive', available: false },
+};
+
+function renderIntegrations() {
+  const grid = $('intgGrid');
+  const tools = ['telegram','n8n','gdrive'];
+  grid.innerHTML = tools.map(tool => {
+    const meta = TOOL_META[tool];
+    const intg = integrationsCache.find(i => i.tool === tool);
+    let statusHtml, action;
+    if (intg && intg.is_enabled && intg.status === 'active') {
+      const botInfo = intg.bot_username ? '@' + intg.bot_username : '';
+      statusHtml = '<span class="intg-status on">●  Yoqilgan</span>' + (botInfo ? ' <span style="font-size:12px; color: var(--muted); margin-left:6px;">' + escapeHtml(botInfo) + '</span>' : '');
+      action = '<button class="btn secondary sm" onclick="openTgSetup(true)">Sozlash</button>' +
+               '<button class="btn sm" style="background: transparent; color: var(--danger); border: 1px solid var(--danger-soft);" onclick="disableIntegration(\''+intg.id+'\')">O\'chirish</button>';
+    } else if (intg && intg.status === 'error') {
+      statusHtml = '<span class="intg-status err">●  Xato</span>';
+      action = '<button class="btn sm" onclick="openTgSetup(true)">Qayta sozlash</button>';
+    } else {
+      statusHtml = '<span class="intg-status off">○  Yoqilmagan</span>';
+      if (!meta.available) {
+        action = '<span style="font-size:12.5px; color: var(--muted);">Tez orada</span>';
+      } else if (tool === 'telegram') {
+        action = '<button class="btn sm" onclick="openTgSetup(false)">Yoqish</button>';
+      }
+    }
+    return '<div class="intg-card">' +
+      '<div class="intg-head">' +
+        '<div class="intg-logo ' + meta.cls + '">' + meta.logo + '</div>' +
+        '<div style="flex:1; min-width:0;">' +
+          '<div class="intg-name">' + meta.name + '</div>' +
+          '<div class="intg-desc">' + meta.desc + '</div>' +
+          '<div style="margin-top:8px;">' + statusHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="intg-foot">' + action + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function disableIntegration(id) {
+  if (!confirm('Integratsiyani o\'chirib qo\'yasizmi? Sozlama saqlanadi, lekin xabarlar yuborilmaydi.')) return;
+  try {
+    const { error } = await sb.from('integrations').update({ is_enabled: false }).eq('id', id);
+    if (error) throw error;
+    toast('O\'chirildi', 'ok');
+    await loadIntegrations();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// ---- TELEGRAM SETUP WIZARD ----
+function openTgSetup(isReconfigure) {
+  tgSetupState = { step: 1, token: '', bot: null };
+  $('tgSetupTitle').textContent = isReconfigure ? 'Telegram botni qayta sozlash' : 'Telegram bot ulash';
+  tgGoStep(1);
+  $('tgTokenInput').value = '';
+  hideMsg($('tgVerifyMsg')); hideMsg($('tgSaveMsg'));
+  $('tgSetupBd').classList.add('show');
+}
+function closeTgSetup() { $('tgSetupBd').classList.remove('show'); }
+function tgGoStep(n) {
+  tgSetupState.step = n;
+  [1,2,3].forEach(i => { $('tgStep'+i).style.display = (i === n ? 'block' : 'none'); });
+  if (n === 2) setTimeout(() => $('tgTokenInput').focus(), 50);
+}
+
+async function tgVerifyToken() {
+  const token = $('tgTokenInput').value.trim();
+  const btn = $('tgVerifyBtn');
+  if (!token) { showMsg($('tgVerifyMsg'), 'Tokenni kiriting.', 'err'); return; }
+  if (!/^\d{6,12}:[A-Za-z0-9_-]{20,}$/.test(token)) { showMsg($('tgVerifyMsg'), 'Token formati noto\'g\'ri. BotFather bergan tokendan nusxa olganingizga ishonch hosil qiling.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Tekshirilmoqda…';
+  hideMsg($('tgVerifyMsg'));
+  try {
+    const { data, error } = await sb.functions.invoke('tg-verify', { body: { bot_token: token } });
+    if (error) throw error;
+    if (!data || !data.ok) {
+      showMsg($('tgVerifyMsg'), data?.error || 'Telegram tokenni rad etdi', 'err');
+      btn.disabled = false; btn.textContent = 'Tekshirish';
+      return;
+    }
+    tgSetupState.token = token;
+    tgSetupState.bot = { id: data.bot_id, username: data.bot_username, name: data.bot_name };
+    $('tgBotPreview').innerHTML =
+      '<div class="bp-av">' + (data.bot_name||'B').slice(0,1).toUpperCase() + '</div>' +
+      '<div><div class="bp-name">' + escapeHtml(data.bot_name) + '</div>' +
+      '<div class="bp-user">@' + escapeHtml(data.bot_username) + '</div></div>';
+    tgGoStep(3);
+  } catch (e) {
+    showMsg($('tgVerifyMsg'), 'Tekshirib bo\'lmadi: ' + (e?.message || e), 'err');
+    btn.disabled = false; btn.textContent = 'Tekshirish';
+  }
+}
+
+async function tgSaveIntegration() {
+  const btn = $('tgSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
+  hideMsg($('tgSaveMsg'));
+  try {
+    const config = {
+      bot_token: tgSetupState.token,
+      bot_id: tgSetupState.bot.id,
+      bot_username: tgSetupState.bot.username,
+      bot_name: tgSetupState.bot.name
+    };
+    // Upsert (agar oldin yoqilgan bo'lsa, yangilab qo'yamiz)
+    const existing = integrationsCache.find(i => i.tool === 'telegram');
+    if (existing) {
+      const { error } = await sb.from('integrations').update({ is_enabled: true, status: 'active', last_error: null, config, updated_at: new Date().toISOString() }).eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await sb.from('integrations').insert({ workspace_id: currentWs.id, tool: 'telegram', is_enabled: true, status: 'active', config, created_by: me.id });
+      if (error) throw error;
+    }
+
+    // Webhook'ni botda o'rnatish (tg-verify edge function shu serverda bo'lsa, biz SUPABASE_URL'ga webhook qo'yamiz)
+    const webhookUrl = SUPABASE_URL + '/functions/v1/tg-webhook?wid=' + currentWs.id;
+    try {
+      await fetch('https://api.telegram.org/bot' + tgSetupState.token + '/setWebhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: webhookUrl, allowed_updates: ['message','callback_query'] })
+      });
+    } catch (e) { /* webhook xatosi muhim emas — keyin qayta sozlash mumkin */ }
+
+    toast('✅ Telegram bot yoqildi', 'ok');
+    closeTgSetup();
+    await loadIntegrations();
+  } catch (e) {
+    showMsg($('tgSaveMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Saqlash va yoqish';
+  }
+}
+
+// ---- USER: o'z hisobini Telegram'ga bog'lash ----
+async function openTgConnect() {
+  // Joriy workspace'ning Telegram integratsiyasi bormi?
+  if (currentWs.kind !== 'organization') { toast('Faqat kompaniyada', 'err'); return; }
+  const { data: intg } = await sb.from('integrations_safe').select('*').eq('workspace_id', currentWs.id).eq('tool', 'telegram').maybeSingle();
+  if (!intg || !intg.is_enabled) {
+    $('tgConnectBody').innerHTML = '<div class="empty"><strong>Bot ulanmagan</strong>Bu kompaniyaning Telegram boti hali ulanmagan. Administratorga murojaat qiling.</div>';
+    $('tgConnectBd').classList.add('show');
+    return;
+  }
+  // Mavjud bog'lanish bormi?
+  const { data: link } = await sb.from('tg_chat_links').select('id, tg_username, tg_first_name').eq('integration_id', intg.id).eq('user_id', me.id).maybeSingle();
+  if (link) {
+    $('tgConnectBody').innerHTML =
+      '<div style="font-size:14px; line-height:1.6;">✅ Sizning hisobingiz <b>@' + escapeHtml(intg.bot_username || 'bot') + '</b> botiga allaqachon bog\'langan.</div>' +
+      '<div style="font-size:13px; color: var(--muted); margin-top:8px;">Telegram nomi: ' + escapeHtml(link.tg_first_name || link.tg_username || '—') + '</div>' +
+      '<div style="margin-top:14px;"><button class="btn danger sm" onclick="unlinkTg(\''+link.id+'\')">Bog\'lanishni uzish</button></div>';
+    $('tgConnectBd').classList.add('show');
+    return;
+  }
+  // Yangi bog'lanish — token yaratamiz
+  const token = (Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0, 24);
+  const { error } = await sb.from('tg_link_tokens').insert({ token, user_id: me.id, integration_id: intg.id });
+  if (error) { toast(translateErr(error.message), 'err'); return; }
+  const startUrl = 'https://t.me/' + intg.bot_username + '?start=' + token;
+  $('tgConnectBody').innerHTML =
+    '<div style="font-size:14px; line-height:1.55; margin-bottom: 14px;">Hisobingizni <b>@' + escapeHtml(intg.bot_username) + '</b> botiga bog\'lash uchun quyidagi havolani oching:</div>' +
+    '<a href="' + startUrl + '" target="_blank" class="btn block" style="text-decoration:none; text-align:center;">Telegram\'da botni ochish</a>' +
+    '<div class="copy-row" style="margin-top:14px;"><code>' + escapeHtml(startUrl) + '</code><button class="icon-btn" onclick="navigator.clipboard.writeText(\''+startUrl+'\').then(()=>toast(\'Nusxalandi\',\'ok\'))">Nusxa</button></div>' +
+    '<div style="font-size:12px; color: var(--muted); margin-top:12px;">⏱ Havola 15 daqiqa amal qiladi. Bot ichida <b>/start</b> tugmasini bosgach, bog\'lanish tugaydi va siz xabarlar ola boshlaysiz.</div>';
+  $('tgConnectBd').classList.add('show');
+}
+function closeTgConnect() { $('tgConnectBd').classList.remove('show'); }
+async function unlinkTg(linkId) {
+  if (!confirm('Bog\'lanishni uzasizmi? Xabarlar boshqa kelmaydi.')) return;
+  try {
+    const { error } = await sb.from('tg_chat_links').delete().eq('id', linkId);
+    if (error) throw error;
+    toast('Uzildi', 'ok');
+    closeTgConnect();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// Vazifa biriktirilganda foydalanuvchiga TG xabar yuborish (frontend chaqirig'i)
+async function tgNotifyAssignment(taskId, assigneeUserId) {
+  if (!assigneeUserId || assigneeUserId === me.id) return; // o'zimga yubormaymiz
+  if (currentWs.kind !== 'organization') return;
+  const t = tasksCache.find(x => x.id === taskId);
+  if (!t) return;
+  const dept = t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
+  const lines = [
+    '🔔 <b>Yangi vazifa biriktirildi</b>',
+    '',
+    '📝 <b>' + (t.title || '') + '</b>',
+    dept ? ('📂 ' + dept) : '',
+    t.deadline ? ('⏰ Deadline: ' + fmtDeadline(t.deadline)) : '',
+    (t.priority_level||0) > 0 ? ('🔥 Prioritet: P' + t.priority_level) : '',
+    '',
+    'Beruvchi: ' + (myProfile.full_name || me.email),
+  ].filter(Boolean).join('\n');
+  try {
+    await sb.functions.invoke('tg-send', { body: { workspace_id: currentWs.id, user_id: assigneeUserId, text: lines } });
+  } catch (e) { /* sokin xato — TG yoqilmagan yoki user bog'lanmagan */ }
+}
+
 async function init() {
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   sb.auth.onAuthStateChange(event => { if (event === 'PASSWORD_RECOVERY') showResetStep(); });
