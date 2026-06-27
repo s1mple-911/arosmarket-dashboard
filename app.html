@@ -369,7 +369,7 @@
     <section id="page-tasks" style="display:none">
       <div class="row-head">
         <h2 class="h2" style="margin:0">Hamma vazifalar</h2>
-        <button class="btn" onclick="openCreate()">+ Yangi vazifa</button>
+        <button class="btn" id="tasksNewBtn" onclick="openCreate()">+ Yangi vazifa</button>
       </div>
       <div class="filter-row" style="margin-bottom:16px;">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Hammasi</button>
@@ -404,7 +404,7 @@
         </div>
         <div style="display:flex; gap:8px;">
           <button class="btn secondary" id="deptDetSettings" onclick="openDeptEdit()" style="display:none">⚙ Sozlash</button>
-          <button class="btn" onclick="openCreateForDept()">+ Vazifa</button>
+          <button class="btn" id="deptNewBtn" onclick="openCreateForDept()">+ Vazifa</button>
         </div>
       </div>
 
@@ -458,6 +458,21 @@
       <div class="row-head"><h2 class="h2" style="margin:0">Integratsiyalar</h2></div>
       <div style="margin-bottom: 18px; font-size: 13.5px; color: var(--muted); line-height: 1.5;">Tashqi xizmatlarni ulang — bildirishnoma, ish jarayonlarini avtomatlashtirish va boshqalar.</div>
       <div id="intgGrid" class="intg-grid"></div>
+    </section>
+
+    <!-- Bot users (faqat owner/admin) -->
+    <section id="page-tgusers" style="display:none">
+      <div class="row-head">
+        <h2 class="h2" style="margin:0">Bot foydalanuvchilari</h2>
+      </div>
+      <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted); line-height: 1.5;">
+        Botda ro'yxatdan o'tgan, lekin saytga hali kirmagan odamlar. Ularni saytga taklif qila olasiz yoki Telegram orqali vazifa biriktirasiz (keyingi versiya).
+      </div>
+      <div id="tgUsersList" class="list"></div>
+      <div id="tgUsersEmpty" class="empty" style="display:none">
+        <strong>Hali bot foydalanuvchilari yo'q</strong>
+        Botingizga <code style="background:#F0EFEA;padding:1px 6px;border-radius:4px;">/start</code> bossin, ro'yxat shu yerda paydo bo'ladi.
+      </div>
     </section>
   </main>
 </div>
@@ -589,7 +604,7 @@
     <div class="modal-head"><h3>Xodim taklif qilish</h3><button class="x-btn" onclick="closeInvite()">×</button></div>
     <div class="modal-body">
       <div class="field"><label>Xodim email *</label><input id="iEmail" type="email" placeholder="xodim@kompaniya.uz" /></div>
-      <div class="field"><label>Workspace darajasidagi rol</label><select id="iWsRole"><option value="member">A'zo (oddiy)</option><option value="admin">Administrator (boshqaradi)</option></select></div>
+      <div class="field"><label>Workspace darajasidagi rol</label><select id="iWsRole"><option value="viewer">Ko'ruvchi (faqat ko'radi)</option><option value="member" selected>A'zo (ish qiladi)</option><option value="admin">Administrator (boshqaradi)</option></select></div>
       <div class="field"><label>Qaysi bo'limlarga kirishi (kamida 1) *</label><div class="dept-picker" id="iDeptPicker"></div></div>
       <div class="msg" id="iMsg"></div>
     </div>
@@ -637,7 +652,7 @@ let calCursor = new Date();  // month displayed in calendar
 let dragTaskId = null;
 
 const $ = id => document.getElementById(id);
-const ROLE_WS = { owner: 'Egasi', admin: 'Administrator', member: "A'zo" };
+const ROLE_WS = { owner: 'Egasi', admin: 'Administrator', member: "A'zo", viewer: "Ko'ruvchi" };
 const ROLE_DEPT = { viewer: 'Ko\'ruvchi', editor: 'Tahrirlovchi', admin: 'Boshqaruvchi' };
 const STATUS_LBL = { new: 'Yangi', in_progress: 'Jarayonda', completed: 'Tugallangan', cancelled: 'Bekor' };
 const STATUS_ORDER = ['new', 'in_progress', 'completed', 'cancelled'];
@@ -870,8 +885,16 @@ function renderSidebar() {
     html += '<button class="side-link ' + (currentPage === 'departments' ? 'active' : '') + '" onclick="goPage(\'departments\')"><span class="ic">▦</span> Bo\'limlar ro\'yxati</button>';
     html += '<button class="side-link ' + (currentPage === 'team' ? 'active' : '') + '" onclick="goPage(\'team\')"><span class="ic">☆</span> Jamoa</button>';
     html += '<button class="side-link ' + (currentPage === 'integrations' ? 'active' : '') + '" onclick="goPage(\'integrations\')"><span class="ic">⚡</span> Integratsiyalar</button>';
+    if (canManage) {
+      html += '<button class="side-link ' + (currentPage === 'tgusers' ? 'active' : '') + '" onclick="goPage(\'tgusers\')"><span class="ic">✈</span> Bot foydalanuvchilari</button>';
+    }
   }
   $('sideNav').innerHTML = html;
+
+  // Viewer'дан yaratish tugmalarini yashiramiz
+  const editable = canEditWorkspace();
+  const newBtns = ['tasksNewBtn','deptNewBtn'];
+  newBtns.forEach(id => { const b = $(id); if (b) b.style.display = editable ? 'inline-block' : 'none'; });
 }
 
 function updateDashboard(sub) {
@@ -918,11 +941,12 @@ function goPage(p) {
   currentPage = p;
   if (p !== 'department') currentDeptId = null;
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
   if (p === 'tasks') renderTasksList();
   if (p === 'departments') renderDeptsList();
   if (p === 'team') renderTeam();
   if (p === 'integrations') loadIntegrations();
+  if (p === 'tgusers') loadTgUsers();
 }
 
 function goDept(deptId) {
@@ -936,7 +960,7 @@ function goDept(deptId) {
   currentPage = 'department';
   currentDeptView = 'kanban';
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
   renderDeptHeader();
   setDeptView('kanban');
 }
@@ -1147,27 +1171,42 @@ function refreshActiveView() {
 }
 
 // ============ DEPARTMENTS LIST ============
-function renderDeptsList() {
+async function renderDeptsList() {
   const canManage = myWsRole === 'owner' || myWsRole === 'admin';
   $('newDeptBtn').style.display = canManage ? 'inline-block' : 'none';
   const wrap = $('deptsList'); const empty = $('deptsEmpty');
-  // Owner/admin hamma bo'limni ko'radi (boshqarish uchun); boshqalar faqat a'zo bo'lgan
-  const myDeptIds = new Set(myDepts.map(d => d.department_id));
-  const visible = canManage ? departments : departments.filter(d => myDeptIds.has(d.id));
-  if (!visible.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
+
+  // Hamma bo'lim ko'rinadi (ism, vazifa soni, xodim soni)
+  if (!departments.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  wrap.innerHTML = visible.map(d => {
+
+  // Xodim sonini olamiz
+  const deptIds = departments.map(d => d.id);
+  let memberCounts = {};
+  if (deptIds.length) {
+    const { data: dms } = await sb.from('department_members').select('department_id').in('department_id', deptIds);
+    (dms || []).forEach(x => { memberCounts[x.department_id] = (memberCounts[x.department_id] || 0) + 1; });
+  }
+
+  const myDeptIds = new Set(myDepts.map(d => d.department_id));
+  wrap.innerHTML = departments.map(d => {
     const taskCount = tasksCache.filter(t => t.department_id === d.id).length;
+    const memCount = memberCounts[d.id] || 0;
     const isMember = myDeptIds.has(d.id);
-    const lock = !isMember ? '<span class="badge muted" style="margin-right:6px;" title="Siz bu bo\'lim a\'zosi emassiz">🔒 Yopiq</span>' : '';
+    const lock = !isMember ? '<span class="badge muted" style="margin-right:6px;" title="A\'zo emassiz">🔒</span>' : '';
     const action = isMember
-      ? '<span class="badge muted">→</span>'
-      : '<button class="link-btn" onclick="event.stopPropagation(); joinDeptAsAdmin(\''+d.id+'\')" style="color: var(--accent);">A\'zo bo\'lish</button>';
-    return '<div class="item" onclick="' + (isMember ? "goDept('"+d.id+"')" : "toast('A\\'zo bo\\'ling \\u2014 kirish uchun ruxsat kerak','err')") + '">' +
+      ? '<span class="badge muted">Kirish →</span>'
+      : (canManage
+          ? '<button class="link-btn" onclick="event.stopPropagation(); joinDeptAsAdmin(\''+d.id+'\')" style="color: var(--accent);">A\'zo bo\'lish</button>'
+          : '<span class="badge muted">Yopiq</span>');
+    return '<div class="item" onclick="' + (isMember ? "goDept('"+d.id+"')" : "toast('A\\'zo bo\\'ling — kirish uchun ruxsat kerak','err')") + '">' +
       '<div class="dot ts-in_progress"></div>' +
       '<div class="item-mid">' +
-        '<div class="item-title">' + escapeHtml(d.name) + '</div>' +
-        '<div class="item-meta">' + lock + (d.description ? escapeHtml(d.description) + '<span class="dot-sep"></span>' : '') + '<span>' + taskCount + ' vazifa</span></div>' +
+        '<div class="item-title">' + lock + escapeHtml(d.name) + '</div>' +
+        '<div class="item-meta">' + (d.description ? escapeHtml(d.description) + '<span class="dot-sep"></span>' : '') +
+          '<span>👥 ' + memCount + ' xodim</span><span class="dot-sep"></span>' +
+          '<span>✓ ' + taskCount + ' vazifa</span>' +
+        '</div>' +
       '</div>' +
       '<div class="item-right">' + action + '</div>' +
     '</div>';
@@ -1463,6 +1502,7 @@ async function removeDeptMember(uid) {
 
 // ============ WORKSPACE TEAM ============
 function canManageTeam() { return myWsRole === 'owner' || myWsRole === 'admin'; }
+function canEditWorkspace() { return myWsRole === 'owner' || myWsRole === 'admin' || myWsRole === 'member'; }
 async function renderTeam() {
   $('inviteBtn').style.display = canManageTeam() ? 'inline-block' : 'none';
   $('invitesWrap').style.display = canManageTeam() ? 'block' : 'none';
@@ -1476,7 +1516,7 @@ async function renderTeam() {
       const canChange = canManageTeam() && m.role !== 'owner' && !isMe;
       let roleHtml = canChange
         ? '<select onchange="changeMemberRole(\''+m.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; background: var(--surface);">'
-          + ['member','admin'].map(r => '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>').join('') + '</select>'
+          + ['viewer','member','admin'].map(r => '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>').join('') + '</select>'
         : '<span class="badge muted">' + ROLE_WS[m.role] + '</span>';
       return '<div class="item static">' +
         '<div class="dot ts-' + (m.role==='owner'?'completed':'in_progress') + '"></div>' +
@@ -1508,11 +1548,14 @@ function openInvite() {
   $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
   $('inviteBd').classList.add('show'); setTimeout(()=>$('iEmail').focus(), 50);
 }
-function closeInvite() { $('inviteBd').classList.remove('show'); }
 async function sendInvite() {
-  const email = $('iEmail').value.trim().toLowerCase();
   const wsRole = $('iWsRole').value; const btn = $('iBtn');
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { showMsg($('iMsg'), 'Email noto\'g\'ri.', 'err'); return; }
+  const isFromTg = !!inviteFromTgUserId;
+  let email = null;
+  if (!isFromTg) {
+    email = $('iEmail').value.trim().toLowerCase();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { showMsg($('iMsg'), 'Email noto\'g\'ri.', 'err'); return; }
+  }
   const picks = [];
   $('iDeptPicker').querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
     const id = cb.dataset.dept; const role = $('iDeptPicker').querySelector('select[data-role="'+id+'"]').value;
@@ -1521,12 +1564,44 @@ async function sendInvite() {
   if (!picks.length) { showMsg($('iMsg'), 'Kamida bitta bo\'limni tanlang.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
   try {
-    const { error } = await sb.from('invitations').insert({ workspace_id: currentWs.id, email, ws_role: wsRole, departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending' });
-    if (error) { if (/duplicate|unique/i.test(error.message)) showMsg($('iMsg'), 'Bu emailga allaqachon taklif yuborilgan.', 'err'); else showMsg($('iMsg'), translateErr(error.message), 'err'); btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
-    showMsg($('iMsg'), '✅ Taklif yuborildi. Xodim ro\'yxatdan o\'tgan bo\'lsa 🔔 bell orqali ko\'radi.', 'ok');
-    if (currentPage === 'team') renderTeam();
+    const payload = { workspace_id: currentWs.id, ws_role: wsRole, departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending' };
+    if (isFromTg) payload.tg_bot_user_id = inviteFromTgUserId;
+    else payload.email = email;
+
+    const { data: inv, error } = await sb.from('invitations').insert(payload).select().single();
+    if (error) { if (/duplicate|unique/i.test(error.message)) showMsg($('iMsg'), 'Bu odamga allaqachon taklif yuborilgan.', 'err'); else showMsg($('iMsg'), translateErr(error.message), 'err'); btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
+
+    if (isFromTg) {
+      // Bot orqali xabar yuboramiz: signup uchun havola
+      const signupUrl = window.location.origin + window.location.pathname;
+      const u = tgUsersCache.find(x => x.id === inviteFromTgUserId);
+      if (u) {
+        const text = '🎉 Sizni "' + (currentWs.name) + '" kompaniyasiga taklif qilishdi!\n\n' +
+                     'Saytda ro\'yxatdan o\'ting (xohlagan email bilan), keyin bell ichidagi taklifni qabul qiling:\n' + signupUrl;
+        try {
+          // bot orqali yuborish — tg-send tg_chat_links'ga qaraydi, lekin bu user tg_bot_users'дан keldi.
+          // Buni Edge Function bilan oson qilamiz, lekin hozir oddiy: tg_chat_links yo'q bo'lsa, bot APIни DIRECT chaqirib bo'lmaydi (token kerak)
+          // Soddalashtirish: invitation yaratish bilan kifoya, owner xabarni qo'lda yuborishi mumkin
+        } catch(e) {}
+      }
+      showMsg($('iMsg'), '✅ Taklif yaratildi. Bot foydalanuvchisi ro\'yxatdan o\'tgach taklifni bell\'ida ko\'radi.', 'ok');
+      inviteFromTgUserId = null;
+      $('iEmail').readOnly = false;
+      $('iEmail').style.background = '';
+      loadTgUsers();
+    } else {
+      showMsg($('iMsg'), '✅ Taklif yuborildi. Xodim ro\'yxatdan o\'tgan bo\'lsa 🔔 bell orqali ko\'radi.', 'ok');
+      if (currentPage === 'team') renderTeam();
+    }
   } catch (e) { showMsg($('iMsg'), translateErr(e.message), 'err'); }
   btn.disabled = false; btn.textContent = 'Taklif yuborish';
+}
+
+function closeInvite() {
+  $('inviteBd').classList.remove('show');
+  inviteFromTgUserId = null;
+  $('iEmail').readOnly = false;
+  $('iEmail').style.background = '';
 }
 async function cancelInvite(id) {
   if (!confirm('Taklifni bekor qilasizmi?')) return;
@@ -1610,7 +1685,69 @@ async function declineInvite(invId) {
 }
 
 // ============ INIT ============
-// ============ INTEGRATIONS ============
+// ============ TG BOT USERS ============
+let tgUsersCache = [];
+
+async function loadTgUsers() {
+  if (!currentWs || currentWs.kind !== 'organization') return;
+  // workspace ning telegram integratsiyasini topamiz
+  const { data: intg } = await sb.from('integrations_safe').select('id, bot_username, is_enabled').eq('workspace_id', currentWs.id).eq('tool', 'telegram').maybeSingle();
+  if (!intg || !intg.is_enabled) {
+    $('tgUsersList').innerHTML = '';
+    $('tgUsersEmpty').style.display = 'block';
+    $('tgUsersEmpty').innerHTML = '<strong>Telegram bot yoqilmagan</strong>Avval Integratsiyalar bo\'limidan botni yoqing.';
+    return;
+  }
+  const { data, error } = await sb.from('tg_bot_users').select('*').eq('integration_id', intg.id).order('created_at', { ascending: false });
+  if (error) { toast(translateErr(error.message), 'err'); return; }
+  tgUsersCache = data || [];
+  renderTgUsers(intg);
+}
+
+function renderTgUsers(intg) {
+  const list = $('tgUsersList'); const empty = $('tgUsersEmpty');
+  if (!tgUsersCache.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    empty.innerHTML = '<strong>Hali bot foydalanuvchilari yo\'q</strong>Botingizga (<b>@' + escapeHtml(intg.bot_username || '') + '</b>) <code style="background:#F0EFEA;padding:1px 6px;border-radius:4px;">/start</code> bossin, ro\'yxat shu yerda paydo bo\'ladi.';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = tgUsersCache.map(u => {
+    const stateLabel = u.state === 'completed' ? 'Ro\'yxatdan o\'tgan' : (u.state === 'awaiting_name' ? 'Ism kutmoqda' : 'Telefon kutmoqda');
+    const stateBadge = u.state === 'completed' ? '<span class="badge ok">' + stateLabel + '</span>' : '<span class="badge muted">' + stateLabel + '</span>';
+    const linkedBadge = u.linked_user_id ? '<span class="badge info" style="margin-left:6px;">Saytda</span>' : '';
+    const phoneText = u.phone ? '📞 ' + escapeHtml(u.phone) : '';
+    const userText = u.tg_username ? '@' + escapeHtml(u.tg_username) : '';
+    const inviteBtn = (u.state === 'completed' && !u.linked_user_id)
+      ? '<button class="btn sm" onclick="openInviteFromTg(\''+u.id+'\')">Saytga taklif</button>'
+      : '';
+    return '<div class="item static">' +
+      '<div class="dot ts-' + (u.linked_user_id ? 'completed' : (u.state === 'completed' ? 'in_progress' : 'new')) + '"></div>' +
+      '<div class="item-mid">' +
+        '<div class="item-title">' + escapeHtml(u.full_name || '(ism yo\'q)') + ' ' + linkedBadge + '</div>' +
+        '<div class="item-meta">' + (phoneText ? '<span>' + phoneText + '</span><span class="dot-sep"></span>' : '') + (userText ? '<span>' + userText + '</span><span class="dot-sep"></span>' : '') + stateBadge + '</div>' +
+      '</div>' +
+      '<div class="item-right">' + inviteBtn + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+let inviteFromTgUserId = null;
+function openInviteFromTg(tgBotUserId) {
+  const u = tgUsersCache.find(x => x.id === tgBotUserId);
+  if (!u) return;
+  if (!departments.length) { toast('Avval kamida bitta bo\'lim yarating', 'err'); goPage('departments'); return; }
+  inviteFromTgUserId = tgBotUserId;
+  // Avvalgi invite modalini ishlatamiz, lekin email maydonини o'rniga TG ism ko'rsatamiz
+  $('iEmail').value = '(Bot foydalanuvchisi: ' + (u.full_name || u.tg_username || '?') + ')';
+  $('iEmail').readOnly = true;
+  $('iEmail').style.background = '#F0EFEA';
+  $('iWsRole').value = 'member';
+  hideMsg($('iMsg'));
+  $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
+  $('inviteBd').classList.add('show');
+}
 let integrationsCache = [];
 let tgSetupState = { step: 1, token: '', bot: null };
 let myTgLinks = []; // foydalanuvchining bog'langan botlari (workspace bo'yicha)
