@@ -9,57 +9,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #F6F5F1;
-    --surface: #FFFFFF;
-    --surface-2: #FAFAF7;
-    --side: #1A1D26;
-    --side-ink: #EDEDE9;
-    --side-muted: #8A8D95;
-    --side-hover: rgba(255,255,255,.06);
-    --side-active: rgba(255,255,255,.10);
-    --ink: #16181D;
-    --ink-soft: #2A2D36;
-    --muted: #6B6F76;
-    --line: #E5E3DC;
-    --line-strong: #D6D3C9;
-    --accent: #1FA968;
-    --accent-ink: #0F7A49;
-    --accent-soft: #ECF7F1;
-    --warn: #B45309;
-    --warn-soft: #FEF3C7;
-    --danger: #C0392B;
-    --danger-soft: #FCEEEC;
+    --bg: #F6F5F1; --surface: #FFFFFF; --surface-2: #FAFAF7;
+    --side: #1A1D26; --side-ink: #EDEDE9; --side-muted: #8A8D95;
+    --side-hover: rgba(255,255,255,.06); --side-active: rgba(255,255,255,.10);
+    --ink: #16181D; --ink-soft: #2A2D36; --muted: #6B6F76;
+    --line: #E5E3DC; --line-strong: #D6D3C9;
+    --accent: #1FA968; --accent-ink: #0F7A49; --accent-soft: #ECF7F1;
+    --warn: #B45309; --warn-soft: #FEF3C7;
+    --danger: #C0392B; --danger-soft: #FCEEEC;
+    --info: #2563EB; --info-soft: #DBEAFE;
     --radius: 14px;
     --shadow: 0 1px 2px rgba(20,22,28,.04), 0 12px 32px -12px rgba(20,22,28,.18);
     --sidebar-w: 248px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh; min-height: 100dvh;
-  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; min-height: 100vh; min-height: 100dvh; }
   button { font-family: inherit; }
 
-  /* ========== AUTH ========== */
+  /* AUTH */
   .shell { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; min-height: 100dvh; }
-  .brand {
-    position: relative;
-    background:
-      radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 0) 0 0 / 22px 22px,
-      linear-gradient(155deg, #1A1D26 0%, #121319 70%);
-    color: #EDEDE9; padding: 48px 52px;
-    display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
-  }
-  .brand::after {
-    content: ''; position: absolute; right: -120px; bottom: -120px;
-    width: 360px; height: 360px;
-    background: radial-gradient(circle, rgba(31,169,104,.22), transparent 65%);
-    pointer-events: none;
-  }
+  .brand { position: relative; background: radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 0) 0 0 / 22px 22px, linear-gradient(155deg, #1A1D26 0%, #121319 70%); color: #EDEDE9; padding: 48px 52px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+  .brand::after { content: ''; position: absolute; right: -120px; bottom: -120px; width: 360px; height: 360px; background: radial-gradient(circle, rgba(31,169,104,.22), transparent 65%); pointer-events: none; }
   .wordmark { display: inline-flex; align-items: center; gap: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.02em; }
   .wordmark .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(31,169,104,.18); }
   .brand-hero { max-width: 460px; }
@@ -76,17 +47,9 @@
   .tab-pill.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
   .field { margin-bottom: 14px; }
   .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
-  .field input, .field textarea, .field select {
-    width: 100%; padding: 11px 13px;
-    border: 1px solid var(--line); border-radius: 10px;
-    font-size: 14.5px; font-family: inherit; color: var(--ink);
-    background: #FCFCFB; transition: border-color .15s, box-shadow .15s;
-  }
+  .field input, .field textarea, .field select { width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; font-size: 14.5px; font-family: inherit; color: var(--ink); background: #FCFCFB; transition: border-color .15s, box-shadow .15s; }
   .field textarea { resize: vertical; min-height: 80px; }
-  .field input:focus, .field textarea:focus, .field select:focus {
-    outline: none; border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(31,169,104,.14);
-  }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(31,169,104,.14); }
   .btn { padding: 12px 16px; border: none; border-radius: 10px; font-size: 14.5px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; transition: background .15s, transform .05s; }
   .btn:hover { background: var(--accent-ink); }
   .btn:active { transform: translateY(1px); }
@@ -102,22 +65,11 @@
   .msg.err { background: var(--danger-soft); color: var(--danger); }
   .msg.ok { background: var(--accent-soft); color: var(--accent-ink); }
 
-  /* ========== APP (sidebar layout) ========== */
+  /* APP */
   .app { display: none; min-height: 100vh; min-height: 100dvh; }
   .app.show { display: grid; grid-template-columns: var(--sidebar-w) 1fr; }
-
-  .sidebar {
-    background: var(--side); color: var(--side-ink);
-    padding: 16px 12px; display: flex; flex-direction: column;
-    min-height: 100vh; min-height: 100dvh;
-    position: sticky; top: 0;
-  }
-  .ws-switch {
-    position: relative;
-    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-    border-radius: 10px; padding: 10px 12px; cursor: pointer;
-    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
-  }
+  .sidebar { background: var(--side); color: var(--side-ink); padding: 16px 12px; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; position: sticky; top: 0; }
+  .ws-switch { position: relative; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .ws-switch:hover { background: rgba(255,255,255,.07); }
   .ws-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; flex-shrink: 0; }
   .ws-avatar.personal { background: #475569; }
@@ -125,28 +77,20 @@
   .ws-name { font-size: 13.5px; font-weight: 600; color: var(--side-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ws-kind { font-size: 11.5px; color: var(--side-muted); margin-top: 1px; }
   .ws-chev { color: var(--side-muted); font-size: 11px; }
-  .ws-dropdown {
-    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-    background: #22252F; border: 1px solid rgba(255,255,255,.1);
-    border-radius: 10px; padding: 6px; box-shadow: 0 12px 28px rgba(0,0,0,.4);
-    z-index: 20; display: none;
-  }
+  .ws-dropdown { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #22252F; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 6px; box-shadow: 0 12px 28px rgba(0,0,0,.4); z-index: 20; display: none; }
   .ws-dropdown.show { display: block; }
   .ws-item { padding: 8px 10px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
   .ws-item:hover { background: rgba(255,255,255,.06); }
   .ws-item.active { background: rgba(31,169,104,.15); }
   .ws-item.create { color: var(--accent); font-weight: 600; font-size: 13px; border-top: 1px solid rgba(255,255,255,.08); margin-top: 4px; padding-top: 10px; }
-
   .side-nav { display: flex; flex-direction: column; gap: 2px; }
-  .side-section { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--side-muted); padding: 14px 12px 6px; }
-  .side-link {
-    padding: 8px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500;
-    color: var(--side-ink); cursor: pointer; display: flex; align-items: center; gap: 10px;
-    border: none; background: transparent; text-align: left; width: 100%;
-  }
+  .side-link { padding: 8px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--side-ink); cursor: pointer; display: flex; align-items: center; gap: 10px; border: none; background: transparent; text-align: left; width: 100%; }
   .side-link:hover { background: var(--side-hover); }
   .side-link.active { background: var(--side-active); }
   .side-link .ic { width: 16px; opacity: .8; text-align: center; }
+  .side-section { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--side-muted); padding: 14px 12px 6px; display: flex; justify-content: space-between; align-items: center; }
+  .side-section .add-mini { background: none; border: none; color: var(--side-muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; font-size: 14px; line-height: 1; }
+  .side-section .add-mini:hover { color: var(--side-ink); background: var(--side-hover); }
   .side-spacer { flex: 1; }
   .side-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; margin-top: 12px; }
   .side-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
@@ -154,20 +98,23 @@
   .side-user-info { min-width: 0; flex: 1; }
   .side-user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .side-user-mail { font-size: 11px; color: var(--side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bell-btn {
-    background: none; border: none; color: var(--side-ink); padding: 6px 8px;
-    border-radius: 7px; cursor: pointer; font-size: 16px; position: relative;
-  }
+  .bell-btn { background: none; border: none; color: var(--side-ink); padding: 6px 8px; border-radius: 7px; cursor: pointer; font-size: 16px; position: relative; }
   .bell-btn:hover { background: var(--side-hover); }
   .bell-dot { position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid var(--side); }
 
-  /* ========== MAIN ========== */
-  .main { padding: 32px 36px; max-width: 1180px; }
+  /* MAIN */
+  .main { padding: 32px 36px; max-width: 1280px; }
   .h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 24px; letter-spacing: -.02em; margin: 0 0 20px; }
   .row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+  .crumbs { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .crumbs a { color: var(--muted); cursor: pointer; text-decoration: none; }
+  .crumbs a:hover { color: var(--ink); text-decoration: underline; }
   .filter-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .filter-btn { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
   .filter-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .view-tabs { display: flex; gap: 4px; background: #F0EFEA; border-radius: 10px; padding: 4px; margin-bottom: 18px; max-width: 460px; }
+  .view-tab { flex: 1; text-align: center; padding: 8px 14px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: transparent; transition: all .15s; }
+  .view-tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
 
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
@@ -178,13 +125,10 @@
   .badge.ok { background: var(--accent-soft); color: var(--accent-ink); }
   .badge.muted { background: #F0EFEA; color: var(--muted); }
   .badge.danger { background: var(--danger-soft); color: var(--danger); }
+  .badge.info { background: var(--info-soft); color: var(--info); }
 
   .list { display: flex; flex-direction: column; gap: 8px; }
-  .item {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    padding: 14px 16px; cursor: pointer; transition: border-color .12s, transform .05s;
-    display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
-  }
+  .item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: border-color .12s, transform .05s; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
   .item:hover { border-color: var(--line-strong); }
   .item:active { transform: translateY(1px); }
   .item.static { cursor: default; }
@@ -202,13 +146,42 @@
   .task-completed .item-title { text-decoration: line-through; color: var(--muted); }
   .task-overdue { color: var(--danger) !important; font-weight: 600; }
 
-  .empty {
-    background: var(--surface); border: 1px dashed var(--line-strong); border-radius: var(--radius);
-    padding: 40px 24px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.6;
-  }
+  .empty { background: var(--surface); border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 40px 24px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.6; }
   .empty strong { display: block; color: var(--ink); font-size: 15.5px; font-weight: 600; margin-bottom: 4px; }
 
-  /* ========== MODALS ========== */
+  /* KANBAN */
+  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: start; }
+  .kan-col { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-height: 200px; }
+  .kan-col.drop-over { background: #ECF7F1; border-color: var(--accent); }
+  .kan-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+  .kan-title { font-size: 12.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .kan-count { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
+  .kan-list { display: flex; flex-direction: column; gap: 8px; min-height: 50px; }
+  .kan-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: grab; transition: border-color .12s, transform .05s, opacity .15s; }
+  .kan-card:hover { border-color: var(--line-strong); }
+  .kan-card:active { cursor: grabbing; }
+  .kan-card.dragging { opacity: .4; }
+  .kan-card-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; line-height: 1.35; }
+  .kan-card-meta { font-size: 11.5px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* CALENDAR */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .cal-month { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 18px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-dow { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; text-align: center; padding: 6px 0; }
+  .cal-cell { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-height: 92px; padding: 6px 8px; font-size: 12px; }
+  .cal-cell.other { opacity: .4; }
+  .cal-cell.today { border-color: var(--accent); background: #F7FCF9; }
+  .cal-day { font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .cal-task { background: var(--info-soft); color: var(--info); border-radius: 6px; padding: 2px 6px; font-size: 11px; font-weight: 500; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .cal-task.overdue { background: var(--danger-soft); color: var(--danger); }
+  .cal-task.done { background: var(--accent-soft); color: var(--accent-ink); text-decoration: line-through; }
+
+  /* DEPT TEAM TAB */
+  .member-add-row { display: flex; gap: 8px; align-items: end; margin-bottom: 18px; }
+  .member-add-row .field { flex: 1; margin: 0; }
+
+  /* MODAL */
   .modal-backdrop { position: fixed; inset: 0; background: rgba(20,22,28,.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
   .modal-backdrop.show { display: flex; }
   .modal { background: var(--surface); border-radius: 16px; width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto; box-shadow: 0 30px 80px -20px rgba(0,0,0,.4); }
@@ -218,15 +191,12 @@
   .modal-foot { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; position: sticky; bottom: 0; background: var(--surface); }
   .x-btn { background: none; border: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 4px 8px; }
   .x-btn:hover { color: var(--ink); }
-
   .detail-row { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; display: flex; gap: 12px; }
   .detail-row:last-child { border-bottom: 0; }
   .detail-row .lbl { color: var(--muted); flex-shrink: 0; width: 110px; font-weight: 600; }
   .detail-row .val { color: var(--ink); flex: 1; word-break: break-word; }
   .status-pick { display: flex; gap: 6px; flex-wrap: wrap; }
   .status-pick .filter-btn { font-size: 12.5px; padding: 6px 10px; }
-
-  /* dept multi-select chips */
   .dept-picker { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: #FCFCFB; }
   .dept-pick-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
   .dept-pick-item:hover { background: #F4F3EF; }
@@ -234,7 +204,6 @@
   .dept-pick-item .dept-name { flex: 1; font-size: 13.5px; font-weight: 500; }
   .dept-pick-item select { width: auto; padding: 4px 8px; font-size: 12px; }
 
-  /* notifications dropdown */
   .notif-panel { position: fixed; left: 8px; bottom: 64px; width: 320px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); max-height: 70vh; overflow-y: auto; z-index: 50; display: none; }
   .notif-panel.show { display: block; }
   .notif-head { padding: 12px 16px; font-weight: 600; font-size: 13.5px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
@@ -254,7 +223,13 @@
   .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; min-height: 100dvh; color: var(--muted); font-size: 14px; }
   .link-btn { background: none; border: none; color: var(--muted); font-size: 13.5px; font-weight: 600; cursor: pointer; }
   .link-btn:hover { color: var(--ink); }
+  .icon-btn { background: none; border: 1px solid var(--line); padding: 6px 10px; border-radius: 7px; font-size: 12.5px; color: var(--ink-soft); cursor: pointer; }
+  .icon-btn:hover { background: #F4F3EF; }
 
+  @media (max-width: 980px) {
+    .kanban { grid-template-columns: 1fr; }
+    .cal-cell { min-height: 60px; padding: 4px; }
+  }
   @media (max-width: 880px) {
     .shell { grid-template-columns: 1fr; }
     .brand { padding: 30px 26px; gap: 26px; min-height: auto; }
@@ -275,7 +250,7 @@
 
 <div id="loadingView" class="loading">Yuklanmoqda…</div>
 
-<!-- ============ AUTH ============ -->
+<!-- AUTH -->
 <div class="shell" id="authShell" style="display:none">
   <aside class="brand">
     <div class="wordmark"><span class="dot"></span> Boshqaruv</div>
@@ -294,34 +269,25 @@
           <button class="tab-pill active" id="tabLogin" onclick="setMode('login')">Kirish</button>
           <button class="tab-pill" id="tabSignup" onclick="setMode('signup')">Ro'yxatdan o'tish</button>
         </div>
-        <div class="field" id="nameField" style="display:none">
-          <label for="fullName">Ismingiz</label>
-          <input id="fullName" type="text" autocomplete="name" placeholder="Asilbek" />
-        </div>
-        <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="siz@kompaniya.uz" /></div>
-        <div class="field"><label for="password">Parol</label><input id="password" type="password" autocomplete="current-password" placeholder="Kamida 6 belgi" /></div>
-        <div id="forgotRow" style="text-align:right; margin: -6px 0 10px;">
-          <button class="link-btn" type="button" onclick="goForgot()">Parolni unutdingizmi?</button>
-        </div>
+        <div class="field" id="nameField" style="display:none"><label>Ismingiz</label><input id="fullName" type="text" autocomplete="name" placeholder="Asilbek" /></div>
+        <div class="field"><label>Email</label><input id="email" type="email" autocomplete="email" placeholder="siz@kompaniya.uz" /></div>
+        <div class="field"><label>Parol</label><input id="password" type="password" autocomplete="current-password" placeholder="Kamida 6 belgi" /></div>
+        <div id="forgotRow" style="text-align:right; margin: -6px 0 10px;"><button class="link-btn" type="button" onclick="goForgot()">Parolni unutdingizmi?</button></div>
         <button class="btn block" id="authBtn" onclick="submitAuth()">Kirish</button>
         <div class="msg" id="authMsg"></div>
-        <div id="switchToLogin" style="text-align:center; margin-top:10px; display:none">
-          <button class="link-btn" type="button" onclick="switchToLoginKeepEmail()">→ Kirish formasiga o'tish</button>
-        </div>
+        <div id="switchToLogin" style="text-align:center; margin-top:10px; display:none"><button class="link-btn" type="button" onclick="switchToLoginKeepEmail()">→ Kirish formasiga o'tish</button></div>
       </div>
       <div id="forgotStep" style="display:none">
-        <h2>Parolni tiklash</h2>
-        <p class="sub">Emailingizni yozing — havola yuboramiz.</p>
-        <div class="field"><label for="fEmail">Email</label><input id="fEmail" type="email" /></div>
+        <h2>Parolni tiklash</h2><p class="sub">Emailingizni yozing — havola yuboramiz.</p>
+        <div class="field"><label>Email</label><input id="fEmail" type="email" /></div>
         <button class="btn block" id="fBtn" onclick="sendReset()">Havola yuborish</button>
         <div class="msg" id="fMsg"></div>
         <div style="text-align:center; margin-top:14px;"><button class="link-btn" type="button" onclick="backToLogin()">← Kirishga qaytish</button></div>
       </div>
       <div id="resetStep" style="display:none">
-        <h2>Yangi parol</h2>
-        <p class="sub">Yangi parolingizni kiriting.</p>
-        <div class="field"><label for="rPwd">Yangi parol</label><input id="rPwd" type="password" /></div>
-        <div class="field"><label for="rPwd2">Takror</label><input id="rPwd2" type="password" /></div>
+        <h2>Yangi parol</h2><p class="sub">Yangi parolingizni kiriting.</p>
+        <div class="field"><label>Yangi parol</label><input id="rPwd" type="password" /></div>
+        <div class="field"><label>Takror</label><input id="rPwd2" type="password" /></div>
         <button class="btn block" id="rBtn" onclick="saveNewPassword()">Saqlash va kirish</button>
         <div class="msg" id="rMsg"></div>
       </div>
@@ -329,30 +295,21 @@
   </main>
 </div>
 
-<!-- ============ APP ============ -->
+<!-- APP -->
 <div class="app" id="appView">
   <aside class="sidebar">
     <div class="ws-switch" onclick="toggleWsDrop(event)">
       <div class="ws-avatar" id="wsAvatar">P</div>
-      <div class="ws-info">
-        <div class="ws-name" id="wsName">—</div>
-        <div class="ws-kind" id="wsKind">—</div>
-      </div>
+      <div class="ws-info"><div class="ws-name" id="wsName">—</div><div class="ws-kind" id="wsKind">—</div></div>
       <div class="ws-chev">▾</div>
       <div class="ws-dropdown" id="wsDrop"></div>
     </div>
-
     <nav class="side-nav" id="sideNav"></nav>
-
     <div class="side-spacer"></div>
-
     <div class="side-bottom">
       <div class="side-user">
         <div class="side-user-avatar" id="userAv">?</div>
-        <div class="side-user-info">
-          <div class="side-user-name" id="userNm">—</div>
-          <div class="side-user-mail" id="userMl">—</div>
-        </div>
+        <div class="side-user-info"><div class="side-user-name" id="userNm">—</div><div class="side-user-mail" id="userMl">—</div></div>
         <button class="bell-btn" onclick="toggleNotif(event)" title="Bildirishnomalar">🔔<span class="bell-dot" id="bellDot" style="display:none"></span></button>
       </div>
       <button class="side-link" onclick="doLogout()" style="margin-top:4px"><span class="ic">↩</span> Chiqish</button>
@@ -370,16 +327,15 @@
         <div class="stat"><div class="k">Faol vazifalar</div><div class="v" id="dashActive">0</div></div>
       </div>
       <div class="empty">
-        <strong>Yangi arxitektura tirik ✅</strong>
-        Chap tomondagi workspace switcher orqali Personal va Organization workspace'lar orasida o'ting.
-        Organization'da bo'limlar yarating va xodimlarni biriktiring.
+        <strong>Yangi arxitektura ✅</strong>
+        Chap menyudan: bo'sh maydonni Bo'limlar bilan tartiblang, har birida Kanban / Ro'yxat / Kalendar ko'rinishlari mavjud.
       </div>
     </section>
 
-    <!-- Tasks -->
+    <!-- Tasks (workspace-wide) -->
     <section id="page-tasks" style="display:none">
       <div class="row-head">
-        <h2 class="h2" style="margin:0">Vazifalar</h2>
+        <h2 class="h2" style="margin:0">Hamma vazifalar</h2>
         <button class="btn" onclick="openCreate()">+ Yangi vazifa</button>
       </div>
       <div class="filter-row" style="margin-bottom:16px;">
@@ -390,31 +346,72 @@
         <button class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Muddati o'tgan</button>
       </div>
       <div id="tasksList" class="list"></div>
-      <div id="tasksEmpty" class="empty" style="display:none">
-        <strong>Hali vazifa yo'q</strong>
-        Birinchi vazifani yarating va boshlang.
-      </div>
+      <div id="tasksEmpty" class="empty" style="display:none"><strong>Hali vazifa yo'q</strong>Birinchi vazifani yarating.</div>
     </section>
 
-    <!-- Departments -->
+    <!-- Departments (list) -->
     <section id="page-departments" style="display:none">
       <div class="row-head">
         <h2 class="h2" style="margin:0">Bo'limlar</h2>
         <button class="btn" id="newDeptBtn" onclick="openNewDept()" style="display:none">+ Yangi bo'lim</button>
       </div>
       <div id="deptsList" class="list"></div>
-      <div id="deptsEmpty" class="empty" style="display:none">
-        <strong>Hali bo'lim yo'q</strong>
-        Bo'limlar (IT, HR, Savdo, ...) yarating — xodimlarni keyin ularga biriktirasiz.
+      <div id="deptsEmpty" class="empty" style="display:none"><strong>Hali bo'lim yo'q</strong>Bo'limlar (IT, HR, Savdo, ...) yarating.</div>
+    </section>
+
+    <!-- Department detail -->
+    <section id="page-department" style="display:none">
+      <div class="crumbs">
+        <a onclick="goPage('departments')">← Bo'limlar</a>
+      </div>
+      <div class="row-head">
+        <div>
+          <h2 class="h2" id="deptDetTitle" style="margin:0 0 4px">—</h2>
+          <div id="deptDetDesc" style="font-size:13.5px; color: var(--muted);"></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn secondary" id="deptDetSettings" onclick="openDeptEdit()" style="display:none">⚙ Sozlash</button>
+          <button class="btn" onclick="openCreateForDept()">+ Vazifa</button>
+        </div>
+      </div>
+
+      <div class="view-tabs">
+        <button class="view-tab active" data-vt="kanban"   onclick="setDeptView('kanban')">Kanban</button>
+        <button class="view-tab"        data-vt="list"     onclick="setDeptView('list')">Ro'yxat</button>
+        <button class="view-tab"        data-vt="calendar" onclick="setDeptView('calendar')">Kalendar</button>
+        <button class="view-tab"        data-vt="team"     onclick="setDeptView('team')">Jamoa</button>
+      </div>
+
+      <div id="deptView-kanban">
+        <div class="kanban" id="kanbanGrid"></div>
+      </div>
+      <div id="deptView-list" style="display:none">
+        <div id="deptListWrap" class="list"></div>
+      </div>
+      <div id="deptView-calendar" style="display:none">
+        <div class="cal-head">
+          <div class="cal-month" id="calMonth">—</div>
+          <div style="display:flex; gap:6px;">
+            <button class="icon-btn" onclick="calNav(-1)">← Avvalgi</button>
+            <button class="icon-btn" onclick="calNav(0)">Bugun</button>
+            <button class="icon-btn" onclick="calNav(1)">Keyingi →</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div id="deptView-team" style="display:none">
+        <div id="deptTeamMgr" class="member-add-row" style="display:none">
+          <div class="field"><label>Workspace a'zosi qo'shish</label><select id="deptAddSel"></select></div>
+          <div class="field" style="flex:0 0 160px"><label>Rol</label><select id="deptAddRole"><option value="viewer">Ko'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></div>
+          <button class="btn sm" onclick="addDeptMember()">+ Qo'shish</button>
+        </div>
+        <div id="deptTeamList" class="list"></div>
       </div>
     </section>
 
-    <!-- Team -->
+    <!-- Team (workspace) -->
     <section id="page-team" style="display:none">
-      <div class="row-head">
-        <h2 class="h2" style="margin:0">Jamoa</h2>
-        <button class="btn" id="inviteBtn" onclick="openInvite()" style="display:none">+ Xodim taklif qilish</button>
-      </div>
+      <div class="row-head"><h2 class="h2" style="margin:0">Jamoa</h2><button class="btn" id="inviteBtn" onclick="openInvite()" style="display:none">+ Xodim taklif qilish</button></div>
       <div style="margin-bottom: 14px; font-size: 13.5px; color: var(--muted);">Faol a'zolar</div>
       <div id="membersList" class="list"></div>
       <div id="invitesWrap" style="margin-top: 28px; display:none;">
@@ -425,7 +422,7 @@
   </main>
 </div>
 
-<!-- ============ MODALS ============ -->
+<!-- MODALS -->
 <div class="modal-backdrop" id="newWsBd">
   <div class="modal">
     <div class="modal-head"><h3>Yangi kompaniya</h3><button class="x-btn" onclick="closeNewWs()">×</button></div>
@@ -434,31 +431,23 @@
       <div style="font-size:12.5px;color:var(--muted);line-height:1.5;">14 kun bepul sinov. Siz egasi bo'lasiz.</div>
       <div class="msg" id="newWsMsg"></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn secondary" onclick="closeNewWs()">Bekor</button>
-      <button class="btn" id="newWsBtn" onclick="createWs()">Yaratish</button>
-    </div>
+    <div class="modal-foot"><button class="btn secondary" onclick="closeNewWs()">Bekor</button><button class="btn" id="newWsBtn" onclick="createWs()">Yaratish</button></div>
   </div>
 </div>
 
 <div class="modal-backdrop" id="createBd">
   <div class="modal">
-    <div class="modal-head"><h3>Yangi vazifa</h3><button class="x-btn" onclick="closeCreate()">×</button></div>
+    <div class="modal-head"><h3 id="createTitle">Yangi vazifa</h3><button class="x-btn" onclick="closeCreate()">×</button></div>
     <div class="modal-body">
       <div class="field"><label>Nomi *</label><input id="cTitle" type="text" /></div>
       <div class="field"><label>Tavsif</label><textarea id="cDesc"></textarea></div>
-      <div class="field" id="cDeptField" style="display:none">
-        <label>Bo'lim</label>
-        <select id="cDept"><option value="">(Bo'limsiz)</option></select>
-      </div>
+      <div class="field" id="cDeptField" style="display:none"><label>Bo'lim</label><select id="cDept"><option value="">(Bo'limsiz)</option></select></div>
+      <div class="field"><label>Biriktirish</label><select id="cAssignee"><option value="">(Mening o'zimga)</option></select></div>
       <div class="field"><label>Deadline</label><input id="cDeadline" type="datetime-local" /></div>
       <div class="field"><label>Prioritet (0-10)</label><input id="cPriority" type="number" min="0" max="10" value="0" /></div>
       <div class="msg" id="cMsg"></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn secondary" onclick="closeCreate()">Bekor</button>
-      <button class="btn" id="cBtn" onclick="saveCreate()">Yaratish</button>
-    </div>
+    <div class="modal-foot"><button class="btn secondary" onclick="closeCreate()">Bekor</button><button class="btn" id="cBtn" onclick="saveCreate()">Yaratish</button></div>
   </div>
 </div>
 
@@ -466,10 +455,7 @@
   <div class="modal">
     <div class="modal-head"><h3 id="dTitle">—</h3><button class="x-btn" onclick="closeDetail()">×</button></div>
     <div class="modal-body" id="dBody">—</div>
-    <div class="modal-foot">
-      <button class="btn danger" id="dDelete" onclick="deleteCurrent()" style="margin-right:auto">O'chirish</button>
-      <button class="btn secondary" onclick="closeDetail()">Yopish</button>
-    </div>
+    <div class="modal-foot"><button class="btn danger" id="dDelete" onclick="deleteCurrent()" style="margin-right:auto">O'chirish</button><button class="btn secondary" onclick="closeDetail()">Yopish</button></div>
   </div>
 </div>
 
@@ -482,8 +468,9 @@
       <div class="msg" id="deptMsg"></div>
     </div>
     <div class="modal-foot">
+      <button class="btn danger" id="deptDeleteBtn" onclick="deleteDeptFromModal()" style="margin-right:auto; display:none">O'chirish</button>
       <button class="btn secondary" onclick="closeDept()">Bekor</button>
-      <button class="btn" id="deptBtn" onclick="saveDept()">Yaratish</button>
+      <button class="btn" id="deptBtn" onclick="saveDept()">Saqlash</button>
     </div>
   </div>
 </div>
@@ -493,27 +480,14 @@
     <div class="modal-head"><h3>Xodim taklif qilish</h3><button class="x-btn" onclick="closeInvite()">×</button></div>
     <div class="modal-body">
       <div class="field"><label>Xodim email *</label><input id="iEmail" type="email" placeholder="xodim@kompaniya.uz" /></div>
-      <div class="field">
-        <label>Workspace darajasidagi rol</label>
-        <select id="iWsRole">
-          <option value="member">A'zo (oddiy)</option>
-          <option value="admin">Administrator (boshqaradi)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Qaysi bo'limlarga kirishi (kamida 1) *</label>
-        <div class="dept-picker" id="iDeptPicker"></div>
-      </div>
+      <div class="field"><label>Workspace darajasidagi rol</label><select id="iWsRole"><option value="member">A'zo (oddiy)</option><option value="admin">Administrator (boshqaradi)</option></select></div>
+      <div class="field"><label>Qaysi bo'limlarga kirishi (kamida 1) *</label><div class="dept-picker" id="iDeptPicker"></div></div>
       <div class="msg" id="iMsg"></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn secondary" onclick="closeInvite()">Bekor</button>
-      <button class="btn" id="iBtn" onclick="sendInvite()">Taklif yuborish</button>
-    </div>
+    <div class="modal-foot"><button class="btn secondary" onclick="closeInvite()">Bekor</button><button class="btn" id="iBtn" onclick="sendInvite()">Taklif yuborish</button></div>
   </div>
 </div>
 
-<!-- Notifications panel -->
 <div class="notif-panel" id="notifPanel">
   <div class="notif-head">Bildirishnomalar <button class="link-btn" onclick="markAllRead()">Hammasini o'qildi</button></div>
   <div id="notifList"></div>
@@ -523,28 +497,41 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ====================== CONFIG ======================
 const SUPABASE_URL = 'https://nnpsbwsppgxbytlfloth.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ouA6pp3DwJjQkDJrWPi8QQ_30CUo51t';
+// ====================================================
 
+// ============ STATE ============
 let sb = null;
 let mode = 'login';
-let me = null;
-let myProfile = null;
+let me = null, myProfile = null;
 let workspaces = [];
 let currentWs = null;
 let myWsRole = null;
-let myDepts = [];      // [{department_id, role}]
+let myDepts = [];          // [{department_id, role}]
 let departments = [];
+let wsMembers = [];        // [{user_id, role, profile}]
 let tasksCache = [];
 let activeFilter = 'all';
 let currentDetailId = null;
 let currentPage = 'dashboard';
 let notifs = [];
 
+// Department detail state
+let currentDeptId = null;
+let currentDeptView = 'kanban';
+let deptTeamCache = [];   // department_members for current dept
+let calCursor = new Date();  // month displayed in calendar
+
+// Drag-drop
+let dragTaskId = null;
+
 const $ = id => document.getElementById(id);
 const ROLE_WS = { owner: 'Egasi', admin: 'Administrator', member: "A'zo" };
 const ROLE_DEPT = { viewer: 'Ko\'ruvchi', editor: 'Tahrirlovchi', admin: 'Boshqaruvchi' };
 const STATUS_LBL = { new: 'Yangi', in_progress: 'Jarayonda', completed: 'Tugallangan', cancelled: 'Bekor' };
+const STATUS_ORDER = ['new', 'in_progress', 'completed', 'cancelled'];
 
 function showMsg(el, t, k) { el.textContent = t; el.className = 'msg show ' + (k || ''); }
 function hideMsg(el) { el.className = 'msg'; }
@@ -558,16 +545,18 @@ function translateErr(m) {
   if (!m) return 'Xatolik yuz berdi.';
   if (/invalid login credentials/i.test(m)) return 'Email yoki parol noto\'g\'ri.';
   if (/already|registered|exists/i.test(m)) return 'Bu email allaqachon ro\'yxatdan o\'tgan.';
-  if (/password should be at least/i.test(m)) return 'Parol kamida 6 belgidan iborat bo\'lsin.';
-  if (/email/i.test(m) && /valid/i.test(m)) return 'Email manzili noto\'g\'ri.';
+  if (/password should be at least/i.test(m)) return 'Parol kamida 6 belgi.';
+  if (/email/i.test(m) && /valid/i.test(m)) return 'Email noto\'g\'ri.';
   if (/row-level security/i.test(m)) return 'Ruxsat yo\'q.';
   if (/duplicate|unique/i.test(m)) return 'Bu allaqachon mavjud.';
   return m;
 }
-function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]; }); }
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
 function initials(s) { const p = String(s||'?').trim().split(/\s+/); return ((p[0]||'?')[0] + (p[1]?p[1][0]:'')).toUpperCase(); }
+function isOverdue(t) { if (!t.deadline) return false; if (t.status !== 'new' && t.status !== 'in_progress') return false; return new Date(t.deadline).getTime() < Date.now(); }
+function fmtDeadline(s) { if (!s) return '—'; const d = new Date(s); const pad = n => String(n).padStart(2, '0'); return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 
-// ============ AUTH UI ============
+// ============ AUTH ============
 function setMode(m) {
   mode = m;
   $('tabLogin').classList.toggle('active', m === 'login');
@@ -587,17 +576,14 @@ function backToLogin() { setMode('login'); showAuth(); }
 function showResetStep() { $('loadingView').style.display='none'; $('authShell').style.display='grid'; $('appView').classList.remove('show'); $('authStep').style.display='none'; $('forgotStep').style.display='none'; $('resetStep').style.display='block'; hideMsg($('rMsg')); }
 
 async function submitAuth() {
-  const email = $('email').value.trim();
-  const password = $('password').value;
-  const btn = $('authBtn');
+  const email = $('email').value.trim(); const password = $('password').value; const btn = $('authBtn');
   if (!email || !password) { showMsg($('authMsg'), 'Email va parolni kiriting.', 'err'); return; }
   $('switchToLogin').style.display = 'none';
   btn.disabled = true; btn.textContent = 'Tekshirilmoqda…';
   try {
     if (mode === 'signup') {
       if (password.length < 6) { showMsg($('authMsg'), 'Parol kamida 6 belgi.', 'err'); btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return; }
-      const fullName = $('fullName').value.trim();
-      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin + window.location.pathname } });
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: $('fullName').value.trim() }, emailRedirectTo: window.location.origin + window.location.pathname } });
       if (error) {
         if (/already|registered|exists/i.test(error.message)) { showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan.', 'err'); $('switchToLogin').style.display='block'; }
         else { showMsg($('authMsg'), translateErr(error.message), 'err'); }
@@ -610,7 +596,7 @@ async function submitAuth() {
         btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
       if (!data.session) {
-        showMsg($('authMsg'), 'Hisob yaratildi. Pochtangizga tasdiqlash havolasi yuborildi.', 'ok');
+        showMsg($('authMsg'), 'Hisob yaratildi. Pochtangizga havola yuborildi.', 'ok');
         btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
     } else {
@@ -624,8 +610,7 @@ async function submitAuth() {
   }
 }
 async function sendReset() {
-  const email = $('fEmail').value.trim();
-  const btn = $('fBtn');
+  const email = $('fEmail').value.trim(); const btn = $('fBtn');
   if (!email) { showMsg($('fMsg'), 'Emailingizni kiriting.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
   try {
@@ -649,34 +634,29 @@ async function saveNewPassword() {
   } catch (e) { showMsg($('rMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Saqlash va kirish'; }
 }
 async function doLogout() {
+  if (window._bellTimer) clearInterval(window._bellTimer);
   await sb.auth.signOut();
   me = myProfile = currentWs = myWsRole = null;
   workspaces = []; myDepts = []; departments = []; tasksCache = []; notifs = [];
   setMode('login'); $('email').value=''; $('password').value=''; showAuth();
 }
 
-// ============ BOOTSTRAP ============
+// ============ BOOTSTRAP & WORKSPACE ============
 async function bootstrap() {
   const { data: { user } } = await sb.auth.getUser();
   me = user;
   if (!me) { showAuth(); return; }
 
-  // Profil yuklash (mavjud bo'lmasa kut — trigger yaratayotgan bo'lishi mumkin)
   const { data: prof } = await sb.from('profiles').select('*').eq('id', me.id).maybeSingle();
   myProfile = prof || { id: me.id };
 
-  // Workspace'lar
   await loadWorkspaces();
   if (!workspaces.length) {
-    // Trigger ishlamagan bo'lishi mumkin — biroz kutamiz va yana sinab ko'ramiz
     await new Promise(r => setTimeout(r, 800));
     await loadWorkspaces();
   }
-  if (!workspaces.length) {
-    toast('Workspace topilmadi — qaytadan kiring', 'err'); return;
-  }
+  if (!workspaces.length) { toast('Workspace topilmadi — qaytadan kiring', 'err'); return; }
 
-  // Hozirgi workspace tanlash (oxirgi tanlangan yoki personal)
   const stored = localStorage.getItem('current_ws_' + me.id);
   currentWs = workspaces.find(w => w.id === stored) || workspaces.find(w => w.kind === 'personal') || workspaces[0];
 
@@ -684,7 +664,6 @@ async function bootstrap() {
   showApp();
   goPage('dashboard');
   loadNotifs();
-  // Bell'ni har 30 sekundда yangilab turamiz (yangi taklif kelганини sezish)
   if (window._bellTimer) clearInterval(window._bellTimer);
   window._bellTimer = setInterval(loadNotifs, 30000);
 }
@@ -698,63 +677,85 @@ async function loadCurrentContext() {
   if (!currentWs) return;
   localStorage.setItem('current_ws_' + me.id, currentWs.id);
 
-  // Mening workspace rolim
   const { data: m } = await sb.from('workspace_members').select('role').eq('workspace_id', currentWs.id).eq('user_id', me.id).maybeSingle();
   myWsRole = m ? m.role : null;
 
-  // Mening bo'limlarim
   if (currentWs.kind === 'organization') {
     const { data: dm } = await sb.from('department_members').select('department_id, role, departments!inner(workspace_id)').eq('user_id', me.id).eq('departments.workspace_id', currentWs.id);
     myDepts = (dm || []).map(x => ({ department_id: x.department_id, role: x.role }));
     const { data: d } = await sb.from('departments').select('*').eq('workspace_id', currentWs.id).order('created_at', { ascending: true });
     departments = d || [];
-  } else {
-    myDepts = []; departments = [];
-  }
+  } else { myDepts = []; departments = []; }
 
-  // Subscription
+  // workspace a'zolari (jamoa + biriktirish dropdown'lari uchun)
+  const { data: wm } = await sb.from('workspace_members').select('user_id, role, created_at').eq('workspace_id', currentWs.id).order('created_at', { ascending: true });
+  const ids = (wm || []).map(x => x.user_id);
+  let profMap = {};
+  if (ids.length) {
+    const { data: profs } = await sb.from('profiles').select('id, full_name, phone').in('id', ids);
+    (profs || []).forEach(p => { profMap[p.id] = p; });
+  }
+  wsMembers = (wm || []).map(x => Object.assign({}, x, { profile: profMap[x.user_id] || {} }));
+
   const { data: sub } = await sb.from('subscriptions').select('*').eq('workspace_id', currentWs.id).maybeSingle();
 
-  // UI'ni yangilash
+  // Vazifalarni bir marta yuklab cache'ga olamiz — har action mahalliy state'da bo'ladi
+  await loadTasksFull();
+
   renderSidebar();
   updateDashboard(sub);
 }
 
+async function loadTasksFull() {
+  if (!currentWs) { tasksCache = []; return; }
+  const { data } = await sb.from('tasks').select('*').eq('workspace_id', currentWs.id).order('created_at', { ascending: false });
+  tasksCache = data || [];
+  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress').length;
+  if ($('dashActive')) $('dashActive').textContent = active;
+}
+
 function renderSidebar() {
-  // WS switcher
   $('wsName').textContent = currentWs.name;
   $('wsKind').textContent = currentWs.kind === 'personal' ? 'Shaxsiy' : 'Kompaniya';
   $('wsAvatar').textContent = initials(currentWs.name);
   $('wsAvatar').className = 'ws-avatar' + (currentWs.kind === 'personal' ? ' personal' : '');
 
-  // User
   $('userNm').textContent = myProfile.full_name || me.email.split('@')[0];
   $('userMl').textContent = me.email;
   $('userAv').textContent = initials(myProfile.full_name || me.email);
 
-  // Dropdown
   const drop = $('wsDrop');
-  drop.innerHTML = workspaces.map(function(w){
-    return '<div class="ws-item ' + (w.id === currentWs.id ? 'active' : '') + '" onclick="switchWs(\''+w.id+'\')">' +
+  drop.innerHTML = workspaces.map(w =>
+    '<div class="ws-item ' + (w.id === currentWs.id ? 'active' : '') + '" onclick="switchWs(\''+w.id+'\')">' +
       '<div class="ws-avatar ' + (w.kind === 'personal' ? 'personal' : '') + '" style="width:24px;height:24px;font-size:11px;">' + initials(w.name) + '</div>' +
       '<div style="flex:1;min-width:0;"><div class="ws-name">' + escapeHtml(w.name) + '</div><div class="ws-kind">' + (w.kind === 'personal' ? 'Shaxsiy' : 'Kompaniya') + '</div></div>' +
-      '</div>';
-  }).join('') +
-  '<div class="ws-item create" onclick="openNewWs()">+ Yangi kompaniya yaratish</div>';
+    '</div>'
+  ).join('') + '<div class="ws-item create" onclick="openNewWs()">+ Yangi kompaniya yaratish</div>';
 
-  // Nav
   const isOrg = currentWs.kind === 'organization';
-  const items = [
-    { id: 'dashboard', label: 'Bosh sahifa', ic: '◐' },
-    { id: 'tasks',     label: 'Vazifalar',   ic: '✓' }
-  ];
+  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+
+  let html = '';
+  html += '<button class="side-link ' + (currentPage === 'dashboard' ? 'active' : '') + '" onclick="goPage(\'dashboard\')"><span class="ic">◐</span> Bosh sahifa</button>';
+  html += '<button class="side-link ' + (currentPage === 'tasks' ? 'active' : '') + '" onclick="goPage(\'tasks\')"><span class="ic">✓</span> Hamma vazifalar</button>';
   if (isOrg) {
-    items.push({ id: 'departments', label: 'Bo\'limlar', ic: '◫' });
-    items.push({ id: 'team',        label: 'Jamoa',     ic: '☆' });
+    html += '<div class="side-section">Bo\'limlar' + (canManage ? '<button class="add-mini" title="Yangi bo\'lim" onclick="openNewDept()">+</button>' : '') + '</div>';
+    if (departments.length) {
+      const myDeptIds = new Set(myDepts.map(d => d.department_id));
+      departments.forEach(d => {
+        if (canManage || myDeptIds.has(d.id)) {
+          const isActive = currentPage === 'department' && currentDeptId === d.id;
+          html += '<button class="side-link ' + (isActive ? 'active' : '') + '" onclick="goDept(\''+d.id+'\')"><span class="ic">◫</span> ' + escapeHtml(d.name) + '</button>';
+        }
+      });
+    } else {
+      html += '<div style="padding: 6px 12px; font-size: 11.5px; color: var(--side-muted);">Hali yo\'q</div>';
+    }
+    html += '<div class="side-section">Boshqaruv</div>';
+    html += '<button class="side-link ' + (currentPage === 'departments' ? 'active' : '') + '" onclick="goPage(\'departments\')"><span class="ic">▦</span> Bo\'limlar ro\'yxati</button>';
+    html += '<button class="side-link ' + (currentPage === 'team' ? 'active' : '') + '" onclick="goPage(\'team\')"><span class="ic">☆</span> Jamoa</button>';
   }
-  $('sideNav').innerHTML = items.map(function(it){
-    return '<button class="side-link ' + (currentPage === it.id ? 'active' : '') + '" onclick="goPage(\''+it.id+'\')"><span class="ic">'+it.ic+'</span> ' + it.label + '</button>';
-  }).join('');
+  $('sideNav').innerHTML = html;
 }
 
 function updateDashboard(sub) {
@@ -769,7 +770,7 @@ function updateDashboard(sub) {
 }
 
 function toggleWsDrop(e) { e.stopPropagation(); $('wsDrop').classList.toggle('show'); $('notifPanel').classList.remove('show'); }
-document.addEventListener('click', function(){ $('wsDrop').classList.remove('show'); $('notifPanel').classList.remove('show'); });
+document.addEventListener('click', () => { $('wsDrop').classList.remove('show'); $('notifPanel').classList.remove('show'); });
 
 async function switchWs(id) {
   currentWs = workspaces.find(w => w.id === id);
@@ -781,8 +782,7 @@ async function switchWs(id) {
 function openNewWs() { $('wsDrop').classList.remove('show'); $('newWsName').value = ''; hideMsg($('newWsMsg')); $('newWsBd').classList.add('show'); setTimeout(()=>$('newWsName').focus(), 50); }
 function closeNewWs() { $('newWsBd').classList.remove('show'); }
 async function createWs() {
-  const name = $('newWsName').value.trim();
-  const btn = $('newWsBtn');
+  const name = $('newWsName').value.trim(); const btn = $('newWsBtn');
   if (!name) { showMsg($('newWsMsg'), 'Nomini kiriting.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
   try {
@@ -791,8 +791,7 @@ async function createWs() {
     await loadWorkspaces();
     currentWs = workspaces.find(w => w.id === data.id);
     await loadCurrentContext();
-    closeNewWs();
-    goPage('dashboard');
+    closeNewWs(); goPage('dashboard');
     toast('✅ Kompaniya yaratildi', 'ok');
   } catch (e) { showMsg($('newWsMsg'), translateErr(e.message), 'err'); }
   btn.disabled = false; btn.textContent = 'Yaratish';
@@ -801,121 +800,123 @@ async function createWs() {
 // ============ ROUTING ============
 function goPage(p) {
   currentPage = p;
-  document.querySelectorAll('.side-link').forEach(function(b){ b.classList.remove('active'); });
-  // sidebar regen will mark active
+  if (p !== 'department') currentDeptId = null;
   renderSidebar();
-  ['dashboard','tasks','departments','team'].forEach(function(x){ $('page-'+x).style.display = (x === p ? 'block' : 'none'); });
-  if (p === 'tasks') loadTasks();
-  if (p === 'departments') renderDepts();
-  if (p === 'team') loadTeam();
+  ['dashboard','tasks','departments','department','team'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
+  if (p === 'tasks') renderTasksList();
+  if (p === 'departments') renderDeptsList();
+  if (p === 'team') renderTeam();
 }
 
-// ============ TASKS ============
-function isOverdue(t) {
-  if (!t.deadline) return false;
-  if (t.status !== 'new' && t.status !== 'in_progress') return false;
-  return new Date(t.deadline).getTime() < Date.now();
+function goDept(deptId) {
+  currentDeptId = deptId;
+  currentPage = 'department';
+  currentDeptView = 'kanban';
+  renderSidebar();
+  ['dashboard','tasks','departments','department','team'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
+  renderDeptHeader();
+  setDeptView('kanban');
 }
-function fmtDeadline(s) {
-  if (!s) return '—';
-  const d = new Date(s);
-  const pad = n => String(n).padStart(2, '0');
-  return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-}
+
+// ============ TASKS (workspace-wide list) ============
 function setFilter(f) {
   activeFilter = f;
-  document.querySelectorAll('[data-filter]').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
-  renderTasks();
+  document.querySelectorAll('#page-tasks [data-filter]').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  renderTasksList();
 }
-async function loadTasks(silent) {
-  if (!currentWs) return;
-  const { data, error } = await sb.from('tasks').select('*').eq('workspace_id', currentWs.id).order('created_at', { ascending: false });
-  if (error) { if (!silent) toast(translateErr(error.message), 'err'); return; }
-  tasksCache = data || [];
-  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress').length;
-  $('dashActive').textContent = active;
-  renderTasks();
-}
-function renderTasks() {
+function renderTasksList() {
   let list = tasksCache.slice();
   if (activeFilter === 'overdue') list = list.filter(isOverdue);
   else if (activeFilter !== 'all') list = list.filter(t => t.status === activeFilter);
   const wrap = $('tasksList'); const empty = $('tasksEmpty');
   if (!list.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  wrap.innerHTML = list.map(function(t){
-    const ov = isOverdue(t);
-    const completed = t.status === 'completed';
-    const dlText = t.deadline ? fmtDeadline(t.deadline) : '';
-    const dept = t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
-    return '<div class="item ' + (completed ? 'task-completed' : '') + '" onclick="openDetail(' + t.id + ')">' +
-      '<div class="dot ts-' + t.status + '"></div>' +
-      '<div class="item-mid">' +
-        '<div class="item-title">' + escapeHtml(t.title) + '</div>' +
-        '<div class="item-meta">' +
-          '<span>' + STATUS_LBL[t.status] + '</span>' +
-          (dept ? '<span class="dot-sep"></span><span>' + escapeHtml(dept) + '</span>' : '') +
-          (dlText ? '<span class="dot-sep"></span><span class="' + (ov ? 'task-overdue' : '') + '">⏰ ' + dlText + '</span>' : '') +
-          ((t.priority_level || 0) > 0 ? '<span class="dot-sep"></span><span>P' + t.priority_level + '</span>' : '') +
-        '</div>' +
-      '</div>' +
-      '<div class="item-right">' + (ov ? '<span class="badge danger">o\'tgan</span>' : '') + '</div>' +
-    '</div>';
-  }).join('');
+  wrap.innerHTML = list.map(t => taskItemHtml(t, true)).join('');
 }
-function openCreate() {
+
+function taskItemHtml(t, showDept) {
+  const ov = isOverdue(t);
+  const completed = t.status === 'completed';
+  const dlText = t.deadline ? fmtDeadline(t.deadline) : '';
+  const dept = showDept && t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
+  const asg = t.assigned_to ? (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile : null;
+  const asgName = asg && asg.full_name ? asg.full_name : (t.assigned_to ? 'A\'zo' : '');
+  return '<div class="item ' + (completed ? 'task-completed' : '') + '" onclick="openDetail(' + t.id + ')">' +
+    '<div class="dot ts-' + t.status + '"></div>' +
+    '<div class="item-mid">' +
+      '<div class="item-title">' + escapeHtml(t.title) + '</div>' +
+      '<div class="item-meta">' +
+        '<span>' + STATUS_LBL[t.status] + '</span>' +
+        (dept ? '<span class="dot-sep"></span><span>' + escapeHtml(dept) + '</span>' : '') +
+        (asgName ? '<span class="dot-sep"></span><span>👤 ' + escapeHtml(asgName) + '</span>' : '') +
+        (dlText ? '<span class="dot-sep"></span><span class="' + (ov ? 'task-overdue' : '') + '">⏰ ' + dlText + '</span>' : '') +
+        ((t.priority_level || 0) > 0 ? '<span class="dot-sep"></span><span>P' + t.priority_level + '</span>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="item-right">' + (ov ? '<span class="badge danger">o\'tgan</span>' : '') + '</div>' +
+  '</div>';
+}
+
+function openCreate() { openCreateInternal(null); }
+function openCreateForDept() { openCreateInternal(currentDeptId); }
+function openCreateInternal(forceDeptId) {
   $('cTitle').value=''; $('cDesc').value=''; $('cDeadline').value=''; $('cPriority').value='0';
   hideMsg($('cMsg'));
   if (currentWs.kind === 'organization') {
     $('cDeptField').style.display = 'block';
-    $('cDept').innerHTML = '<option value="">(Bo\'limsiz)</option>' + departments.map(function(d){ return '<option value="'+d.id+'">'+escapeHtml(d.name)+'</option>'; }).join('');
-  } else {
-    $('cDeptField').style.display = 'none';
-  }
+    $('cDept').innerHTML = '<option value="">(Bo\'limsiz)</option>' + departments.map(d => '<option value="'+d.id+'">'+escapeHtml(d.name)+'</option>').join('');
+    if (forceDeptId) $('cDept').value = forceDeptId;
+  } else { $('cDeptField').style.display = 'none'; }
+  // Assignee dropdown — workspace a'zolari
+  let assigneeHtml = '<option value="">(Mening o\'zimga)</option>';
+  wsMembers.forEach(m => { if (m.user_id !== me.id) assigneeHtml += '<option value="'+m.user_id+'">' + escapeHtml(m.profile.full_name || 'A\'zo') + '</option>'; });
+  $('cAssignee').innerHTML = assigneeHtml;
   $('createBd').classList.add('show');
   setTimeout(()=>$('cTitle').focus(), 50);
 }
 function closeCreate() { $('createBd').classList.remove('show'); }
+
 async function saveCreate() {
   const title = $('cTitle').value.trim();
   const desc = $('cDesc').value.trim();
   const deadline = $('cDeadline').value;
   const deptId = $('cDept').value || null;
-  let prio = parseInt($('cPriority').value, 10); if (isNaN(prio) || prio < 0) prio = 0; if (prio > 10) prio = 10;
+  const asg = $('cAssignee').value || me.id;
+  let prio = parseInt($('cPriority').value, 10); if (isNaN(prio)||prio<0) prio=0; if (prio>10) prio=10;
   if (!title) { showMsg($('cMsg'), 'Nomi kerak.', 'err'); return; }
   const btn = $('cBtn');
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
   try {
     let deadlineIso = null;
-    if (deadline) {
-      const v = deadline.length === 16 ? deadline + ':00' : deadline;
-      deadlineIso = new Date(v + '+05:00').toISOString();
-    }
-    const { error } = await sb.from('tasks').insert({
-      workspace_id: currentWs.id,
-      department_id: deptId,
+    if (deadline) { const v = deadline.length === 16 ? deadline + ':00' : deadline; deadlineIso = new Date(v + '+05:00').toISOString(); }
+    const { data, error } = await sb.from('tasks').insert({
+      workspace_id: currentWs.id, department_id: deptId,
       title, description: desc || null,
       deadline: deadlineIso, priority_level: prio,
-      created_by: me.id, assigned_to: me.id
-    });
+      created_by: me.id, assigned_to: asg
+    }).select().single();
     if (error) throw error;
-    closeCreate(); toast('✅ Vazifa yaratildi', 'ok'); await loadTasks();
+    // Mahalliy state'ga qo'shamiz — yangilash kerakmas
+    tasksCache.unshift(data);
+    closeCreate(); toast('✅ Vazifa yaratildi', 'ok');
+    refreshActiveView();
   } catch (e) { showMsg($('cMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Yaratish'; }
 }
+
 function openDetail(id) {
   const t = tasksCache.find(x => x.id === id);
   if (!t) return;
   currentDetailId = id;
   $('dTitle').textContent = t.title;
   const ov = isOverdue(t);
-  const statusBtns = ['new','in_progress','completed','cancelled'].map(function(s){
-    return '<button class="filter-btn ' + (t.status===s?'active':'') + '" onclick="changeStatus('+t.id+',\''+s+'\')">'+STATUS_LBL[s]+'</button>';
-  }).join('');
+  const statusBtns = STATUS_ORDER.map(s => '<button class="filter-btn ' + (t.status===s?'active':'') + '" onclick="changeStatus('+t.id+',\''+s+'\')">'+STATUS_LBL[s]+'</button>').join('');
   const dept = t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
+  const asg = t.assigned_to ? (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile : null;
   $('dBody').innerHTML =
     (t.description ? '<div style="margin-bottom:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;">'+escapeHtml(t.description)+'</div>' : '') +
     '<div class="detail-row"><div class="lbl">Holat</div><div class="val"><div class="status-pick">'+statusBtns+'</div></div></div>' +
     (dept ? '<div class="detail-row"><div class="lbl">Bo\'lim</div><div class="val">'+escapeHtml(dept)+'</div></div>' : '') +
+    (asg ? '<div class="detail-row"><div class="lbl">Biriktirildi</div><div class="val">'+escapeHtml(asg.full_name || 'A\'zo')+'</div></div>' : '') +
     '<div class="detail-row"><div class="lbl">Deadline</div><div class="val '+(ov?'task-overdue':'')+'">'+(t.deadline ? fmtDeadline(t.deadline) + (ov?' (o\'tgan)':'') : 'yo\'q')+'</div></div>' +
     '<div class="detail-row"><div class="lbl">Prioritet</div><div class="val">'+((t.priority_level||0)>0?'P'+t.priority_level:'—')+'</div></div>' +
     '<div class="detail-row"><div class="lbl">Yaratilgan</div><div class="val">'+new Date(t.created_at).toLocaleString('uz-UZ')+'</div></div>';
@@ -923,48 +924,82 @@ function openDetail(id) {
   $('detailBd').classList.add('show');
 }
 function closeDetail() { $('detailBd').classList.remove('show'); currentDetailId = null; }
+
 async function changeStatus(id, newStatus) {
   try {
     const patch = { status: newStatus };
     if (newStatus === 'in_progress') patch.started_at = new Date().toISOString();
     if (newStatus === 'completed') patch.completed_at = new Date().toISOString();
-    const { error } = await sb.from('tasks').update(patch).eq('id', id);
+    const { data, error } = await sb.from('tasks').update(patch).eq('id', id).select().single();
     if (error) throw error;
-    toast('✅ Holat yangilandi', 'ok'); await loadTasks(); openDetail(id);
-  } catch (e) { toast(translateErr(e.message), 'err'); }
-}
-async function deleteCurrent() {
-  if (!currentDetailId) return;
-  if (!confirm('Vazifani o\'chirasizmi?')) return;
-  try {
-    const { error } = await sb.from('tasks').delete().eq('id', currentDetailId);
-    if (error) throw error;
-    closeDetail(); toast('🗑 O\'chirildi', 'ok'); await loadTasks();
+    // mahalliy cache'ni yangilaymiz
+    const idx = tasksCache.findIndex(x => x.id === id);
+    if (idx >= 0) tasksCache[idx] = data;
+    toast('✅ Holat yangilandi', 'ok');
+    refreshActiveView();
+    if (currentDetailId === id) openDetail(id);
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
-// ============ DEPARTMENTS ============
-function renderDepts() {
+async function deleteCurrent() {
+  if (!currentDetailId) return;
+  if (!confirm('Vazifani o\'chirasizmi?')) return;
+  const id = currentDetailId;
+  try {
+    const { error } = await sb.from('tasks').delete().eq('id', id);
+    if (error) throw error;
+    tasksCache = tasksCache.filter(t => t.id !== id);
+    closeDetail(); toast('🗑 O\'chirildi', 'ok');
+    refreshActiveView();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+function refreshActiveView() {
+  // Dashboard counter
+  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress').length;
+  if ($('dashActive')) $('dashActive').textContent = active;
+  // Active page
+  if (currentPage === 'tasks') renderTasksList();
+  else if (currentPage === 'department') {
+    if (currentDeptView === 'kanban') renderKanban();
+    else if (currentDeptView === 'list') renderDeptList();
+    else if (currentDeptView === 'calendar') renderCalendar();
+  }
+}
+
+// ============ DEPARTMENTS LIST ============
+function renderDeptsList() {
   const canManage = myWsRole === 'owner' || myWsRole === 'admin';
   $('newDeptBtn').style.display = canManage ? 'inline-block' : 'none';
   const wrap = $('deptsList'); const empty = $('deptsEmpty');
   if (!departments.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  wrap.innerHTML = departments.map(function(d){
-    return '<div class="item static">' +
+  wrap.innerHTML = departments.map(d => {
+    const taskCount = tasksCache.filter(t => t.department_id === d.id).length;
+    return '<div class="item" onclick="goDept(\''+d.id+'\')">' +
       '<div class="dot ts-in_progress"></div>' +
       '<div class="item-mid">' +
         '<div class="item-title">' + escapeHtml(d.name) + '</div>' +
-        '<div class="item-meta">' + (d.description ? escapeHtml(d.description) : '—') + '</div>' +
+        '<div class="item-meta">' + (d.description ? escapeHtml(d.description) + '<span class="dot-sep"></span>' : '') + '<span>' + taskCount + ' vazifa</span></div>' +
       '</div>' +
-      '<div class="item-right">' +
-        (canManage ? '<button class="icon-btn link-btn" onclick="deleteDept(\''+d.id+'\')" style="color:var(--danger)">O\'chirish</button>' : '') +
-      '</div>' +
+      '<div class="item-right"><span class="badge muted">→</span></div>' +
     '</div>';
   }).join('');
 }
-function openNewDept() { $('deptName').value=''; $('deptDesc').value=''; hideMsg($('deptMsg')); $('deptBd').classList.add('show'); setTimeout(()=>$('deptName').focus(), 50); }
-function closeDept() { $('deptBd').classList.remove('show'); }
+
+let editingDeptId = null;
+function openNewDept() { editingDeptId = null; $('deptModalTitle').textContent = 'Yangi bo\'lim'; $('deptName').value=''; $('deptDesc').value=''; $('deptDeleteBtn').style.display = 'none'; hideMsg($('deptMsg')); $('deptBd').classList.add('show'); setTimeout(()=>$('deptName').focus(), 50); }
+function openDeptEdit() {
+  const d = departments.find(x => x.id === currentDeptId); if (!d) return;
+  editingDeptId = d.id;
+  $('deptModalTitle').textContent = 'Bo\'limni tahrirlash';
+  $('deptName').value = d.name; $('deptDesc').value = d.description || '';
+  $('deptDeleteBtn').style.display = (myWsRole==='owner' || myWsRole==='admin') ? 'inline-block' : 'none';
+  hideMsg($('deptMsg'));
+  $('deptBd').classList.add('show');
+}
+function closeDept() { $('deptBd').classList.remove('show'); editingDeptId = null; }
+
 async function saveDept() {
   const name = $('deptName').value.trim();
   const desc = $('deptDesc').value.trim();
@@ -972,47 +1007,257 @@ async function saveDept() {
   if (!name) { showMsg($('deptMsg'), 'Nomini kiriting.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
   try {
-    const { error } = await sb.from('departments').insert({ workspace_id: currentWs.id, name, description: desc || null, created_by: me.id });
-    if (error) throw error;
-    closeDept(); toast('✅ Bo\'lim yaratildi', 'ok');
-    await loadCurrentContext(); renderDepts();
+    if (editingDeptId) {
+      const { data, error } = await sb.from('departments').update({ name, description: desc || null }).eq('id', editingDeptId).select().single();
+      if (error) throw error;
+      const idx = departments.findIndex(x => x.id === editingDeptId);
+      if (idx >= 0) departments[idx] = data;
+      toast('✅ Saqlandi', 'ok');
+      if (currentPage === 'department' && currentDeptId === editingDeptId) renderDeptHeader();
+    } else {
+      const { data, error } = await sb.from('departments').insert({ workspace_id: currentWs.id, name, description: desc || null, created_by: me.id }).select().single();
+      if (error) throw error;
+      departments.push(data);
+      toast('✅ Bo\'lim yaratildi', 'ok');
+    }
+    closeDept();
+    renderSidebar();
+    if (currentPage === 'departments') renderDeptsList();
   } catch (e) { showMsg($('deptMsg'), translateErr(e.message), 'err'); }
-  btn.disabled = false; btn.textContent = 'Yaratish';
+  btn.disabled = false; btn.textContent = 'Saqlash';
 }
-async function deleteDept(id) {
+
+async function deleteDeptFromModal() {
+  if (!editingDeptId) return;
   if (!confirm('Bo\'limni o\'chirasizmi? Ichidagi vazifalar "bo\'limsiz" bo\'lib qoladi.')) return;
   try {
-    const { error } = await sb.from('departments').delete().eq('id', id);
+    const { error } = await sb.from('departments').delete().eq('id', editingDeptId);
     if (error) throw error;
+    const wasId = editingDeptId;
+    departments = departments.filter(x => x.id !== wasId);
+    tasksCache.forEach(t => { if (t.department_id === wasId) t.department_id = null; });
+    closeDept();
     toast('🗑 O\'chirildi', 'ok');
-    await loadCurrentContext(); renderDepts();
+    renderSidebar();
+    if (currentPage === 'department' && currentDeptId === wasId) goPage('departments');
+    else if (currentPage === 'departments') renderDeptsList();
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
-// ============ TEAM ============
+// ============ DEPARTMENT DETAIL ============
+function renderDeptHeader() {
+  const d = departments.find(x => x.id === currentDeptId); if (!d) return;
+  $('deptDetTitle').textContent = d.name;
+  $('deptDetDesc').textContent = d.description || '';
+  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  $('deptDetSettings').style.display = canManage ? 'inline-block' : 'none';
+}
+
+function setDeptView(v) {
+  currentDeptView = v;
+  document.querySelectorAll('.view-tab').forEach(b => b.classList.toggle('active', b.dataset.vt === v));
+  ['kanban','list','calendar','team'].forEach(x => { $('deptView-'+x).style.display = (x === v ? 'block' : 'none'); });
+  if (v === 'kanban') renderKanban();
+  else if (v === 'list') renderDeptList();
+  else if (v === 'calendar') { calCursor = new Date(); renderCalendar(); }
+  else if (v === 'team') loadDeptTeam();
+}
+
+function deptTasks() { return tasksCache.filter(t => t.department_id === currentDeptId); }
+
+// ---- Kanban ----
+function renderKanban() {
+  const grid = $('kanbanGrid'); if (!grid) return;
+  const tasks = deptTasks();
+  grid.innerHTML = STATUS_ORDER.map(st => {
+    const cards = tasks.filter(t => t.status === st);
+    const cardsHtml = cards.map(t => {
+      const ov = isOverdue(t);
+      const dl = t.deadline ? fmtDeadline(t.deadline) : '';
+      const asg = t.assigned_to ? (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile : null;
+      return '<div class="kan-card" draggable="true" data-id="'+t.id+'" ondragstart="kanDragStart(event, '+t.id+')" ondragend="kanDragEnd(event)" onclick="openDetail('+t.id+')">' +
+        '<div class="kan-card-title">' + escapeHtml(t.title) + '</div>' +
+        '<div class="kan-card-meta">' +
+          (asg ? '<span>👤 ' + escapeHtml(asg.full_name || 'A\'zo') + '</span>' : '') +
+          (dl ? '<span class="' + (ov ? 'task-overdue' : '') + '">⏰ ' + dl + '</span>' : '') +
+          ((t.priority_level||0) > 0 ? '<span>P' + t.priority_level + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="kan-col" data-status="'+st+'" ondragover="kanDragOver(event)" ondragleave="kanDragLeave(event)" ondrop="kanDrop(event, \''+st+'\')">' +
+      '<div class="kan-head">' +
+        '<div class="kan-title"><span class="dot ts-'+st+'"></span> ' + STATUS_LBL[st] + '</div>' +
+        '<span class="kan-count">' + cards.length + '</span>' +
+      '</div>' +
+      '<div class="kan-list">' + (cardsHtml || '<div style="font-size:12px; color: var(--muted); text-align:center; padding: 16px 0;">Yo\'q</div>') + '</div>' +
+    '</div>';
+  }).join('');
+}
+function kanDragStart(e, id) { dragTaskId = id; e.dataTransfer.effectAllowed = 'move'; e.target.classList.add('dragging'); }
+function kanDragEnd(e) { e.target.classList.remove('dragging'); document.querySelectorAll('.kan-col').forEach(c => c.classList.remove('drop-over')); dragTaskId = null; }
+function kanDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; e.currentTarget.classList.add('drop-over'); }
+function kanDragLeave(e) { e.currentTarget.classList.remove('drop-over'); }
+function kanDrop(e, newStatus) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drop-over');
+  if (!dragTaskId) return;
+  const t = tasksCache.find(x => x.id === dragTaskId);
+  if (!t || t.status === newStatus) return;
+  changeStatus(dragTaskId, newStatus);
+}
+
+// ---- Dept list ----
+function renderDeptList() {
+  const wrap = $('deptListWrap');
+  const tasks = deptTasks();
+  if (!tasks.length) { wrap.innerHTML = '<div class="empty"><strong>Bu bo\'limda vazifa yo\'q</strong>Birinchi vazifani yarating.</div>'; return; }
+  wrap.innerHTML = tasks.map(t => taskItemHtml(t, false)).join('');
+}
+
+// ---- Calendar ----
+function calNav(dir) {
+  if (dir === 0) calCursor = new Date();
+  else { calCursor.setDate(1); calCursor.setMonth(calCursor.getMonth() + dir); }
+  renderCalendar();
+}
+function renderCalendar() {
+  const tasks = deptTasks();
+  const cur = new Date(calCursor.getFullYear(), calCursor.getMonth(), 1);
+  const monthNames = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+  $('calMonth').textContent = monthNames[cur.getMonth()] + ' ' + cur.getFullYear();
+
+  // Monday first
+  const firstDay = (cur.getDay() + 6) % 7;
+  const daysInMonth = new Date(cur.getFullYear(), cur.getMonth()+1, 0).getDate();
+  const prevMonthDays = new Date(cur.getFullYear(), cur.getMonth(), 0).getDate();
+
+  // Build 42 cells
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) {
+    cells.push({ day: prevMonthDays - firstDay + 1 + i, other: true, date: new Date(cur.getFullYear(), cur.getMonth()-1, prevMonthDays - firstDay + 1 + i) });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, other: false, date: new Date(cur.getFullYear(), cur.getMonth(), d) });
+  }
+  while (cells.length < 42) {
+    const i = cells.length - firstDay - daysInMonth + 1;
+    cells.push({ day: i, other: true, date: new Date(cur.getFullYear(), cur.getMonth()+1, i) });
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Tasks bucketed by yyyy-mm-dd
+  const buckets = {};
+  tasks.forEach(t => {
+    if (!t.deadline) return;
+    const d = new Date(t.deadline);
+    const key = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+    if (!buckets[key]) buckets[key] = [];
+    buckets[key].push(t);
+  });
+
+  const dowHtml = ['Du','Se','Cho','Pa','Ju','Sh','Ya'].map(x => '<div class="cal-dow">'+x+'</div>').join('');
+
+  const cellsHtml = cells.map(c => {
+    const key = c.date.getFullYear() + '-' + (c.date.getMonth()+1) + '-' + c.date.getDate();
+    const ts = (buckets[key] || []).slice(0, 3);
+    const more = (buckets[key] || []).length - ts.length;
+    const isToday = c.date.getTime() === today.getTime();
+    const tHtml = ts.map(t => {
+      const cls = t.status === 'completed' ? 'done' : (isOverdue(t) ? 'overdue' : '');
+      return '<div class="cal-task ' + cls + '" onclick="event.stopPropagation(); openDetail('+t.id+')" title="' + escapeHtml(t.title) + '">' + escapeHtml(t.title) + '</div>';
+    }).join('');
+    return '<div class="cal-cell ' + (c.other?'other':'') + ' ' + (isToday?'today':'') + '">' +
+      '<div class="cal-day">' + c.day + '</div>' + tHtml +
+      (more > 0 ? '<div style="font-size:10.5px; color: var(--muted); margin-top:2px;">+' + more + ' boshqa</div>' : '') +
+    '</div>';
+  }).join('');
+
+  $('calGrid').innerHTML = dowHtml + cellsHtml;
+}
+
+// ---- Dept team ----
+async function loadDeptTeam() {
+  if (!currentDeptId) return;
+  const { data } = await sb.from('department_members').select('user_id, role').eq('department_id', currentDeptId);
+  deptTeamCache = data || [];
+  renderDeptTeam();
+}
+function renderDeptTeam() {
+  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  $('deptTeamMgr').style.display = canManage ? 'flex' : 'none';
+  // Dropdown: workspace members not yet in this dept
+  if (canManage) {
+    const here = new Set(deptTeamCache.map(d => d.user_id));
+    const opts = wsMembers.filter(m => !here.has(m.user_id)).map(m => '<option value="'+m.user_id+'">' + escapeHtml(m.profile.full_name || m.profile.phone || 'A\'zo') + '</option>').join('');
+    $('deptAddSel').innerHTML = opts || '<option value="">(Qo\'shiladigan a\'zo yo\'q)</option>';
+  }
+  const list = $('deptTeamList');
+  if (!deptTeamCache.length) { list.innerHTML = '<div class="empty"><strong>Bo\'limda a\'zo yo\'q</strong>Yuqoridagi tugma orqali qo\'shing.</div>'; return; }
+  list.innerHTML = deptTeamCache.map(dm => {
+    const m = wsMembers.find(x => x.user_id === dm.user_id);
+    const p = m ? m.profile : {};
+    const isMe = dm.user_id === me.id;
+    let roleHtml;
+    if (canManage && !isMe) {
+      roleHtml = '<select onchange="changeDeptMemberRole(\''+dm.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; background: var(--surface);">' +
+        ['viewer','editor','admin'].map(r => '<option value="'+r+'" '+(dm.role===r?'selected':'')+'>'+ROLE_DEPT[r]+'</option>').join('') + '</select>';
+    } else {
+      roleHtml = '<span class="badge muted">' + ROLE_DEPT[dm.role] + '</span>';
+    }
+    return '<div class="item static">' +
+      '<div class="dot ts-in_progress"></div>' +
+      '<div class="item-mid"><div class="item-title">' + escapeHtml(p.full_name || 'A\'zo') + (isMe ? ' <span style="color:var(--muted); font-weight:500;">(siz)</span>' : '') + '</div><div class="item-meta">' + escapeHtml(p.phone || '—') + '</div></div>' +
+      '<div class="item-right">' + roleHtml + (canManage && !isMe ? ' <button class="link-btn" onclick="removeDeptMember(\''+dm.user_id+'\')" style="color:var(--danger)">×</button>' : '') + '</div>' +
+    '</div>';
+  }).join('');
+}
+async function addDeptMember() {
+  const uid = $('deptAddSel').value; const role = $('deptAddRole').value;
+  if (!uid) { toast('Qo\'shiladigan a\'zo tanlang', 'err'); return; }
+  try {
+    const { data, error } = await sb.from('department_members').insert({ department_id: currentDeptId, user_id: uid, role }).select().single();
+    if (error) throw error;
+    deptTeamCache.push(data);
+    toast('✅ Qo\'shildi', 'ok');
+    renderDeptTeam();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function changeDeptMemberRole(uid, role) {
+  try {
+    const { error } = await sb.from('department_members').update({ role }).eq('department_id', currentDeptId).eq('user_id', uid);
+    if (error) throw error;
+    const i = deptTeamCache.findIndex(x => x.user_id === uid); if (i>=0) deptTeamCache[i].role = role;
+    toast('Rol o\'zgartirildi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); loadDeptTeam(); }
+}
+async function removeDeptMember(uid) {
+  if (!confirm('Bo\'limdan chiqarasizmi?')) return;
+  try {
+    const { error } = await sb.from('department_members').delete().eq('department_id', currentDeptId).eq('user_id', uid);
+    if (error) throw error;
+    deptTeamCache = deptTeamCache.filter(x => x.user_id !== uid);
+    toast('O\'chirildi', 'ok');
+    renderDeptTeam();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// ============ WORKSPACE TEAM ============
 function canManageTeam() { return myWsRole === 'owner' || myWsRole === 'admin'; }
-async function loadTeam() {
+async function renderTeam() {
   $('inviteBtn').style.display = canManageTeam() ? 'inline-block' : 'none';
   $('invitesWrap').style.display = canManageTeam() ? 'block' : 'none';
-  const { data: members } = await sb.from('workspace_members').select('user_id, role, created_at').eq('workspace_id', currentWs.id).order('created_at', { ascending: true });
-  const ids = (members || []).map(m => m.user_id);
-  let profMap = {};
-  if (ids.length) {
-    const { data: profs } = await sb.from('profiles').select('id, full_name, phone').in('id', ids);
-    (profs || []).forEach(p => { profMap[p.id] = p; });
-  }
   const wrap = $('membersList');
-  if (!members || !members.length) {
-    wrap.innerHTML = '<div class="empty"><strong>A\'zo yo\'q</strong></div>';
-  } else {
-    wrap.innerHTML = members.map(function(m){
-      const p = profMap[m.user_id] || {};
+  if (!wsMembers.length) { wrap.innerHTML = '<div class="empty"><strong>A\'zo yo\'q</strong></div>'; }
+  else {
+    wrap.innerHTML = wsMembers.map(m => {
+      const p = m.profile || {};
       const isMe = m.user_id === me.id;
-      const name = p.full_name || (isMe ? 'Siz' : 'Foydalanuvchi');
+      const name = p.full_name || (isMe ? 'Siz' : 'A\'zo');
       const canChange = canManageTeam() && m.role !== 'owner' && !isMe;
       let roleHtml = canChange
         ? '<select onchange="changeMemberRole(\''+m.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; background: var(--surface);">'
-          + ['member','admin'].map(function(r){ return '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>'; }).join('') + '</select>'
+          + ['member','admin'].map(r => '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>').join('') + '</select>'
         : '<span class="badge muted">' + ROLE_WS[m.role] + '</span>';
       return '<div class="item static">' +
         '<div class="dot ts-' + (m.role==='owner'?'completed':'in_progress') + '"></div>' +
@@ -1024,11 +1269,10 @@ async function loadTeam() {
   if (canManageTeam()) {
     const { data: invs } = await sb.from('invitations').select('*').eq('workspace_id', currentWs.id).eq('status', 'pending').order('created_at', { ascending: false });
     const list = $('invitesList');
-    if (!invs || !invs.length) {
-      list.innerHTML = '<div class="empty" style="padding:24px"><strong>Ochiq taklif yo\'q</strong></div>';
-    } else {
-      list.innerHTML = invs.map(function(inv){
-        const deptNames = (inv.departments || []).map(function(x){ const d = departments.find(z=>z.id===x.department_id); return d ? d.name+' ('+ROLE_DEPT[x.role]+')' : ''; }).filter(Boolean).join(', ');
+    if (!invs || !invs.length) { list.innerHTML = '<div class="empty" style="padding:24px"><strong>Ochiq taklif yo\'q</strong></div>'; }
+    else {
+      list.innerHTML = invs.map(inv => {
+        const deptNames = (inv.departments || []).map(x => { const d = departments.find(z=>z.id===x.department_id); return d ? d.name+' ('+ROLE_DEPT[x.role]+')' : ''; }).filter(Boolean).join(', ');
         return '<div class="item static">' +
           '<div class="dot ts-new"></div>' +
           '<div class="item-mid"><div class="item-title">' + escapeHtml(inv.email) + '</div><div class="item-meta"><span>'+ROLE_WS[inv.ws_role]+'</span>' + (deptNames ? '<span class="dot-sep"></span><span>'+escapeHtml(deptNames)+'</span>' : '') + '</div></div>' +
@@ -1042,50 +1286,44 @@ function openInvite() {
   if (!canManageTeam()) return;
   if (!departments.length) { toast('Avval kamida bitta bo\'lim yarating', 'err'); goPage('departments'); return; }
   $('iEmail').value=''; $('iWsRole').value='member'; hideMsg($('iMsg'));
-  $('iDeptPicker').innerHTML = departments.map(function(d){
-    return '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span>' +
-      '<select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>';
-  }).join('');
-  $('inviteBd').classList.add('show');
-  setTimeout(()=>$('iEmail').focus(), 50);
+  $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
+  $('inviteBd').classList.add('show'); setTimeout(()=>$('iEmail').focus(), 50);
 }
 function closeInvite() { $('inviteBd').classList.remove('show'); }
 async function sendInvite() {
   const email = $('iEmail').value.trim().toLowerCase();
-  const wsRole = $('iWsRole').value;
-  const btn = $('iBtn');
+  const wsRole = $('iWsRole').value; const btn = $('iBtn');
   if (!email || !/^\S+@\S+\.\S+$/.test(email)) { showMsg($('iMsg'), 'Email noto\'g\'ri.', 'err'); return; }
   const picks = [];
-  $('iDeptPicker').querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){
-    const id = cb.dataset.dept;
-    const role = $('iDeptPicker').querySelector('select[data-role="'+id+'"]').value;
-    picks.push({ department_id: id, role: role });
+  $('iDeptPicker').querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
+    const id = cb.dataset.dept; const role = $('iDeptPicker').querySelector('select[data-role="'+id+'"]').value;
+    picks.push({ department_id: id, role });
   });
   if (!picks.length) { showMsg($('iMsg'), 'Kamida bitta bo\'limni tanlang.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
   try {
-    const { error } = await sb.from('invitations').insert({
-      workspace_id: currentWs.id, email, ws_role: wsRole,
-      departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending'
-    });
-    if (error) { if (/duplicate|unique/i.test(error.message)) { showMsg($('iMsg'), 'Bu emailga allaqachon taklif yuborilgan.', 'err'); } else { showMsg($('iMsg'), translateErr(error.message), 'err'); } btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
-    showMsg($('iMsg'),
-      '✅ Taklif yuborildi. Agar xodim allaqachon ro\'yxatdan o\'tgan bo\'lsa, 🔔 bell orqali ko\'radi (Qabul/Rad tugmasi bilan). Ro\'yxatdan o\'tmagan bo\'lsa, signup qilgach avtomatik xabarni oladi.',
-      'ok');
-    await loadTeam();
+    const { error } = await sb.from('invitations').insert({ workspace_id: currentWs.id, email, ws_role: wsRole, departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending' });
+    if (error) { if (/duplicate|unique/i.test(error.message)) showMsg($('iMsg'), 'Bu emailga allaqachon taklif yuborilgan.', 'err'); else showMsg($('iMsg'), translateErr(error.message), 'err'); btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
+    showMsg($('iMsg'), '✅ Taklif yuborildi. Xodim ro\'yxatdan o\'tgan bo\'lsa 🔔 bell orqali ko\'radi.', 'ok');
+    if (currentPage === 'team') renderTeam();
   } catch (e) { showMsg($('iMsg'), translateErr(e.message), 'err'); }
   btn.disabled = false; btn.textContent = 'Taklif yuborish';
 }
 async function cancelInvite(id) {
   if (!confirm('Taklifni bekor qilasizmi?')) return;
-  try { const { error } = await sb.from('invitations').update({ status: 'cancelled' }).eq('id', id); if (error) throw error; toast('Bekor qilindi', 'ok'); await loadTeam(); } catch (e) { toast(translateErr(e.message), 'err'); }
+  try { const { error } = await sb.from('invitations').update({ status: 'cancelled' }).eq('id', id); if (error) throw error; toast('Bekor qilindi', 'ok'); if (currentPage === 'team') renderTeam(); } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 async function changeMemberRole(uid, role) {
-  try { const { error } = await sb.from('workspace_members').update({ role }).eq('workspace_id', currentWs.id).eq('user_id', uid); if (error) throw error; toast('Rol o\'zgartirildi', 'ok'); } catch (e) { toast(translateErr(e.message), 'err'); await loadTeam(); }
+  try {
+    const { error } = await sb.from('workspace_members').update({ role }).eq('workspace_id', currentWs.id).eq('user_id', uid);
+    if (error) throw error;
+    const i = wsMembers.findIndex(x => x.user_id === uid); if (i>=0) wsMembers[i].role = role;
+    toast('Rol o\'zgartirildi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 async function removeMember(uid) {
   if (!confirm('A\'zoni o\'chirasizmi?')) return;
-  try { const { error } = await sb.from('workspace_members').delete().eq('workspace_id', currentWs.id).eq('user_id', uid); if (error) throw error; toast('O\'chirildi', 'ok'); await loadTeam(); } catch (e) { toast(translateErr(e.message), 'err'); }
+  try { const { error } = await sb.from('workspace_members').delete().eq('workspace_id', currentWs.id).eq('user_id', uid); if (error) throw error; wsMembers = wsMembers.filter(x => x.user_id !== uid); toast('O\'chirildi', 'ok'); if (currentPage === 'team') renderTeam(); } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
 // ============ NOTIFICATIONS ============
@@ -1100,21 +1338,14 @@ async function loadNotifs() {
 function renderNotifs() {
   const list = $('notifList');
   if (!notifs.length) { list.innerHTML = '<div class="notif-item"><div class="notif-body">Bildirishnomalar yo\'q.</div></div>'; return; }
-  list.innerHTML = notifs.map(function(n){
+  list.innerHTML = notifs.map(n => {
     const meta = n.meta || {};
     const isInvite = n.kind === 'invitation' && meta.invitation_id && !n.read_at;
     const actions = isInvite
-      ? '<div class="notif-actions" style="margin-top:8px">' +
-          '<button class="btn sm" onclick="acceptInvite(\''+meta.invitation_id+'\')">✓ Qabul</button>' +
-          '<button class="btn sm secondary" onclick="declineInvite(\''+meta.invitation_id+'\')">Rad</button>' +
-        '</div>'
+      ? '<div class="notif-actions" style="margin-top:8px"><button class="btn sm" onclick="acceptInvite(\''+meta.invitation_id+'\')">✓ Qabul</button><button class="btn sm secondary" onclick="declineInvite(\''+meta.invitation_id+'\')">Rad</button></div>'
       : '';
     const from = meta.invited_by_name ? '<div style="font-size:11.5px; color: var(--muted); margin-top:4px;">Kim: ' + escapeHtml(meta.invited_by_name) + '</div>' : '';
-    return '<div class="notif-item ' + (n.read_at ? '' : 'unread') + '">' +
-      '<div class="notif-title">' + escapeHtml(n.title) + '</div>' +
-      (n.body ? '<div class="notif-body">' + escapeHtml(n.body) + '</div>' : '') +
-      from + actions +
-    '</div>';
+    return '<div class="notif-item ' + (n.read_at ? '' : 'unread') + '"><div class="notif-title">' + escapeHtml(n.title) + '</div>' + (n.body ? '<div class="notif-body">' + escapeHtml(n.body) + '</div>' : '') + from + actions + '</div>';
   }).join('');
 }
 function toggleNotif(e) {
@@ -1122,8 +1353,6 @@ function toggleNotif(e) {
   const p = $('notifPanel');
   p.classList.toggle('show');
   $('wsDrop').classList.remove('show');
-  // Bell ochilganda — faqat NON-INVITE notif'larni o'qildi qilamiz
-  // (taklif uchun foydalanuvchi Qabul/Rad tugmasini bosishi shart)
   if (p.classList.contains('show')) markNonInviteRead();
 }
 async function markNonInviteRead() {
@@ -1145,10 +1374,9 @@ async function acceptInvite(invId) {
     if (!data.ok) { toast(data.error || 'Xato', 'err'); return; }
     toast('✅ Taklif qabul qilindi', 'ok');
     $('notifPanel').classList.remove('show');
-    // Workspace ro'yxatini yangilab, yangi joyga o'tamiz
     await loadWorkspaces();
-    const targetWs = workspaces.find(w => w.id === data.workspace_id);
-    if (targetWs) { currentWs = targetWs; await loadCurrentContext(); goPage('dashboard'); }
+    const target = workspaces.find(w => w.id === data.workspace_id);
+    if (target) { currentWs = target; await loadCurrentContext(); goPage('dashboard'); }
     await loadNotifs();
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
@@ -1158,18 +1386,15 @@ async function declineInvite(invId) {
     const { data, error } = await sb.rpc('decline_invitation', { inv_id: invId });
     if (error) throw error;
     if (!data.ok) { toast(data.error || 'Xato', 'err'); return; }
-    toast('Taklif rad etildi', 'ok');
-    await loadNotifs();
+    toast('Rad etildi', 'ok'); await loadNotifs();
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
 // ============ INIT ============
 async function init() {
-  if (SUPABASE_URL.indexOf('YOUR_') === 0 || SUPABASE_ANON_KEY.indexOf('YOUR_') === 0) { showAuth(); return; }
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  sb.auth.onAuthStateChange(function(event){ if (event === 'PASSWORD_RECOVERY') showResetStep(); });
-  const h = window.location.hash || '';
-  const isRecovery = h.indexOf('type=recovery') !== -1;
+  sb.auth.onAuthStateChange(event => { if (event === 'PASSWORD_RECOVERY') showResetStep(); });
+  const isRecovery = (window.location.hash || '').indexOf('type=recovery') !== -1;
   const { data: { session } } = await sb.auth.getSession();
   if (isRecovery) { showResetStep(); return; }
   if (session) { await bootstrap(); }
