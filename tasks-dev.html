@@ -328,6 +328,7 @@ html, body { background: var(--bg); color: var(--text); font-family: -apple-syst
       <div class="attach-grid" id="modalAttachGrid"></div>
       <input type="file" id="modalFileInput" style="display:none" onchange="onModalFilePick(this)" multiple />
       <button type="button" class="btn-upload-file" onclick="document.getElementById('modalFileInput').click()">📎 Rasm / fayl tanlash (papkalardan)</button>
+      <div style="font-size:11px; color: var(--muted); margin-top:6px; line-height:1.5;">💡 Yoki <b>Ctrl+V</b> (Mac'да <b>⌘+V</b>) — rasm/screenshot'ni clipboard'дан to'g'ridan paste qiling</div>
     </div>
     <div class="form-row">
       <label class="form-check">
@@ -1008,10 +1009,12 @@ function openCreate(editTask) {
   renderModalAttachGrid();
   
   document.getElementById('createModal').classList.add('show');
+  attachPasteHandler();
 }
 
 function closeCreate() {
   document.getElementById('createModal').classList.remove('show');
+  detachPasteHandler();
 }
 
 function setAssignType(type, preselect) {
@@ -1197,12 +1200,53 @@ function selectPriority(pl) {
 
 function onModalFilePick(input) {
   const files = Array.from(input.files || []);
-  for (const f of files) {
-    if (f.size > 20 * 1024 * 1024) { toast(f.name + ' — 20MB dan katta', 'error'); continue; }
-    pendingFiles.push(f);
-  }
+  for (const f of files) addFileToPending(f);
   input.value = '';
   renderModalAttachGrid();
+}
+// Qayta ishlatish uchun — paste va drag-drop'дан ham chaqiriladi
+function addFileToPending(f) {
+  if (!f) return false;
+  if (f.size > 20 * 1024 * 1024) { toast(f.name + ' — 20MB dan katta', 'error'); return false; }
+  pendingFiles.push(f);
+  return true;
+}
+// Paste handler — modal ochilganda biriktiriladi, yopilganda uziladi
+let _pasteHandlerActive = false;
+function modalPasteHandler(e) {
+  // Faqat modal ochiq bo'lganda ishlasin (modal yopilganda removeEventListener ishlaydi)
+  const items = (e.clipboardData || window.clipboardData)?.items;
+  if (!items || !items.length) return;
+  let added = 0;
+  const tsNow = Date.now();
+  for (const it of items) {
+    if (it.kind === 'file') {
+      const f = it.getAsFile();
+      if (!f) continue;
+      // Clipboard'дан kelgan rasmlar ko'pincha "image.png" nomli — vaqt bilan unique qilamiz
+      let file = f;
+      if (/^image\.png$/i.test(f.name) || !f.name) {
+        const ext = (f.type && f.type.split('/')[1]) || 'png';
+        file = new File([f], 'paste_' + tsNow + '_' + (added+1) + '.' + ext, { type: f.type });
+      }
+      if (addFileToPending(file)) added++;
+    }
+  }
+  if (added) {
+    e.preventDefault();
+    renderModalAttachGrid();
+    toast('📎 ' + added + ' ta fayl paste qilindi', 'success');
+  }
+}
+function attachPasteHandler() {
+  if (_pasteHandlerActive) return;
+  document.addEventListener('paste', modalPasteHandler);
+  _pasteHandlerActive = true;
+}
+function detachPasteHandler() {
+  if (!_pasteHandlerActive) return;
+  document.removeEventListener('paste', modalPasteHandler);
+  _pasteHandlerActive = false;
 }
 function removePendingFile(idx) {
   pendingFiles.splice(idx, 1);
@@ -1407,9 +1451,37 @@ async function saveTask() {
 }
 
 // ============ DETAIL ============
+let _detailPasteTaskId = null;
+async function detailPasteHandler(e) {
+  if (!_detailPasteTaskId) return;
+  const items = (e.clipboardData || window.clipboardData)?.items;
+  if (!items || !items.length) return;
+  const files = [];
+  const tsNow = Date.now();
+  for (const it of items) {
+    if (it.kind === 'file') {
+      const f = it.getAsFile();
+      if (!f) continue;
+      let file = f;
+      if (/^image\.png$/i.test(f.name) || !f.name) {
+        const ext = (f.type && f.type.split('/')[1]) || 'png';
+        file = new File([f], 'paste_' + tsNow + '_' + (files.length+1) + '.' + ext, { type: f.type });
+      }
+      files.push(file);
+    }
+  }
+  if (files.length) {
+    e.preventDefault();
+    toast('📎 ' + files.length + ' ta fayl yuklanmoqda…', 'success');
+    await uploadTaskFilesArray(_detailPasteTaskId, files);
+  }
+}
+
 async function openDetail(id) {
   document.getElementById('detailContent').innerHTML = '<div class="loading">Yuklanmoqda...</div>';
   document.getElementById('detailModal').classList.add('show');
+  _detailPasteTaskId = id;
+  document.addEventListener('paste', detailPasteHandler);
   try {
     const r = await fetch(TASK_DETAIL + '?id=' + id + '&uid=' + UID);
     const d = await r.json();
@@ -1422,6 +1494,8 @@ async function openDetail(id) {
 
 function closeDetail() {
   document.getElementById('detailModal').classList.remove('show');
+  _detailPasteTaskId = null;
+  document.removeEventListener('paste', detailPasteHandler);
 }
 
 function renderDetail(d) {
@@ -1515,6 +1589,7 @@ function renderDetail(d) {
       <div class="attach-grid">${attachsHtml}</div>
       <input type="file" id="taskFileInput_${t.id}" style="display:none" onchange="uploadTaskFile(${t.id}, this)" multiple />
       <button class="btn-upload-file" onclick="document.getElementById('taskFileInput_${t.id}').click()">📎 Rasm / fayl tanlash (papkalardan)</button>
+      <div style="font-size:11px; color: var(--text-dim); margin-top:6px; line-height:1.5;">💡 Yoki <b>Ctrl+V</b> (Mac: <b>⌘+V</b>) — clipboard'дан to'g'ridan paste qiling</div>
       <div id="uploadProgress_${t.id}" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px">Yuklanmoqda...</div>
     </div>
     
@@ -1611,6 +1686,10 @@ async function deleteTask(id) {
 
 async function uploadTaskFile(taskId, input) {
   const files = Array.from(input.files || []);
+  input.value = '';
+  await uploadTaskFilesArray(taskId, files);
+}
+async function uploadTaskFilesArray(taskId, files) {
   if (!files.length) return;
   const prog = document.getElementById('uploadProgress_' + taskId);
   let okCount = 0;
@@ -1628,7 +1707,6 @@ async function uploadTaskFile(taskId, input) {
       else toast('Xato: ' + (d.error || 'yuklanmadi'), 'error');
     } catch (e) { toast('Yuklashda xato', 'error'); }
   }
-  input.value = '';
   if (okCount > 0) {
     toast('✅ ' + okCount + ' ta fayl yuklandi — Telegramga yuborildi', 'success');
     await openDetail(taskId);
