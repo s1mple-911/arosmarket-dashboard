@@ -604,8 +604,16 @@
     <div class="modal-head"><h3>Xodim taklif qilish</h3><button class="x-btn" onclick="closeInvite()">×</button></div>
     <div class="modal-body">
       <div class="field"><label>Xodim email *</label><input id="iEmail" type="email" placeholder="xodim@kompaniya.uz" /></div>
-      <div class="field"><label>Workspace darajasidagi rol</label><select id="iWsRole"><option value="viewer">Ko'ruvchi (faqat ko'radi)</option><option value="member" selected>A'zo (ish qiladi)</option><option value="admin">Administrator (boshqaradi)</option></select></div>
-      <div class="field"><label>Qaysi bo'limlarga kirishi (kamida 1) *</label><div class="dept-picker" id="iDeptPicker"></div></div>
+      <div class="field">
+        <label>Bo'limlarga kirish *</label>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; padding:8px 10px; background:#F4F3EF; border-radius:8px;">
+          <span style="font-size:12.5px; color:var(--muted);">Tezkor:</span>
+          <select id="iBulkRole" style="padding:5px 8px; font-size:12.5px; border:1px solid var(--line); border-radius:6px; background:#fff;"><option value="viewer">Ko'ruvchi</option><option value="editor" selected>Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select>
+          <button type="button" class="btn sm secondary" onclick="iApplyBulk()">Hammasiga shu rol</button>
+          <button type="button" class="btn sm secondary" onclick="iToggleAll()" id="iToggleAllBtn">Hammasini tanlash</button>
+        </div>
+        <div class="dept-picker" id="iDeptPicker"></div>
+      </div>
       <div class="msg" id="iMsg"></div>
     </div>
     <div class="modal-foot"><button class="btn secondary" onclick="closeInvite()">Bekor</button><button class="btn" id="iBtn" onclick="sendInvite()">Taklif yuborish</button></div>
@@ -652,7 +660,7 @@ let calCursor = new Date();  // month displayed in calendar
 let dragTaskId = null;
 
 const $ = id => document.getElementById(id);
-const ROLE_WS = { owner: 'Egasi', admin: 'Administrator', member: "A'zo", viewer: "Ko'ruvchi" };
+const ROLE_WS = { owner: 'Egasi', member: "A'zo" };
 const ROLE_DEPT = { viewer: 'Ko\'ruvchi', editor: 'Tahrirlovchi', admin: 'Boshqaruvchi' };
 const STATUS_LBL = { new: 'Yangi', in_progress: 'Jarayonda', completed: 'Tugallangan', cancelled: 'Bekor' };
 const STATUS_ORDER = ['new', 'in_progress', 'completed', 'cancelled'];
@@ -821,6 +829,17 @@ async function loadCurrentContext() {
   }
   wsMembers = (wm || []).map(x => Object.assign({}, x, { profile: profMap[x.user_id] || {} }));
 
+  // TG bot users — agar telegram integratsiya yoqilgan bo'lsa, completed bo'lganlarni keshlaymiz
+  // (Create task modal'да assignee sifatida ko'rinadi.) Faqat owner ko'radi (RLS).
+  tgUsersCache = [];
+  if (currentWs.kind === 'organization') {
+    const { data: tgIntg } = await sb.from('integrations_safe').select('id').eq('workspace_id', currentWs.id).eq('tool', 'telegram').maybeSingle();
+    if (tgIntg) {
+      const { data: bus } = await sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id).eq('state', 'completed');
+      tgUsersCache = bus || [];
+    }
+  }
+
   const { data: sub } = await sb.from('subscriptions').select('*').eq('workspace_id', currentWs.id).maybeSingle();
 
   // Vazifalarni bir marta yuklab cache'ga olamiz — har action mahalliy state'da bo'ladi
@@ -859,7 +878,7 @@ function renderSidebar() {
   ).join('') + '<div class="ws-item create" onclick="openNewWs()">+ Yangi kompaniya yaratish</div>';
 
   const isOrg = currentWs.kind === 'organization';
-  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  const canManage = myWsRole === 'owner';
 
   let html = '';
   html += '<button class="side-link ' + (currentPage === 'dashboard' ? 'active' : '') + '" onclick="goPage(\'dashboard\')"><span class="ic">◐</span> Bosh sahifa</button>';
@@ -986,8 +1005,15 @@ function taskItemHtml(t, showDept) {
   const completed = t.status === 'completed';
   const dlText = t.deadline ? fmtDeadline(t.deadline) : '';
   const dept = showDept && t.department_id ? (departments.find(d=>d.id===t.department_id) || {}).name : '';
-  const asg = t.assigned_to ? (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile : null;
-  const asgName = asg && asg.full_name ? asg.full_name : (t.assigned_to ? 'A\'zo' : '');
+  // Assignee: auth user yoki TG-only
+  let asgName = '';
+  if (t.assigned_to) {
+    const asg = (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile;
+    asgName = asg && asg.full_name ? asg.full_name : 'A\'zo';
+  } else if (t.assigned_to_tg_bot_user) {
+    const bu = tgUsersCache.find(u => u.id === t.assigned_to_tg_bot_user);
+    asgName = bu ? ('✈ ' + (bu.full_name || bu.tg_username || 'Bot user')) : '✈ Bot user';
+  }
   return '<div class="item ' + (completed ? 'task-completed' : '') + '" onclick="openDetail(' + t.id + ')">' +
     '<div class="dot ts-' + t.status + '"></div>' +
     '<div class="item-mid">' +
@@ -1013,14 +1039,23 @@ function openCreateInternal(forceDeptId) {
     $('cDeptField').style.display = 'block';
     // Faqat o'zi a'zo bo'lgan bo'limlar (yoki owner/admin: hammasi)
     const myDeptIds = new Set(myDepts.map(d => d.department_id));
-    const visible = (myWsRole==='owner' || myWsRole==='admin')
+    const visible = (myWsRole==='owner')
       ? departments
       : departments.filter(d => myDeptIds.has(d.id));
     $('cDept').innerHTML = '<option value="">(Bo\'limsiz)</option>' + visible.map(d => '<option value="'+d.id+'">'+escapeHtml(d.name)+'</option>').join('');
     if (forceDeptId) $('cDept').value = forceDeptId;
   } else { $('cDeptField').style.display = 'none'; }
   let assigneeHtml = '<option value="">(Mening o\'zimga)</option>';
-  wsMembers.forEach(m => { if (m.user_id !== me.id) assigneeHtml += '<option value="'+m.user_id+'">' + escapeHtml(m.profile.full_name || 'A\'zo') + '</option>'; });
+  wsMembers.forEach(m => { if (m.user_id !== me.id) assigneeHtml += '<option value="user:'+m.user_id+'">' + escapeHtml(m.profile.full_name || 'A\'zo') + '</option>'; });
+  // TG-only (saytsiz, faqat botda)
+  if (tgUsersCache.length) {
+    assigneeHtml += '<option disabled>── Telegram bot foydalanuvchilari ──</option>';
+    tgUsersCache.forEach(u => {
+      if (!u.linked_user_id) {  // saytga bog'langanlarni ikkilantirmaymиz
+        assigneeHtml += '<option value="tg:'+u.id+'">✈ ' + escapeHtml(u.full_name || u.tg_username || 'Bot user') + '</option>';
+      }
+    });
+  }
   $('cAssignee').innerHTML = assigneeHtml;
   $('createBd').classList.add('show');
   setTimeout(()=>$('cTitle').focus(), 50);
@@ -1032,7 +1067,7 @@ async function saveCreate() {
   const desc = $('cDesc').value.trim();
   const deadline = $('cDeadline').value;
   const deptId = $('cDept').value || null;
-  const asg = $('cAssignee').value || me.id;
+  const asgRaw = $('cAssignee').value;
   let prio = parseInt($('cPriority').value, 10); if (isNaN(prio)||prio<0) prio=0; if (prio>10) prio=10;
   if (!title) { showMsg($('cMsg'), 'Nomi kerak.', 'err'); return; }
   const btn = $('cBtn');
@@ -1040,20 +1075,32 @@ async function saveCreate() {
   try {
     let deadlineIso = null;
     if (deadline) { const v = deadline.length === 16 ? deadline + ':00' : deadline; deadlineIso = new Date(v + '+05:00').toISOString(); }
+    // Assignee: prefix 'user:' yoki 'tg:' yoki bo'sh (=> menga)
+    let assignedTo = null, assignedTgBotUser = null;
+    if (asgRaw && asgRaw.startsWith('tg:')) {
+      assignedTgBotUser = asgRaw.slice(3);
+    } else if (asgRaw && asgRaw.startsWith('user:')) {
+      assignedTo = asgRaw.slice(5);
+    } else {
+      assignedTo = me.id;
+    }
     const { data, error } = await sb.from('tasks').insert({
       workspace_id: currentWs.id, department_id: deptId,
       title, description: desc || null,
       deadline: deadlineIso, priority_level: prio,
-      created_by: me.id, assigned_to: asg
+      created_by: me.id,
+      assigned_to: assignedTo,
+      assigned_to_tg_bot_user: assignedTgBotUser
     }).select().single();
     if (error) throw error;
-    // Mahalliy state'ga qo'shamiz — yangilash kerakmas
     tasksCache.unshift(data);
     closeCreate(); toast('✅ Vazifa yaratildi', 'ok');
     refreshActiveView();
-    // Boshqa odamga biriktirilgan bo'lsa Telegram xabar
+    // Telegram xabar
     if (data.assigned_to && data.assigned_to !== me.id) {
-      tgNotifyAssignment(data.id, data.assigned_to);
+      tgNotifyAssignment(data.id, { user_id: data.assigned_to });
+    } else if (data.assigned_to_tg_bot_user) {
+      tgNotifyAssignment(data.id, { tg_bot_user_id: data.assigned_to_tg_bot_user });
     }
   } catch (e) { showMsg($('cMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Yaratish'; }
 }
@@ -1065,17 +1112,25 @@ function openDetail(id) {
   $('dTitle').textContent = t.title;
   const ov = isOverdue(t);
   const statusBtns = STATUS_ORDER.map(s => '<button class="filter-btn ' + (t.status===s?'active':'') + '" onclick="changeStatus('+t.id+',\''+s+'\')">'+STATUS_LBL[s]+'</button>').join('');
-  const asg = t.assigned_to ? (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile : null;
+  // Assignee: auth user yoki TG-only
+  let asgLine = '';
+  if (t.assigned_to) {
+    const asg = (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile;
+    asgLine = asg && asg.full_name ? asg.full_name : 'A\'zo';
+  } else if (t.assigned_to_tg_bot_user) {
+    const bu = tgUsersCache.find(u => u.id === t.assigned_to_tg_bot_user);
+    asgLine = bu ? ('✈ ' + (bu.full_name || bu.tg_username || 'Bot user') + (bu.phone ? ' · ' + bu.phone : '')) : '✈ Bot user';
+  }
 
   // Bo'lim ko'chirish: faqat foydalanuvchi a'zo bo'lgan bo'limlar + (bo'limsiz)
   // Owner/admin esa hamma bo'limga ko'chira oladi (lekin u yerda a'zo bo'lmasa, ko'chirgandan keyin ko'rmaydi — bu sezilarli)
-  const canEditTask = (myWsRole==='owner' || myWsRole==='admin')
+  const canEditTask = (myWsRole==='owner')
     || (t.department_id && myDepts.some(x => x.department_id === t.department_id && (x.role==='editor' || x.role==='admin')))
     || t.assigned_to === me.id || t.created_by === me.id;
 
   const myDeptIds = new Set(myDepts.map(d => d.department_id));
   // Workspace owner/admin hamma bo'limni ko'chira oladi; aks holda faqat a'zo bo'lgan bo'limlar
-  const transferTargets = (myWsRole==='owner' || myWsRole==='admin')
+  const transferTargets = (myWsRole==='owner')
     ? departments
     : departments.filter(d => myDeptIds.has(d.id));
 
@@ -1096,11 +1151,11 @@ function openDetail(id) {
     (t.description ? '<div style="margin-bottom:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;">'+escapeHtml(t.description)+'</div>' : '') +
     '<div class="detail-row"><div class="lbl">Holat</div><div class="val"><div class="status-pick">'+statusBtns+'</div></div></div>' +
     deptHtml +
-    (asg ? '<div class="detail-row"><div class="lbl">Biriktirildi</div><div class="val">'+escapeHtml(asg.full_name || 'A\'zo')+'</div></div>' : '') +
+    (asgLine ? '<div class="detail-row"><div class="lbl">Biriktirildi</div><div class="val">'+escapeHtml(asgLine)+'</div></div>' : '') +
     '<div class="detail-row"><div class="lbl">Deadline</div><div class="val '+(ov?'task-overdue':'')+'">'+(t.deadline ? fmtDeadline(t.deadline) + (ov?' (o\'tgan)':'') : 'yo\'q')+'</div></div>' +
     '<div class="detail-row"><div class="lbl">Prioritet</div><div class="val">'+((t.priority_level||0)>0?'P'+t.priority_level:'—')+'</div></div>' +
     '<div class="detail-row"><div class="lbl">Yaratilgan</div><div class="val">'+new Date(t.created_at).toLocaleString('uz-UZ')+'</div></div>';
-  $('dDelete').style.display = (myWsRole==='owner' || myWsRole==='admin') ? 'inline-block' : 'none';
+  $('dDelete').style.display = (myWsRole==='owner') ? 'inline-block' : 'none';
   $('detailBd').classList.add('show');
 }
 
@@ -1172,7 +1227,7 @@ function refreshActiveView() {
 
 // ============ DEPARTMENTS LIST ============
 async function renderDeptsList() {
-  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  const canManage = myWsRole === 'owner';
   $('newDeptBtn').style.display = canManage ? 'inline-block' : 'none';
   const wrap = $('deptsList'); const empty = $('deptsEmpty');
 
@@ -1215,7 +1270,7 @@ async function renderDeptsList() {
 
 // Owner/admin o'zini bo'limga qo'sha oladi (xavfsizlik: faqat workspace owner/admin)
 async function joinDeptAsAdmin(deptId) {
-  if (!(myWsRole==='owner' || myWsRole==='admin')) { toast('Faqat boshqaruvchi qila oladi', 'err'); return; }
+  if (!(myWsRole==='owner')) { toast('Faqat boshqaruvchi qila oladi', 'err'); return; }
   if (!confirm('O\'zingizni bu bo\'limga "Boshqaruvchi" sifatida qo\'shasizmi?')) return;
   try {
     const { error } = await sb.from('department_members').insert({ department_id: deptId, user_id: me.id, role: 'admin' });
@@ -1234,7 +1289,7 @@ function openDeptEdit() {
   editingDeptId = d.id;
   $('deptModalTitle').textContent = 'Bo\'limni tahrirlash';
   $('deptName').value = d.name; $('deptDesc').value = d.description || '';
-  $('deptDeleteBtn').style.display = (myWsRole==='owner' || myWsRole==='admin') ? 'inline-block' : 'none';
+  $('deptDeleteBtn').style.display = (myWsRole==='owner') ? 'inline-block' : 'none';
   hideMsg($('deptMsg'));
   $('deptBd').classList.add('show');
 }
@@ -1293,7 +1348,7 @@ function renderDeptHeader() {
   const d = departments.find(x => x.id === currentDeptId); if (!d) return;
   $('deptDetTitle').textContent = d.name;
   $('deptDetDesc').textContent = d.description || '';
-  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  const canManage = myWsRole === 'owner';
   $('deptDetSettings').style.display = canManage ? 'inline-block' : 'none';
 }
 
@@ -1318,11 +1373,18 @@ function renderKanban() {
     const cardsHtml = cards.map(t => {
       const ov = isOverdue(t);
       const dl = t.deadline ? fmtDeadline(t.deadline) : '';
-      const asg = t.assigned_to ? (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile : null;
+      let asgName = '';
+      if (t.assigned_to) {
+        const asg = (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile;
+        asgName = asg && asg.full_name ? '👤 ' + asg.full_name : '👤 A\'zo';
+      } else if (t.assigned_to_tg_bot_user) {
+        const bu = tgUsersCache.find(u => u.id === t.assigned_to_tg_bot_user);
+        asgName = bu ? '✈ ' + (bu.full_name || bu.tg_username || 'Bot') : '✈ Bot';
+      }
       return '<div class="kan-card" draggable="true" data-id="'+t.id+'" ondragstart="kanDragStart(event, '+t.id+')" ondragend="kanDragEnd(event)" onclick="openDetail('+t.id+')">' +
         '<div class="kan-card-title">' + escapeHtml(t.title) + '</div>' +
         '<div class="kan-card-meta">' +
-          (asg ? '<span>👤 ' + escapeHtml(asg.full_name || 'A\'zo') + '</span>' : '') +
+          (asgName ? '<span>' + escapeHtml(asgName) + '</span>' : '') +
           (dl ? '<span class="' + (ov ? 'task-overdue' : '') + '">⏰ ' + dl + '</span>' : '') +
           ((t.priority_level||0) > 0 ? '<span>P' + t.priority_level + '</span>' : '') +
         '</div>' +
@@ -1428,7 +1490,7 @@ async function loadDeptTeam() {
   renderDeptTeam();
 }
 function renderDeptTeam() {
-  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  const canManage = myWsRole === 'owner';
   $('deptTeamMgr').style.display = canManage ? 'flex' : 'none';
   // Dropdown: workspace members not yet in this dept
   if (canManage) {
@@ -1501,8 +1563,8 @@ async function removeDeptMember(uid) {
 }
 
 // ============ WORKSPACE TEAM ============
-function canManageTeam() { return myWsRole === 'owner' || myWsRole === 'admin'; }
-function canEditWorkspace() { return myWsRole === 'owner' || myWsRole === 'admin' || myWsRole === 'member'; }
+function canManageTeam() { return myWsRole === 'owner'; }
+function canEditWorkspace() { return myWsRole === 'owner' || myWsRole === 'member'; }
 async function renderTeam() {
   $('inviteBtn').style.display = canManageTeam() ? 'inline-block' : 'none';
   $('invitesWrap').style.display = canManageTeam() ? 'block' : 'none';
@@ -1516,7 +1578,7 @@ async function renderTeam() {
       const canChange = canManageTeam() && m.role !== 'owner' && !isMe;
       let roleHtml = canChange
         ? '<select onchange="changeMemberRole(\''+m.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; background: var(--surface);">'
-          + ['viewer','member','admin'].map(r => '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>').join('') + '</select>'
+          + ['member'].map(r => '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>').join('') + '</select>'
         : '<span class="badge muted">' + ROLE_WS[m.role] + '</span>';
       return '<div class="item static">' +
         '<div class="dot ts-' + (m.role==='owner'?'completed':'in_progress') + '"></div>' +
@@ -1544,12 +1606,24 @@ async function renderTeam() {
 function openInvite() {
   if (!canManageTeam()) return;
   if (!departments.length) { toast('Avval kamida bitta bo\'lim yarating', 'err'); goPage('departments'); return; }
-  $('iEmail').value=''; $('iWsRole').value='member'; hideMsg($('iMsg'));
-  $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
+  $('iEmail').value=''; hideMsg($('iMsg'));
+  $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor" selected>Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
   $('inviteBd').classList.add('show'); setTimeout(()=>$('iEmail').focus(), 50);
 }
+
+function iApplyBulk() {
+  const role = $('iBulkRole').value;
+  $('iDeptPicker').querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = true; });
+  $('iDeptPicker').querySelectorAll('select[data-role]').forEach(s => { s.value = role; });
+}
+function iToggleAll() {
+  const cbs = $('iDeptPicker').querySelectorAll('input[type=checkbox]');
+  const anyUnchecked = Array.from(cbs).some(cb => !cb.checked);
+  cbs.forEach(cb => { cb.checked = anyUnchecked; });
+}
+
 async function sendInvite() {
-  const wsRole = $('iWsRole').value; const btn = $('iBtn');
+  const btn = $('iBtn');
   const isFromTg = !!inviteFromTgUserId;
   let email = null;
   if (!isFromTg) {
@@ -1564,33 +1638,28 @@ async function sendInvite() {
   if (!picks.length) { showMsg($('iMsg'), 'Kamida bitta bo\'limni tanlang.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
   try {
-    const payload = { workspace_id: currentWs.id, ws_role: wsRole, departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending' };
+    const payload = { workspace_id: currentWs.id, ws_role: 'member', departments: picks, invited_by: me.id, invited_by_name: myProfile.full_name || me.email, status: 'pending' };
     if (isFromTg) payload.tg_bot_user_id = inviteFromTgUserId;
     else payload.email = email;
 
     const { data: inv, error } = await sb.from('invitations').insert(payload).select().single();
     if (error) { if (/duplicate|unique/i.test(error.message)) showMsg($('iMsg'), 'Bu odamga allaqachon taklif yuborilgan.', 'err'); else showMsg($('iMsg'), translateErr(error.message), 'err'); btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
 
+    // Telegram orqali xabar yuborishni Edge Function bajaradi
+    // (TG bot foydalanuvchisi yoki email orqali bog'langan auth user)
+    const signupUrl = window.location.origin + window.location.pathname;
+    try {
+      await sb.functions.invoke('tg-send-invite', { body: { invitation_id: inv.id, signup_url: signupUrl } });
+    } catch (e) { /* sokin xato */ }
+
     if (isFromTg) {
-      // Bot orqali xabar yuboramiz: signup uchun havola
-      const signupUrl = window.location.origin + window.location.pathname;
-      const u = tgUsersCache.find(x => x.id === inviteFromTgUserId);
-      if (u) {
-        const text = '🎉 Sizni "' + (currentWs.name) + '" kompaniyasiga taklif qilishdi!\n\n' +
-                     'Saytda ro\'yxatdan o\'ting (xohlagan email bilan), keyin bell ichidagi taklifni qabul qiling:\n' + signupUrl;
-        try {
-          // bot orqali yuborish — tg-send tg_chat_links'ga qaraydi, lekin bu user tg_bot_users'дан keldi.
-          // Buni Edge Function bilan oson qilamiz, lekin hozir oddiy: tg_chat_links yo'q bo'lsa, bot APIни DIRECT chaqirib bo'lmaydi (token kerak)
-          // Soddalashtirish: invitation yaratish bilan kifoya, owner xabarni qo'lda yuborishi mumkin
-        } catch(e) {}
-      }
-      showMsg($('iMsg'), '✅ Taklif yaratildi. Bot foydalanuvchisi ro\'yxatdan o\'tgach taklifni bell\'ida ko\'radi.', 'ok');
+      showMsg($('iMsg'), '✅ Taklif yuborildi. Botda xabar bordi va saytga ro\'yxatdan o\'tgach bell\'ida ko\'radi.', 'ok');
       inviteFromTgUserId = null;
       $('iEmail').readOnly = false;
       $('iEmail').style.background = '';
       loadTgUsers();
     } else {
-      showMsg($('iMsg'), '✅ Taklif yuborildi. Xodim ro\'yxatdan o\'tgan bo\'lsa 🔔 bell orqali ko\'radi.', 'ok');
+      showMsg($('iMsg'), '✅ Taklif yuborildi. Saytда 🔔 bell orqali ko\'radi (Telegramда ham xabar olgan bo\'lsa).', 'ok');
       if (currentPage === 'team') renderTeam();
     }
   } catch (e) { showMsg($('iMsg'), translateErr(e.message), 'err'); }
@@ -1743,9 +1812,8 @@ function openInviteFromTg(tgBotUserId) {
   $('iEmail').value = '(Bot foydalanuvchisi: ' + (u.full_name || u.tg_username || '?') + ')';
   $('iEmail').readOnly = true;
   $('iEmail').style.background = '#F0EFEA';
-  $('iWsRole').value = 'member';
   hideMsg($('iMsg'));
-  $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor">Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
+  $('iDeptPicker').innerHTML = departments.map(d => '<label class="dept-pick-item"><input type="checkbox" data-dept="'+d.id+'" /><span class="dept-name">'+escapeHtml(d.name)+'</span><select data-role="'+d.id+'"><option value="viewer">Ko\'ruvchi</option><option value="editor" selected>Tahrirlovchi</option><option value="admin">Boshqaruvchi</option></select></label>').join('');
   $('inviteBd').classList.add('show');
 }
 let integrationsCache = [];
@@ -1754,7 +1822,7 @@ let myTgLinks = []; // foydalanuvchining bog'langan botlari (workspace bo'yicha)
 
 async function loadIntegrations() {
   if (!currentWs || currentWs.kind !== 'organization') return;
-  const canManage = myWsRole === 'owner' || myWsRole === 'admin';
+  const canManage = myWsRole === 'owner';
   if (!canManage) {
     $('intgGrid').innerHTML = '<div class="empty"><strong>Faqat boshqaruvchi ko\'radi</strong>Integratsiyalarni faqat workspace egasi yoki administratori sozlaydi.</div>';
     return;
@@ -1946,8 +2014,8 @@ async function unlinkTg(linkId) {
 }
 
 // Vazifa biriktirilganda foydalanuvchiga TG xabar yuborish (frontend chaqirig'i)
-async function tgNotifyAssignment(taskId, assigneeUserId) {
-  if (!assigneeUserId || assigneeUserId === me.id) return; // o'zimga yubormaymiz
+async function tgNotifyAssignment(taskId, target) {
+  if (!target) return;
   if (currentWs.kind !== 'organization') return;
   const t = tasksCache.find(x => x.id === taskId);
   if (!t) return;
@@ -1955,16 +2023,26 @@ async function tgNotifyAssignment(taskId, assigneeUserId) {
   const lines = [
     '🔔 <b>Yangi vazifa biriktirildi</b>',
     '',
-    '📝 <b>' + (t.title || '') + '</b>',
-    dept ? ('📂 ' + dept) : '',
+    '📝 <b>' + escapeHtml(t.title || '') + '</b>',
+    t.description ? escapeHtml(t.description) : '',
+    '',
+    dept ? ('📂 Bo\'lim: ' + escapeHtml(dept)) : '',
     t.deadline ? ('⏰ Deadline: ' + fmtDeadline(t.deadline)) : '',
     (t.priority_level||0) > 0 ? ('🔥 Prioritet: P' + t.priority_level) : '',
     '',
-    'Beruvchi: ' + (myProfile.full_name || me.email),
+    'Beruvchi: ' + escapeHtml(myProfile.full_name || me.email),
   ].filter(Boolean).join('\n');
+  // Inline tugmalar — botda javob berishi uchun
+  const inline_keyboard = [
+    [{ text: '⚙️ Jarayonda', callback_data: 'task:in_progress:' + taskId }],
+    [{ text: '🏁 Tugallandi', callback_data: 'task:completed:' + taskId }],
+    [{ text: '💬 Izoh yozish', callback_data: 'task:comment:' + taskId }],
+  ];
   try {
-    await sb.functions.invoke('tg-send', { body: { workspace_id: currentWs.id, user_id: assigneeUserId, text: lines } });
-  } catch (e) { /* sokin xato — TG yoqilmagan yoki user bog'lanmagan */ }
+    await sb.functions.invoke('tg-send', {
+      body: { workspace_id: currentWs.id, target, text: lines, inline_keyboard }
+    });
+  } catch (e) { /* sokin xato */ }
 }
 
 async function init() {
