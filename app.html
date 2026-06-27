@@ -1646,11 +1646,21 @@ async function sendInvite() {
     if (error) { if (/duplicate|unique/i.test(error.message)) showMsg($('iMsg'), 'Bu odamga allaqachon taklif yuborilgan.', 'err'); else showMsg($('iMsg'), translateErr(error.message), 'err'); btn.disabled=false; btn.textContent='Taklif yuborish'; return; }
 
     // Telegram orqali xabar yuborishni Edge Function bajaradi
-    // (TG bot foydalanuvchisi yoki email orqali bog'langan auth user)
     const signupUrl = window.location.origin + window.location.pathname;
     try {
-      await sb.functions.invoke('tg-send-invite', { body: { invitation_id: inv.id, signup_url: signupUrl } });
-    } catch (e) { /* sokin xato */ }
+      const { data: tgData, error: tgErr } = await sb.functions.invoke('tg-send-invite', { body: { invitation_id: inv.id, signup_url: signupUrl } });
+      console.log('[tg-send-invite] data:', tgData, 'error:', tgErr);
+      if (tgErr) {
+        toast('TG xabar yuborilmadi: ' + (tgErr.message || tgErr), 'err');
+      } else if (tgData && tgData.sent === false) {
+        toast('TG xabar yuborilmadi: ' + (tgData.reason || tgData.error || 'noma\'lum'), 'err');
+      } else if (tgData && tgData.sent === true) {
+        toast('📨 Telegram\'ga ham yuborildi', 'ok');
+      }
+    } catch (e) {
+      console.error('[tg-send-invite] exception:', e);
+      toast('TG xato: ' + (e?.message || e), 'err');
+    }
 
     if (isFromTg) {
       showMsg($('iMsg'), '✅ Taklif yuborildi. Botda xabar bordi va saytga ro\'yxatdan o\'tgach bell\'ida ko\'radi.', 'ok');
