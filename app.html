@@ -274,6 +274,23 @@
 
   /* Stat cards (dashboard) */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px; }
+
+  /* Kanban toolbar */
+  .kanban-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .kan-col-head { display: flex; align-items: center; gap: 8px; }
+  .kan-col-color { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .kan-col-name { font-weight: 600; font-size: 13px; cursor: text; padding: 2px 6px; border-radius: 4px; }
+  .kan-col-name:hover { background: #F4F3EF; }
+  .kan-col-name.editing { background: var(--surface); border: 1px solid var(--accent); outline: none; }
+  .kan-add-task { background: none; border: 1px dashed var(--line-strong); border-radius: 8px; padding: 8px; width: 100%; color: var(--muted); font-size: 12.5px; cursor: pointer; margin-top: 6px; }
+  .kan-add-task:hover { color: var(--accent-ink); border-color: var(--accent); background: var(--accent-soft); }
+  .kan-col-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+  .kan-col:hover .kan-col-actions { opacity: 1; }
+  .kan-col-action-btn { background: none; border: none; cursor: pointer; padding: 2px 6px; font-size: 12px; color: var(--muted); border-radius: 4px; }
+  .kan-col-action-btn:hover { background: #F4F3EF; color: var(--ink); }
+  .kc-color-opt { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform .12s; }
+  .kc-color-opt:hover { transform: scale(1.15); }
+  .kc-color-opt.active { border-color: var(--ink); transform: scale(1.15); }
   .stat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
   .stat-card .lbl { font-size: 11.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
   .stat-card .val { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -.02em; color: var(--ink); }
@@ -525,6 +542,22 @@
       </div>
 
       <div id="deptView-kanban">
+        <div class="kanban-toolbar">
+          <input type="text" class="search-input" id="kanSearch" placeholder="Vazifa qidirish..." oninput="renderKanban()" style="max-width: 280px;" />
+          <select id="kanAsgFilter" onchange="renderKanban()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+            <option value="all">Hamma biriktirilganlar</option>
+            <option value="me">Faqat menga</option>
+            <option value="unassigned">Biriktirilmagan</option>
+          </select>
+          <select id="kanPrioFilter" onchange="renderKanban()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+            <option value="all">Hamma prioritetlar</option>
+            <option value="overdue">⏰ Muddati o'tgan</option>
+            <option value="high">🔥 Yuqori (P7+)</option>
+            <option value="today">📅 Bugun deadline</option>
+          </select>
+          <div style="flex:1"></div>
+          <button class="btn sm secondary" onclick="openAddColumnModal()">+ Yangi column</button>
+        </div>
         <div class="kanban" id="kanbanGrid"></div>
       </div>
       <div id="deptView-list" style="display:none">
@@ -685,6 +718,47 @@
   </div>
 </div>
 
+<!-- ADD KANBAN COLUMN MODAL -->
+<div class="modal-backdrop" id="addColumnBd">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-head">
+      <h3>Yangi kanban column</h3>
+      <button class="x-btn" onclick="closeAddColumnModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Column nomi *</label><input id="kcName" type="text" placeholder="Masalan: Review" /></div>
+      <div class="field">
+        <label>Status mapping</label>
+        <select id="kcStatus">
+          <option value="new">Yangi (boshlanmagan)</option>
+          <option value="in_progress" selected>Jarayonda (ishlayotgan)</option>
+          <option value="completed">Tugatilgan</option>
+          <option value="cancelled">Bekor</option>
+        </select>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Bu column'gа ko'chirilgan vazifa qaysi statusга tushadi</div>
+      </div>
+      <div class="field">
+        <label>Rang</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="kcColorPicker">
+          <span class="kc-color-opt" data-color="#94A3B8" style="background:#94A3B8" onclick="kcSetColor('#94A3B8')"></span>
+          <span class="kc-color-opt" data-color="#3B82F6" style="background:#3B82F6" onclick="kcSetColor('#3B82F6')"></span>
+          <span class="kc-color-opt" data-color="#10B981" style="background:#10B981" onclick="kcSetColor('#10B981')"></span>
+          <span class="kc-color-opt" data-color="#F59E0B" style="background:#F59E0B" onclick="kcSetColor('#F59E0B')"></span>
+          <span class="kc-color-opt" data-color="#EF4444" style="background:#EF4444" onclick="kcSetColor('#EF4444')"></span>
+          <span class="kc-color-opt" data-color="#8B5CF6" style="background:#8B5CF6" onclick="kcSetColor('#8B5CF6')"></span>
+          <span class="kc-color-opt" data-color="#EC4899" style="background:#EC4899" onclick="kcSetColor('#EC4899')"></span>
+          <span class="kc-color-opt" data-color="#14B8A6" style="background:#14B8A6" onclick="kcSetColor('#14B8A6')"></span>
+        </div>
+      </div>
+      <div class="msg" id="kcMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeAddColumnModal()">Bekor</button>
+      <button class="btn" id="kcSaveBtn" onclick="saveNewColumn()">Yaratish</button>
+    </div>
+  </div>
+</div>
+
 <!-- n8n SETUP MODAL -->
 <div class="modal-backdrop" id="n8nSetupBd">
   <div class="modal" style="max-width: 600px;">
@@ -748,6 +822,15 @@
         <div style="display:flex; gap:8px; margin-top: 6px;">
           <input id="cNewSub" type="text" placeholder="Subtask qo'shish..." onkeydown="if(event.key==='Enter') { event.preventDefault(); addCreateSub(); }" />
           <button class="btn sm secondary" onclick="addCreateSub()">+</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top: 12px;">
+        <label>Fayllar / Rasmlar (ixtiyoriy)</label>
+        <div class="att-grid" id="cAttGrid" style="min-height: 10px;"></div>
+        <input type="file" id="cFileInput" multiple style="display:none" onchange="onCreateFilePick(this)" />
+        <div style="display:flex; gap:8px; margin-top: 6px; align-items: center; flex-wrap: wrap;">
+          <button class="upload-btn" onclick="document.getElementById('cFileInput').click()">📎 Fayl tanlash</button>
+          <span class="att-hint">💡 Yoki <b>Ctrl+V</b> (Mac: <b>⌘+V</b>) — clipboard'дан paste qiling</span>
         </div>
       </div>
       <div class="msg" id="cMsg"></div>
@@ -1095,6 +1178,7 @@ async function loadCurrentContext() {
   const { data: sub } = await sb.from('subscriptions').select('*').eq('workspace_id', currentWs.id).maybeSingle();
 
   await loadTasksFull();
+  await loadKanbanColumns();
   setupRealtime();
 
   renderSidebar();
@@ -1150,6 +1234,21 @@ function setupRealtime() {
         curDetailSubs = curDetailSubs.filter(s => s.id !== row.id);
       }
       renderDetailBody();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_columns', filter: 'workspace_id=eq.' + wsId }, payload => {
+      const row = payload.new || payload.old;
+      if (!row) return;
+      const ev = payload.eventType;
+      if (ev === 'INSERT') {
+        if (!kanbanColumns.find(c => c.id === row.id)) kanbanColumns.push(payload.new);
+      } else if (ev === 'UPDATE') {
+        const i = kanbanColumns.findIndex(c => c.id === row.id);
+        if (i >= 0) kanbanColumns[i] = payload.new;
+      } else if (ev === 'DELETE') {
+        kanbanColumns = kanbanColumns.filter(c => c.id !== row.id);
+      }
+      kanbanColumns.sort((a, b) => (a.sort_order||0) - (b.sort_order||0));
+      if (currentPage === 'department' && currentDeptView === 'kanban') renderKanban();
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + me.id }, payload => {
       // Yangi notification — bell ko'rsatkichi va list
@@ -1399,13 +1498,20 @@ function taskItemHtml(t, showDept) {
 }
 
 let cPendingSubs = []; // [{title}]
+let cPendingFiles = []; // [File]
+let kanbanColumns = []; // [{id, name, status, color, sort_order, is_default}]
+let kcSelectedColor = '#3B82F6';
+let _createPasteHandler = null;
+
 function openCreate() { openCreateInternal(null); }
 function openCreateForDept() { openCreateInternal(currentDeptId); }
 function openCreateInternal(forceDeptId) {
   $('cTitle').value=''; $('cDesc').value=''; $('cDeadline').value=''; $('cPriority').value='0';
   $('cNewSub').value = '';
   cPendingSubs = [];
+  cPendingFiles = [];
   renderCreateSubs();
+  renderCreateAtts();
   hideMsg($('cMsg'));
   if (currentWs.kind === 'organization') {
     $('cDeptField').style.display = 'block';
@@ -1428,7 +1534,69 @@ function openCreateInternal(forceDeptId) {
   }
   $('cAssignee').innerHTML = assigneeHtml;
   $('createBd').classList.add('show');
+  attachCreatePaste();
   setTimeout(()=>$('cTitle').focus(), 50);
+}
+
+function attachCreatePaste() {
+  detachCreatePaste();
+  _createPasteHandler = (e) => {
+    const items = (e.clipboardData || window.clipboardData)?.items;
+    if (!items || !items.length) return;
+    const tsNow = Date.now();
+    let added = 0;
+    for (const it of items) {
+      if (it.kind === 'file') {
+        const f = it.getAsFile();
+        if (!f) continue;
+        let file = f;
+        if (/^image\.png$/i.test(f.name) || !f.name) {
+          const ext = (f.type && f.type.split('/')[1]) || 'png';
+          file = new File([f], 'paste_' + tsNow + '_' + (cPendingFiles.length+1) + '.' + ext, { type: f.type });
+        }
+        if (file.size > 20 * 1024 * 1024) { toast(file.name + ' — 20MB dan katta', 'err'); continue; }
+        cPendingFiles.push(file);
+        added++;
+      }
+    }
+    if (added) {
+      e.preventDefault();
+      renderCreateAtts();
+      toast('📎 ' + added + ' ta fayl qo\'shildi', 'ok');
+    }
+  };
+  document.addEventListener('paste', _createPasteHandler);
+}
+function detachCreatePaste() {
+  if (_createPasteHandler) { document.removeEventListener('paste', _createPasteHandler); _createPasteHandler = null; }
+}
+
+function onCreateFilePick(input) {
+  const files = Array.from(input.files || []);
+  input.value = '';
+  for (const f of files) {
+    if (f.size > 20 * 1024 * 1024) { toast(f.name + ' — 20MB dan katta', 'err'); continue; }
+    cPendingFiles.push(f);
+  }
+  renderCreateAtts();
+}
+
+function removeCreateAtt(idx) {
+  cPendingFiles.splice(idx, 1);
+  renderCreateAtts();
+}
+
+function renderCreateAtts() {
+  const grid = $('cAttGrid');
+  if (!grid) return;
+  grid.innerHTML = cPendingFiles.map((f, i) => {
+    const isImg = (f.type || '').startsWith('image/');
+    if (isImg) {
+      const url = URL.createObjectURL(f);
+      return '<div class="att-thumb"><img src="' + url + '" /><div class="att-del" onclick="removeCreateAtt('+i+')" style="opacity:1;">×</div></div>';
+    }
+    return '<div class="att-thumb"><div class="att-file"><div class="icon">' + fileIcon(f.type, f.name) + '</div><div class="name">' + escapeHtml(f.name) + '</div></div><div class="att-del" onclick="removeCreateAtt('+i+')" style="opacity:1;">×</div></div>';
+  }).join('');
 }
 
 function addCreateSub() {
@@ -1454,7 +1622,7 @@ function renderCreateSubs() {
   ).join('');
 }
 
-function closeCreate() { $('createBd').classList.remove('show'); }
+function closeCreate() { $('createBd').classList.remove('show'); detachCreatePaste(); window._cQuickStatus = null; }
 
 async function saveCreate() {
   const title = $('cTitle').value.trim();
@@ -1483,8 +1651,10 @@ async function saveCreate() {
       deadline: deadlineIso, priority_level: prio,
       created_by: me.id,
       assigned_to: assignedTo,
-      assigned_to_tg_bot_user: assignedTgBotUser
+      assigned_to_tg_bot_user: assignedTgBotUser,
+      status: window._cQuickStatus || 'new'
     }).select().single();
+    window._cQuickStatus = null;
     if (error) throw error;
     // Subtasks insert (best-effort, parallel)
     if (cPendingSubs.length) {
@@ -1492,6 +1662,11 @@ async function saveCreate() {
         workspace_id: currentWs.id, task_id: data.id, title: s.title, sort_order: i + 1
       }));
       try { await sb.from('task_subtasks').insert(rows); } catch(e) {}
+    }
+    // Fayllarni yuklash (parallel)
+    if (cPendingFiles.length) {
+      btn.textContent = '📎 Fayllar yuklanmoqda…';
+      await Promise.all(cPendingFiles.map(f => uploadAttachmentSilent(data.id, f)));
     }
     tasksCache.unshift(data);
     closeCreate(); toast('✅ Vazifa yaratildi', 'ok');
@@ -1917,31 +2092,43 @@ async function uploadAttachment(taskId, file) {
     grid.appendChild(placeholder);
   }
   try {
-    // Storage path: <workspace_id>/<task_id>/<timestamp>_<name>
-    const safeName = file.name.replace(/[^\w.\-]+/g, '_');
-    const path = currentWs.id + '/' + taskId + '/' + Date.now() + '_' + safeName;
-    const { data: up, error: upErr } = await sb.storage.from('attachments').upload(path, file, {
-      cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream'
-    });
-    if (upErr) throw upErr;
-    const { data: pub } = sb.storage.from('attachments').getPublicUrl(up.path);
-    const fileUrl = pub.publicUrl;
-    const { data: row, error: rowErr } = await sb.from('task_attachments').insert({
-      workspace_id: currentWs.id, task_id: taskId,
-      file_url: fileUrl, file_name: file.name, file_type: file.type, file_size: file.size,
-      uploaded_by: me.id
-    }).select().single();
-    if (rowErr) throw rowErr;
+    const row = await _uploadAttachmentCore(taskId, file);
     curDetailAttachments.push(row);
     if (placeholder) placeholder.remove();
     renderDetailBody();
     toast('📎 Yuklandi', 'ok');
-    // TG notify assignee
     notifyAttachmentToTg(file.name);
   } catch (e) {
     if (placeholder) placeholder.remove();
     toast('Xato: ' + translateErr(e.message || String(e)), 'err');
   }
+}
+
+// Sokin versiya — create modal'дан pending fayllar uchun
+async function uploadAttachmentSilent(taskId, file) {
+  if (!taskId || !file) return null;
+  if (file.size > 20 * 1024 * 1024) { toast(file.name + ' — 20MB dan katta', 'err'); return null; }
+  try { return await _uploadAttachmentCore(taskId, file); }
+  catch (e) { toast('Yuklashda xato: ' + (file.name || ''), 'err'); return null; }
+}
+
+// Core upload — har joydan ishlatiladi
+async function _uploadAttachmentCore(taskId, file) {
+  const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+  const path = currentWs.id + '/' + taskId + '/' + Date.now() + '_' + safeName;
+  const { data: up, error: upErr } = await sb.storage.from('attachments').upload(path, file, {
+    cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream'
+  });
+  if (upErr) throw upErr;
+  const { data: pub } = sb.storage.from('attachments').getPublicUrl(up.path);
+  const fileUrl = pub.publicUrl;
+  const { data: row, error: rowErr } = await sb.from('task_attachments').insert({
+    workspace_id: currentWs.id, task_id: taskId,
+    file_url: fileUrl, file_name: file.name, file_type: file.type, file_size: file.size,
+    uploaded_by: me.id
+  }).select().single();
+  if (rowErr) throw rowErr;
+  return row;
 }
 
 async function notifyAttachmentToTg(fileName) {
@@ -2189,11 +2376,67 @@ function setDeptView(v) {
 function deptTasks() { return tasksCache.filter(t => t.department_id === currentDeptId); }
 
 // ---- Kanban ----
+async function loadKanbanColumns() {
+  if (!currentWs) { kanbanColumns = []; return; }
+  try {
+    const { data, error } = await sb.from('kanban_columns').select('*').eq('workspace_id', currentWs.id).order('sort_order', { ascending: true });
+    if (error) throw error;
+    kanbanColumns = data || [];
+    // Agar bo'sh — default 4 ta yaratamиz (backfill SQL ishlamagan bo'lsa)
+    if (!kanbanColumns.length && currentWs.kind === 'organization') {
+      const defaults = [
+        { workspace_id: currentWs.id, name: 'Yangi', status: 'new', color: '#94A3B8', sort_order: 1, is_default: true },
+        { workspace_id: currentWs.id, name: 'Jarayonда', status: 'in_progress', color: '#3B82F6', sort_order: 2, is_default: true },
+        { workspace_id: currentWs.id, name: 'Tugatilgan', status: 'completed', color: '#10B981', sort_order: 3, is_default: true },
+        { workspace_id: currentWs.id, name: 'Bekor', status: 'cancelled', color: '#EF4444', sort_order: 4, is_default: true },
+      ];
+      try {
+        const { data: ins } = await sb.from('kanban_columns').insert(defaults).select();
+        kanbanColumns = ins || [];
+      } catch(e) { /* ignore */ }
+    }
+  } catch(e) { kanbanColumns = []; }
+}
+
+function kanFilteredTasks() {
+  let list = deptTasks();
+  // Search
+  const q = ($('kanSearch')?.value || '').trim().toLowerCase();
+  if (q) list = list.filter(t => (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
+  // Assignee
+  const asgF = $('kanAsgFilter')?.value || 'all';
+  if (asgF === 'me') list = list.filter(t => t.assigned_to === me.id);
+  else if (asgF === 'unassigned') list = list.filter(t => !t.assigned_to && !t.assigned_to_tg_bot_user);
+  // Prio
+  const prioF = $('kanPrioFilter')?.value || 'all';
+  if (prioF === 'overdue') list = list.filter(isOverdue);
+  else if (prioF === 'high') list = list.filter(t => (t.priority_level||0) >= 7);
+  else if (prioF === 'today') {
+    const today = new Date();
+    list = list.filter(t => {
+      if (!t.deadline || t.status === 'completed' || t.status === 'cancelled') return false;
+      const d = new Date(t.deadline);
+      return d.getUTCDate() === today.getUTCDate() && d.getUTCMonth() === today.getUTCMonth() && d.getUTCFullYear() === today.getUTCFullYear();
+    });
+  }
+  return list;
+}
+
 function renderKanban() {
   const grid = $('kanbanGrid'); if (!grid) return;
-  const tasks = deptTasks();
-  grid.innerHTML = STATUS_ORDER.map(st => {
-    const cards = tasks.filter(t => t.status === st);
+  const tasks = kanFilteredTasks();
+  const cols = kanbanColumns.length ? kanbanColumns : STATUS_ORDER.map((s, i) => ({ id: 'fallback-'+s, name: STATUS_LBL[s], status: s, color: '#94A3B8', sort_order: i+1, is_default: true }));
+
+  grid.innerHTML = cols.map(col => {
+    // Vazifalarni shu column'ga group qilamиz:
+    // 1) Kanban_column_id mos kelsa
+    // 2) Yoki status mos kelsa va boshqa column'дa explicit emas
+    const cards = tasks.filter(t => {
+      // future: t.kanban_column_id === col.id
+      // hozir: status orqali
+      return t.status === col.status;
+    });
+
     const cardsHtml = cards.map(t => {
       const ov = isOverdue(t);
       const dl = t.deadline ? fmtDeadline(t.deadline) : '';
@@ -2214,15 +2457,119 @@ function renderKanban() {
         '</div>' +
       '</div>';
     }).join('');
-    return '<div class="kan-col" data-status="'+st+'" ondragover="kanDragOver(event)" ondragleave="kanDragLeave(event)" ondrop="kanDrop(event, \''+st+'\')">' +
+
+    const colId = col.id;
+    const isFb = String(colId).startsWith('fallback-');
+    const colorDot = '<span class="kan-col-color" style="background:' + (col.color || '#94A3B8') + '"></span>';
+    const nameHtml = (col.is_default || isFb)
+      ? '<span class="kan-col-name" style="cursor: default;">' + escapeHtml(col.name) + '</span>'
+      : '<span class="kan-col-name" onclick="editColName(\''+colId+'\', this)">' + escapeHtml(col.name) + '</span>';
+    const actions = (col.is_default || isFb)
+      ? ''
+      : '<div class="kan-col-actions"><button class="kan-col-action-btn" title="O\'chirish" onclick="event.stopPropagation(); deleteColumn(\''+colId+'\')">×</button></div>';
+
+    return '<div class="kan-col" data-col="'+colId+'" data-status="'+col.status+'" ondragover="kanDragOver(event)" ondragleave="kanDragLeave(event)" ondrop="kanDrop(event, \''+col.status+'\')">' +
       '<div class="kan-head">' +
-        '<div class="kan-title"><span class="dot ts-'+st+'"></span> ' + STATUS_LBL[st] + '</div>' +
-        '<span class="kan-count">' + cards.length + '</span>' +
+        '<div class="kan-col-head">' + colorDot + nameHtml + '</div>' +
+        '<div style="display:flex; align-items:center; gap:6px;">' +
+          actions +
+          '<span class="kan-count">' + cards.length + '</span>' +
+        '</div>' +
       '</div>' +
-      '<div class="kan-list">' + (cardsHtml || '<div style="font-size:12px; color: var(--muted); text-align:center; padding: 16px 0;">Yo\'q</div>') + '</div>' +
+      '<div class="kan-list">' + (cardsHtml || '') + '</div>' +
+      (canEditWorkspace() ? '<button class="kan-add-task" onclick="quickAddToColumn(\''+col.status+'\')">+ Vazifa qo\'shish</button>' : '') +
     '</div>';
   }).join('');
 }
+
+function quickAddToColumn(status) {
+  openCreateInternal(currentDeptId);
+  // Vazifa yaratilgach status'ni patch qilamиz (yaratish paytida status — default 'new')
+  // Soddasi: prompt orqali nomни darrov yaratish:
+  setTimeout(() => {
+    // Set a flag — keyin saveCreate'дa status'ни o'zgartiramиz
+    window._cQuickStatus = status;
+  }, 50);
+}
+
+function openAddColumnModal() {
+  if (currentWs.kind !== 'organization') { toast('Faqat kompaniya workspace\'дa', 'err'); return; }
+  $('kcName').value = '';
+  $('kcStatus').value = 'in_progress';
+  kcSetColor('#3B82F6');
+  hideMsg($('kcMsg'));
+  $('addColumnBd').classList.add('show');
+  setTimeout(() => $('kcName').focus(), 50);
+}
+function closeAddColumnModal() { $('addColumnBd').classList.remove('show'); }
+function kcSetColor(c) {
+  kcSelectedColor = c;
+  document.querySelectorAll('.kc-color-opt').forEach(el => el.classList.toggle('active', el.dataset.color === c));
+}
+
+async function saveNewColumn() {
+  const name = ($('kcName').value || '').trim();
+  if (!name) { showMsg($('kcMsg'), 'Nomi kerak', 'err'); return; }
+  const status = $('kcStatus').value;
+  const btn = $('kcSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqда…';
+  try {
+    const sortMax = kanbanColumns.reduce((a, c) => Math.max(a, c.sort_order || 0), 0);
+    const { data, error } = await sb.from('kanban_columns').insert({
+      workspace_id: currentWs.id, name, status, color: kcSelectedColor, sort_order: sortMax + 1, is_default: false
+    }).select().single();
+    if (error) throw error;
+    kanbanColumns.push(data);
+    closeAddColumnModal();
+    renderKanban();
+    toast('✓ Column qo\'shildi', 'ok');
+  } catch (e) {
+    showMsg($('kcMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Yaratish';
+  }
+}
+
+function editColName(colId, el) {
+  const col = kanbanColumns.find(c => c.id === colId); if (!col) return;
+  const original = col.name;
+  el.contentEditable = 'true';
+  el.classList.add('editing');
+  el.focus();
+  // select all
+  const range = document.createRange(); range.selectNodeContents(el);
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  const save = async () => {
+    el.contentEditable = 'false';
+    el.classList.remove('editing');
+    const newName = (el.textContent || '').trim();
+    if (!newName || newName === original) { el.textContent = original; return; }
+    try {
+      const { error } = await sb.from('kanban_columns').update({ name: newName }).eq('id', colId);
+      if (error) throw error;
+      col.name = newName;
+      toast('✓ O\'zgartirildi', 'ok');
+    } catch (e) { el.textContent = original; toast(translateErr(e.message), 'err'); }
+  };
+  el.addEventListener('blur', save, { once: true });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    if (e.key === 'Escape') { el.textContent = original; el.blur(); }
+  });
+}
+
+async function deleteColumn(colId) {
+  const col = kanbanColumns.find(c => c.id === colId); if (!col) return;
+  if (col.is_default) { toast('Default column o\'chirilmaydi', 'err'); return; }
+  if (!confirm('"'+col.name+'" column\'ni o\'chirasizmi? Ichidagi vazifalar boshqa column\'gа avtomatik tushadi.')) return;
+  try {
+    const { error } = await sb.from('kanban_columns').delete().eq('id', colId);
+    if (error) throw error;
+    kanbanColumns = kanbanColumns.filter(c => c.id !== colId);
+    renderKanban();
+    toast('O\'chirildi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
 function kanDragStart(e, id) { dragTaskId = id; e.dataTransfer.effectAllowed = 'move'; e.target.classList.add('dragging'); }
 function kanDragEnd(e) { e.target.classList.remove('dragging'); document.querySelectorAll('.kan-col').forEach(c => c.classList.remove('drop-over')); dragTaskId = null; }
 function kanDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; e.currentTarget.classList.add('drop-over'); }
@@ -3047,7 +3394,7 @@ async function init() {
     }
     // Escape => close any open modal
     if (e.key === 'Escape') {
-      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd'].forEach(id => {
+      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd','addColumnBd'].forEach(id => {
         const el = $(id);
         if (el && el.classList.contains('show')) el.classList.remove('show');
       });
