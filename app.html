@@ -204,6 +204,87 @@
   .dept-pick-item .dept-name { flex: 1; font-size: 13.5px; font-weight: 500; }
   .dept-pick-item select { width: auto; padding: 4px 8px; font-size: 12px; }
 
+  /* Detail modal — kengroq */
+  .modal.modal-wide { max-width: 720px; }
+
+  /* Section header in detail */
+  .detail-section { margin-top: 22px; }
+  .detail-section-head { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+  .detail-section-head .count { background: #F0EFEA; color: var(--ink); padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: none; }
+
+  /* Inline editable */
+  .inline-edit { position: relative; }
+  .inline-edit-text { padding: 6px 8px; border-radius: 6px; cursor: text; min-height: 24px; }
+  .inline-edit-text:hover { background: #F4F3EF; }
+  .inline-edit-input { width: 100%; padding: 7px 9px; border: 1px solid var(--accent); border-radius: 6px; font-size: 13.5px; font-family: inherit; background: var(--surface); outline: none; }
+  .inline-edit-input.area { min-height: 80px; resize: vertical; }
+  .inline-edit-empty { color: var(--muted); font-style: italic; }
+
+  /* Comments */
+  .cmt-list { display: flex; flex-direction: column; gap: 10px; }
+  .cmt-item { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+  .cmt-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+  .cmt-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  .cmt-author { font-weight: 600; color: var(--ink); }
+  .cmt-time { color: var(--muted); font-size: 11px; }
+  .cmt-text { font-size: 13.5px; line-height: 1.5; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+  .cmt-text.from-tg { padding-left: 18px; border-left: 2px solid #229ED9; background: linear-gradient(to right, rgba(34,158,217,0.05), transparent); padding-top: 4px; padding-bottom: 4px; border-radius: 4px; }
+  .cmt-input-row { display: flex; gap: 8px; margin-top: 12px; }
+  .cmt-input { flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; font-family: inherit; background: var(--surface); }
+  .cmt-input:focus { outline: none; border-color: var(--accent); }
+  .cmt-delete { color: var(--danger); cursor: pointer; font-size: 12px; opacity: 0; transition: opacity .15s; }
+  .cmt-item:hover .cmt-delete { opacity: 1; }
+
+  /* Subtasks */
+  .sub-list { display: flex; flex-direction: column; gap: 4px; }
+  .sub-item { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 6px; }
+  .sub-item:hover { background: #F4F3EF; }
+  .sub-item input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+  .sub-item .sub-title { flex: 1; font-size: 13.5px; color: var(--ink); }
+  .sub-item.done .sub-title { text-decoration: line-through; color: var(--muted); }
+  .sub-item .sub-del { opacity: 0; color: var(--danger); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+  .sub-item:hover .sub-del { opacity: 1; }
+  .sub-add { display: flex; gap: 8px; margin-top: 8px; }
+  .sub-add input { flex: 1; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; background: var(--surface); }
+
+  /* Attachments */
+  .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .att-thumb { position: relative; aspect-ratio: 1; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; cursor: pointer; }
+  .att-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .att-file { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px; text-align: center; }
+  .att-file .icon { font-size: 28px; }
+  .att-file .name { font-size: 10.5px; color: var(--ink); word-break: break-word; line-height: 1.3; max-height: 26px; overflow: hidden; }
+  .att-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.6); color: #fff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; opacity: 0; transition: opacity .15s; }
+  .att-thumb:hover .att-del { opacity: 1; }
+  .att-empty { color: var(--muted); font-size: 12.5px; font-style: italic; padding: 10px 0; }
+  .att-uploading { font-size: 12px; color: var(--accent-ink); padding: 6px 0; }
+  .upload-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px dashed var(--line-strong); border-radius: 8px; cursor: pointer; font-size: 12.5px; color: var(--muted); background: transparent; }
+  .upload-btn:hover { color: var(--ink); border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+  .att-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* Avatar helper */
+  .avatar { width: 28px; height: 28px; border-radius: 50%; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .avatar.sm { width: 22px; height: 22px; font-size: 10px; }
+  .avatar.lg { width: 36px; height: 36px; font-size: 13px; }
+
+  /* Search */
+  .search-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .search-input { flex: 1; padding: 9px 12px 9px 36px; border: 1px solid var(--line); border-radius: 10px; font-size: 13.5px; background: var(--surface); font-family: inherit; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 11px center; background-size: 16px 16px; }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+
+  /* Stat cards (dashboard) */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .stat-card .lbl { font-size: 11.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .stat-card .val { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -.02em; color: var(--ink); }
+  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stat-card.alert .val { color: var(--danger); }
+  .stat-card.ok .val { color: var(--accent-ink); }
+
+  /* Settings */
+  .settings-section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+  .settings-section h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; margin: 0 0 12px; font-weight: 600; }
+
   .notif-panel { position: fixed; left: 8px; bottom: 64px; width: 320px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); max-height: 70vh; overflow-y: auto; z-index: 50; display: none; }
   .notif-panel.show { display: block; }
   .notif-head { padding: 12px 16px; font-weight: 600; font-size: 13.5px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
@@ -261,6 +342,7 @@
   @media (max-width: 980px) {
     .kanban { grid-template-columns: 1fr; }
     .cal-cell { min-height: 60px; padding: 4px; }
+    #dashSplit { grid-template-columns: 1fr !important; }
   }
   @media (max-width: 880px) {
     .shell { grid-template-columns: 1fr; }
@@ -274,6 +356,12 @@
     .side-link { padding: 7px 11px; font-size: 12.5px; }
     .main { padding: 20px 16px; }
     .notif-panel { left: 8px; right: 8px; width: auto; bottom: auto; top: 60px; }
+    .modal { max-height: 100vh; border-radius: 0; }
+    .modal.modal-wide { max-width: 100%; }
+    .att-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .search-row { flex-direction: column; align-items: stretch; }
+    .search-row select { width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -354,14 +442,27 @@
     <section id="page-dashboard">
       <h2 class="h2" id="dashTitle">Bosh sahifa</h2>
       <div class="stat-grid">
-        <div class="stat"><div class="k">Workspace turi</div><div class="v small" id="dashKind">—</div></div>
-        <div class="stat"><div class="k">Sizning rolingiz</div><div class="v small" id="dashRole">—</div></div>
-        <div class="stat"><div class="k">Holat</div><div class="v"><span class="badge ok" id="dashPlan">—</span></div></div>
-        <div class="stat"><div class="k">Faol vazifalar</div><div class="v" id="dashActive">0</div></div>
+        <div class="stat-card"><div class="lbl">Faol vazifalar</div><div class="val" id="statActive">0</div><div class="sub" id="statActiveSub">—</div></div>
+        <div class="stat-card alert"><div class="lbl">Muddati o'tgan</div><div class="val" id="statOverdue">0</div><div class="sub" id="statOverdueSub">vazifa</div></div>
+        <div class="stat-card"><div class="lbl">Bugun</div><div class="val" id="statToday">0</div><div class="sub" id="statTodaySub">deadline</div></div>
+        <div class="stat-card ok"><div class="lbl">Tugatilgan</div><div class="val" id="statDone">0</div><div class="sub" id="statDoneSub">jami</div></div>
       </div>
-      <div class="empty">
-        <strong>Yangi arxitektura ✅</strong>
-        Chap menyudan: bo'sh maydonni Bo'limlar bilan tartiblang, har birida Kanban / Ro'yxat / Kalendar ko'rinishlari mavjud.
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;" id="dashSplit">
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px;">
+            <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; margin: 0;">Mening vazifalarim</h3>
+            <a href="#" onclick="event.preventDefault(); goPage('tasks')" style="font-size: 12.5px; color: var(--accent-ink); text-decoration: none;">Hammasi →</a>
+          </div>
+          <div id="dashMyTasks" class="list"></div>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px;">
+            <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; margin: 0;">Yaqin deadline'lar</h3>
+            <a href="#" onclick="event.preventDefault(); goPage('tasks')" style="font-size: 12.5px; color: var(--accent-ink); text-decoration: none;">Hammasi →</a>
+          </div>
+          <div id="dashDueSoon" class="list"></div>
+        </div>
       </div>
     </section>
 
@@ -370,6 +471,14 @@
       <div class="row-head">
         <h2 class="h2" style="margin:0">Hamma vazifalar</h2>
         <button class="btn" id="tasksNewBtn" onclick="openCreate()">+ Yangi vazifa</button>
+      </div>
+      <div class="search-row">
+        <input type="text" class="search-input" id="tasksSearch" placeholder="Vazifalar bo'yicha qidirish… (nom, tavsif)" oninput="onTasksSearch()" />
+        <select id="tasksAsgFilter" onchange="renderTasksList()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+          <option value="all">Hamma biriktirilganlar</option>
+          <option value="me">Faqat menga</option>
+          <option value="unassigned">Biriktirilmagan</option>
+        </select>
       </div>
       <div class="filter-row" style="margin-bottom:16px;">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Hammasi</button>
@@ -474,6 +583,36 @@
         Botingizga <code style="background:#F0EFEA;padding:1px 6px;border-radius:4px;">/start</code> bossin, ro'yxat shu yerda paydo bo'ladi.
       </div>
     </section>
+
+    <!-- Settings (faqat owner) -->
+    <section id="page-settings" style="display:none">
+      <div class="row-head"><h2 class="h2" style="margin:0">Sozlamalar</h2></div>
+
+      <div class="settings-section">
+        <h3>Workspace ma'lumotlari</h3>
+        <div class="field"><label>Nomi *</label><input id="setWsName" type="text" /></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" onclick="saveWsName()">Saqlash</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Hisob</h3>
+        <div class="field"><label>To'liq ism</label><input id="setProfName" type="text" /></div>
+        <div class="field"><label>Telefon</label><input id="setProfPhone" type="text" /></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" onclick="saveProfile()">Saqlash</button>
+        </div>
+      </div>
+
+      <div class="settings-section" style="border-color: #FECACA;">
+        <h3 style="color: var(--danger);">Xavfli zona</h3>
+        <p style="font-size: 12.5px; color: var(--muted); margin: 0 0 12px;">Bu amallarni qaytarib bo'lmaydi.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn danger" onclick="deleteWs()" id="deleteWsBtn">Workspace'ni o'chirish</button>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -546,7 +685,39 @@
   </div>
 </div>
 
-<!-- MODALS -->
+<!-- n8n SETUP MODAL -->
+<div class="modal-backdrop" id="n8nSetupBd">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-head">
+      <h3>n8n integratsiyasi</h3>
+      <button class="x-btn" onclick="closeN8nSetup()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="step-num">Webhook URL</div>
+      <p style="font-size:13.5px; color: var(--muted); margin: 0 0 14px; line-height: 1.55;">Vazifa hodisalari (yaratildi, holat o'zgardi, biriktirildi) sizning n8n instance'ingizdagi webhook'gа JSON sifatida yuboriladi.</p>
+      <div class="field">
+        <label>Webhook URL *</label>
+        <input id="n8nUrl" type="text" placeholder="https://n8n.example.com/webhook/tasks" />
+      </div>
+      <div class="tip">
+        💡 n8n'da yangi workflow yarating → "Webhook" trigger qo'shing → URL'ni nusxalab shu yerga joylang. Misol payload:
+        <div class="copy-row" style="margin-top:8px;"><code>{ "event": "task.created", "workspace_id": "...", "task": { ... } }</code></div>
+      </div>
+      <div style="font-size: 13px; color: var(--ink-soft); margin-top: 16px; line-height: 1.6;">
+        <strong>Yuboriladigan hodisalar:</strong>
+        <ul style="padding-left: 20px; margin: 8px 0;">
+          <li><code class="kbd">task.created</code> — yangi vazifa yaratilganda</li>
+          <li><code class="kbd">task.status_changed</code> — holat o'zgarganda</li>
+        </ul>
+      </div>
+      <div class="msg" id="n8nMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeN8nSetup()">Bekor</button>
+      <button class="btn" id="n8nSaveBtn" onclick="saveN8nFromModal()">Saqlash</button>
+    </div>
+  </div>
+</div>
 <div class="modal-backdrop" id="newWsBd">
   <div class="modal">
     <div class="modal-head"><h3>Yangi kompaniya</h3><button class="x-btn" onclick="closeNewWs()">×</button></div>
@@ -560,15 +731,25 @@
 </div>
 
 <div class="modal-backdrop" id="createBd">
-  <div class="modal">
+  <div class="modal modal-wide">
     <div class="modal-head"><h3 id="createTitle">Yangi vazifa</h3><button class="x-btn" onclick="closeCreate()">×</button></div>
     <div class="modal-body">
       <div class="field"><label>Nomi *</label><input id="cTitle" type="text" /></div>
       <div class="field"><label>Tavsif</label><textarea id="cDesc"></textarea></div>
       <div class="field" id="cDeptField" style="display:none"><label>Bo'lim</label><select id="cDept"><option value="">(Bo'limsiz)</option></select></div>
       <div class="field"><label>Biriktirish</label><select id="cAssignee"><option value="">(Mening o'zimga)</option></select></div>
-      <div class="field"><label>Deadline</label><input id="cDeadline" type="datetime-local" /></div>
-      <div class="field"><label>Prioritet (0-10)</label><input id="cPriority" type="number" min="0" max="10" value="0" /></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="field" style="margin-bottom:0"><label>Deadline</label><input id="cDeadline" type="datetime-local" /></div>
+        <div class="field" style="margin-bottom:0"><label>Prioritet</label><select id="cPriority"><option value="0">Yo'q</option><option value="1">P1 (past)</option><option value="2">P2</option><option value="3">P3</option><option value="4">P4</option><option value="5">P5 (o'rta)</option><option value="6">P6</option><option value="7">P7</option><option value="8">P8 (yuqori)</option><option value="9">P9</option><option value="10">P10 (eng yuqori)</option></select></div>
+      </div>
+      <div class="field" style="margin-top: 12px;">
+        <label>Subtask'lar (ixtiyoriy)</label>
+        <div id="cSubsList" style="display: flex; flex-direction: column; gap: 4px;"></div>
+        <div style="display:flex; gap:8px; margin-top: 6px;">
+          <input id="cNewSub" type="text" placeholder="Subtask qo'shish..." onkeydown="if(event.key==='Enter') { event.preventDefault(); addCreateSub(); }" />
+          <button class="btn sm secondary" onclick="addCreateSub()">+</button>
+        </div>
+      </div>
       <div class="msg" id="cMsg"></div>
     </div>
     <div class="modal-foot"><button class="btn secondary" onclick="closeCreate()">Bekor</button><button class="btn" id="cBtn" onclick="saveCreate()">Yaratish</button></div>
@@ -576,7 +757,7 @@
 </div>
 
 <div class="modal-backdrop" id="detailBd">
-  <div class="modal">
+  <div class="modal modal-wide">
     <div class="modal-head"><h3 id="dTitle">—</h3><button class="x-btn" onclick="closeDetail()">×</button></div>
     <div class="modal-body" id="dBody">—</div>
     <div class="modal-foot"><button class="btn danger" id="dDelete" onclick="deleteCurrent()" style="margin-right:auto">O'chirish</button><button class="btn secondary" onclick="closeDetail()">Yopish</button></div>
@@ -767,6 +948,7 @@ async function saveNewPassword() {
 }
 async function doLogout() {
   if (window._bellTimer) clearInterval(window._bellTimer);
+  teardownRealtime();
   await sb.auth.signOut();
   me = myProfile = currentWs = myWsRole = null;
   workspaces = []; myDepts = []; departments = []; tasksCache = []; notifs = [];
@@ -774,6 +956,72 @@ async function doLogout() {
 }
 
 // ============ BOOTSTRAP & WORKSPACE ============
+function loadSettings() {
+  $('setWsName').value = currentWs.name || '';
+  $('setProfName').value = myProfile.full_name || '';
+  $('setProfPhone').value = myProfile.phone || '';
+  $('deleteWsBtn').style.display = (currentWs.kind === 'organization' && myWsRole === 'owner') ? 'inline-block' : 'none';
+}
+async function saveWsName() {
+  const n = ($('setWsName').value || '').trim();
+  if (!n) { toast('Nomi bo\'sh', 'err'); return; }
+  try {
+    const { data, error } = await sb.from('workspaces').update({ name: n }).eq('id', currentWs.id).select().single();
+    if (error) throw error;
+    currentWs.name = data.name;
+    const wIdx = workspaces.findIndex(w => w.id === currentWs.id);
+    if (wIdx >= 0) workspaces[wIdx].name = data.name;
+    renderSidebar();
+    if (currentPage === 'dashboard') updateDashboard(null);
+    toast('✓ Saqlandi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function saveProfile() {
+  const n = ($('setProfName').value || '').trim();
+  const p = ($('setProfPhone').value || '').trim();
+  try {
+    const { data, error } = await sb.from('profiles').update({ full_name: n || null, phone: p || null }).eq('id', me.id).select().single();
+    if (error) throw error;
+    myProfile = data;
+    renderSidebar();
+    toast('✓ Saqlandi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function deleteWs() {
+  if (currentWs.kind !== 'organization') return;
+  if (!confirm('Workspace va undagi hamma narsa o\'chiriladi (bo\'limlar, vazifalar, takliflar). Davom etamizmi?')) return;
+  const second = prompt('Tasdiqlash uchun workspace nomini yozing:');
+  if (second !== currentWs.name) { toast('Nom mos kelmadi — bekor qilindi', 'err'); return; }
+  try {
+    const wsId = currentWs.id;
+    const { error } = await sb.from('workspaces').delete().eq('id', wsId);
+    if (error) throw error;
+    toast('O\'chirildi', 'ok');
+    workspaces = workspaces.filter(w => w.id !== wsId);
+    currentWs = workspaces.find(w => w.kind === 'personal') || workspaces[0];
+    if (currentWs) { await loadCurrentContext(); goPage('dashboard'); }
+    else { await doLogout(); }
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+async function notifyN8n(event, payload) {
+  if (currentWs.kind !== 'organization') return;
+  // n8n integratsiyasi yoqilganmi?
+  const n8n = integrationsCache.find(i => i.tool === 'n8n' && i.is_enabled);
+  if (!n8n) return;
+  // Webhook URL'ni olish — integrations_safe'дa bot_username field'да saqlanadi
+  const url = n8n.bot_username; // we stored URL there for read-back
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({ event, workspace_id: currentWs.id, workspace_name: currentWs.name, ...payload })
+    });
+  } catch (e) { /* sokin */ }
+}
+
 async function bootstrap() {
   const { data: { user } } = await sb.auth.getUser();
   me = user;
@@ -832,8 +1080,12 @@ async function loadCurrentContext() {
   // TG bot users — agar telegram integratsiya yoqilgan bo'lsa, completed bo'lganlarni keshlaymiz
   // (Create task modal'да assignee sifatida ko'rinadi.) Faqat owner ko'radi (RLS).
   tgUsersCache = [];
+  integrationsCache = [];
   if (currentWs.kind === 'organization') {
-    const { data: tgIntg } = await sb.from('integrations_safe').select('id').eq('workspace_id', currentWs.id).eq('tool', 'telegram').maybeSingle();
+    // Integratsiyalarni ham yuklab qo'yamиz (notifyN8n uchun kerak)
+    const { data: intgs } = await sb.from('integrations_safe').select('*').eq('workspace_id', currentWs.id);
+    integrationsCache = intgs || [];
+    const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
     if (tgIntg) {
       const { data: bus } = await sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id).eq('state', 'completed');
       tgUsersCache = bus || [];
@@ -842,19 +1094,78 @@ async function loadCurrentContext() {
 
   const { data: sub } = await sb.from('subscriptions').select('*').eq('workspace_id', currentWs.id).maybeSingle();
 
-  // Vazifalarni bir marta yuklab cache'ga olamiz — har action mahalliy state'da bo'ladi
   await loadTasksFull();
+  setupRealtime();
 
   renderSidebar();
   updateDashboard(sub);
+}
+
+// ============ REALTIME ============
+let _rtChannel = null;
+function setupRealtime() {
+  if (_rtChannel) { try { sb.removeChannel(_rtChannel); } catch(e){} _rtChannel = null; }
+  if (!currentWs) return;
+  const wsId = currentWs.id;
+  _rtChannel = sb.channel('ws-' + wsId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: 'workspace_id=eq.' + wsId }, payload => {
+      const ev = payload.eventType;
+      const row = payload.new || payload.old;
+      if (!row) return;
+      const idx = tasksCache.findIndex(t => t.id === row.id);
+      if (ev === 'INSERT') {
+        if (idx < 0) tasksCache.unshift(payload.new);
+      } else if (ev === 'UPDATE') {
+        if (idx >= 0) tasksCache[idx] = payload.new; else tasksCache.unshift(payload.new);
+      } else if (ev === 'DELETE') {
+        if (idx >= 0) tasksCache.splice(idx, 1);
+        if (currentDetailId === row.id) closeDetail();
+      }
+      refreshActiveView();
+      if (currentDetailId === row.id && (ev === 'UPDATE')) renderDetailBody();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'task_comments', filter: 'workspace_id=eq.' + wsId }, payload => {
+      if (!currentDetailId) return;
+      const row = payload.new || payload.old;
+      if (!row || row.task_id !== currentDetailId) return;
+      const ev = payload.eventType;
+      if (ev === 'INSERT') {
+        if (!curDetailComments.find(c => c.id === row.id)) curDetailComments.push(payload.new);
+      } else if (ev === 'DELETE') {
+        curDetailComments = curDetailComments.filter(c => c.id !== row.id);
+      }
+      renderDetailBody();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'task_subtasks', filter: 'workspace_id=eq.' + wsId }, payload => {
+      if (!currentDetailId) return;
+      const row = payload.new || payload.old;
+      if (!row || row.task_id !== currentDetailId) return;
+      const ev = payload.eventType;
+      if (ev === 'INSERT') {
+        if (!curDetailSubs.find(s => s.id === row.id)) curDetailSubs.push(payload.new);
+      } else if (ev === 'UPDATE') {
+        const i = curDetailSubs.findIndex(s => s.id === row.id);
+        if (i >= 0) curDetailSubs[i] = payload.new;
+      } else if (ev === 'DELETE') {
+        curDetailSubs = curDetailSubs.filter(s => s.id !== row.id);
+      }
+      renderDetailBody();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + me.id }, payload => {
+      // Yangi notification — bell ko'rsatkichi va list
+      loadNotifs();
+    })
+    .subscribe();
+}
+
+function teardownRealtime() {
+  if (_rtChannel) { try { sb.removeChannel(_rtChannel); } catch(e){} _rtChannel = null; }
 }
 
 async function loadTasksFull() {
   if (!currentWs) { tasksCache = []; return; }
   const { data } = await sb.from('tasks').select('*').eq('workspace_id', currentWs.id).order('created_at', { ascending: false });
   tasksCache = data || [];
-  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress').length;
-  if ($('dashActive')) $('dashActive').textContent = active;
 }
 
 function renderSidebar() {
@@ -908,6 +1219,9 @@ function renderSidebar() {
       html += '<button class="side-link ' + (currentPage === 'tgusers' ? 'active' : '') + '" onclick="goPage(\'tgusers\')"><span class="ic">✈</span> Bot foydalanuvchilari</button>';
     }
   }
+  if (myWsRole === 'owner') {
+    html += '<button class="side-link ' + (currentPage === 'settings' ? 'active' : '') + '" onclick="goPage(\'settings\')"><span class="ic">⚙</span> Sozlamalar</button>';
+  }
   $('sideNav').innerHTML = html;
 
   // Viewer'дан yaratish tugmalarini yashiramiz
@@ -918,13 +1232,45 @@ function renderSidebar() {
 
 function updateDashboard(sub) {
   $('dashTitle').textContent = currentWs.name;
-  $('dashKind').textContent = currentWs.kind === 'personal' ? 'Shaxsiy' : 'Kompaniya';
-  $('dashRole').textContent = ROLE_WS[myWsRole] || '—';
-  if (sub) {
-    const planMap = { free: 'Bepul', pro: 'Pro', business: 'Business' };
-    const statMap = { trialing: 'Sinov', active: 'Faol', past_due: 'To\'lov kutilmoqda', canceled: 'Bekor' };
-    $('dashPlan').textContent = (planMap[sub.plan] || sub.plan) + ' · ' + (statMap[sub.status] || sub.status);
-  } else $('dashPlan').textContent = '—';
+  // Stats
+  const now = Date.now();
+  const isOver = t => t.deadline && t.status !== 'completed' && t.status !== 'cancelled' && new Date(t.deadline).getTime() < now;
+  const isToday = t => {
+    if (!t.deadline) return false;
+    if (t.status === 'completed' || t.status === 'cancelled') return false;
+    const d = new Date(t.deadline);
+    const today = new Date();
+    return d.getUTCDate() === today.getUTCDate() && d.getUTCMonth() === today.getUTCMonth() && d.getUTCFullYear() === today.getUTCFullYear();
+  };
+
+  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress');
+  const overdue = tasksCache.filter(isOver);
+  const today = tasksCache.filter(isToday);
+  const done = tasksCache.filter(t => t.status === 'completed');
+
+  if ($('statActive')) $('statActive').textContent = active.length;
+  if ($('statActiveSub')) $('statActiveSub').textContent = (active.filter(t => t.assigned_to === me.id).length) + ' meniki';
+  if ($('statOverdue')) $('statOverdue').textContent = overdue.length;
+  if ($('statToday')) $('statToday').textContent = today.length;
+  if ($('statDone')) $('statDone').textContent = done.length;
+
+  // My tasks (mining)
+  const mine = active.filter(t => t.assigned_to === me.id).slice(0, 6);
+  if ($('dashMyTasks')) {
+    $('dashMyTasks').innerHTML = mine.length
+      ? mine.map(t => taskItemHtml(t, true)).join('')
+      : '<div class="empty" style="padding: 20px;"><strong>Bo\'sh</strong>Mengа biriktirilgan faol vazifa yo\'q.</div>';
+  }
+  // Due soon (in next 3 days, not completed)
+  const limit = now + 3 * 24 * 60 * 60 * 1000;
+  const due = tasksCache.filter(t => t.deadline && t.status !== 'completed' && t.status !== 'cancelled' && new Date(t.deadline).getTime() <= limit)
+    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    .slice(0, 6);
+  if ($('dashDueSoon')) {
+    $('dashDueSoon').innerHTML = due.length
+      ? due.map(t => taskItemHtml(t, true)).join('')
+      : '<div class="empty" style="padding: 20px;"><strong>Toza</strong>Yaqin deadline yo\'q.</div>';
+  }
 }
 
 function toggleWsDrop(e) { e.stopPropagation(); $('wsDrop').classList.toggle('show'); $('notifPanel').classList.remove('show'); }
@@ -960,12 +1306,14 @@ function goPage(p) {
   currentPage = p;
   if (p !== 'department') currentDeptId = null;
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations','tgusers'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers','settings'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
   if (p === 'tasks') renderTasksList();
   if (p === 'departments') renderDeptsList();
   if (p === 'team') renderTeam();
   if (p === 'integrations') loadIntegrations();
   if (p === 'tgusers') loadTgUsers();
+  if (p === 'dashboard') updateDashboard(null);
+  if (p === 'settings') loadSettings();
 }
 
 function goDept(deptId) {
@@ -979,7 +1327,7 @@ function goDept(deptId) {
   currentPage = 'department';
   currentDeptView = 'kanban';
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations','tgusers'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers','settings'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
   renderDeptHeader();
   setDeptView('kanban');
 }
@@ -990,10 +1338,30 @@ function setFilter(f) {
   document.querySelectorAll('#page-tasks [data-filter]').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
   renderTasksList();
 }
+let tasksSearchQuery = '';
+function onTasksSearch() {
+  tasksSearchQuery = ($('tasksSearch')?.value || '').trim().toLowerCase();
+  renderTasksList();
+}
+
 function renderTasksList() {
   let list = tasksCache.slice();
   if (activeFilter === 'overdue') list = list.filter(isOverdue);
   else if (activeFilter !== 'all') list = list.filter(t => t.status === activeFilter);
+
+  // Assignee filter
+  const asgF = $('tasksAsgFilter')?.value || 'all';
+  if (asgF === 'me') list = list.filter(t => t.assigned_to === me.id);
+  else if (asgF === 'unassigned') list = list.filter(t => !t.assigned_to && !t.assigned_to_tg_bot_user);
+
+  // Search
+  if (tasksSearchQuery) {
+    list = list.filter(t =>
+      (t.title || '').toLowerCase().includes(tasksSearchQuery) ||
+      (t.description || '').toLowerCase().includes(tasksSearchQuery)
+    );
+  }
+
   const wrap = $('tasksList'); const empty = $('tasksEmpty');
   if (!list.length) { wrap.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
@@ -1030,14 +1398,17 @@ function taskItemHtml(t, showDept) {
   '</div>';
 }
 
+let cPendingSubs = []; // [{title}]
 function openCreate() { openCreateInternal(null); }
 function openCreateForDept() { openCreateInternal(currentDeptId); }
 function openCreateInternal(forceDeptId) {
   $('cTitle').value=''; $('cDesc').value=''; $('cDeadline').value=''; $('cPriority').value='0';
+  $('cNewSub').value = '';
+  cPendingSubs = [];
+  renderCreateSubs();
   hideMsg($('cMsg'));
   if (currentWs.kind === 'organization') {
     $('cDeptField').style.display = 'block';
-    // Faqat o'zi a'zo bo'lgan bo'limlar (yoki owner/admin: hammasi)
     const myDeptIds = new Set(myDepts.map(d => d.department_id));
     const visible = (myWsRole==='owner')
       ? departments
@@ -1047,11 +1418,10 @@ function openCreateInternal(forceDeptId) {
   } else { $('cDeptField').style.display = 'none'; }
   let assigneeHtml = '<option value="">(Mening o\'zimga)</option>';
   wsMembers.forEach(m => { if (m.user_id !== me.id) assigneeHtml += '<option value="user:'+m.user_id+'">' + escapeHtml(m.profile.full_name || 'A\'zo') + '</option>'; });
-  // TG-only (saytsiz, faqat botda)
   if (tgUsersCache.length) {
     assigneeHtml += '<option disabled>── Telegram bot foydalanuvchilari ──</option>';
     tgUsersCache.forEach(u => {
-      if (!u.linked_user_id) {  // saytga bog'langanlarni ikkilantirmaymиz
+      if (!u.linked_user_id) {
         assigneeHtml += '<option value="tg:'+u.id+'">✈ ' + escapeHtml(u.full_name || u.tg_username || 'Bot user') + '</option>';
       }
     });
@@ -1060,6 +1430,30 @@ function openCreateInternal(forceDeptId) {
   $('createBd').classList.add('show');
   setTimeout(()=>$('cTitle').focus(), 50);
 }
+
+function addCreateSub() {
+  const v = ($('cNewSub').value || '').trim();
+  if (!v) return;
+  cPendingSubs.push({ title: v });
+  $('cNewSub').value = '';
+  renderCreateSubs();
+  $('cNewSub').focus();
+}
+function removeCreateSub(idx) {
+  cPendingSubs.splice(idx, 1);
+  renderCreateSubs();
+}
+function renderCreateSubs() {
+  if (!$('cSubsList')) return;
+  $('cSubsList').innerHTML = cPendingSubs.map((s, i) =>
+    '<div style="display:flex; align-items:center; gap:8px; padding:6px 8px; background: var(--surface-2); border-radius:6px;">' +
+      '<input type="checkbox" disabled />' +
+      '<span style="flex:1; font-size:13px;">' + escapeHtml(s.title) + '</span>' +
+      '<span style="cursor:pointer; color:var(--danger); font-size:13px;" onclick="removeCreateSub('+i+')">×</span>' +
+    '</div>'
+  ).join('');
+}
+
 function closeCreate() { $('createBd').classList.remove('show'); }
 
 async function saveCreate() {
@@ -1075,7 +1469,6 @@ async function saveCreate() {
   try {
     let deadlineIso = null;
     if (deadline) { const v = deadline.length === 16 ? deadline + ':00' : deadline; deadlineIso = new Date(v + '+05:00').toISOString(); }
-    // Assignee: prefix 'user:' yoki 'tg:' yoki bo'sh (=> menga)
     let assignedTo = null, assignedTgBotUser = null;
     if (asgRaw && asgRaw.startsWith('tg:')) {
       assignedTgBotUser = asgRaw.slice(3);
@@ -1093,26 +1486,94 @@ async function saveCreate() {
       assigned_to_tg_bot_user: assignedTgBotUser
     }).select().single();
     if (error) throw error;
+    // Subtasks insert (best-effort, parallel)
+    if (cPendingSubs.length) {
+      const rows = cPendingSubs.map((s, i) => ({
+        workspace_id: currentWs.id, task_id: data.id, title: s.title, sort_order: i + 1
+      }));
+      try { await sb.from('task_subtasks').insert(rows); } catch(e) {}
+    }
     tasksCache.unshift(data);
     closeCreate(); toast('✅ Vazifa yaratildi', 'ok');
     refreshActiveView();
-    // Telegram xabar
     if (data.assigned_to && data.assigned_to !== me.id) {
       tgNotifyAssignment(data.id, { user_id: data.assigned_to });
     } else if (data.assigned_to_tg_bot_user) {
       tgNotifyAssignment(data.id, { tg_bot_user_id: data.assigned_to_tg_bot_user });
     }
+    notifyN8n('task.created', { task: data });
   } catch (e) { showMsg($('cMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Yaratish'; }
 }
 
-function openDetail(id) {
+// Caches for currently open task detail
+let curDetailSubs = [];
+let curDetailComments = [];
+let curDetailAttachments = [];
+let _detailPasteHandler = null;
+
+async function openDetail(id) {
   const t = tasksCache.find(x => x.id === id);
   if (!t) return;
   currentDetailId = id;
-  $('dTitle').textContent = t.title;
+  $('dTitle').textContent = t.title || '—';
+  $('dBody').innerHTML = '<div style="text-align:center; padding: 30px; color: var(--muted); font-size: 13px;">⏳ Yuklanmoqda…</div>';
+  $('detailBd').classList.add('show');
+
+  // Paralel ravishda hammasini yuklaymиz
+  const [subsRes, cmtsRes, attsRes] = await Promise.all([
+    sb.from('task_subtasks').select('*').eq('task_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true }),
+    sb.from('task_comments').select('*').eq('task_id', id).order('created_at', { ascending: true }),
+    sb.from('task_attachments').select('*').eq('task_id', id).order('uploaded_at', { ascending: true }),
+  ]);
+  curDetailSubs = subsRes.data || [];
+  curDetailComments = cmtsRes.data || [];
+  curDetailAttachments = attsRes.data || [];
+
+  renderDetailBody();
+  attachDetailPaste();
+}
+
+function attachDetailPaste() {
+  detachDetailPaste();
+  _detailPasteHandler = async (e) => {
+    if (!currentDetailId) return;
+    const items = (e.clipboardData || window.clipboardData)?.items;
+    if (!items || !items.length) return;
+    const files = [];
+    const tsNow = Date.now();
+    for (const it of items) {
+      if (it.kind === 'file') {
+        const f = it.getAsFile();
+        if (!f) continue;
+        let file = f;
+        if (/^image\.png$/i.test(f.name) || !f.name) {
+          const ext = (f.type && f.type.split('/')[1]) || 'png';
+          file = new File([f], 'paste_' + tsNow + '_' + (files.length+1) + '.' + ext, { type: f.type });
+        }
+        files.push(file);
+      }
+    }
+    if (files.length) {
+      e.preventDefault();
+      for (const f of files) await uploadAttachment(currentDetailId, f);
+    }
+  };
+  document.addEventListener('paste', _detailPasteHandler);
+}
+function detachDetailPaste() {
+  if (_detailPasteHandler) {
+    document.removeEventListener('paste', _detailPasteHandler);
+    _detailPasteHandler = null;
+  }
+}
+
+function renderDetailBody() {
+  const t = tasksCache.find(x => x.id === currentDetailId);
+  if (!t) return;
   const ov = isOverdue(t);
   const statusBtns = STATUS_ORDER.map(s => '<button class="filter-btn ' + (t.status===s?'active':'') + '" onclick="changeStatus('+t.id+',\''+s+'\')">'+STATUS_LBL[s]+'</button>').join('');
-  // Assignee: auth user yoki TG-only
+
+  // Assignee
   let asgLine = '';
   if (t.assigned_to) {
     const asg = (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile;
@@ -1122,17 +1583,13 @@ function openDetail(id) {
     asgLine = bu ? ('✈ ' + (bu.full_name || bu.tg_username || 'Bot user') + (bu.phone ? ' · ' + bu.phone : '')) : '✈ Bot user';
   }
 
-  // Bo'lim ko'chirish: faqat foydalanuvchi a'zo bo'lgan bo'limlar + (bo'limsiz)
-  // Owner/admin esa hamma bo'limga ko'chira oladi (lekin u yerda a'zo bo'lmasa, ko'chirgandan keyin ko'rmaydi — bu sezilarli)
+  // Can edit checks
   const canEditTask = (myWsRole==='owner')
     || (t.department_id && myDepts.some(x => x.department_id === t.department_id && (x.role==='editor' || x.role==='admin')))
     || t.assigned_to === me.id || t.created_by === me.id;
 
   const myDeptIds = new Set(myDepts.map(d => d.department_id));
-  // Workspace owner/admin hamma bo'limni ko'chira oladi; aks holda faqat a'zo bo'lgan bo'limlar
-  const transferTargets = (myWsRole==='owner')
-    ? departments
-    : departments.filter(d => myDeptIds.has(d.id));
+  const transferTargets = (myWsRole==='owner') ? departments : departments.filter(d => myDeptIds.has(d.id));
 
   let deptHtml;
   if (canEditTask && transferTargets.length) {
@@ -1147,16 +1604,371 @@ function openDetail(id) {
     deptHtml = dept ? '<div class="detail-row"><div class="lbl">Bo\'lim</div><div class="val">'+escapeHtml(dept)+'</div></div>' : '';
   }
 
+  // Title (inline edit)
+  const titleHtml = canEditTask
+    ? '<div class="inline-edit" style="margin-bottom: 6px;"><div class="inline-edit-text" id="d-title-text" style="font-family: \'Space Grotesk\', sans-serif; font-size: 18px; font-weight: 600;" onclick="editTitle()">' + escapeHtml(t.title) + '</div></div>'
+    : '<h3 style="margin: 0 0 6px; font-family: \'Space Grotesk\', sans-serif; font-size: 18px;">' + escapeHtml(t.title) + '</h3>';
+
+  // Description (inline edit)
+  const descText = t.description || '';
+  const descHtml = canEditTask
+    ? '<div class="inline-edit" style="margin-bottom: 16px;"><div class="inline-edit-text ' + (descText ? '' : 'inline-edit-empty') + '" id="d-desc-text" onclick="editDesc()" style="font-size:14px; line-height:1.55; white-space:pre-wrap; min-height: 30px;">' + (descText ? escapeHtml(descText) : 'Tavsif qo\'shish…') + '</div></div>'
+    : (descText ? '<div style="margin-bottom:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;">'+escapeHtml(descText)+'</div>' : '');
+
+  // Deadline (inline edit)
+  const deadlineHtml = canEditTask
+    ? '<input type="datetime-local" value="' + (t.deadline ? toInputDt(t.deadline) : '') + '" onchange="updateField(\'deadline\', this.value ? new Date(this.value + \'+05:00\').toISOString() : null)" style="padding:6px 10px; border:1px solid var(--line); border-radius:6px; font-size:13px; background: var(--surface); font-family:inherit;" />'
+    : (t.deadline ? fmtDeadline(t.deadline) + (ov?' (o\'tgan)':'') : 'yo\'q');
+
+  // Priority (inline edit)
+  const prioHtml = canEditTask
+    ? '<select onchange="updateField(\'priority_level\', parseInt(this.value, 10))" style="padding:6px 10px; border:1px solid var(--line); border-radius:6px; font-size:13px; background: var(--surface); font-family:inherit;">' +
+        Array.from({length: 11}, (_, i) => '<option value="'+i+'" ' + (t.priority_level===i?'selected':'') + '>' + (i===0 ? 'Yo\'q' : 'P'+i) + '</option>').join('') +
+      '</select>'
+    : ((t.priority_level||0)>0?'P'+t.priority_level:'—');
+
+  // Subtasks
+  const subDoneCount = curDetailSubs.filter(s => s.is_completed).length;
+  const subTotal = curDetailSubs.length;
+  let subsHtml = '<div class="sub-list">' + curDetailSubs.map(s =>
+    '<div class="sub-item' + (s.is_completed ? ' done' : '') + '">' +
+      '<input type="checkbox" ' + (s.is_completed ? 'checked' : '') + ' onchange="toggleSubtask('+s.id+', this.checked)" />' +
+      '<div class="sub-title">' + escapeHtml(s.title) + '</div>' +
+      (canEditTask ? '<span class="sub-del" onclick="deleteSubtask('+s.id+')">×</span>' : '') +
+    '</div>'
+  ).join('') + '</div>' +
+  (canEditTask ? '<div class="sub-add"><input type="text" id="newSubInput" placeholder="Yangi subtask…" onkeydown="if (event.key === \'Enter\') addSubtask()" /><button class="btn sm" onclick="addSubtask()">+</button></div>' : '');
+
+  // Comments
+  const cmtsHtml = '<div class="cmt-list">' + curDetailComments.map(c => renderCommentItem(c, canEditTask)).join('') + '</div>' +
+    '<div class="cmt-input-row"><input class="cmt-input" id="newCmtInput" placeholder="Izoh yozish… (Ctrl+Enter — yuborish)" onkeydown="if ((event.ctrlKey || event.metaKey) && event.key === \'Enter\') addComment()" /><button class="btn" onclick="addComment()">Yuborish</button></div>';
+
+  // Attachments
+  const attsHtml = curDetailAttachments.length
+    ? '<div class="att-grid">' + curDetailAttachments.map(a => renderAttachItem(a, canEditTask)).join('') + '</div>'
+    : '<div class="att-empty">Hech qanday fayl yo\'q. Pastdagi tugma yoki <b>Ctrl+V</b> bilan qo\'shing.</div>';
+
+  // Build body
   $('dBody').innerHTML =
-    (t.description ? '<div style="margin-bottom:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;">'+escapeHtml(t.description)+'</div>' : '') +
+    titleHtml +
+    descHtml +
     '<div class="detail-row"><div class="lbl">Holat</div><div class="val"><div class="status-pick">'+statusBtns+'</div></div></div>' +
     deptHtml +
     (asgLine ? '<div class="detail-row"><div class="lbl">Biriktirildi</div><div class="val">'+escapeHtml(asgLine)+'</div></div>' : '') +
-    '<div class="detail-row"><div class="lbl">Deadline</div><div class="val '+(ov?'task-overdue':'')+'">'+(t.deadline ? fmtDeadline(t.deadline) + (ov?' (o\'tgan)':'') : 'yo\'q')+'</div></div>' +
-    '<div class="detail-row"><div class="lbl">Prioritet</div><div class="val">'+((t.priority_level||0)>0?'P'+t.priority_level:'—')+'</div></div>' +
-    '<div class="detail-row"><div class="lbl">Yaratilgan</div><div class="val">'+new Date(t.created_at).toLocaleString('uz-UZ')+'</div></div>';
-  $('dDelete').style.display = (myWsRole==='owner') ? 'inline-block' : 'none';
-  $('detailBd').classList.add('show');
+    '<div class="detail-row"><div class="lbl">Deadline</div><div class="val '+(ov?'task-overdue':'')+'">'+deadlineHtml+'</div></div>' +
+    '<div class="detail-row"><div class="lbl">Prioritet</div><div class="val">'+prioHtml+'</div></div>' +
+    '<div class="detail-row"><div class="lbl">Yaratilgan</div><div class="val">'+new Date(t.created_at).toLocaleString('uz-UZ')+'</div></div>' +
+
+    '<div class="detail-section">' +
+      '<div class="detail-section-head">Subtasks ' + (subTotal ? '<span class="count">' + subDoneCount + '/' + subTotal + '</span>' : '') + '</div>' +
+      subsHtml +
+    '</div>' +
+
+    '<div class="detail-section">' +
+      '<div class="detail-section-head">Fayllar ' + (curDetailAttachments.length ? '<span class="count">' + curDetailAttachments.length + '</span>' : '') + '</div>' +
+      attsHtml +
+      (canEditTask ? '<div style="display:flex; align-items:center; gap:10px; margin-top:10px;">' +
+        '<input type="file" id="attInput" multiple style="display:none" onchange="onAttPick(this)" />' +
+        '<button class="upload-btn" onclick="document.getElementById(\'attInput\').click()">📎 Fayl yuklash</button>' +
+        '<span class="att-hint">💡 Yoki Ctrl+V (Mac: ⌘+V) — clipboard\'дан paste</span>' +
+      '</div>' : '') +
+    '</div>' +
+
+    '<div class="detail-section">' +
+      '<div class="detail-section-head">Izohlar ' + (curDetailComments.length ? '<span class="count">' + curDetailComments.length + '</span>' : '') + '</div>' +
+      cmtsHtml +
+    '</div>';
+
+  $('dDelete').style.display = (canEditTask) ? 'inline-block' : 'none';
+}
+
+function renderCommentItem(c, canDelete) {
+  const author = c.author_id ? (wsMembers.find(m => m.user_id === c.author_id) || {}).profile : null;
+  const authorName = author && author.full_name ? author.full_name : 'Foydalanuvchi';
+  const fromTg = /^\[Telegram:/.test(c.comment_text || '');
+  // Telegram: [Telegram: Ism]\nMatn formatini ajratib olamиz
+  let displayText = c.comment_text || '';
+  let displayAuthor = authorName;
+  if (fromTg) {
+    const m = displayText.match(/^\[Telegram:\s*([^\]]+)\]\n?([\s\S]*)$/);
+    if (m) {
+      displayAuthor = '✈ ' + m[1];
+      displayText = m[2];
+    }
+  }
+  const av = avatarHtml(displayAuthor, 'sm');
+  const time = relTime(c.created_at);
+  const canDel = canDelete && (c.author_id === me.id || myWsRole === 'owner');
+  return '<div class="cmt-item">' +
+    '<div class="cmt-head">' + av + '<span class="cmt-author">' + escapeHtml(displayAuthor) + '</span><span class="cmt-time">' + time + '</span>' +
+      (canDel ? '<span class="cmt-delete" onclick="deleteComment('+c.id+')" style="margin-left:auto;">×</span>' : '') +
+    '</div>' +
+    '<div class="cmt-text ' + (fromTg ? 'from-tg' : '') + '">' + escapeHtml(displayText) + '</div>' +
+  '</div>';
+}
+
+function renderAttachItem(a, canDelete) {
+  const isImage = (a.file_type || '').startsWith('image/');
+  if (isImage) {
+    return '<div class="att-thumb" onclick="window.open(\'' + escapeHtml(a.file_url) + '\', \'_blank\')">' +
+      '<img src="' + escapeHtml(a.file_url) + '" alt="' + escapeHtml(a.file_name || '') + '" />' +
+      (canDelete ? '<div class="att-del" onclick="event.stopPropagation(); deleteAttach('+a.id+')">×</div>' : '') +
+    '</div>';
+  }
+  const icon = fileIcon(a.file_type, a.file_name);
+  return '<div class="att-thumb" onclick="window.open(\'' + escapeHtml(a.file_url) + '\', \'_blank\')">' +
+    '<div class="att-file">' +
+      '<div class="icon">' + icon + '</div>' +
+      '<div class="name">' + escapeHtml(a.file_name || '?') + '</div>' +
+    '</div>' +
+    (canDelete ? '<div class="att-del" onclick="event.stopPropagation(); deleteAttach('+a.id+')">×</div>' : '') +
+  '</div>';
+}
+
+function fileIcon(type, name) {
+  type = (type || '').toLowerCase();
+  name = (name || '').toLowerCase();
+  if (type.startsWith('video/')) return '🎬';
+  if (type.startsWith('audio/')) return '🎵';
+  if (type.includes('pdf') || name.endsWith('.pdf')) return '📕';
+  if (type.includes('excel') || type.includes('spreadsheet') || name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return '📊';
+  if (type.includes('word') || type.includes('document') || name.endsWith('.docx') || name.endsWith('.doc')) return '📝';
+  if (type.includes('zip') || type.includes('rar') || name.match(/\.(zip|rar|7z|tar|gz)$/)) return '🗜';
+  return '📄';
+}
+
+function avatarHtml(name, size) {
+  const initials = (name || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase() || '?';
+  const colors = ['#3B82F6','#10B981','#F59E0B','#EC4899','#8B5CF6','#EF4444','#14B8A6','#F97316'];
+  let hash = 0; for (let i = 0; i < (name||'').length; i++) hash = (hash + name.charCodeAt(i)) % colors.length;
+  const cls = size === 'sm' ? 'avatar sm' : (size === 'lg' ? 'avatar lg' : 'avatar');
+  return '<span class="' + cls + '" style="background:' + colors[hash] + '">' + escapeHtml(initials) + '</span>';
+}
+
+function relTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const sec = (Date.now() - d.getTime()) / 1000;
+  if (sec < 60) return 'hozir';
+  if (sec < 3600) return Math.floor(sec / 60) + ' daq oldin';
+  if (sec < 86400) return Math.floor(sec / 3600) + ' soat oldin';
+  if (sec < 86400 * 7) return Math.floor(sec / 86400) + ' kun oldin';
+  return d.toLocaleDateString('uz-UZ');
+}
+
+function toInputDt(iso) {
+  // ISO -> 'YYYY-MM-DDTHH:MM' in UZB time (UTC+5)
+  if (!iso) return '';
+  const d = new Date(iso);
+  const local = new Date(d.getTime() + 5*60*60*1000);
+  return local.toISOString().slice(0, 16);
+}
+
+// ----- Inline edit (title, description) -----
+function editTitle() {
+  const t = tasksCache.find(x => x.id === currentDetailId); if (!t) return;
+  const cont = document.getElementById('d-title-text');
+  if (!cont) return;
+  const input = document.createElement('input');
+  input.className = 'inline-edit-input';
+  input.style.fontFamily = "'Space Grotesk', sans-serif";
+  input.style.fontSize = '18px';
+  input.style.fontWeight = '600';
+  input.value = t.title || '';
+  cont.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = async () => {
+    const v = input.value.trim();
+    if (v && v !== t.title) await updateField('title', v);
+    else renderDetailBody();
+  };
+  input.addEventListener('blur', save, { once: true });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = t.title || ''; input.blur(); }
+  });
+}
+function editDesc() {
+  const t = tasksCache.find(x => x.id === currentDetailId); if (!t) return;
+  const cont = document.getElementById('d-desc-text');
+  if (!cont) return;
+  const ta = document.createElement('textarea');
+  ta.className = 'inline-edit-input area';
+  ta.value = t.description || '';
+  cont.replaceWith(ta);
+  ta.focus();
+  const save = async () => {
+    const v = ta.value;
+    if (v !== (t.description || '')) await updateField('description', v || null);
+    else renderDetailBody();
+  };
+  ta.addEventListener('blur', save, { once: true });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { ta.value = t.description || ''; ta.blur(); }
+  });
+}
+
+async function updateField(field, value) {
+  if (!currentDetailId) return;
+  const patch = {}; patch[field] = value;
+  try {
+    const { data, error } = await sb.from('tasks').update(patch).eq('id', currentDetailId).select().single();
+    if (error) throw error;
+    const i = tasksCache.findIndex(x => x.id === currentDetailId);
+    if (i >= 0) tasksCache[i] = data;
+    $('dTitle').textContent = data.title || '—';
+    renderDetailBody();
+    refreshActiveView();
+    toast('✓ Saqlandi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// ----- Subtasks -----
+async function addSubtask() {
+  const input = document.getElementById('newSubInput'); if (!input) return;
+  const title = (input.value || '').trim(); if (!title) return;
+  const sortMax = curDetailSubs.reduce((a, s) => Math.max(a, s.sort_order || 0), 0);
+  try {
+    const { data, error } = await sb.from('task_subtasks').insert({
+      workspace_id: currentWs.id, task_id: currentDetailId, title, sort_order: sortMax + 1
+    }).select().single();
+    if (error) throw error;
+    curDetailSubs.push(data);
+    input.value = '';
+    renderDetailBody();
+    document.getElementById('newSubInput')?.focus();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function toggleSubtask(id, checked) {
+  try {
+    const { data, error } = await sb.from('task_subtasks').update({ is_completed: checked }).eq('id', id).select().single();
+    if (error) throw error;
+    const i = curDetailSubs.findIndex(s => s.id === id);
+    if (i >= 0) curDetailSubs[i] = data;
+    renderDetailBody();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function deleteSubtask(id) {
+  try {
+    const { error } = await sb.from('task_subtasks').delete().eq('id', id);
+    if (error) throw error;
+    curDetailSubs = curDetailSubs.filter(s => s.id !== id);
+    renderDetailBody();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// ----- Comments -----
+async function addComment() {
+  const input = document.getElementById('newCmtInput'); if (!input) return;
+  const text = (input.value || '').trim(); if (!text) return;
+  try {
+    const { data, error } = await sb.from('task_comments').insert({
+      workspace_id: currentWs.id, task_id: currentDetailId, author_id: me.id, comment_text: text
+    }).select().single();
+    if (error) throw error;
+    curDetailComments.push(data);
+    input.value = '';
+    renderDetailBody();
+    // Telegram'gа yuborish — assignee'gа
+    notifyCommentToTg(text);
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+async function deleteComment(id) {
+  if (!confirm('Izohni o\'chirasizmi?')) return;
+  try {
+    const { error } = await sb.from('task_comments').delete().eq('id', id);
+    if (error) throw error;
+    curDetailComments = curDetailComments.filter(c => c.id !== id);
+    renderDetailBody();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+async function notifyCommentToTg(text) {
+  const t = tasksCache.find(x => x.id === currentDetailId); if (!t) return;
+  if (currentWs.kind !== 'organization') return;
+  let target = null;
+  if (t.assigned_to && t.assigned_to !== me.id) target = { user_id: t.assigned_to };
+  else if (t.assigned_to_tg_bot_user) target = { tg_bot_user_id: t.assigned_to_tg_bot_user };
+  if (!target) return;
+  const body = '💬 <b>Yangi izoh: ' + escapeHtml(t.title) + '</b>\n\n' + escapeHtml(myProfile.full_name || me.email) + ':\n' + escapeHtml(text);
+  try { await sb.functions.invoke('tg-send', { body: { workspace_id: currentWs.id, target, text: body } }); } catch(e) {}
+}
+
+// ----- Attachments -----
+async function onAttPick(input) {
+  const files = Array.from(input.files || []);
+  input.value = '';
+  for (const f of files) await uploadAttachment(currentDetailId, f);
+}
+
+async function uploadAttachment(taskId, file) {
+  if (!taskId || !file) return;
+  if (file.size > 20 * 1024 * 1024) { toast(file.name + ' — 20MB dan katta', 'err'); return; }
+  // Render uploading state
+  const grid = document.querySelector('#dBody .att-grid');
+  let placeholder = null;
+  if (grid) {
+    placeholder = document.createElement('div');
+    placeholder.className = 'att-thumb';
+    placeholder.style.display = 'flex'; placeholder.style.alignItems = 'center'; placeholder.style.justifyContent = 'center';
+    placeholder.style.fontSize = '11px'; placeholder.style.color = 'var(--muted)';
+    placeholder.textContent = '⏳ ' + file.name.slice(0, 14);
+    grid.appendChild(placeholder);
+  }
+  try {
+    // Storage path: <workspace_id>/<task_id>/<timestamp>_<name>
+    const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+    const path = currentWs.id + '/' + taskId + '/' + Date.now() + '_' + safeName;
+    const { data: up, error: upErr } = await sb.storage.from('attachments').upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream'
+    });
+    if (upErr) throw upErr;
+    const { data: pub } = sb.storage.from('attachments').getPublicUrl(up.path);
+    const fileUrl = pub.publicUrl;
+    const { data: row, error: rowErr } = await sb.from('task_attachments').insert({
+      workspace_id: currentWs.id, task_id: taskId,
+      file_url: fileUrl, file_name: file.name, file_type: file.type, file_size: file.size,
+      uploaded_by: me.id
+    }).select().single();
+    if (rowErr) throw rowErr;
+    curDetailAttachments.push(row);
+    if (placeholder) placeholder.remove();
+    renderDetailBody();
+    toast('📎 Yuklandi', 'ok');
+    // TG notify assignee
+    notifyAttachmentToTg(file.name);
+  } catch (e) {
+    if (placeholder) placeholder.remove();
+    toast('Xato: ' + translateErr(e.message || String(e)), 'err');
+  }
+}
+
+async function notifyAttachmentToTg(fileName) {
+  const t = tasksCache.find(x => x.id === currentDetailId); if (!t) return;
+  if (currentWs.kind !== 'organization') return;
+  let target = null;
+  if (t.assigned_to && t.assigned_to !== me.id) target = { user_id: t.assigned_to };
+  else if (t.assigned_to_tg_bot_user) target = { tg_bot_user_id: t.assigned_to_tg_bot_user };
+  if (!target) return;
+  const body = '📎 <b>Yangi fayl: ' + escapeHtml(t.title) + '</b>\n\n' + escapeHtml(myProfile.full_name || me.email) + ' qo\'shdi: ' + escapeHtml(fileName);
+  try { await sb.functions.invoke('tg-send', { body: { workspace_id: currentWs.id, target, text: body } }); } catch(e) {}
+}
+
+async function deleteAttach(id) {
+  const att = curDetailAttachments.find(a => a.id === id);
+  if (!att) return;
+  if (!confirm('Faylni o\'chirasizmi?')) return;
+  try {
+    // Try delete from storage (best-effort)
+    const url = att.file_url || '';
+    const m = url.match(/\/attachments\/(.+)$/);
+    if (m) { try { await sb.storage.from('attachments').remove([m[1]]); } catch(e){} }
+    const { error } = await sb.from('task_attachments').delete().eq('id', id);
+    if (error) throw error;
+    curDetailAttachments = curDetailAttachments.filter(a => a.id !== id);
+    renderDetailBody();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
 async function transferTask(id, newDeptId) {
@@ -1177,11 +1989,11 @@ async function transferTask(id, newDeptId) {
       tasksCache = tasksCache.filter(t => t.id !== id);
       refreshActiveView();
     } else {
-      openDetail(id);
+      renderDetailBody();
     }
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
-function closeDetail() { $('detailBd').classList.remove('show'); currentDetailId = null; }
+function closeDetail() { $('detailBd').classList.remove('show'); currentDetailId = null; detachDetailPaste(); }
 
 async function changeStatus(id, newStatus) {
   try {
@@ -1190,13 +2002,26 @@ async function changeStatus(id, newStatus) {
     if (newStatus === 'completed') patch.completed_at = new Date().toISOString();
     const { data, error } = await sb.from('tasks').update(patch).eq('id', id).select().single();
     if (error) throw error;
-    // mahalliy cache'ni yangilaymiz
     const idx = tasksCache.findIndex(x => x.id === id);
     if (idx >= 0) tasksCache[idx] = data;
     toast('✅ Holat yangilandi', 'ok');
     refreshActiveView();
-    if (currentDetailId === id) openDetail(id);
+    if (currentDetailId === id) renderDetailBody();
+    // Telegram'ga assignee xabari
+    notifyStatusToTg(data, newStatus);
+    notifyN8n('task.status_changed', { task: data, new_status: newStatus });
   } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+async function notifyStatusToTg(t, newStatus) {
+  if (currentWs.kind !== 'organization') return;
+  let target = null;
+  if (t.assigned_to && t.assigned_to !== me.id) target = { user_id: t.assigned_to };
+  else if (t.assigned_to_tg_bot_user) target = { tg_bot_user_id: t.assigned_to_tg_bot_user };
+  if (!target) return;
+  const statusLabel = STATUS_LBL[newStatus] || newStatus;
+  const body = '🔄 <b>Vazifa holati: ' + escapeHtml(t.title) + '</b>\n\nYangi holat: ' + escapeHtml(statusLabel) + '\nO\'zgartirgan: ' + escapeHtml(myProfile.full_name || me.email);
+  try { await sb.functions.invoke('tg-send', { body: { workspace_id: currentWs.id, target, text: body } }); } catch(e) {}
 }
 
 async function deleteCurrent() {
@@ -1213,9 +2038,8 @@ async function deleteCurrent() {
 }
 
 function refreshActiveView() {
-  // Dashboard counter
-  const active = tasksCache.filter(t => t.status === 'new' || t.status === 'in_progress').length;
-  if ($('dashActive')) $('dashActive').textContent = active;
+  // Dashboard
+  if (currentPage === 'dashboard') updateDashboard(null);
   // Active page
   if (currentPage === 'tasks') renderTasksList();
   else if (currentPage === 'department') {
@@ -1576,14 +2400,12 @@ async function renderTeam() {
       const isMe = m.user_id === me.id;
       const name = p.full_name || (isMe ? 'Siz' : 'A\'zo');
       const canChange = canManageTeam() && m.role !== 'owner' && !isMe;
-      let roleHtml = canChange
-        ? '<select onchange="changeMemberRole(\''+m.user_id+'\', this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; background: var(--surface);">'
-          + ['member'].map(r => '<option value="'+r+'" '+(m.role===r?'selected':'')+'>'+ROLE_WS[r]+'</option>').join('') + '</select>'
-        : '<span class="badge muted">' + ROLE_WS[m.role] + '</span>';
+      const isOwner = m.role === 'owner';
+      const badge = isOwner ? '<span class="badge ok">Egasi</span>' : '<span class="badge muted">A\'zo</span>';
       return '<div class="item static">' +
-        '<div class="dot ts-' + (m.role==='owner'?'completed':'in_progress') + '"></div>' +
+        '<div style="padding-right:10px;">' + avatarHtml(name) + '</div>' +
         '<div class="item-mid"><div class="item-title">' + escapeHtml(name) + (isMe?' <span style="color:var(--muted); font-weight:500;">(siz)</span>':'') + '</div><div class="item-meta">' + escapeHtml(p.phone || '—') + '</div></div>' +
-        '<div class="item-right">' + roleHtml + (canChange ? ' <button class="link-btn" onclick="removeMember(\''+m.user_id+'\')" style="color:var(--danger)">×</button>' : '') + '</div>' +
+        '<div class="item-right">' + badge + (canChange ? ' <button class="link-btn" onclick="removeMember(\''+m.user_id+'\')" style="color:var(--danger); margin-left:8px;">O\'chirish</button>' : '') + '</div>' +
       '</div>';
     }).join('');
   }
@@ -1594,10 +2416,15 @@ async function renderTeam() {
     else {
       list.innerHTML = invs.map(inv => {
         const deptNames = (inv.departments || []).map(x => { const d = departments.find(z=>z.id===x.department_id); return d ? d.name+' ('+ROLE_DEPT[x.role]+')' : ''; }).filter(Boolean).join(', ');
+        let label = inv.email;
+        if (!inv.email && inv.tg_bot_user_id) {
+          const bu = tgUsersCache.find(u => u.id === inv.tg_bot_user_id);
+          label = bu ? '✈ ' + (bu.full_name || bu.tg_username || 'TG user') : '✈ TG user';
+        }
         return '<div class="item static">' +
           '<div class="dot ts-new"></div>' +
-          '<div class="item-mid"><div class="item-title">' + escapeHtml(inv.email) + '</div><div class="item-meta"><span>'+ROLE_WS[inv.ws_role]+'</span>' + (deptNames ? '<span class="dot-sep"></span><span>'+escapeHtml(deptNames)+'</span>' : '') + '</div></div>' +
-          '<div class="item-right"><button class="link-btn" onclick="cancelInvite(\''+inv.id+'\')" style="color:var(--danger)">×</button></div>' +
+          '<div class="item-mid"><div class="item-title">' + escapeHtml(label || '—') + '</div><div class="item-meta">' + (deptNames ? escapeHtml(deptNames) : 'bo\'lim yo\'q') + '</div></div>' +
+          '<div class="item-right"><button class="link-btn" onclick="cancelInvite(\''+inv.id+'\')" style="color:var(--danger)">Bekor</button></div>' +
         '</div>';
       }).join('');
     }
@@ -1708,18 +2535,63 @@ async function loadNotifs() {
   $('bellDot').style.display = unread > 0 ? 'block' : 'none';
   renderNotifs();
 }
+const NOTIF_ICONS = {
+  invitation: '📨',
+  invitation_accepted: '✅',
+  task_assigned: '🔔',
+  task_status: '🔄',
+  task_comment: '💬',
+  task_attachment: '📎',
+};
+
 function renderNotifs() {
   const list = $('notifList');
   if (!notifs.length) { list.innerHTML = '<div class="notif-item"><div class="notif-body">Bildirishnomalar yo\'q.</div></div>'; return; }
   list.innerHTML = notifs.map(n => {
     const meta = n.meta || {};
     const isInvite = n.kind === 'invitation' && meta.invitation_id && !n.read_at;
-    const actions = isInvite
-      ? '<div class="notif-actions" style="margin-top:8px"><button class="btn sm" onclick="acceptInvite(\''+meta.invitation_id+'\')">✓ Qabul</button><button class="btn sm secondary" onclick="declineInvite(\''+meta.invitation_id+'\')">Rad</button></div>'
-      : '';
+    const icon = NOTIF_ICONS[n.kind] || '🔔';
+    let actions = '';
+    let clickHandler = '';
+    if (isInvite) {
+      actions = '<div class="notif-actions" style="margin-top:8px"><button class="btn sm" onclick="acceptInvite(\''+meta.invitation_id+'\')">✓ Qabul</button><button class="btn sm secondary" onclick="declineInvite(\''+meta.invitation_id+'\')">Rad</button></div>';
+    } else if (meta.task_id && meta.workspace_id) {
+      // Click to open task (switch workspace if needed)
+      clickHandler = ' onclick="openNotifTask(\''+meta.workspace_id+'\', '+meta.task_id+', \''+n.id+'\')" style="cursor:pointer;"';
+    }
     const from = meta.invited_by_name ? '<div style="font-size:11.5px; color: var(--muted); margin-top:4px;">Kim: ' + escapeHtml(meta.invited_by_name) + '</div>' : '';
-    return '<div class="notif-item ' + (n.read_at ? '' : 'unread') + '"><div class="notif-title">' + escapeHtml(n.title) + '</div>' + (n.body ? '<div class="notif-body">' + escapeHtml(n.body) + '</div>' : '') + from + actions + '</div>';
+    const wsLabel = meta.workspace_name ? '<div style="font-size:11px; color: var(--muted); margin-top:2px;">' + escapeHtml(meta.workspace_name) + '</div>' : '';
+    const time = '<div style="font-size:11px; color: var(--muted); margin-top:4px;">' + relTime(n.created_at) + '</div>';
+    return '<div class="notif-item ' + (n.read_at ? '' : 'unread') + '"' + clickHandler + '>' +
+      '<div style="display:flex; gap:10px; align-items:flex-start;">' +
+        '<div style="font-size:16px; line-height:1;">' + icon + '</div>' +
+        '<div style="flex:1; min-width:0;">' +
+          '<div class="notif-title">' + escapeHtml(n.title || '') + '</div>' +
+          (n.body ? '<div class="notif-body">' + escapeHtml(n.body) + '</div>' : '') +
+          from + wsLabel + time + actions +
+        '</div>' +
+      '</div>' +
+    '</div>';
   }).join('');
+}
+
+async function openNotifTask(wsId, taskId, notifId) {
+  // Mark read
+  if (notifId) {
+    try { await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', notifId); } catch(e){}
+  }
+  $('notifPanel').classList.remove('show');
+  // Switch workspace if needed
+  if (!currentWs || currentWs.id !== wsId) {
+    const target = workspaces.find(w => w.id === wsId);
+    if (target) {
+      currentWs = target;
+      await loadCurrentContext();
+    }
+  }
+  goPage('tasks');
+  setTimeout(() => openDetail(taskId), 80);
+  loadNotifs();
 }
 function toggleNotif(e) {
   e.stopPropagation();
@@ -1795,21 +2667,71 @@ function renderTgUsers(intg) {
   list.innerHTML = tgUsersCache.map(u => {
     const stateLabel = u.state === 'completed' ? 'Ro\'yxatdan o\'tgan' : (u.state === 'awaiting_name' ? 'Ism kutmoqda' : 'Telefon kutmoqda');
     const stateBadge = u.state === 'completed' ? '<span class="badge ok">' + stateLabel + '</span>' : '<span class="badge muted">' + stateLabel + '</span>';
-    const linkedBadge = u.linked_user_id ? '<span class="badge info" style="margin-left:6px;">Saytda</span>' : '';
+    const linkedBadge = u.linked_user_id ? '<span class="badge info" style="margin-left:6px;">Saytда</span>' : '';
     const phoneText = u.phone ? '📞 ' + escapeHtml(u.phone) : '';
     const userText = u.tg_username ? '@' + escapeHtml(u.tg_username) : '';
-    const inviteBtn = (u.state === 'completed' && !u.linked_user_id)
-      ? '<button class="btn sm" onclick="openInviteFromTg(\''+u.id+'\')">Saytga taklif</button>'
-      : '';
-    return '<div class="item static">' +
-      '<div class="dot ts-' + (u.linked_user_id ? 'completed' : (u.state === 'completed' ? 'in_progress' : 'new')) + '"></div>' +
+
+    const actions = [];
+    if (u.state === 'completed') {
+      // Vazifa biriktirish — TG-only (yangi modal kerakmas — create modal'дa allaqachon TG users bor)
+      actions.push('<button class="btn sm secondary" onclick="quickAssignTg(\''+u.id+'\')">Vazifa berish</button>');
+      if (!u.linked_user_id) {
+        actions.push('<button class="btn sm" onclick="openInviteFromTg(\''+u.id+'\')">Saytga taklif</button>');
+        // Qo'lda bog'lash — agar owner shu telefon raqamiga ega bo'lsa
+        actions.push('<button class="btn sm secondary" onclick="manualLink(\''+u.id+'\', \''+(u.full_name || '').replace(/\'/g, "\\'")+'\')">Bog\'lash</button>');
+      }
+    }
+    return '<div class="item static" style="align-items: flex-start;">' +
+      '<div style="padding-right:10px; padding-top: 2px;">' + avatarHtml(u.full_name || u.tg_username || '?') + '</div>' +
       '<div class="item-mid">' +
         '<div class="item-title">' + escapeHtml(u.full_name || '(ism yo\'q)') + ' ' + linkedBadge + '</div>' +
         '<div class="item-meta">' + (phoneText ? '<span>' + phoneText + '</span><span class="dot-sep"></span>' : '') + (userText ? '<span>' + userText + '</span><span class="dot-sep"></span>' : '') + stateBadge + '</div>' +
       '</div>' +
-      '<div class="item-right">' + inviteBtn + '</div>' +
+      '<div class="item-right" style="display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-end;">' + actions.join('') + '</div>' +
     '</div>';
   }).join('');
+}
+
+async function manualLink(tgBotUserId, name) {
+  // Owner saytda taklif sinash uchun o'zining auth user'ига qo'lda bog'lay olsin
+  const choices = wsMembers.map(m => (m.profile.full_name || 'A\'zo') + ' (' + (m.user_id === me.id ? 'siz' : m.user_id.slice(0,8)) + ')').join('\n');
+  const chosen = prompt('Qaysi auth user\'gа bog\'laysiz?\n\nMavjud:\n' + choices + '\n\nFull name yoki UUID yozing (yoki "men" deb yozsangiz siz bilan bog\'lanadi):');
+  if (!chosen) return;
+  let userId = null;
+  if (chosen.toLowerCase() === 'men') userId = me.id;
+  else {
+    const m = wsMembers.find(x => (x.profile.full_name || '').toLowerCase() === chosen.toLowerCase() || x.user_id === chosen);
+    if (m) userId = m.user_id;
+  }
+  if (!userId) { toast('Foydalanuvchi topilmadi', 'err'); return; }
+  try {
+    const { error } = await sb.from('tg_bot_users').update({ linked_user_id: userId }).eq('id', tgBotUserId);
+    if (error) throw error;
+    toast('✓ Bog\'landi', 'ok');
+    loadTgUsers();
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+async function quickAssignTg(tgBotUserId) {
+  // Tezda vazifa yaratish: prompt orqali
+  const title = prompt('Vazifa nomi:');
+  if (!title || !title.trim()) return;
+  if (!departments.length) { toast('Avval bo\'lim yarating', 'err'); return; }
+  const dept = departments[0]; // birinchi bo'lim — keyin foydalanuvchi o'zgartira oladi
+  try {
+    const { data, error } = await sb.from('tasks').insert({
+      workspace_id: currentWs.id, department_id: dept.id,
+      title: title.trim(), created_by: me.id,
+      assigned_to_tg_bot_user: tgBotUserId
+    }).select().single();
+    if (error) throw error;
+    tasksCache.unshift(data);
+    toast('✅ Vazifa yaratildi va botda yuborildi', 'ok');
+    tgNotifyAssignment(data.id, { tg_bot_user_id: tgBotUserId });
+    refreshActiveView();
+    // Detail modal'нi ochaylik tafsilotlar uchun
+    setTimeout(() => openDetail(data.id), 100);
+  } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
 let inviteFromTgUserId = null;
@@ -1845,8 +2767,8 @@ async function loadIntegrations() {
 
 const TOOL_META = {
   telegram: { name: 'Telegram', desc: 'Vazifa, taklif va eslatmalarni botingiz orqali yetkazing.', logo: '✈', cls: 'tg', available: true },
-  n8n:      { name: 'n8n',      desc: 'Avtomatlashtirish va boshqa xizmatlarga ko\'prik.',           logo: 'n', cls: 'n8n', available: false },
-  gdrive:   { name: 'Google Drive', desc: 'Vazifa fayllarini Drive\'ga saqlash.',                    logo: 'D', cls: 'gdrive', available: false },
+  n8n:      { name: 'n8n',      desc: 'Vazifa hodisalarini sizning n8n instance\'ингizga webhook orqali yuborish.', logo: 'n', cls: 'n8n', available: true },
+  gdrive:   { name: 'Google Drive', desc: 'Vazifa fayllarini Drive\'ga saqlash (tez orada).', logo: 'D', cls: 'gdrive', available: false },
 };
 
 function renderIntegrations() {
@@ -1857,19 +2779,29 @@ function renderIntegrations() {
     const intg = integrationsCache.find(i => i.tool === tool);
     let statusHtml, action;
     if (intg && intg.is_enabled && intg.status === 'active') {
-      const botInfo = intg.bot_username ? '@' + intg.bot_username : '';
-      statusHtml = '<span class="intg-status on">●  Yoqilgan</span>' + (botInfo ? ' <span style="font-size:12px; color: var(--muted); margin-left:6px;">' + escapeHtml(botInfo) + '</span>' : '');
-      action = '<button class="btn secondary sm" onclick="openTgSetup(true)">Sozlash</button>' +
-               '<button class="btn sm" style="background: transparent; color: var(--danger); border: 1px solid var(--danger-soft);" onclick="disableIntegration(\''+intg.id+'\')">O\'chirish</button>';
+      let info = '';
+      if (tool === 'telegram' && intg.bot_username) info = ' <span style="font-size:12px; color: var(--muted); margin-left:6px;">@' + escapeHtml(intg.bot_username) + '</span>';
+      statusHtml = '<span class="intg-status on">●  Yoqilgan</span>' + info;
+      if (tool === 'telegram') {
+        action = '<button class="btn secondary sm" onclick="openTgSetup(true)">Sozlash</button>' +
+                 '<button class="btn sm" style="background: transparent; color: var(--danger); border: 1px solid var(--danger-soft);" onclick="disableIntegration(\''+intg.id+'\')">O\'chirish</button>';
+      } else if (tool === 'n8n') {
+        action = '<button class="btn secondary sm" onclick="openN8nSetup(true)">Sozlash</button>' +
+                 '<button class="btn sm" style="background: transparent; color: var(--danger); border: 1px solid var(--danger-soft);" onclick="disableIntegration(\''+intg.id+'\')">O\'chirish</button>';
+      }
     } else if (intg && intg.status === 'error') {
       statusHtml = '<span class="intg-status err">●  Xato</span>';
-      action = '<button class="btn sm" onclick="openTgSetup(true)">Qayta sozlash</button>';
+      action = (tool === 'telegram')
+        ? '<button class="btn sm" onclick="openTgSetup(true)">Qayta sozlash</button>'
+        : '<button class="btn sm" onclick="openN8nSetup(true)">Qayta sozlash</button>';
     } else {
       statusHtml = '<span class="intg-status off">○  Yoqilmagan</span>';
       if (!meta.available) {
         action = '<span style="font-size:12.5px; color: var(--muted);">Tez orada</span>';
       } else if (tool === 'telegram') {
         action = '<button class="btn sm" onclick="openTgSetup(false)">Yoqish</button>';
+      } else if (tool === 'n8n') {
+        action = '<button class="btn sm" onclick="openN8nSetup(false)">Yoqish</button>';
       }
     }
     return '<div class="intg-card">' +
@@ -1884,6 +2816,41 @@ function renderIntegrations() {
       '<div class="intg-foot">' + action + '</div>' +
     '</div>';
   }).join('');
+}
+
+// ----- N8N SETUP (modal bilan) -----
+function openN8nSetup(isReconfigure) {
+  const existing = integrationsCache.find(i => i.tool === 'n8n');
+  $('n8nUrl').value = existing?.bot_username || '';
+  hideMsg($('n8nMsg'));
+  $('n8nSetupBd').classList.add('show');
+  setTimeout(() => $('n8nUrl').focus(), 50);
+}
+function closeN8nSetup() { $('n8nSetupBd').classList.remove('show'); }
+
+async function saveN8nFromModal() {
+  const url = ($('n8nUrl').value || '').trim();
+  if (!url) { showMsg($('n8nMsg'), 'URL kerak', 'err'); return; }
+  if (!/^https?:\/\//.test(url)) { showMsg($('n8nMsg'), 'URL https:// bilan boshlanishi kerak', 'err'); return; }
+  const btn = $('n8nSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
+  try {
+    const config = { webhook_url: url, bot_username: url };
+    const existing = integrationsCache.find(i => i.tool === 'n8n');
+    if (existing) {
+      const { error } = await sb.from('integrations').update({ is_enabled: true, status: 'active', last_error: null, config, updated_at: new Date().toISOString() }).eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await sb.from('integrations').insert({ workspace_id: currentWs.id, tool: 'n8n', is_enabled: true, status: 'active', config, created_by: me.id });
+      if (error) throw error;
+    }
+    toast('✅ n8n yoqildi', 'ok');
+    closeN8nSetup();
+    loadIntegrations();
+  } catch (e) {
+    showMsg($('n8nMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Saqlash';
+  }
 }
 
 async function disableIntegration(id) {
@@ -2063,6 +3030,30 @@ async function init() {
   if (isRecovery) { showResetStep(); return; }
   if (session) { await bootstrap(); }
   else { setMode('login'); showAuth(); }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (!me) return;
+    // Ctrl/Cmd + K => Tasks page + focus search
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      goPage('tasks');
+      setTimeout(() => { const s = $('tasksSearch'); if (s) s.focus(); }, 100);
+    }
+    // Ctrl/Cmd + Shift + N => New task
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+      e.preventDefault();
+      if (canEditWorkspace()) openCreate();
+    }
+    // Escape => close any open modal
+    if (e.key === 'Escape') {
+      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd'].forEach(id => {
+        const el = $(id);
+        if (el && el.classList.contains('show')) el.classList.remove('show');
+      });
+      if (currentDetailId) { currentDetailId = null; detachDetailPaste(); }
+    }
+  });
 }
 init();
 </script>
