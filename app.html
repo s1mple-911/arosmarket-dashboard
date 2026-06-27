@@ -1648,8 +1648,8 @@ async function sendInvite() {
     // Telegram orqali xabar yuborishni Edge Function bajaradi
     const signupUrl = window.location.origin + window.location.pathname;
     try {
-      const { data: tgData, error: tgErr } = await sb.functions.invoke('tg-send-invite', { body: { invitation_id: inv.id, signup_url: signupUrl } });
-      console.log('[tg-send-invite] data:', tgData, 'error:', tgErr);
+      const { data: tgData, error: tgErr } = await sb.functions.invoke('tg-send-invites', { body: { invitation_id: inv.id, signup_url: signupUrl } });
+      console.log('[tg-send-invites] data:', tgData, 'error:', tgErr);
       if (tgErr) {
         toast('TG xabar yuborilmadi: ' + (tgErr.message || tgErr), 'err');
       } else if (tgData && tgData.sent === false) {
@@ -1658,7 +1658,7 @@ async function sendInvite() {
         toast('📨 Telegram\'ga ham yuborildi', 'ok');
       }
     } catch (e) {
-      console.error('[tg-send-invite] exception:', e);
+      console.error('[tg-send-invites] exception:', e);
       toast('TG xato: ' + (e?.message || e), 'err');
     }
 
