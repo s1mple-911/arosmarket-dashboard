@@ -328,6 +328,7 @@ html, body { background: var(--bg); color: var(--text); font-family: -apple-syst
       <div class="attach-grid" id="modalAttachGrid"></div>
       <input type="file" id="modalFileInput" style="display:none" onchange="onModalFilePick(this)" multiple />
       <button type="button" class="btn-upload-file" onclick="document.getElementById('modalFileInput').click()">📎 Rasm / fayl tanlash (papkalardan)</button>
+      <div style="font-size:11px; color: var(--muted); margin-top:6px; line-height:1.5;">💡 Yoki <b>Ctrl+V</b> (Mac'да <b>⌘+V</b>) — rasm/screenshot'ni clipboard'дан to'g'ridan paste qiling</div>
     </div>
     <div class="form-row">
       <label class="form-check">
@@ -376,6 +377,9 @@ html, body { background: var(--bg); color: var(--text); font-family: -apple-syst
 
 <script>
 // ============ CONFIG ============
+const BUILD_VERSION = '2026-06-26-T18UTC';
+console.log('%c AROS TASKS BUILD: ' + BUILD_VERSION + ' ', 'background:#16a34a;color:#fff;font-weight:bold;');
+document.addEventListener('DOMContentLoaded', function(){ try{ var b=document.createElement('div'); b.textContent='build '+BUILD_VERSION; b.style.cssText='position:fixed;bottom:2px;right:4px;font-size:9px;color:#16a34a;opacity:.6;z-index:99999;pointer-events:none;'; document.body.appendChild(b); }catch(e){} });
 const API_BASE = 'https://n8n.arosmarket.com/webhook';
 const TASKS_LIST = API_BASE + '/aros-tasks-list';
 const TASK_DETAIL = API_BASE + '/aros-task-detail';
@@ -807,7 +811,7 @@ function renderCalendar() {
   // Group tasks by date
   const byDate = {};
   tasks.forEach(t => {
-    const d = new Date(new Date(t.deadline).getTime() + 5*60*60*1000);
+    const d = new Date(pUTC(t.deadline).getTime() + 5*60*60*1000);
     const y = d.getUTCFullYear(), m = d.getUTCMonth(), dom = d.getUTCDate();
     if (y === calYear && m === calMonth) {
       const key = dom;
@@ -875,7 +879,7 @@ function changeMonth(delta) {
 function showDayTasks(d) {
   const tasks = filteredTasks().filter(t => {
     if (!t.deadline) return false;
-    const dt = new Date(new Date(t.deadline).getTime() + 5*60*60*1000);
+    const dt = new Date(pUTC(t.deadline).getTime() + 5*60*60*1000);
     return dt.getUTCDate() === d && dt.getUTCMonth() === calMonth && dt.getUTCFullYear() === calYear;
   });
   if (tasks.length === 0) return;
@@ -922,10 +926,19 @@ function taskCardHTML(t) {
   `;
 }
 
+// Saqlangan deadline doim UTC (Z'siz bo'lsa ham UTC deb o'qiymiz) — brauzer timezone'iga bog'liq emas
+function pUTC(s) {
+  if (!s) return null;
+  s = String(s).replace(' ', 'T');
+  if (!/[Zz]|[+-]\d\d:?\d\d$/.test(s)) s += 'Z';
+  return new Date(s);
+}
 function formatDeadline(iso) {
   if (!iso) return null;
-  const d = new Date(new Date(iso).getTime() + 5*60*60*1000);
-  const now = new Date(new Date().getTime() + 5*60*60*1000);
+  const base = pUTC(iso);
+  if (!base || isNaN(base.getTime())) return null;
+  const d = new Date(base.getTime() + 5*60*60*1000);
+  const now = new Date(Date.now() + 5*60*60*1000);
   const diffMs = d.getTime() - now.getTime();
   const diffH = diffMs / 3600000;
   const pad = n => n < 10 ? '0' + n : '' + n;
@@ -996,10 +1009,12 @@ function openCreate(editTask) {
   renderModalAttachGrid();
   
   document.getElementById('createModal').classList.add('show');
+  attachPasteHandler();
 }
 
 function closeCreate() {
   document.getElementById('createModal').classList.remove('show');
+  detachPasteHandler();
 }
 
 function setAssignType(type, preselect) {
@@ -1134,9 +1149,9 @@ function updateDlPreview() {
   const v = document.getElementById('f_deadline').value;
   const el = document.getElementById('dlPreview');
   if (!v) { el.textContent = ''; return; }
-  const d = new Date(v);
-  const now = new Date(new Date().getTime() + 5*60*60*1000);
-  const diffMs = new Date(v).getTime() - now.getTime();
+  const dl = v.length === 16 ? v + ':00' : v;
+  const target = new Date(dl + '+05:00').getTime();
+  const diffMs = target - Date.now();
   const days = Math.round(diffMs / 86400000);
   let rel = '';
   if (diffMs < 0) rel = ' (o\'tib ketgan)';
@@ -1185,12 +1200,53 @@ function selectPriority(pl) {
 
 function onModalFilePick(input) {
   const files = Array.from(input.files || []);
-  for (const f of files) {
-    if (f.size > 20 * 1024 * 1024) { toast(f.name + ' — 20MB dan katta', 'error'); continue; }
-    pendingFiles.push(f);
-  }
+  for (const f of files) addFileToPending(f);
   input.value = '';
   renderModalAttachGrid();
+}
+// Qayta ishlatish uchun — paste va drag-drop'дан ham chaqiriladi
+function addFileToPending(f) {
+  if (!f) return false;
+  if (f.size > 20 * 1024 * 1024) { toast(f.name + ' — 20MB dan katta', 'error'); return false; }
+  pendingFiles.push(f);
+  return true;
+}
+// Paste handler — modal ochilganda biriktiriladi, yopilganda uziladi
+let _pasteHandlerActive = false;
+function modalPasteHandler(e) {
+  // Faqat modal ochiq bo'lganda ishlasin (modal yopilganda removeEventListener ishlaydi)
+  const items = (e.clipboardData || window.clipboardData)?.items;
+  if (!items || !items.length) return;
+  let added = 0;
+  const tsNow = Date.now();
+  for (const it of items) {
+    if (it.kind === 'file') {
+      const f = it.getAsFile();
+      if (!f) continue;
+      // Clipboard'дан kelgan rasmlar ko'pincha "image.png" nomli — vaqt bilan unique qilamiz
+      let file = f;
+      if (/^image\.png$/i.test(f.name) || !f.name) {
+        const ext = (f.type && f.type.split('/')[1]) || 'png';
+        file = new File([f], 'paste_' + tsNow + '_' + (added+1) + '.' + ext, { type: f.type });
+      }
+      if (addFileToPending(file)) added++;
+    }
+  }
+  if (added) {
+    e.preventDefault();
+    renderModalAttachGrid();
+    toast('📎 ' + added + ' ta fayl paste qilindi', 'success');
+  }
+}
+function attachPasteHandler() {
+  if (_pasteHandlerActive) return;
+  document.addEventListener('paste', modalPasteHandler);
+  _pasteHandlerActive = true;
+}
+function detachPasteHandler() {
+  if (!_pasteHandlerActive) return;
+  document.removeEventListener('paste', modalPasteHandler);
+  _pasteHandlerActive = false;
 }
 function removePendingFile(idx) {
   pendingFiles.splice(idx, 1);
@@ -1208,15 +1264,21 @@ function renderModalAttachGrid() {
     return `<div class="attach-file"><span style="font-size:18px">${attachIcon(f.type)}</span><span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escapeHtml(f.name)}</span><div class="attach-del" onclick="removePendingFile(${i})">×</div></div>`;
   }).join('');
 }
-async function uploadPendingFiles(taskId) {
-  if (!pendingFiles.length) return;
-  for (const f of pendingFiles) {
+// Bitta vazifaga fayllarni yuklash. Birinchi fayl primary=1 (to'liq vazifa xabari + tugmalar bilan boradi)
+async function uploadFilesToTask(taskId, files) {
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    const primary = i === 0 ? 1 : 0;
     try {
       const fd = new FormData();
       fd.append('file', f, f.name);
-      await fetch(TASK_FILE_UPLOAD + '?task_id=' + taskId + '&uid=' + UID + '&file_name=' + encodeURIComponent(f.name), { method: 'POST', body: fd });
+      await fetch(TASK_FILE_UPLOAD + '?task_id=' + taskId + '&uid=' + UID + '&primary=' + primary + '&file_name=' + encodeURIComponent(f.name), { method: 'POST', body: fd });
     } catch (e) {}
   }
+}
+async function uploadPendingFiles(taskId) {
+  if (!pendingFiles.length) return;
+  await uploadFilesToTask(taskId, pendingFiles);
   pendingFiles = [];
 }
 
@@ -1300,7 +1362,13 @@ async function saveTask() {
     }
   }
   
-  const deadlineIso = deadline ? new Date(deadline).toISOString() : null;
+  // f_deadline = UZB devor-soati. Aniq +05:00 bilan UTC ga aylantiramiz (brauzer timezone'iga bog'liq emas)
+  let deadlineIso = null;
+  if (deadline) {
+    const dl = deadline.length === 16 ? deadline + ':00' : deadline;
+    const parsed = new Date(dl + '+05:00');
+    deadlineIso = isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
   
   const btn = document.getElementById('btnSave');
   btn.disabled = true;
@@ -1338,8 +1406,8 @@ async function saveTask() {
       const r = await fetch(TASK_CREATE + '?data=' + encodeURIComponent(JSON.stringify(body)));
       const d = await r.json();
       if (d.ok) {
-        await uploadPendingFiles(d.id);
-        notifyTask(d.id);
+        if (pendingFiles.length) { await uploadPendingFiles(d.id); }
+        else { notifyTask(d.id); }
         toast('✅ Vazifa yaratildi', 'success');
         closeCreate(); await loadTasks();
       } else toast('Xato: ' + (d.error || 'noma\'lum'), 'error');
@@ -1358,18 +1426,14 @@ async function saveTask() {
           else failCount++;
         } catch (e) { failCount++; }
       }
-      // Fire notifications after all creates done (doesn't block UI)
-      // Pending fayllarni har bir yaratilgan vazifaga yuklash
-      if (pendingFiles.length && createdIds.length) {
+      // Fayl bo'lsa: har vazifaga yuklaymiz (birinchi fayl = to'liq xabar), alohida matn notify yubormaymiz
+      const hadFiles = pendingFiles.length > 0;
+      if (hadFiles && createdIds.length) {
         const filesCopy = pendingFiles.slice();
-        for (const cid of createdIds) {
-          for (const f of filesCopy) {
-            try { const fd = new FormData(); fd.append('file', f, f.name); await fetch(TASK_FILE_UPLOAD + '?task_id=' + cid + '&uid=' + UID + '&file_name=' + encodeURIComponent(f.name), { method: 'POST', body: fd }); } catch (e) {}
-          }
-        }
+        for (const cid of createdIds) { await uploadFilesToTask(cid, filesCopy); }
         pendingFiles = [];
       }
-      createdIds.forEach(id => notifyTask(id));
+      if (!hadFiles) { createdIds.forEach(id => notifyTask(id)); }
       if (okCount > 0) {
         toast(`✅ ${okCount} ta vazifa yaratildi${failCount > 0 ? ` (${failCount} ta xato)` : ''}`, failCount > 0 ? 'error' : 'success');
         closeCreate(); await loadTasks();
@@ -1387,9 +1451,37 @@ async function saveTask() {
 }
 
 // ============ DETAIL ============
+let _detailPasteTaskId = null;
+async function detailPasteHandler(e) {
+  if (!_detailPasteTaskId) return;
+  const items = (e.clipboardData || window.clipboardData)?.items;
+  if (!items || !items.length) return;
+  const files = [];
+  const tsNow = Date.now();
+  for (const it of items) {
+    if (it.kind === 'file') {
+      const f = it.getAsFile();
+      if (!f) continue;
+      let file = f;
+      if (/^image\.png$/i.test(f.name) || !f.name) {
+        const ext = (f.type && f.type.split('/')[1]) || 'png';
+        file = new File([f], 'paste_' + tsNow + '_' + (files.length+1) + '.' + ext, { type: f.type });
+      }
+      files.push(file);
+    }
+  }
+  if (files.length) {
+    e.preventDefault();
+    toast('📎 ' + files.length + ' ta fayl yuklanmoqda…', 'success');
+    await uploadTaskFilesArray(_detailPasteTaskId, files);
+  }
+}
+
 async function openDetail(id) {
   document.getElementById('detailContent').innerHTML = '<div class="loading">Yuklanmoqda...</div>';
   document.getElementById('detailModal').classList.add('show');
+  _detailPasteTaskId = id;
+  document.addEventListener('paste', detailPasteHandler);
   try {
     const r = await fetch(TASK_DETAIL + '?id=' + id + '&uid=' + UID);
     const d = await r.json();
@@ -1402,6 +1494,8 @@ async function openDetail(id) {
 
 function closeDetail() {
   document.getElementById('detailModal').classList.remove('show');
+  _detailPasteTaskId = null;
+  document.removeEventListener('paste', detailPasteHandler);
 }
 
 function renderDetail(d) {
@@ -1495,6 +1589,7 @@ function renderDetail(d) {
       <div class="attach-grid">${attachsHtml}</div>
       <input type="file" id="taskFileInput_${t.id}" style="display:none" onchange="uploadTaskFile(${t.id}, this)" multiple />
       <button class="btn-upload-file" onclick="document.getElementById('taskFileInput_${t.id}').click()">📎 Rasm / fayl tanlash (papkalardan)</button>
+      <div style="font-size:11px; color: var(--text-dim); margin-top:6px; line-height:1.5;">💡 Yoki <b>Ctrl+V</b> (Mac: <b>⌘+V</b>) — clipboard'дан to'g'ridan paste qiling</div>
       <div id="uploadProgress_${t.id}" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px">Yuklanmoqda...</div>
     </div>
     
@@ -1591,6 +1686,10 @@ async function deleteTask(id) {
 
 async function uploadTaskFile(taskId, input) {
   const files = Array.from(input.files || []);
+  input.value = '';
+  await uploadTaskFilesArray(taskId, files);
+}
+async function uploadTaskFilesArray(taskId, files) {
   if (!files.length) return;
   const prog = document.getElementById('uploadProgress_' + taskId);
   let okCount = 0;
@@ -1608,7 +1707,6 @@ async function uploadTaskFile(taskId, input) {
       else toast('Xato: ' + (d.error || 'yuklanmadi'), 'error');
     } catch (e) { toast('Yuklashda xato', 'error'); }
   }
-  input.value = '';
   if (okCount > 0) {
     toast('✅ ' + okCount + ' ta fayl yuklandi — Telegramga yuborildi', 'success');
     await openDetail(taskId);
@@ -1677,7 +1775,9 @@ function formatDate(iso) {
 
 function toLocalDatetime(iso) {
   if (!iso) return '';
-  const d = new Date(new Date(iso).getTime() + 5*60*60*1000);
+  const base = pUTC(iso);
+  if (!base || isNaN(base.getTime())) return '';
+  const d = new Date(base.getTime() + 5*60*60*1000);
   const pad = n => n < 10 ? '0' + n : '' + n;
   return d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
 }
