@@ -307,6 +307,31 @@
   .onb-dot.active { background:var(--accent); }
   .onb-dot.done { background:var(--accent-ink); }
 
+  /* Org chart */
+  .oc-node { position: absolute; min-width: 160px; max-width: 200px; background: var(--surface); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); cursor: pointer; transition: box-shadow .15s, transform .15s; }
+  .oc-node:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); transform: translateY(-1px); }
+  .oc-node .oc-top { padding: 8px 12px 6px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
+  .oc-node .oc-icon { font-size: 16px; line-height: 1; }
+  .oc-node .oc-role { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .oc-node .oc-body { padding: 10px 12px; }
+  .oc-node .oc-name { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .oc-node .oc-sub { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Role-specific colors */
+  .oc-node.role-ceo .oc-top { background: #FEF3C7; color: #78350F; }
+  .oc-node.role-bugalter .oc-top { background: #DBEAFE; color: #1E40AF; }
+  .oc-node.role-boshliq .oc-top { background: #E9D5FF; color: #6B21A8; }
+  .oc-node.role-filial_boshligi .oc-top { background: #FCE7F3; color: #9F1239; }
+  .oc-node.role-katta_sotuvchi .oc-top { background: #D1FAE5; color: #065F46; }
+  .oc-node.role-sotuvchi .oc-top { background: #ECFCCB; color: #3F6212; }
+  .oc-node.role-kuryer .oc-top { background: #FED7AA; color: #9A3412; }
+  .oc-node.role-hodim .oc-top { background: #E5E7EB; color: #374151; }
+  .oc-node.role-default .oc-top { background: var(--surface-2); color: var(--muted); }
+  /* Site user (saytda registratsiya) */
+  .oc-node.is-site-user .oc-body { background: #FFFBEB; border-radius: 0 0 12px 12px; }
+  .oc-line { position: absolute; background: var(--line-strong); pointer-events: none; }
+  .oc-line.v { width: 1.5px; }
+  .oc-line.h { height: 1.5px; }
+
   /* Stat cards (dashboard) */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px; }
 
@@ -777,6 +802,24 @@
           </label>
         </div>
 
+        <div class="field" style="background:var(--surface-2);padding:14px;border-radius:10px;">
+          <label style="font-weight:600;margin-bottom:10px;display:block;">Ro'yxatdan o'tishda qanday ma'lumotlar so'ralsin?</label>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ismdan tashqari qo'shimcha ma'lumotlar. Bot tartib bilan so'raydi.</div>
+
+          <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; padding: 6px 0;">
+            <input type="checkbox" id="bsCollectPhone" style="width: 18px; height: 18px;" />
+            <span>📞 Telefon raqami</span>
+          </label>
+          <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; padding: 6px 0;">
+            <input type="checkbox" id="bsCollectPosition" style="width: 18px; height: 18px;" />
+            <span>⌬ Lavozim</span>
+          </label>
+          <label style="display:flex; align-items:center; gap: 10px; cursor: pointer; padding: 6px 0;">
+            <input type="checkbox" id="bsCollectBranch" style="width: 18px; height: 18px;" />
+            <span>▢ Filial <span style="font-size:11.5px;color:var(--muted);">(workspace'dagi filiallar ro'yxatidan tanlanadi)</span></span>
+          </label>
+        </div>
+
         <div class="field">
           <label>Tasdiqdan keyingi xabar</label>
           <textarea id="bsRegistered" rows="3" style="font-family:inherit;font-size:13.5px;"></textarea>
@@ -845,6 +888,28 @@
       <div id="cmdsEmpty" class="empty" style="display:none">
         <strong>Hech qanday maxsus komanda yo'q</strong>
         Yuqoridagi "Yangi komanda" tugmasini bosib qo'shing.
+      </div>
+    </section>
+
+    <!-- Tashkilot tuzilmasi -->
+    <section id="page-orgchart" style="display:none">
+      <div class="row-head" style="margin-bottom: 14px;">
+        <h2 class="h2" style="margin:0">⛓ Tashkilot tuzilmasi</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn secondary" onclick="ocZoomOut()">−</button>
+          <span id="ocZoomLabel" style="font-size:12px;color:var(--muted);min-width:40px;text-align:center;">100%</span>
+          <button class="btn secondary" onclick="ocZoomIn()">+</button>
+          <button class="btn secondary" onclick="ocRecenter()">⊙ Markazlash</button>
+        </div>
+      </div>
+      <div style="margin-bottom: 14px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+        Kim kimga boshliq — kartochka ustiga bossangiz "boshliq tanlash" oynasi ochiladi.
+        <br>Boshliqsizlar — eng yuqorida (CEO darajasi).
+      </div>
+
+      <!-- Org chart container -->
+      <div id="ocViewport" style="border:1px solid var(--line); border-radius:14px; background:repeating-linear-gradient(0deg,var(--surface),var(--surface) 22px,var(--surface-2) 23px),repeating-linear-gradient(90deg,var(--surface),var(--surface) 22px,var(--surface-2) 23px); background-blend-mode:multiply; overflow:auto; height: 70vh; position: relative;">
+        <div id="ocStage" style="position:relative; transform-origin: 0 0; transition: transform .12s;"></div>
       </div>
     </section>
 
@@ -1048,6 +1113,20 @@
     </div>
   </div>
 </div>
+<div class="modal-backdrop" id="ocPickBd">
+  <div class="modal">
+    <div class="modal-head"><h3 id="ocPickTitle">Boshliqni tanlash</h3><button class="x-btn" onclick="closeManagerPick()">×</button></div>
+    <div class="modal-body" style="max-height:60vh;overflow-y:auto;">
+      <input type="text" id="ocPickSearch" placeholder="Qidirish..." oninput="renderManagerPickList()" style="width:100%;margin-bottom:12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;" />
+      <div id="ocPickList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="setManagerNone()" style="margin-right:auto;color:var(--danger);">Boshliqsiz (yuqori)</button>
+      <button class="btn secondary" onclick="closeManagerPick()">Bekor</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="cmdEditBd">
   <div class="modal">
     <div class="modal-head"><h3 id="cmdEditTitle">Yangi komanda</h3><button class="x-btn" onclick="closeCmdEdit()">×</button></div>
@@ -1319,6 +1398,8 @@ let me = null, myProfile = null;
 let workspaces = [];
 let currentWs = null;
 let myWsRole = null;
+// canManage — owner yoki admin huquqlari (workspace darajasida)
+function isOwnerLike() { return myWsRole === 'owner' || myWsRole === 'admin'; }
 let myDepts = [];          // [{department_id, role}]
 let departments = [];
 let wsMembers = [];        // [{user_id, role, profile}]
@@ -1679,7 +1760,7 @@ function loadSettings() {
   $('setWsName').value = currentWs.name || '';
   $('setProfName').value = myProfile.full_name || '';
   $('setProfPhone').value = myProfile.phone || '';
-  $('deleteWsBtn').style.display = (currentWs.kind === 'organization' && myWsRole === 'owner') ? 'inline-block' : 'none';
+  $('deleteWsBtn').style.display = (currentWs.kind === 'organization' && isWorkspaceOwner()) ? 'inline-block' : 'none';
 }
 async function saveWsName() {
   const n = ($('setWsName').value || '').trim();
@@ -1776,53 +1857,52 @@ async function loadCurrentContext() {
   if (!currentWs) return;
   localStorage.setItem('current_ws_' + me.id, currentWs.id);
 
-  const { data: m } = await sb.from('workspace_members').select('role').eq('workspace_id', currentWs.id).eq('user_id', me.id).maybeSingle();
-  myWsRole = m ? m.role : null;
+  const wsId = currentWs.id;
+  const isOrg = currentWs.kind === 'organization';
 
-  if (currentWs.kind === 'organization') {
-    const { data: dm } = await sb.from('department_members').select('department_id, role, departments!inner(workspace_id)').eq('user_id', me.id).eq('departments.workspace_id', currentWs.id);
-    myDepts = (dm || []).map(x => ({ department_id: x.department_id, role: x.role }));
-    const { data: d } = await sb.from('departments').select('*').eq('workspace_id', currentWs.id).order('created_at', { ascending: true });
-    departments = d || [];
-  } else { myDepts = []; departments = []; }
+  // ─── Hammasini PARALLEL chaqiramιz (9 query birga, ~80% tez) ───
+  const [
+    myMemberR, myDeptsR, deptsR, wsMembersR,
+    intgsR, branchesR, subR
+  ] = await Promise.all([
+    sb.from('workspace_members').select('role').eq('workspace_id', wsId).eq('user_id', me.id).maybeSingle(),
+    isOrg ? sb.from('department_members').select('department_id, role, departments!inner(workspace_id)').eq('user_id', me.id).eq('departments.workspace_id', wsId) : Promise.resolve({ data: [] }),
+    isOrg ? sb.from('departments').select('*').eq('workspace_id', wsId).order('created_at', { ascending: true }) : Promise.resolve({ data: [] }),
+    sb.from('workspace_members').select('user_id, role, created_at').eq('workspace_id', wsId).order('created_at', { ascending: true }),
+    isOrg ? sb.from('integrations_safe').select('*').eq('workspace_id', wsId) : Promise.resolve({ data: [] }),
+    isOrg ? sb.from('branches').select('*').eq('workspace_id', wsId).order('name') : Promise.resolve({ data: [] }),
+    sb.from('subscriptions').select('*').eq('workspace_id', wsId).maybeSingle(),
+  ]);
 
-  // workspace a'zolari (jamoa + biriktirish dropdown'lari uchun)
-  const { data: wm } = await sb.from('workspace_members').select('user_id, role, created_at').eq('workspace_id', currentWs.id).order('created_at', { ascending: true });
-  const ids = (wm || []).map(x => x.user_id);
-  let profMap = {};
-  if (ids.length) {
-    const { data: profs } = await sb.from('profiles').select('id, full_name, phone').in('id', ids);
-    (profs || []).forEach(p => { profMap[p.id] = p; });
-  }
-  wsMembers = (wm || []).map(x => Object.assign({}, x, { profile: profMap[x.user_id] || {} }));
+  myWsRole = myMemberR.data ? myMemberR.data.role : null;
+  myDepts = (myDeptsR.data || []).map(x => ({ department_id: x.department_id, role: x.role }));
+  departments = deptsR.data || [];
+  integrationsCache = intgsR.data || [];
+  branchesCache = branchesR.data || [];
 
-  // TG bot users — agar telegram integratsiya yoqilgan bo'lsa, completed bo'lganlarni keshlaymiz
-  // (Create task modal'да assignee sifatida ko'rinadi.) Faqat owner ko'radi (RLS).
-  tgUsersCache = [];
-  integrationsCache = [];
-  branchesCache = [];
-  if (currentWs.kind === 'organization') {
-    // Integratsiyalarni ham yuklab qo'yamиz (notifyN8n uchun kerak)
-    const { data: intgs } = await sb.from('integrations_safe').select('*').eq('workspace_id', currentWs.id);
-    integrationsCache = intgs || [];
-    const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
-    if (tgIntg) {
-      const { data: bus } = await sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id).eq('state', 'completed');
-      tgUsersCache = bus || [];
-    }
-    // Branches
-    const { data: brs } = await sb.from('branches').select('*').eq('workspace_id', currentWs.id).order('name');
-    branchesCache = brs || [];
-  }
+  // Workspace members + profillar (2 ta query — birgalikda)
+  const wm = wsMembersR.data || [];
+  const memberIds = wm.map(x => x.user_id);
 
-  const { data: sub } = await sb.from('subscriptions').select('*').eq('workspace_id', currentWs.id).maybeSingle();
+  // tg_bot_users — telegram integratsiya bor bo'lsa
+  const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
 
-  await loadTasksFull();
-  await loadKanbanColumns();
+  const [profsR, tgBusR] = await Promise.all([
+    memberIds.length ? sb.from('profiles').select('id, full_name, phone').in('id', memberIds) : Promise.resolve({ data: [] }),
+    (isOrg && tgIntg) ? sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id).eq('state', 'completed') : Promise.resolve({ data: [] }),
+  ]);
+
+  const profMap = {};
+  (profsR.data || []).forEach(p => { profMap[p.id] = p; });
+  wsMembers = wm.map(x => Object.assign({}, x, { profile: profMap[x.user_id] || {} }));
+  tgUsersCache = tgBusR.data || [];
+
+  // Tasks + kanban — parallel
+  await Promise.all([loadTasksFull(), loadKanbanColumns()]);
+
   setupRealtime();
-
   renderSidebar();
-  updateDashboard(sub);
+  updateDashboard(subR.data);
 }
 
 // ============ REALTIME ============
@@ -1928,13 +2008,14 @@ function renderSidebar() {
   ).join('') + '<div class="ws-item create" onclick="openNewWs()">+ Yangi kompaniya yaratish</div>';
 
   const isOrg = currentWs.kind === 'organization';
-  const canManage = myWsRole === 'owner';
+  const canManage = isOwnerLike();
 
   let html = '';
   html += '<button class="side-link ' + (currentPage === 'dashboard' ? 'active' : '') + '" onclick="goPage(\'dashboard\')"><span class="ic">◐</span> Bosh sahifa</button>';
   html += '<button class="side-link ' + (currentPage === 'tasks' ? 'active' : '') + '" onclick="goPage(\'tasks\')"><span class="ic">✓</span> Hamma vazifalar</button>';
   if (isOrg) {
     html += '<button class="side-link ' + (currentPage === 'stats' ? 'active' : '') + '" onclick="goPage(\'stats\')"><span class="ic">📊</span> Statistika</button>';
+    html += '<button class="side-link ' + (currentPage === 'orgchart' ? 'active' : '') + '" onclick="goPage(\'orgchart\')"><span class="ic">⛓</span> Tashkilot</button>';
   }
   if (isOrg) {
     html += '<div class="side-section">Bo\'limlar' + (canManage ? '<button class="add-mini" title="Yangi bo\'lim" onclick="openNewDept()">+</button>' : '') + '</div>';
@@ -1962,9 +2043,11 @@ function renderSidebar() {
       const hasTg = (integrationsCache || []).some(i => i.tool === 'telegram' && i.is_enabled);
       if (hasTg) {
         const inTgSection = ['tgusers', 'botsettings', 'botcommands'].includes(currentPage);
-        const tgExpanded = window._tgSbOpen === undefined
-          ? (localStorage.getItem('sidebar_tg_open') !== 'false' || inTgSection)
-          : (window._tgSbOpen || inTgSection);
+        // Default — YOPIQ (faqat foydalanuvchi yoki sub-sahifa bossa ochiladi)
+        const userOpened = window._tgSbOpen === undefined
+          ? (localStorage.getItem('sidebar_tg_open') === 'true')
+          : window._tgSbOpen;
+        const tgExpanded = userOpened || inTgSection;
         html += '<button class="side-link side-group ' + (inTgSection ? 'has-active' : '') + '" onclick="toggleTgSidebar()">' +
           '<span class="ic">✈</span> Telegram' +
           '<span style="margin-left:auto;font-size:10px;color:var(--muted);">' + (tgExpanded ? '▼' : '▶') + '</span>' +
@@ -1979,7 +2062,7 @@ function renderSidebar() {
       html += '<button class="side-link ' + (currentPage === 'positions' ? 'active' : '') + '" onclick="goPage(\'positions\')"><span class="ic">⌬</span> Lavozimlar</button>';
     }
   }
-  if (myWsRole === 'owner') {
+  if (isOwnerLike()) {
     html += '<button class="side-link ' + (currentPage === 'settings' ? 'active' : '') + '" onclick="goPage(\'settings\')"><span class="ic">⚙</span> Sozlamalar</button>';
   }
   $('sideNav').innerHTML = html;
@@ -2216,7 +2299,7 @@ function goPage(p) {
   currentPage = p;
   if (p !== 'department') currentDeptId = null;
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings','stats','botsettings','botcommands'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings','stats','botsettings','botcommands','orgchart'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
   if (p === 'tasks') renderTasksList();
   if (p === 'departments') renderDeptsList();
   if (p === 'team') renderTeam();
@@ -2229,6 +2312,7 @@ function goPage(p) {
   if (p === 'stats') renderStats();
   if (p === 'botsettings') loadBotSettings();
   if (p === 'botcommands') loadBotCommands();
+  if (p === 'orgchart') loadOrgChart();
 }
 
 function goDept(deptId) {
@@ -2242,7 +2326,7 @@ function goDept(deptId) {
   currentPage = 'department';
   currentDeptView = 'kanban';
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings','stats','botsettings','botcommands'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings','stats','botsettings','botcommands','orgchart'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === 'department' ? 'block' : 'none'); });
   renderDeptHeader();
   setDeptView('kanban');
 }
@@ -2674,6 +2758,7 @@ async function saveCreate() {
     for (const t of data) {
       if (t.assigned_to && t.assigned_to !== me.id) {
         tgNotifyAssignment(t.id, { user_id: t.assigned_to });
+        emailNotify('task_assigned', t.id, t.assigned_to);
       } else if (t.assigned_to_tg_bot_user) {
         tgNotifyAssignment(t.id, { tg_bot_user_id: t.assigned_to_tg_bot_user });
       }
@@ -2682,6 +2767,18 @@ async function saveCreate() {
   } catch (e) {
     showMsg($('cMsg'), translateErr(e.message), 'err');
     btn.disabled=false; btn.textContent='Yaratish';
+  }
+}
+
+// Email notify (fire and forget — agar RESEND_API_KEY o'rnatilmagan bo'lsa, sukut qoladi)
+async function emailNotify(type, taskId, recipientUserId) {
+  try {
+    await sb.functions.invoke('send-email', {
+      body: { type, task_id: taskId, recipient_user_id: recipientUserId }
+    });
+  } catch (e) {
+    // Email muvaffaqiyatsiz bo'lsa ham vazifa ishlashda davom etadi
+    console.warn('Email notify failed:', e);
   }
 }
 
@@ -2911,7 +3008,7 @@ function renderCommentItem(c, canDelete) {
   }
   const av = avatarHtml(displayAuthor, 'sm');
   const time = relTime(c.created_at);
-  const canDel = canDelete && (c.author_id === me.id || myWsRole === 'owner');
+  const canDel = canDelete && (c.author_id === me.id || isOwnerLike());
   return '<div class="cmt-item">' +
     '<div class="cmt-head">' + av + '<span class="cmt-author">' + escapeHtml(displayAuthor) + '</span><span class="cmt-time">' + time + '</span>' +
       (canDel ? '<span class="cmt-delete" onclick="deleteComment('+c.id+')" style="margin-left:auto;">×</span>' : '') +
@@ -3235,6 +3332,10 @@ async function changeStatus(id, newStatus) {
     // Telegram'ga assignee xabari
     notifyStatusToTg(data, newStatus);
     notifyN8n('task.status_changed', { task: data, new_status: newStatus });
+    // Email yaratuvchiga (faqat completed bo'lganda, va yaratuvchi boshqa odam bo'lsa)
+    if (newStatus === 'completed' && data.created_by && data.created_by !== me.id) {
+      emailNotify('task_completed', data.id, data.created_by);
+    }
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
@@ -3260,6 +3361,297 @@ async function deleteCurrent() {
     closeDetail(); toast('🗑 O\'chirildi', 'ok');
     refreshActiveView();
   } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// ============ ORG CHART (Tashkilot tuzilmasi) ============
+let _ocZoom = 1;
+let _ocNodes = []; // [{id, name, position, branch_name, manager_id, kind: 'tg'|'user'}]
+const OC_POS_META = {
+  ceo: { icon: '👑', label: 'CEO', cls: 'role-ceo' },
+  bugalter: { icon: '📊', label: 'Bugalter', cls: 'role-bugalter' },
+  boshliq: { icon: '👔', label: 'Boshliq', cls: 'role-boshliq' },
+  filial_boshligi: { icon: '👔', label: 'Filial boshlig\'i', cls: 'role-filial_boshligi' },
+  katta_sotuvchi: { icon: '🛒', label: 'Katta sotuvchi', cls: 'role-katta_sotuvchi' },
+  sotuvchi: { icon: '🛒', label: 'Sotuvchi', cls: 'role-sotuvchi' },
+  kuryer: { icon: '🚚', label: 'Kuryer', cls: 'role-kuryer' },
+  hodim: { icon: '🧑‍💼', label: 'Xodim', cls: 'role-hodim' },
+};
+function ocPosMeta(p) { return OC_POS_META[p] || { icon: '◯', label: p || 'Lavozimsiz', cls: 'role-default' }; }
+
+async function loadOrgChart() {
+  if (!currentWs || currentWs.kind !== 'organization') return;
+  const stage = $('ocStage');
+  stage.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);">Yuklanmoqda…</div>';
+
+  // tg_bot_users — completed
+  const tgIntg = (integrationsCache || []).find(i => i.tool === 'telegram' && i.is_enabled);
+  let tgUsers = [];
+  if (tgIntg) {
+    const { data } = await sb.from('tg_bot_users')
+      .select('id, full_name, position, branch_id, manager_id, linked_user_id')
+      .eq('integration_id', tgIntg.id)
+      .eq('state', 'completed');
+    tgUsers = data || [];
+  }
+
+  // Sayt foydalanuvchilari (workspace_members)
+  const siteUsers = wsMembers.map(m => ({
+    id: 'u:' + m.user_id,
+    user_id: m.user_id,
+    name: m.profile?.full_name || 'A\'zo',
+    position: m.role === 'owner' ? 'ceo' : null,
+    branch_id: null,
+    manager_id: null, // workspace_members.manager_user_id'gа qaraladi
+    kind: 'user',
+    raw_role: m.role,
+  }));
+
+  // Build unified node list. For each tg user — id='t:<uuid>'
+  _ocNodes = [
+    ...siteUsers,
+    ...tgUsers.map(u => ({
+      id: 't:' + u.id,
+      raw_id: u.id,
+      name: u.full_name || '(ism yo\'q)',
+      position: u.position,
+      branch_id: u.branch_id,
+      manager_id: u.manager_id ? 't:' + u.manager_id : null,
+      kind: 'tg',
+      linked_user_id: u.linked_user_id,
+    }))
+  ];
+
+  // workspace_members.manager_user_id mapping (alohida olmadik tezlik uchun — keyingi optimizatsiyada)
+  // Hozircha sayt user'lar boshliqsiz top'da turadi
+
+  renderOrgChart();
+}
+
+function renderOrgChart() {
+  const stage = $('ocStage');
+  if (!_ocNodes.length) {
+    stage.innerHTML = '<div style="padding:50px;text-align:center;color:var(--muted);"><strong>Ma\'lumot yo\'q</strong><br>Bot foydalanuvchilari va sayt a\'zolar ko\'rinadi.</div>';
+    return;
+  }
+
+  // Layout: build tree from roots (no manager)
+  const byId = new Map(_ocNodes.map(n => [n.id, n]));
+  const childrenOf = new Map();
+  const roots = [];
+  for (const n of _ocNodes) {
+    if (n.manager_id && byId.has(n.manager_id)) {
+      const arr = childrenOf.get(n.manager_id) || [];
+      arr.push(n);
+      childrenOf.set(n.manager_id, arr);
+    } else {
+      roots.push(n);
+    }
+  }
+
+  // BFS layout — har darajada gorizontal joylash
+  const NODE_W = 180, NODE_H = 80, GAP_X = 20, GAP_Y = 60;
+
+  // 1) Subtree width hisoblash (her node uchun)
+  const sizeOf = new Map();
+  function computeSize(n) {
+    const kids = childrenOf.get(n.id) || [];
+    if (!kids.length) { sizeOf.set(n.id, NODE_W); return NODE_W; }
+    let total = 0;
+    kids.forEach(k => { total += computeSize(k) + GAP_X; });
+    total -= GAP_X;
+    const w = Math.max(NODE_W, total);
+    sizeOf.set(n.id, w);
+    return w;
+  }
+  roots.forEach(r => computeSize(r));
+
+  // 2) Pozitsiyalash
+  const positions = new Map(); // id → {x, y}
+  function placeSubtree(n, x, y) {
+    const kids = childrenOf.get(n.id) || [];
+    const myW = sizeOf.get(n.id);
+    // markazga qo'yish
+    const cx = x + myW / 2 - NODE_W / 2;
+    positions.set(n.id, { x: cx, y: y, w: NODE_W });
+    if (!kids.length) return;
+    // bolalarni joylash
+    let cursorX = x;
+    const childY = y + NODE_H + GAP_Y;
+    kids.forEach(k => {
+      const kW = sizeOf.get(k.id);
+      placeSubtree(k, cursorX, childY);
+      cursorX += kW + GAP_X;
+    });
+  }
+
+  let rootCursorX = 0;
+  const rootY = 20;
+  roots.forEach(r => {
+    placeSubtree(r, rootCursorX, rootY);
+    rootCursorX += sizeOf.get(r.id) + GAP_X * 3;
+  });
+
+  // Total dimensions
+  let maxX = 0, maxY = 0;
+  positions.forEach(p => {
+    if (p.x + NODE_W > maxX) maxX = p.x + NODE_W;
+    if (p.y + NODE_H > maxY) maxY = p.y + NODE_H;
+  });
+  stage.style.width = (maxX + 40) + 'px';
+  stage.style.height = (maxY + 40) + 'px';
+
+  // 3) Renderlash
+  let html = '';
+  // Lines (manager → child)
+  for (const n of _ocNodes) {
+    const me = positions.get(n.id);
+    if (!me) continue;
+    const kids = childrenOf.get(n.id) || [];
+    if (!kids.length) continue;
+    // pastdan chiqib o'rta vertical
+    const myCx = me.x + NODE_W / 2;
+    const myBottomY = me.y + NODE_H;
+    const childTopY = me.y + NODE_H + GAP_Y;
+    const midY = (myBottomY + childTopY) / 2;
+    // vertical from parent
+    html += '<div class="oc-line v" style="left:' + (myCx - 0.75) + 'px;top:' + myBottomY + 'px;height:' + (midY - myBottomY) + 'px;"></div>';
+    // horizontal across kids
+    if (kids.length > 1) {
+      const xs = kids.map(k => positions.get(k.id).x + NODE_W / 2).filter(x => x !== undefined);
+      const lx = Math.min(...xs);
+      const rx = Math.max(...xs);
+      html += '<div class="oc-line h" style="left:' + lx + 'px;top:' + midY + 'px;width:' + (rx - lx) + 'px;"></div>';
+    }
+    // verticals down to each kid
+    kids.forEach(k => {
+      const kp = positions.get(k.id);
+      if (!kp) return;
+      const kCx = kp.x + NODE_W / 2;
+      html += '<div class="oc-line v" style="left:' + (kCx - 0.75) + 'px;top:' + midY + 'px;height:' + (childTopY - midY) + 'px;"></div>';
+    });
+  }
+
+  // Nodes
+  for (const n of _ocNodes) {
+    const p = positions.get(n.id);
+    if (!p) continue;
+    const meta = ocPosMeta(n.position);
+    const branchName = n.branch_id ? ((branchesCache.find(b => b.id === n.branch_id) || {}).name || '') : '';
+    const isSiteUser = n.kind === 'user';
+    html += '<div class="oc-node ' + meta.cls + (isSiteUser ? ' is-site-user' : '') + '" style="left:' + p.x + 'px;top:' + p.y + 'px;width:' + NODE_W + 'px;" onclick="openManagerPick(\'' + n.id + '\')">' +
+      '<div class="oc-top"><span class="oc-icon">' + meta.icon + '</span><span class="oc-role">' + meta.label + '</span></div>' +
+      '<div class="oc-body">' +
+        '<div class="oc-name">' + escapeHtml(n.name) + '</div>' +
+        (branchName ? '<div class="oc-sub">▢ ' + escapeHtml(branchName) + '</div>' : (isSiteUser ? '<div class="oc-sub">👤 Sayt foydalanuvchisi</div>' : '')) +
+      '</div>' +
+    '</div>';
+  }
+
+  stage.innerHTML = html;
+  ocApplyZoom();
+}
+
+function ocZoomIn() { _ocZoom = Math.min(2, _ocZoom + 0.1); ocApplyZoom(); }
+function ocZoomOut() { _ocZoom = Math.max(0.4, _ocZoom - 0.1); ocApplyZoom(); }
+function ocApplyZoom() {
+  $('ocStage').style.transform = 'scale(' + _ocZoom + ')';
+  $('ocZoomLabel').textContent = Math.round(_ocZoom * 100) + '%';
+}
+function ocRecenter() {
+  const vp = $('ocViewport');
+  vp.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+}
+
+let _ocPickFor = null;
+function openManagerPick(nodeId) {
+  if (!isOwnerLike()) { toast('Faqat admin/owner boshliq belgilay oladi', 'err'); return; }
+  _ocPickFor = nodeId;
+  const node = _ocNodes.find(n => n.id === nodeId);
+  $('ocPickTitle').textContent = 'Boshliqni tanlash — ' + (node?.name || '');
+  $('ocPickSearch').value = '';
+  renderManagerPickList();
+  $('ocPickBd').classList.add('show');
+}
+function closeManagerPick() { $('ocPickBd').classList.remove('show'); _ocPickFor = null; }
+
+function renderManagerPickList() {
+  const q = ($('ocPickSearch').value || '').trim().toLowerCase();
+  const list = $('ocPickList');
+  const candidates = _ocNodes.filter(n => {
+    if (n.id === _ocPickFor) return false; // o'ziga boshliq emas
+    if (isAncestor(n.id, _ocPickFor)) return false; // bolasini boshliq qilib bo'lmaydi (cycle)
+    if (!q) return true;
+    return (n.name || '').toLowerCase().includes(q) || (n.position || '').toLowerCase().includes(q);
+  });
+  if (!candidates.length) {
+    list.innerHTML = '<div class="empty"><strong>Topilmadi</strong></div>';
+    return;
+  }
+  list.innerHTML = candidates.map(c => {
+    const meta = ocPosMeta(c.position);
+    return '<div class="item" onclick="setManager(\'' + c.id + '\')" style="cursor:pointer;">' +
+      '<div style="font-size:18px;margin-right:10px;">' + meta.icon + '</div>' +
+      '<div class="item-mid">' +
+        '<div class="item-title">' + escapeHtml(c.name) + '</div>' +
+        '<div class="item-meta">' + meta.label + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// Cycle prevention: target'ning ajdodi'mi?
+function isAncestor(candidateId, targetId) {
+  if (!targetId) return false;
+  const byId = new Map(_ocNodes.map(n => [n.id, n]));
+  let cur = byId.get(candidateId);
+  let depth = 0;
+  while (cur && cur.manager_id && depth < 50) {
+    if (cur.manager_id === targetId) return true;
+    cur = byId.get(cur.manager_id);
+    depth++;
+  }
+  return false;
+}
+
+async function setManager(managerNodeId) {
+  if (!_ocPickFor) return;
+  await applyManagerChange(_ocPickFor, managerNodeId);
+}
+async function setManagerNone() {
+  if (!_ocPickFor) return;
+  await applyManagerChange(_ocPickFor, null);
+}
+
+async function applyManagerChange(childNodeId, managerNodeId) {
+  try {
+    if (childNodeId.startsWith('t:')) {
+      // TG bot user — manager_id ham tg_bot_users.id bo'lishi kerak (saytdagi user bo'lmaydi v1)
+      if (managerNodeId && !managerNodeId.startsWith('t:')) {
+        toast('Hozircha TG xodimga sayt foydalanuvchisini boshliq qilib bo\'lmaydi', 'err');
+        return;
+      }
+      const tgId = childNodeId.slice(2);
+      const mgrTgId = managerNodeId ? managerNodeId.slice(2) : null;
+      const { error } = await sb.from('tg_bot_users').update({ manager_id: mgrTgId }).eq('id', tgId);
+      if (error) throw error;
+    } else if (childNodeId.startsWith('u:')) {
+      // Sayt user — workspace_members.manager_user_id
+      if (managerNodeId && !managerNodeId.startsWith('u:')) {
+        toast('Hozircha sayt foydalanuvchisiga TG xodim boshliq bo\'la olmaydi', 'err');
+        return;
+      }
+      const uid = childNodeId.slice(2);
+      const mgrUid = managerNodeId ? managerNodeId.slice(2) : null;
+      const { error } = await sb.from('workspace_members').update({ manager_user_id: mgrUid })
+        .eq('workspace_id', currentWs.id).eq('user_id', uid);
+      if (error) throw error;
+    }
+    closeManagerPick();
+    toast('✓ Boshliq o\'zgartirildi', 'ok');
+    loadOrgChart();
+  } catch (e) {
+    toast(translateErr(e.message), 'err');
+  }
 }
 
 // ============ BOT SOZLAMALARI ============
@@ -3317,6 +3709,9 @@ async function loadBotSettings() {
 
   $('bsWelcome').value = settings.welcome_message || DEFAULT_BOT_SETTINGS.welcome_message;
   $('bsApproval').checked = settings.approval_required !== false;
+  $('bsCollectPhone').checked = !!settings.collect_phone;
+  $('bsCollectPosition').checked = !!settings.collect_position;
+  $('bsCollectBranch').checked = !!settings.collect_branch;
   $('bsRegistered').value = settings.registered_message || DEFAULT_BOT_SETTINGS.registered_message;
   $('bsPending').value = settings.pending_message || DEFAULT_BOT_SETTINGS.pending_message;
   $('bsRejected').value = settings.rejected_message || DEFAULT_BOT_SETTINGS.rejected_message;
@@ -3331,6 +3726,9 @@ async function saveBotSettings() {
     const payload = {
       welcome_message: $('bsWelcome').value.trim() || DEFAULT_BOT_SETTINGS.welcome_message,
       approval_required: $('bsApproval').checked,
+      collect_phone: $('bsCollectPhone').checked,
+      collect_position: $('bsCollectPosition').checked,
+      collect_branch: $('bsCollectBranch').checked,
       registered_message: $('bsRegistered').value.trim() || DEFAULT_BOT_SETTINGS.registered_message,
       pending_message: $('bsPending').value.trim() || DEFAULT_BOT_SETTINGS.pending_message,
       rejected_message: $('bsRejected').value.trim() || DEFAULT_BOT_SETTINGS.rejected_message,
@@ -3750,7 +4148,7 @@ function refreshActiveView() {
 
 // ============ DEPARTMENTS LIST ============
 async function renderDeptsList() {
-  const canManage = myWsRole === 'owner';
+  const canManage = isOwnerLike();
   $('newDeptBtn').style.display = canManage ? 'inline-block' : 'none';
   const wrap = $('deptsList'); const empty = $('deptsEmpty');
 
@@ -3875,7 +4273,7 @@ function renderDeptHeader() {
   const d = departments.find(x => x.id === currentDeptId); if (!d) return;
   $('deptDetTitle').textContent = d.name;
   $('deptDetDesc').textContent = d.description || '';
-  const canManage = myWsRole === 'owner';
+  const canManage = isOwnerLike();
   $('deptDetSettings').style.display = canManage ? 'inline-block' : 'none';
 }
 
@@ -4270,7 +4668,7 @@ async function loadDeptTeam() {
   renderDeptTeam();
 }
 function renderDeptTeam() {
-  const canManage = myWsRole === 'owner';
+  const canManage = isOwnerLike();
   $('deptTeamMgr').style.display = canManage ? 'flex' : 'none';
   // Dropdown: workspace members not yet in this dept
   if (canManage) {
@@ -4343,8 +4741,9 @@ async function removeDeptMember(uid) {
 }
 
 // ============ WORKSPACE TEAM ============
-function canManageTeam() { return myWsRole === 'owner'; }
-function canEditWorkspace() { return myWsRole === 'owner' || myWsRole === 'member'; }
+function canManageTeam() { return isOwnerLike(); }
+function canEditWorkspace() { return isOwnerLike() || myWsRole === 'member'; }
+function isWorkspaceOwner() { return myWsRole === 'owner'; }
 async function renderTeam() {
   $('inviteBtn').style.display = canManageTeam() ? 'inline-block' : 'none';
   $('invitesWrap').style.display = canManageTeam() ? 'block' : 'none';
@@ -4357,11 +4756,25 @@ async function renderTeam() {
       const name = p.full_name || (isMe ? 'Siz' : 'A\'zo');
       const canChange = canManageTeam() && m.role !== 'owner' && !isMe;
       const isOwner = m.role === 'owner';
-      const badge = isOwner ? '<span class="badge ok">Egasi</span>' : '<span class="badge muted">A\'zo</span>';
+      const isAdmin = m.role === 'admin';
+      let badge;
+      if (isOwner) badge = '<span class="badge ok">Egasi</span>';
+      else if (isAdmin) badge = '<span class="badge" style="background:#DDEBFF;color:#1E40AF;">Admin</span>';
+      else badge = '<span class="badge muted">A\'zo</span>';
+
+      // Faqat haqiqiy owner — boshqalarni admin/member qila oladi
+      let roleSelector = '';
+      if (canChange && isWorkspaceOwner()) {
+        roleSelector = ' <select class="link-btn" onchange="changeWsRole(\''+m.user_id+'\', this.value)" style="border:1px solid var(--line); padding: 4px 8px; border-radius: 6px; margin-left: 6px;">' +
+          '<option value="member"' + (m.role==='member'?' selected':'') + '>A\'zo</option>' +
+          '<option value="admin"' + (m.role==='admin'?' selected':'') + '>Admin (to\'liq huquqlar)</option>' +
+        '</select>';
+      }
+
       return '<div class="item static">' +
         '<div style="padding-right:10px;">' + avatarHtml(name) + '</div>' +
         '<div class="item-mid"><div class="item-title">' + escapeHtml(name) + (isMe?' <span style="color:var(--muted); font-weight:500;">(siz)</span>':'') + '</div><div class="item-meta">' + escapeHtml(p.phone || '—') + '</div></div>' +
-        '<div class="item-right">' + badge + (canChange ? ' <button class="link-btn" onclick="removeMember(\''+m.user_id+'\')" style="color:var(--danger); margin-left:8px;">O\'chirish</button>' : '') + '</div>' +
+        '<div class="item-right">' + badge + roleSelector + (canChange ? ' <button class="link-btn" onclick="removeMember(\''+m.user_id+'\')" style="color:var(--danger); margin-left:8px;">O\'chirish</button>' : '') + '</div>' +
       '</div>';
     }).join('');
   }
@@ -4491,6 +4904,20 @@ async function changeMemberRole(uid, role) {
     if (error) throw error;
     const i = wsMembers.findIndex(x => x.user_id === uid); if (i>=0) wsMembers[i].role = role;
     toast('Rol o\'zgartirildi', 'ok');
+  } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+async function changeWsRole(uid, role) {
+  // Faqat owner — admin yoki member qila oladi
+  if (!isWorkspaceOwner()) { toast('Faqat workspace egasi rol o\'zgartira oladi', 'err'); return; }
+  if (uid === me.id) { toast('O\'z roligingizni o\'zgartirib bo\'lmaydi', 'err'); return; }
+  if (!['admin', 'member'].includes(role)) return;
+  try {
+    const { error } = await sb.from('workspace_members').update({ role }).eq('workspace_id', currentWs.id).eq('user_id', uid);
+    if (error) throw error;
+    const i = wsMembers.findIndex(x => x.user_id === uid); if (i>=0) wsMembers[i].role = role;
+    toast(role === 'admin' ? '✓ Admin huquqlari berildi' : '✓ Oddiy a\'zoga qaytarildi', 'ok');
+    if (currentPage === 'team') renderTeam();
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 async function removeMember(uid) {
@@ -4958,7 +5385,7 @@ let myTgLinks = []; // foydalanuvchining bog'langan botlari (workspace bo'yicha)
 
 async function loadIntegrations() {
   if (!currentWs || currentWs.kind !== 'organization') return;
-  const canManage = myWsRole === 'owner';
+  const canManage = isOwnerLike();
   if (!canManage) {
     $('intgGrid').innerHTML = '<div class="empty"><strong>Faqat boshqaruvchi ko\'radi</strong>Integratsiyalarni faqat workspace egasi yoki administratori sozlaydi.</div>';
     return;
@@ -5254,7 +5681,7 @@ async function init() {
     }
     // Escape => close any open modal
     if (e.key === 'Escape') {
-      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd','addColumnBd','branchBd','editTgBd','pendingBd','cmdEditBd'].forEach(id => {
+      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd','addColumnBd','branchBd','editTgBd','pendingBd','cmdEditBd','ocPickBd'].forEach(id => {
         const el = $(id);
         if (el && el.classList.contains('show')) el.classList.remove('show');
       });
