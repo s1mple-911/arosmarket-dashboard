@@ -156,7 +156,7 @@
   .kan-col.col-drop-target-left { box-shadow: -3px 0 0 var(--accent); }
   .kan-col.col-drop-target-right { box-shadow: 3px 0 0 var(--accent); }
   .kan-col.col-dragging { opacity: .4; }
-  .kan-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; flex-shrink: 0; cursor: grab; }
+  .kan-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; flex-shrink: 0; cursor: grab; user-select: none; -webkit-user-select: none; }
   .kan-head:active { cursor: grabbing; }
   .kan-title { font-size: 12.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
   .kan-count { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
@@ -276,31 +276,28 @@
   .search-input { flex: 1; padding: 9px 12px 9px 36px; border: 1px solid var(--line); border-radius: 10px; font-size: 13.5px; background: var(--surface); font-family: inherit; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 11px center; background-size: 16px 16px; }
   .search-input:focus { outline: none; border-color: var(--accent); }
 
-  /* Multi-select with search (vazifa biriktirish uchun) */
-  .ms-wrap { position: relative; }
-  .ms-box { min-height: 38px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 5px 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; cursor: text; }
-  .ms-box:focus-within { border-color: var(--accent); }
-  .ms-chip { background: var(--accent-soft); color: var(--accent-ink); padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
-  .ms-chip.branch { background: #FEF3C7; color: #92400E; }
-  .ms-chip.position { background: #DDEBFF; color: #1E40AF; }
-  .ms-chip-x { cursor: pointer; opacity: .6; font-weight: 700; padding: 0 2px; line-height: 1; }
-  .ms-chip-x:hover { opacity: 1; }
-  .ms-input { flex: 1; min-width: 80px; border: none; outline: none; padding: 4px 6px; font-size: 13px; background: transparent; font-family: inherit; color: var(--ink); }
-  .ms-input::placeholder { color: var(--muted); }
-  .ms-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 320px; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); z-index: 20; display: none; }
-  .ms-dropdown.show { display: block; }
-  .ms-group-head { padding: 8px 12px 4px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: var(--surface-2); position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
-  .ms-group-head .add-all { font-size: 10.5px; color: var(--accent-ink); cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 600; }
-  .ms-group-head .add-all:hover { text-decoration: underline; }
-  .ms-opt { padding: 8px 12px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  /* Multi-select PANEL (vazifa biriktirish — checkbox style, always open) */
+  .ms-panel { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .ms-panel:focus-within { border-color: var(--accent); }
+  .ms-panel-search { padding: 8px; border-bottom: 1px solid var(--line); background: var(--surface-2); display: flex; gap: 8px; align-items: center; }
+  .ms-panel-search input { flex: 1; border: none; outline: none; padding: 7px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-family: inherit; color: var(--ink); }
+  .ms-panel-search input:focus { border-color: var(--accent); }
+  .ms-panel-clear { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+  .ms-panel-clear:hover { background: var(--surface); color: var(--ink); }
+  .ms-panel-list { max-height: 280px; min-height: 120px; overflow-y: auto; }
+  .ms-group-head { padding: 8px 12px 5px; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: var(--surface-2); position: sticky; top: 0; z-index: 1; }
+  .ms-opt { display: flex; align-items: center; gap: 10px; padding: 7px 12px; cursor: pointer; font-size: 13px; }
   .ms-opt:hover { background: var(--accent-soft); }
   .ms-opt.selected { background: var(--accent-soft); }
-  .ms-opt .name { flex: 1; }
-  .ms-opt .sub { font-size: 11px; color: var(--muted); }
-  .ms-opt .ic { width: 22px; text-align: center; font-size: 14px; }
-  .ms-opt.disabled { opacity: .5; cursor: default; }
-  .ms-empty { padding: 16px; text-align: center; font-size: 12.5px; color: var(--muted); }
-  .ms-summary { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .ms-opt.disabled { opacity: .5; cursor: not-allowed; }
+  .ms-check { width: 18px; height: 18px; border: 1.5px solid var(--line-strong); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: transparent; transition: all .12s; }
+  .ms-opt.selected .ms-check { background: var(--accent); border-color: var(--accent); color: white; }
+  .ms-opt .ic { width: 20px; text-align: center; font-size: 14px; flex-shrink: 0; }
+  .ms-opt .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-opt .sub { font-size: 11.5px; color: var(--muted); flex-shrink: 0; }
+  .ms-empty { padding: 24px 16px; text-align: center; font-size: 12.5px; color: var(--muted); }
+  .ms-summary { font-size: 12.5px; color: var(--muted); margin-top: 8px; padding: 0 4px; }
+  .ms-summary.has-selection { color: var(--accent-ink); font-weight: 500; }
 
   /* Stat cards (dashboard) */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px; }
@@ -309,9 +306,9 @@
   .kanban-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .kan-col-head { display: flex; align-items: center; gap: 8px; }
   .kan-col-color { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .kan-col-name { font-weight: 600; font-size: 13px; cursor: text; padding: 2px 6px; border-radius: 4px; }
+  .kan-col-name { font-weight: 600; font-size: 13px; cursor: grab; padding: 2px 6px; border-radius: 4px; user-select: none; }
   .kan-col-name:hover { background: #F4F3EF; }
-  .kan-col-name.editing { background: var(--surface); border: 1px solid var(--accent); outline: none; }
+  .kan-col-name.editing { background: var(--surface); border: 1px solid var(--accent); outline: none; cursor: text; user-select: text; }
   .kan-add-task { background: none; border: 1px dashed var(--line-strong); border-radius: 8px; padding: 8px; width: 100%; color: var(--muted); font-size: 12.5px; cursor: pointer; margin-top: 6px; }
   .kan-add-task:hover { color: var(--accent-ink); border-color: var(--accent); background: var(--accent-soft); }
   .kan-col-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
@@ -887,6 +884,52 @@
     </div>
   </div>
 </div>
+<div class="modal-backdrop" id="editTgBd">
+  <div class="modal">
+    <div class="modal-head"><h3>Bot foydalanuvchisini tahrirlash</h3><button class="x-btn" onclick="closeEditTgUser()">×</button></div>
+    <div class="modal-body">
+      <div style="font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;">
+        ⚠️ O'zgarishlar ham Supabase'ga, ham Aros PG bazasiga yoziladi. Telegram ID o'zgartirilmaydi.
+      </div>
+      <div class="field">
+        <label>To'liq ism va familya *</label>
+        <input id="etFullName" type="text" />
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input id="etPhone" type="text" placeholder="+998..." />
+      </div>
+      <div class="field">
+        <label>Filial</label>
+        <select id="etBranch">
+          <option value="">(Filialsiz)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Lavozim</label>
+        <select id="etPosition">
+          <option value="">(Lavozimsiz)</option>
+          <option value="filial_boshligi">👔 Filial boshlig'i</option>
+          <option value="katta_sotuvchi">🛒 Katta sotuvchi</option>
+          <option value="sotuvchi">🛒 Sotuvchi</option>
+          <option value="kuryer">🚚 Kuryer</option>
+          <option value="boshliq">👔 Boshliq</option>
+          <option value="ceo">👑 CEO</option>
+          <option value="bugalter">📊 Bugalter</option>
+          <option value="hodim">🧑‍💼 Xodim</option>
+        </select>
+      </div>
+      <div style="font-size: 11.5px; color: var(--muted);">
+        🆔 Telegram ID: <code id="etChatId" style="background:#F0EFEA;padding:1px 6px;border-radius:4px;"></code>
+      </div>
+      <div class="msg" id="etMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeEditTgUser()">Bekor</button>
+      <button class="btn" id="etSaveBtn" onclick="saveEditTgUser()">Saqlash</button>
+    </div>
+  </div>
+</div>
 <div class="modal-backdrop" id="newWsBd">
   <div class="modal">
     <div class="modal-head"><h3>Yangi kompaniya</h3><button class="x-btn" onclick="closeNewWs()">×</button></div>
@@ -907,13 +950,12 @@
       <div class="field"><label>Tavsif</label><textarea id="cDesc"></textarea></div>
       <div class="field" id="cDeptField" style="display:none"><label>Bo'lim</label><select id="cDept"><option value="">(Bo'limsiz)</option></select></div>
       <div class="field"><label>Biriktirish *</label>
-        <div class="ms-wrap">
-          <div class="ms-box" id="msBox" onclick="msFocus()">
-            <div id="msChips" style="display:contents"></div>
-            <input type="text" id="msInput" class="ms-input" placeholder="Ism, filial, lavozim bo'yicha qidiring..."
-              onfocus="msOpen()" oninput="msFilter()" onkeydown="msKeyDown(event)" />
+        <div class="ms-panel">
+          <div class="ms-panel-search">
+            <input type="text" id="msInput" placeholder="Qidirish: ism, filial, lavozim..." oninput="msFilter()" />
+            <button type="button" class="ms-panel-clear" onclick="msClearAll()" title="Tanlanganlarni tozalash">Tozalash</button>
           </div>
-          <div class="ms-dropdown" id="msDropdown"></div>
+          <div class="ms-panel-list" id="msList"></div>
         </div>
         <div class="ms-summary" id="msSummary"></div>
       </div>
@@ -1314,8 +1356,10 @@ function renderPositions() {
 
   const POS_LABELS = {
     'sotuvchi': '🛒 Sotuvchi',
+    'katta_sotuvchi': '🛒 Katta sotuvchi',
     'boshliq': '👔 Boshliq',
     'filial_boshligi': '👔 Filial boshlig\'i',
+    'kuryer': '🚚 Kuryer',
     'ceo': '👑 CEO',
     'bugalter': '📊 Bugalter',
     'hodim': '🧑‍💼 Xodim',
@@ -1860,177 +1904,70 @@ function openCreateInternal(forceDeptId) {
   // Multi-select reset
   msSelected = [];
   $('msInput').value = '';
-  msRenderChips();
-  msCloseDropdown();
+  msUpdateSummary();
+  msFilter();
   $('createBd').classList.add('show');
   attachCreatePaste();
   setTimeout(()=>$('cTitle').focus(), 50);
 }
 
-// ============ MULTI-SELECT (BIRIKTIRISH) ============
-// Tanlangan elementlar — har biri shu format:
-//   { type: 'user'|'tg'|'branch'|'position'|'me', id, label }
+// ============ MULTI-SELECT (BIRIKTIRISH) — CHECKBOX PANEL ============
+// Tanlangan elementlar: [{ type: 'user'|'tg'|'branch'|'position'|'me', id, label, count? }]
 let msSelected = [];
 
-function msFocus() { $('msInput').focus(); }
+function msIsSelected(type, id) {
+  return msSelected.some(s => s.type === type && s.id === id);
+}
 
-function msOpen() {
-  $('msDropdown').classList.add('show');
+function msToggle(type, id, label, count) {
+  const idx = msSelected.findIndex(s => s.type === type && s.id === id);
+  if (idx >= 0) msSelected.splice(idx, 1);
+  else msSelected.push({ type: type, id: id, label: label, count: count || null });
+  msUpdateSummary();
   msFilter();
 }
 
-function msCloseDropdown() { $('msDropdown').classList.remove('show'); }
-
-function msFilter() {
-  const q = ($('msInput').value || '').trim().toLowerCase();
-  const selectedIds = new Set(msSelected.map(s => s.type + ':' + s.id));
-  const dd = $('msDropdown');
-  let html = '';
-
-  // 1) "Menga" option (har doim ko'rinadi)
-  if (!selectedIds.has('me:me') && ('me'.includes(q) || (myProfile?.full_name||'').toLowerCase().includes(q) || 'siz'.includes(q))) {
-    html += '<div class="ms-opt" onclick="msAdd({type:\'me\',id:\'me\',label:\'Mening o\\\'zimga\'})">' +
-      '<span class="ic">👤</span><div class="name">Mening o\'zimga</div></div>';
-  }
-
-  // 2) Filiallar (search match)
-  const branchMatches = branchesCache.filter(b => {
-    if (selectedIds.has('branch:'+b.id)) return false;
-    if (!q) return true;
-    return (b.name||'').toLowerCase().includes(q) || (b.external_id||'').toLowerCase().includes(q);
-  });
-  if (branchMatches.length) {
-    html += '<div class="ms-group-head"><span>▢ FILIAL — butun jamoasiga</span></div>';
-    branchMatches.slice(0, 30).forEach(b => {
-      const count = tgUsersCache.filter(u => u.branch_id === b.id && u.state === 'completed').length;
-      const enabled = count > 0;
-      html += '<div class="ms-opt' + (enabled ? '' : ' disabled') + '" ' +
-        (enabled ? 'onclick="msAdd({type:\'branch\',id:\''+b.id+'\',label:\''+(b.name||'').replace(/\'/g,"\\'")+'\',count:'+count+'})"' : '') +
-        '><span class="ic">▢</span><div class="name">' + escapeHtml(b.name) +
-        '</div><span class="sub">' + count + ' xodim</span></div>';
-    });
-  }
-
-  // 3) Lavozimlar (search match)
-  const positions = [...new Set(tgUsersCache.map(u => u.position).filter(Boolean))].sort();
-  const posMatches = positions.filter(p => {
-    if (selectedIds.has('position:'+p)) return false;
-    if (!q) return true;
-    return p.toLowerCase().includes(q);
-  });
-  if (posMatches.length) {
-    html += '<div class="ms-group-head"><span>⌬ LAVOZIM — barchaga</span></div>';
-    posMatches.forEach(p => {
-      const count = tgUsersCache.filter(u => u.position === p && u.state === 'completed').length;
-      const enabled = count > 0;
-      html += '<div class="ms-opt' + (enabled ? '' : ' disabled') + '" ' +
-        (enabled ? 'onclick="msAdd({type:\'position\',id:\''+p.replace(/\'/g,"\\'")+'\',label:\''+p.replace(/\'/g,"\\'")+'\',count:'+count+'})"' : '') +
-        '><span class="ic">⌬</span><div class="name">' + escapeHtml(p) +
-        '</div><span class="sub">' + count + ' xodim</span></div>';
-    });
-  }
-
-  // 4) Sayt foydalanuvchilari
-  const userMatches = wsMembers.filter(m => {
-    if (m.user_id === me.id) return false;
-    if (selectedIds.has('user:'+m.user_id)) return false;
-    if (!q) return true;
-    const name = (m.profile?.full_name||'').toLowerCase();
-    return name.includes(q);
-  });
-  if (userMatches.length) {
-    html += '<div class="ms-group-head"><span>👥 SAYT FOYDALANUVCHILARI</span></div>';
-    userMatches.slice(0, 30).forEach(m => {
-      const name = m.profile?.full_name || 'A\'zo';
-      html += '<div class="ms-opt" onclick="msAdd({type:\'user\',id:\''+m.user_id+'\',label:\''+name.replace(/\'/g,"\\'")+'\'})">' +
-        '<span class="ic">👤</span><div class="name">' + escapeHtml(name) + '</div></div>';
-    });
-  }
-
-  // 5) TG bot foydalanuvchilari (saytsiz)
-  const tgMatches = tgUsersCache.filter(u => {
-    if (u.linked_user_id) return false; // saytda bog'langanlar yuqorida
-    if (u.state !== 'completed') return false;
-    if (selectedIds.has('tg:'+u.id)) return false;
-    if (!q) return true;
-    const name = (u.full_name||'').toLowerCase();
-    return name.includes(q) || (u.phone||'').toLowerCase().includes(q) || (u.position||'').toLowerCase().includes(q);
-  });
-  if (tgMatches.length) {
-    html += '<div class="ms-group-head"><span>✈ TELEGRAM BOT FOYDALANUVCHILARI</span></div>';
-    tgMatches.slice(0, 50).forEach(u => {
-      const name = u.full_name || u.tg_username || 'Bot user';
-      const branchName = u.branch_id ? (branchesCache.find(b => b.id === u.branch_id) || {}).name || '' : '';
-      const sub = [u.position, branchName].filter(Boolean).join(' · ');
-      html += '<div class="ms-opt" onclick="msAdd({type:\'tg\',id:\''+u.id+'\',label:\''+name.replace(/\'/g,"\\'")+'\'})">' +
-        '<span class="ic">✈</span><div class="name">' + escapeHtml(name) + '</div>' +
-        (sub ? '<span class="sub">' + escapeHtml(sub) + '</span>' : '') + '</div>';
-    });
-  }
-
-  if (!html) html = '<div class="ms-empty">Hech narsa topilmadi</div>';
-  dd.innerHTML = html;
-}
-
-function msAdd(item) {
-  // me — alohida, faqat 1ta bo'lishi mumkin (va boshqalar bilan)
-  msSelected.push(item);
-  $('msInput').value = '';
-  msRenderChips();
-  msFilter();
-  $('msInput').focus();
-}
-
-function msRemove(idx) {
-  msSelected.splice(idx, 1);
-  msRenderChips();
+function msClearAll() {
+  if (!msSelected.length) return;
+  msSelected = [];
+  msUpdateSummary();
   msFilter();
 }
 
-function msRenderChips() {
-  const wrap = $('msChips');
-  if (!msSelected.length) {
-    wrap.innerHTML = '';
-    $('msSummary').textContent = '';
-    return;
+function msUpdateSummary() {
+  const el = $('msSummary');
+  if (!el) return;
+  const total = msCountFinal();
+  if (total === 0) {
+    el.textContent = '';
+    el.classList.remove('has-selection');
+  } else if (total === 1) {
+    el.textContent = '✓ 1 ta xodimga vazifa beriladi';
+    el.classList.add('has-selection');
+  } else {
+    el.textContent = '✓ ' + total + ' ta xodimga (har biriga alohida vazifa) beriladi';
+    el.classList.add('has-selection');
   }
-  wrap.innerHTML = msSelected.map((s, i) => {
-    let cls = '';
-    let icon = '👤';
-    if (s.type === 'branch') { cls = 'branch'; icon = '▢'; }
-    else if (s.type === 'position') { cls = 'position'; icon = '⌬'; }
-    else if (s.type === 'tg') icon = '✈';
-    else if (s.type === 'me') icon = '👤';
-    const countText = s.count ? ' (' + s.count + ')' : '';
-    return '<span class="ms-chip ' + cls + '">' + icon + ' ' + escapeHtml(s.label) + countText +
-      '<span class="ms-chip-x" onclick="event.stopPropagation(); msRemove('+i+')">×</span></span>';
-  }).join('');
-  // Summary
-  const totalUsers = msCountFinal();
-  $('msSummary').textContent = totalUsers > 1
-    ? '→ ' + totalUsers + ' ta vazifa yaratiladi (har bir xodim uchun alohida)'
-    : (totalUsers === 1 ? '→ 1 ta vazifa yaratiladi' : '');
 }
 
 function msCountFinal() {
-  // Tanlangan items dan haqiqiy assignee userlarni hisoblaymiz
   const finalIds = new Set();
   for (const s of msSelected) {
-    if (s.type === 'me') finalIds.add('me:'+me.id);
-    else if (s.type === 'user') finalIds.add('user:'+s.id);
-    else if (s.type === 'tg') finalIds.add('tg:'+s.id);
+    if (s.type === 'me') finalIds.add('me:' + me.id);
+    else if (s.type === 'user') finalIds.add('user:' + s.id);
+    else if (s.type === 'tg') finalIds.add('tg:' + s.id);
     else if (s.type === 'branch') {
       tgUsersCache.forEach(u => {
         if (u.branch_id === s.id && u.state === 'completed') {
-          if (u.linked_user_id) finalIds.add('user:'+u.linked_user_id);
-          else finalIds.add('tg:'+u.id);
+          if (u.linked_user_id) finalIds.add('user:' + u.linked_user_id);
+          else finalIds.add('tg:' + u.id);
         }
       });
     } else if (s.type === 'position') {
       tgUsersCache.forEach(u => {
         if (u.position === s.id && u.state === 'completed') {
-          if (u.linked_user_id) finalIds.add('user:'+u.linked_user_id);
-          else finalIds.add('tg:'+u.id);
+          if (u.linked_user_id) finalIds.add('user:' + u.linked_user_id);
+          else finalIds.add('tg:' + u.id);
         }
       });
     }
@@ -2038,20 +1975,121 @@ function msCountFinal() {
   return finalIds.size;
 }
 
-function msKeyDown(e) {
-  if (e.key === 'Backspace' && !$('msInput').value && msSelected.length) {
-    msSelected.pop();
-    msRenderChips();
-    msFilter();
-  }
-  if (e.key === 'Escape') { msCloseDropdown(); $('msInput').blur(); }
+function msMatchesQuery(text, q) {
+  if (!q) return true;
+  return (text || '').toLowerCase().includes(q);
 }
 
-// dropdown'ни tashqi click bilan yopish
-document.addEventListener('click', (e) => {
-  const wrap = document.querySelector('#createBd .ms-wrap');
-  if (wrap && !wrap.contains(e.target)) msCloseDropdown();
-});
+// Lavozim labels (Lavozimlar sahifasi bilan bir xil)
+const MS_POS_LABELS = {
+  'sotuvchi': '🛒 Sotuvchi',
+  'katta_sotuvchi': '🛒 Katta sotuvchi',
+  'boshliq': '👔 Boshliq',
+  'filial_boshligi': '👔 Filial boshlig\'i',
+  'kuryer': '🚚 Kuryer',
+  'ceo': '👑 CEO',
+  'bugalter': '📊 Bugalter',
+  'hodim': '🧑‍💼 Xodim'
+};
+
+function msFilter() {
+  const inp = $('msInput');
+  const q = (inp ? inp.value : '').trim().toLowerCase();
+  const list = $('msList');
+  if (!list) return;
+  let html = '';
+
+  // 1. Mening o'zimga
+  const meName = (myProfile && myProfile.full_name) || 'Siz';
+  if (msMatchesQuery('mening ozimga siz me ' + meName, q)) {
+    const sel = msIsSelected('me', 'me');
+    html += '<div class="ms-opt' + (sel ? ' selected' : '') +
+      '" onclick="msToggle(\'me\',\'me\',\'Mening o\\\'zimga\')">' +
+      '<div class="ms-check">✓</div><span class="ic">👤</span><div class="name">Mening o\'zimga</div></div>';
+  }
+
+  // 2. Filiallar — butun jamoaga
+  const branchMatches = (branchesCache || []).filter(b =>
+    msMatchesQuery((b.name || '') + ' ' + (b.external_id || ''), q)
+  );
+  if (branchMatches.length) {
+    html += '<div class="ms-group-head">▢ FILIAL — butun jamoasiga</div>';
+    branchMatches.forEach(b => {
+      const count = tgUsersCache.filter(u => u.branch_id === b.id && u.state === 'completed').length;
+      const enabled = count > 0;
+      const sel = msIsSelected('branch', b.id);
+      const safeName = (b.name || '').replace(/'/g, "\\'");
+      html += '<div class="ms-opt' + (sel ? ' selected' : '') + (enabled ? '' : ' disabled') + '" ' +
+        (enabled ? 'onclick="msToggle(\'branch\',\'' + b.id + '\',\'' + safeName + '\',' + count + ')"' : '') +
+        '><div class="ms-check">✓</div><span class="ic">▢</span><div class="name">' +
+        escapeHtml(b.name) + '</div><span class="sub">' + count + ' xodim</span></div>';
+    });
+  }
+
+  // 3. Lavozimlar — barcha xodimlarga
+  const positions = [...new Set(tgUsersCache.map(u => u.position).filter(Boolean))].sort();
+  const posMatches = positions.filter(p => {
+    const label = MS_POS_LABELS[p] || p;
+    return msMatchesQuery(p + ' ' + label, q);
+  });
+  if (posMatches.length) {
+    html += '<div class="ms-group-head">⌬ LAVOZIM — barchaga</div>';
+    posMatches.forEach(p => {
+      const count = tgUsersCache.filter(u => u.position === p && u.state === 'completed').length;
+      const enabled = count > 0;
+      const sel = msIsSelected('position', p);
+      const safeId = p.replace(/'/g, "\\'");
+      const label = MS_POS_LABELS[p] || p;
+      html += '<div class="ms-opt' + (sel ? ' selected' : '') + (enabled ? '' : ' disabled') + '" ' +
+        (enabled ? 'onclick="msToggle(\'position\',\'' + safeId + '\',\'' + safeId + '\',' + count + ')"' : '') +
+        '><div class="ms-check">✓</div><span class="ic">⌬</span><div class="name">' +
+        escapeHtml(label) + '</div><span class="sub">' + count + ' xodim</span></div>';
+    });
+  }
+
+  // 4. Sayt foydalanuvchilari
+  const userMatches = (wsMembers || []).filter(m => {
+    if (m.user_id === me.id) return false;
+    return msMatchesQuery((m.profile && m.profile.full_name) || '', q);
+  });
+  if (userMatches.length) {
+    html += '<div class="ms-group-head">👥 SAYT FOYDALANUVCHILARI</div>';
+    userMatches.forEach(m => {
+      const name = (m.profile && m.profile.full_name) || "A'zo";
+      const sel = msIsSelected('user', m.user_id);
+      const safeName = name.replace(/'/g, "\\'");
+      html += '<div class="ms-opt' + (sel ? ' selected' : '') +
+        '" onclick="msToggle(\'user\',\'' + m.user_id + '\',\'' + safeName + '\')">' +
+        '<div class="ms-check">✓</div><span class="ic">👤</span><div class="name">' +
+        escapeHtml(name) + '</div></div>';
+    });
+  }
+
+  // 5. TG bot foydalanuvchilari (saytda yo'q bo'lganlar)
+  const tgMatches = tgUsersCache.filter(u => {
+    if (u.linked_user_id) return false;
+    if (u.state !== 'completed') return false;
+    return msMatchesQuery((u.full_name || '') + ' ' + (u.phone || '') + ' ' + (u.position || ''), q);
+  });
+  if (tgMatches.length) {
+    html += '<div class="ms-group-head">✈ TELEGRAM BOT FOYDALANUVCHILARI</div>';
+    tgMatches.forEach(u => {
+      const name = u.full_name || u.tg_username || 'Bot user';
+      const branchName = u.branch_id ? ((branchesCache.find(b => b.id === u.branch_id) || {}).name || '') : '';
+      const posLabel = u.position ? (MS_POS_LABELS[u.position] || u.position) : '';
+      const sub = [posLabel, branchName].filter(Boolean).join(' · ');
+      const sel = msIsSelected('tg', u.id);
+      const safeName = name.replace(/'/g, "\\'");
+      html += '<div class="ms-opt' + (sel ? ' selected' : '') +
+        '" onclick="msToggle(\'tg\',\'' + u.id + '\',\'' + safeName + '\')">' +
+        '<div class="ms-check">✓</div><span class="ic">✈</span><div class="name">' +
+        escapeHtml(name) + '</div>' + (sub ? '<span class="sub">' + escapeHtml(sub) + '</span>' : '') + '</div>';
+    });
+  }
+
+  if (!html) html = '<div class="ms-empty">Hech narsa topilmadi</div>';
+  list.innerHTML = html;
+}
 
 function attachCreatePaste() {
   detachCreatePaste();
@@ -3028,7 +3066,7 @@ function renderKanban() {
     const colorDot = '<span class="kan-col-color" style="background:' + (col.color || '#94A3B8') + '"></span>';
     const nameHtml = (col.is_default || isFb)
       ? '<span class="kan-col-name" style="cursor: default;">' + escapeHtml(col.name) + '</span>'
-      : '<span class="kan-col-name" onclick="editColName(\''+colId+'\', this)">' + escapeHtml(col.name) + '</span>';
+      : '<span class="kan-col-name" ondblclick="event.stopPropagation(); editColName(\''+colId+'\', this)" title="Ikki marta bosing — tahrirlash">' + escapeHtml(col.name) + '</span>';
     const actions = (col.is_default || isFb)
       ? ''
       : '<div class="kan-col-actions"><button class="kan-col-action-btn" title="O\'chirish" onclick="event.stopPropagation(); deleteColumn(\''+colId+'\')">×</button></div>';
@@ -3703,6 +3741,7 @@ function renderTgUsers(intg) {
     const actions = [];
     if (u.state === 'completed') {
       actions.push('<button class="btn sm secondary" onclick="quickAssignTg(\''+u.id+'\')">Vazifa berish</button>');
+      actions.push('<button class="btn sm secondary" onclick="openEditTgUser(\''+u.id+'\')">✎ Tahrirlash</button>');
       if (!u.linked_user_id) {
         actions.push('<button class="btn sm" onclick="openInviteFromTg(\''+u.id+'\')">Saytga taklif</button>');
       }
@@ -3744,6 +3783,74 @@ async function quickAssignTg(tgBotUserId) {
     // Detail modal'нi ochaylik tafsilotlar uchun
     setTimeout(() => openDetail(data.id), 100);
   } catch (e) { toast(translateErr(e.message), 'err'); }
+}
+
+// ============ EDIT TG USER ============
+let editTgUserId = null;
+function openEditTgUser(tgBotUserId) {
+  const u = tgUsersCache.find(x => x.id === tgBotUserId);
+  if (!u) { toast('Foydalanuvchi topilmadi', 'err'); return; }
+  editTgUserId = tgBotUserId;
+  $('etFullName').value = u.full_name || '';
+  $('etPhone').value = u.phone || '';
+  $('etPosition').value = u.position || '';
+  $('etChatId').textContent = u.tg_chat_id || '';
+  // Filiallar
+  let opts = '<option value="">(Filialsiz)</option>';
+  (branchesCache || []).forEach(b => {
+    opts += '<option value="' + b.id + '"' + (u.branch_id === b.id ? ' selected' : '') + '>' + escapeHtml(b.name) + '</option>';
+  });
+  $('etBranch').innerHTML = opts;
+  hideMsg($('etMsg'));
+  $('editTgBd').classList.add('show');
+}
+
+function closeEditTgUser() {
+  $('editTgBd').classList.remove('show');
+  editTgUserId = null;
+}
+
+async function saveEditTgUser() {
+  if (!editTgUserId) return;
+  const u = tgUsersCache.find(x => x.id === editTgUserId);
+  if (!u) return;
+  const fullName = $('etFullName').value.trim();
+  const phone = $('etPhone').value.trim();
+  const branchId = $('etBranch').value || null;
+  const position = $('etPosition').value || null;
+  if (!fullName) { showMsg($('etMsg'), 'Ism va familya kerak.', 'err'); return; }
+  const branchName = branchId ? ((branchesCache.find(b => b.id === branchId) || {}).name || '') : '';
+  const externalId = branchId ? ((branchesCache.find(b => b.id === branchId) || {}).external_id || '') : '';
+
+  const btn = $('etSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
+  try {
+    // 1) Supabase tg_bot_users update
+    const { error: e1 } = await sb.from('tg_bot_users').update({
+      full_name: fullName,
+      phone: phone || null,
+      branch_id: branchId,
+      position: position
+    }).eq('id', editTgUserId);
+    if (e1) throw e1;
+
+    // 2) Aros PG users — chaqiramiz n8n webhook orqali (REST'ga oddiy fetch)
+    //    Variant: agar sync webhook bor bo'lsa shuni chaqiramiz. Hozircha skipping:
+    //    Supabase yetarli (mini-app o'zining sinxron mexanizmiga ega).
+
+    // Local cache yangilash
+    u.full_name = fullName;
+    u.phone = phone || null;
+    u.branch_id = branchId;
+    u.position = position;
+
+    closeEditTgUser();
+    toast('✓ Yangilandi', 'ok');
+    renderTgUsers(window._curTgIntg);
+  } catch (e) {
+    showMsg($('etMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Saqlash';
+  }
 }
 
 let inviteFromTgUserId = null;
