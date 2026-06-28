@@ -88,6 +88,9 @@
   .side-link:hover { background: var(--side-hover); }
   .side-link.active { background: var(--side-active); }
   .side-link .ic { width: 16px; opacity: .8; text-align: center; }
+  .side-link.side-group { font-weight: 600; }
+  .side-link.side-group.has-active { color: var(--accent-ink); }
+  .side-link.side-sub { padding-left: 42px; font-size: 13px; font-weight: 400; }
   .side-section { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--side-muted); padding: 14px 12px 6px; display: flex; justify-content: space-between; align-items: center; }
   .side-section .add-mini { background: none; border: none; color: var(--side-muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; font-size: 14px; line-height: 1; }
   .side-section .add-mini:hover { color: var(--side-ink); background: var(--side-hover); }
@@ -799,6 +802,22 @@
           <button class="btn secondary" onclick="resetBotSettings()">Default'gа qaytarish</button>
         </div>
         <div class="msg" id="bsMsg"></div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Telegram'da admin sifatida bog'lanish</h3>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px;">
+          Bog'langandan keyin, yangi foydalanuvchilar ro'yxatdan o'tganda <b>siz Telegram'дa darrov xabar olasiz</b> va botda Tasdiqlash/Bekor tugmalarini bosa olasiz.
+          <br><br>
+          ℹ Link 1 soat davomida amal qiladi va faqat bir marta ishlatiladi.
+        </div>
+        <button class="btn" onclick="generateAdminLink()">🔗 Bog'lash linkini olish</button>
+        <div id="bsAdminLinkResult" style="display:none;margin-top:14px;padding:12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line);">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Linkni Telegram'дa oching:</div>
+          <a id="bsAdminLink" href="#" target="_blank" style="display:block;font-size:14px;font-weight:600;color:var(--accent-ink);word-break:break-all;text-decoration:none;"></a>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Yoki nusxalab oling: <button class="link-btn" onclick="copyAdminLink()" style="color:var(--accent-ink);">📋 Nusxalash</button></div>
+        </div>
+        <div class="msg" id="bsAdminLinkMsg"></div>
       </div>
 
       <div class="settings-section" style="border-color: #FECACA;">
@@ -1939,9 +1958,23 @@ function renderSidebar() {
     html += '<button class="side-link ' + (currentPage === 'team' ? 'active' : '') + '" onclick="goPage(\'team\')"><span class="ic">☆</span> Jamoa</button>';
     html += '<button class="side-link ' + (currentPage === 'integrations' ? 'active' : '') + '" onclick="goPage(\'integrations\')"><span class="ic">⚡</span> Integratsiyalar</button>';
     if (canManage) {
-      html += '<button class="side-link ' + (currentPage === 'tgusers' ? 'active' : '') + '" onclick="goPage(\'tgusers\')"><span class="ic">✈</span> Bot foydalanuvchilari</button>';
-      html += '<button class="side-link ' + (currentPage === 'botsettings' ? 'active' : '') + '" onclick="goPage(\'botsettings\')"><span class="ic">⚙</span> Bot sozlamalari</button>';
-      html += '<button class="side-link ' + (currentPage === 'botcommands' ? 'active' : '') + '" onclick="goPage(\'botcommands\')"><span class="ic">⌘</span> Bot komandalar</button>';
+      // Telegram section — faqat bot ulangan bo'lsa ko'rinadi
+      const hasTg = (integrationsCache || []).some(i => i.tool === 'telegram' && i.is_enabled);
+      if (hasTg) {
+        const inTgSection = ['tgusers', 'botsettings', 'botcommands'].includes(currentPage);
+        const tgExpanded = window._tgSbOpen === undefined
+          ? (localStorage.getItem('sidebar_tg_open') !== 'false' || inTgSection)
+          : (window._tgSbOpen || inTgSection);
+        html += '<button class="side-link side-group ' + (inTgSection ? 'has-active' : '') + '" onclick="toggleTgSidebar()">' +
+          '<span class="ic">✈</span> Telegram' +
+          '<span style="margin-left:auto;font-size:10px;color:var(--muted);">' + (tgExpanded ? '▼' : '▶') + '</span>' +
+        '</button>';
+        if (tgExpanded) {
+          html += '<button class="side-link side-sub ' + (currentPage === 'tgusers' ? 'active' : '') + '" onclick="goPage(\'tgusers\')">Foydalanuvchilar</button>';
+          html += '<button class="side-link side-sub ' + (currentPage === 'botsettings' ? 'active' : '') + '" onclick="goPage(\'botsettings\')">Sozlamalar</button>';
+          html += '<button class="side-link side-sub ' + (currentPage === 'botcommands' ? 'active' : '') + '" onclick="goPage(\'botcommands\')">Komandalar</button>';
+        }
+      }
       html += '<button class="side-link ' + (currentPage === 'branches' ? 'active' : '') + '" onclick="goPage(\'branches\')"><span class="ic">▢</span> Filiallar</button>';
       html += '<button class="side-link ' + (currentPage === 'positions' ? 'active' : '') + '" onclick="goPage(\'positions\')"><span class="ic">⌬</span> Lavozimlar</button>';
     }
@@ -2170,6 +2203,15 @@ async function onbFinish() {
 async function createWs() { onbFinish(); }
 
 // ============ ROUTING ============
+function toggleTgSidebar() {
+  const cur = window._tgSbOpen === undefined
+    ? (localStorage.getItem('sidebar_tg_open') !== 'false')
+    : window._tgSbOpen;
+  window._tgSbOpen = !cur;
+  localStorage.setItem('sidebar_tg_open', window._tgSbOpen ? 'true' : 'false');
+  renderSidebar();
+}
+
 function goPage(p) {
   currentPage = p;
   if (p !== 'department') currentDeptId = null;
@@ -3331,6 +3373,42 @@ async function resetBotWebhook() {
     'ok');
 }
 
+// Admin link generatsiya
+let _lastAdminLink = '';
+async function generateAdminLink() {
+  if (!_curBotIntg) { toast('Bot ulanmagan', 'err'); return; }
+  hideMsg($('bsAdminLinkMsg'));
+  try {
+    // Random token yaratamиz
+    const token = 'al_' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
+    const { error } = await sb.from('admin_link_tokens').insert({
+      token,
+      workspace_id: currentWs.id,
+      owner_id: me.id,
+      integration_id: _curBotIntg.id
+    });
+    if (error) throw error;
+
+    const botUsername = _curBotIntg.bot_username;
+    const url = 'https://t.me/' + botUsername + '?start=admin_' + token;
+    _lastAdminLink = url;
+    $('bsAdminLink').textContent = url;
+    $('bsAdminLink').href = url;
+    $('bsAdminLinkResult').style.display = 'block';
+    toast('✓ Link tayyor', 'ok');
+  } catch (e) {
+    showMsg($('bsAdminLinkMsg'), translateErr(e.message), 'err');
+  }
+}
+
+function copyAdminLink() {
+  if (!_lastAdminLink) return;
+  navigator.clipboard.writeText(_lastAdminLink).then(
+    () => toast('✓ Nusxalandi', 'ok'),
+    () => toast('Nusxalash bo\'lmadi — qo\'lda nusxalang', 'err')
+  );
+}
+
 // ============ BOT KOMANDALAR ============
 let cmdsCache = [];
 
@@ -4389,7 +4467,23 @@ function closeInvite() {
 }
 async function cancelInvite(id) {
   if (!confirm('Taklifni bekor qilasizmi?')) return;
-  try { const { error } = await sb.from('invitations').update({ status: 'cancelled' }).eq('id', id); if (error) throw error; toast('Bekor qilindi', 'ok'); if (currentPage === 'team') renderTeam(); } catch (e) { toast(translateErr(e.message), 'err'); }
+  try {
+    // Avval o'chirib ko'ramиz (toza yo'l). Agar RLS yoki FK to'sib qo'ysa, status'ni yangilab cancelled qilamиz.
+    const { data: del, error: delErr } = await sb.from('invitations').delete().eq('id', id).select();
+    if (delErr) {
+      // Fallback: status='cancelled'
+      const { data: upd, error: updErr } = await sb.from('invitations').update({ status: 'cancelled' }).eq('id', id).select();
+      if (updErr) throw updErr;
+      if (!upd || upd.length === 0) throw new Error('Bekor qilib bo\'lmadi — sizda ruxsat yo\'q (RLS).');
+    } else if (!del || del.length === 0) {
+      // Hech narsa o'chmadi — ehtimol RLS to'sgan
+      throw new Error('Bekor qilib bo\'lmadi — ehtimol sizda ruxsat yo\'q.');
+    }
+    toast('✓ Bekor qilindi', 'ok');
+    if (currentPage === 'team') renderTeam();
+  } catch (e) {
+    toast(translateErr(e.message), 'err');
+  }
 }
 async function changeMemberRole(uid, role) {
   try {
@@ -4549,27 +4643,32 @@ async function loadTgUsers() {
   loadPendingCount();
 }
 
-// ============ PENDING USERS (Aros approval flow) ============
-const PENDING_API = 'https://n8n.arosmarket.com/webhook/aros-pending-list';
-const ACTION_API  = 'https://n8n.arosmarket.com/webhook/aros-user-action';
+// ============ PENDING USERS (multi-tenant — Supabase) ============
 let _pendingCache = [];
 
 async function loadPendingCount() {
-  // Faqat Aros workspace'дa va owner uchun ko'rinadi
+  // Faqat workspace egasi pending'larni ko'radi
   if (myWsRole !== 'owner') { $('pendingBanner').style.display = 'none'; return; }
-  // Aros workspace tekshir: name yoki workspace_id orqali (eng oddiy: bu workspace TG integration bilan ishlatadimi)
+  // Telegram integratsiya ulanganmi?
+  const tgIntg = (integrationsCache || []).find(i => i.tool === 'telegram' && i.is_enabled);
+  if (!tgIntg) { $('pendingBanner').style.display = 'none'; return; }
   try {
-    const r = await fetch(PENDING_API);
-    if (!r.ok) { $('pendingBanner').style.display = 'none'; return; }
-    const data = await r.json();
-    _pendingCache = (data && data.users) || [];
+    // Supabase'dan: shu integration'ning pending bot foydalanuvchilari
+    const { data, error } = await sb.from('tg_bot_users')
+      .select('id, tg_chat_id, tg_username, full_name, created_at')
+      .eq('integration_id', tgIntg.id)
+      .eq('state', 'pending')
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    _pendingCache = data || [];
     if (_pendingCache.length) {
       $('pendingCount').textContent = _pendingCache.length;
       $('pendingBanner').style.display = 'block';
     } else {
       $('pendingBanner').style.display = 'none';
     }
-  } catch(e) {
+  } catch (e) {
+    console.warn('Pending load error:', e);
     $('pendingBanner').style.display = 'none';
   }
 }
@@ -4589,10 +4688,19 @@ async function loadPendingList() {
   wrap.textContent = 'Yuklanmoqda...';
   list.innerHTML = '';
   try {
-    const r = await fetch(PENDING_API);
-    if (!r.ok) throw new Error('Server xatosi');
-    const data = await r.json();
-    _pendingCache = (data && data.users) || [];
+    const tgIntg = (integrationsCache || []).find(i => i.tool === 'telegram' && i.is_enabled);
+    if (!tgIntg) {
+      wrap.innerHTML = '<div style="color:var(--muted);">Telegram bot ulanmagan.</div>';
+      return;
+    }
+    const { data, error } = await sb.from('tg_bot_users')
+      .select('id, tg_chat_id, tg_username, full_name, created_at')
+      .eq('integration_id', tgIntg.id)
+      .eq('state', 'pending')
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    _pendingCache = data || [];
+
     if (!_pendingCache.length) {
       wrap.innerHTML = '<div style="text-align:center;padding:30px 0;font-size:14px;color:var(--muted);">✅ Tasdiqlashga kutayotgan foydalanuvchi yo\'q</div>';
       $('pendingBanner').style.display = 'none';
@@ -4600,23 +4708,24 @@ async function loadPendingList() {
     }
     wrap.textContent = _pendingCache.length + ' ta foydalanuvchi:';
     list.innerHTML = _pendingCache.map(u => {
-      const safeChat = escapeHtml(String(u.telegram_id));
-      const fullName = escapeHtml(u.ism || '—');
-      const phone = escapeHtml(u.telefon || '—');
-      const branch = escapeHtml(u.warehouse_name || '—');
-      const position = escapeHtml(u.lavozim || '—');
+      const safeId = u.id;
+      const fullName = escapeHtml(u.full_name || '(ism yo\'q)');
+      const safeNameJs = (u.full_name || '').replace(/'/g, "\\'").replace(/\\/g, "\\\\");
+      const chat = u.tg_chat_id;
+      const uname = u.tg_username ? '@' + escapeHtml(u.tg_username) : '';
+      const ago = u.created_at ? timeAgo(u.created_at) : '';
       return '<div class="card" style="padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;">' +
         '<div>' +
           '<div style="font-weight:600;font-size:14.5px;margin-bottom:6px;">' + fullName + '</div>' +
           '<div style="font-size:12.5px;color:var(--muted);line-height:1.5;">' +
-            '📞 <code style="background:var(--surface-2);padding:1px 5px;border-radius:3px;">' + phone + '</code><br>' +
-            '▢ ' + branch + ' · ⌬ ' + position + '<br>' +
-            '🆔 <code style="background:var(--surface-2);padding:1px 5px;border-radius:3px;">' + safeChat + '</code>' +
+            (uname ? uname + '<br>' : '') +
+            '🆔 <code style="background:var(--surface-2);padding:1px 5px;border-radius:3px;">' + chat + '</code>' +
+            (ago ? ' · ' + ago : '') +
           '</div>' +
         '</div>' +
         '<div style="display:flex;flex-direction:column;gap:6px;">' +
-          '<button class="btn sm" onclick="pendingApprove(\'' + safeChat + '\', \'' + fullName.replace(/\'/g,"\\'") + '\')" style="white-space:nowrap;">✓ Tasdiqlash</button>' +
-          '<button class="btn sm secondary" onclick="pendingReject(\'' + safeChat + '\', \'' + fullName.replace(/\'/g,"\\'") + '\')" style="white-space:nowrap;">✗ Bekor</button>' +
+          '<button class="btn sm" onclick="pendingApprove(\'' + safeId + '\', \'' + safeNameJs + '\')" style="white-space:nowrap;">✓ Tasdiqlash</button>' +
+          '<button class="btn sm secondary" onclick="pendingReject(\'' + safeId + '\', \'' + safeNameJs + '\')" style="white-space:nowrap;">✗ Bekor</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -4625,41 +4734,51 @@ async function loadPendingList() {
   }
 }
 
-async function pendingApprove(chatId, name) {
+async function pendingApprove(botUserId, name) {
   if (!confirm('"' + name + '" ni tasdiqlashni xohlaysizmi?')) return;
   try {
-    const r = await fetch(ACTION_API + '?action=approve&chat_id=' + encodeURIComponent(chatId));
-    if (!r.ok) throw new Error('Server xatosi');
-    const data = await r.json();
-    if (data.ok) {
-      toast('✓ ' + name + ' tasdiqlandi', 'ok');
-      loadPendingList();
-      // tg users list ham yangilanadi (yangi user qo'shilgan bo'lishi mumkin)
-      setTimeout(() => { if (currentPage === 'tgusers') loadTgUsers(); }, 1000);
-    } else {
-      throw new Error(data.error || 'Xatolik');
-    }
+    const { data, error } = await sb.functions.invoke('tg-admin-action', {
+      body: { tg_bot_user_id: botUserId, action: 'approve' }
+    });
+    if (error) throw error;
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Xatolik');
+    toast('✓ ' + name + ' tasdiqlandi', 'ok');
+    loadPendingList();
+    // tg users list ham yangilash
+    setTimeout(() => { if (currentPage === 'tgusers') loadTgUsers(); }, 500);
   } catch (e) {
-    toast('❌ ' + e.message, 'err');
+    toast('❌ ' + (e.message || e), 'err');
   }
 }
 
-async function pendingReject(chatId, name) {
+async function pendingReject(botUserId, name) {
   const reason = prompt('Sabab (foydalanuvchi ko\'radi, ixtiyoriy):', '');
   if (reason === null) return;
   try {
-    const r = await fetch(ACTION_API + '?action=reject&chat_id=' + encodeURIComponent(chatId) + (reason ? '&reason=' + encodeURIComponent(reason) : ''));
-    if (!r.ok) throw new Error('Server xatosi');
-    const data = await r.json();
-    if (data.ok) {
-      toast('✗ ' + name + ' bekor qilindi', 'ok');
-      loadPendingList();
-    } else {
-      throw new Error(data.error || 'Xatolik');
-    }
+    const { data, error } = await sb.functions.invoke('tg-admin-action', {
+      body: { tg_bot_user_id: botUserId, action: 'reject', reason: reason || null }
+    });
+    if (error) throw error;
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Xatolik');
+    toast('✗ ' + name + ' bekor qilindi', 'ok');
+    loadPendingList();
   } catch (e) {
-    toast('❌ ' + e.message, 'err');
+    toast('❌ ' + (e.message || e), 'err');
   }
+}
+
+// Helper — "X daqiqa oldin" format
+function timeAgo(iso) {
+  if (!iso) return '';
+  const ms = Date.now() - new Date(iso).getTime();
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return s + ' soniya oldin';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + ' daqiqa oldin';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' soat oldin';
+  const d = Math.floor(h / 24);
+  return d + ' kun oldin';
 }
 
 function renderTgUsersFiltered() { renderTgUsers(window._curTgIntg); }
