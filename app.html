@@ -68,7 +68,11 @@
   /* APP */
   .app { display: none; min-height: 100vh; min-height: 100dvh; }
   .app.show { display: grid; grid-template-columns: var(--sidebar-w) 1fr; }
-  .sidebar { background: var(--side); color: var(--side-ink); padding: 16px 12px; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; position: sticky; top: 0; }
+  .sidebar { background: var(--side); color: var(--side-ink); padding: 16px 12px; display: flex; flex-direction: column; height: 100vh; height: 100dvh; position: sticky; top: 0; overflow-y: auto; overflow-x: hidden; }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+  .main-col { display: flex; flex-direction: column; min-width: 0; }
   .ws-switch { position: relative; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .ws-switch:hover { background: rgba(255,255,255,.07); }
   .ws-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; flex-shrink: 0; }
@@ -308,15 +312,24 @@
   .onb-dot.done { background:var(--accent-ink); }
 
   /* Org chart */
-  .oc-node { position: absolute; min-width: 160px; max-width: 200px; background: var(--surface); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); cursor: pointer; transition: box-shadow .15s, transform .15s; }
-  .oc-node:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); transform: translateY(-1px); }
-  .oc-node .oc-top { padding: 8px 12px 6px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
+  .oc-node { position: absolute; background: var(--surface); border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,.08); cursor: grab; transition: box-shadow .15s, transform .15s; border: 1.5px solid transparent; user-select: none; }
+  .oc-node:active { cursor: grabbing; }
+  .oc-node:hover { box-shadow: 0 6px 20px rgba(0,0,0,.14); transform: translateY(-1px); }
+  .oc-node:hover .oc-actions { opacity: 1; }
+  .oc-node:hover .oc-drag-handle { opacity: .6; }
+  .oc-drag-handle { position: absolute; top: 4px; left: 6px; font-size: 10px; color: var(--muted); letter-spacing: -1px; opacity: 0; transition: opacity .12s; pointer-events: none; }
+  .oc-node .oc-top { padding: 10px 12px 8px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); border-radius: 11px 11px 0 0; }
   .oc-node .oc-icon { font-size: 16px; line-height: 1; }
   .oc-node .oc-role { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .oc-node .oc-body { padding: 10px 12px; }
-  .oc-node .oc-name { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .oc-node .oc-body { padding: 10px 12px 12px; }
+  .oc-node .oc-name { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .oc-node .oc-sub { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .oc-actions { position: absolute; top: 4px; right: 4px; display: flex; gap: 3px; opacity: 0; transition: opacity .15s; }
+  .oc-btn-mini { width: 22px; height: 22px; border-radius: 5px; background: rgba(255,255,255,.85); border: 1px solid var(--line); cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; color: var(--ink); padding: 0; backdrop-filter: blur(4px); }
+  .oc-btn-mini:hover { background: var(--surface); border-color: var(--ink); }
+  .oc-btn-mini.danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
   /* Role-specific colors */
+  .oc-node.role-ceo { border-color: #F59E0B; }
   .oc-node.role-ceo .oc-top { background: #FEF3C7; color: #78350F; }
   .oc-node.role-bugalter .oc-top { background: #DBEAFE; color: #1E40AF; }
   .oc-node.role-boshliq .oc-top { background: #E9D5FF; color: #6B21A8; }
@@ -326,11 +339,7 @@
   .oc-node.role-kuryer .oc-top { background: #FED7AA; color: #9A3412; }
   .oc-node.role-hodim .oc-top { background: #E5E7EB; color: #374151; }
   .oc-node.role-default .oc-top { background: var(--surface-2); color: var(--muted); }
-  /* Site user (saytda registratsiya) */
-  .oc-node.is-site-user .oc-body { background: #FFFBEB; border-radius: 0 0 12px 12px; }
-  .oc-line { position: absolute; background: var(--line-strong); pointer-events: none; }
-  .oc-line.v { width: 1.5px; }
-  .oc-line.h { height: 1.5px; }
+  .oc-node.is-site-user .oc-body { background: #FFFBEB; border-radius: 0 0 11px 11px; }
 
   /* Stat cards (dashboard) */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px; }
@@ -427,7 +436,7 @@
     .brand { padding: 30px 26px; gap: 26px; min-height: auto; }
     .brand-hero h1 { font-size: 26px; }
     .app.show { grid-template-columns: 1fr; }
-    .sidebar { position: relative; min-height: auto; flex-direction: row; align-items: center; padding: 10px 12px; gap: 8px; overflow-x: auto; }
+    .sidebar { position: relative; height: auto; min-height: auto; flex-direction: row; align-items: center; padding: 10px 12px; gap: 8px; overflow-x: auto; overflow-y: visible; }
     .ws-switch { margin: 0; flex-shrink: 0; min-width: 180px; }
     .side-nav { flex-direction: row; gap: 4px; }
     .side-section, .side-spacer, .side-bottom { display: none; }
@@ -896,20 +905,34 @@
       <div class="row-head" style="margin-bottom: 14px;">
         <h2 class="h2" style="margin:0">⛓ Tashkilot tuzilmasi</h2>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button class="btn secondary" onclick="ocZoomOut()">−</button>
-          <span id="ocZoomLabel" style="font-size:12px;color:var(--muted);min-width:40px;text-align:center;">100%</span>
-          <button class="btn secondary" onclick="ocZoomIn()">+</button>
-          <button class="btn secondary" onclick="ocRecenter()">⊙ Markazlash</button>
+          <button class="btn" onclick="ocOpenAddModal(null)">+ Yangi qo'shish</button>
+          <button class="btn secondary" onclick="ocZoomOut()" title="Kichraytirish">−</button>
+          <span id="ocZoomLabel" style="font-size:12px;color:var(--muted);min-width:46px;text-align:center;">100%</span>
+          <button class="btn secondary" onclick="ocZoomIn()" title="Kattalashtirish">+</button>
+          <button class="btn secondary" onclick="ocAutoLayout()" title="Avtomatik chizish">⛁ Joylash</button>
         </div>
       </div>
-      <div style="margin-bottom: 14px; font-size: 13px; color: var(--muted); line-height: 1.5;">
-        Kim kimga boshliq — kartochka ustiga bossangiz "boshliq tanlash" oynasi ochiladi.
-        <br>Boshliqsizlar — eng yuqorida (CEO darajasi).
+      <div style="margin-bottom: 12px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+        Tashkilotingiz tuzilmasini siz quring. Yuqorida <b>"+ Yangi qo'shish"</b> tugmasi orqali odam qo'shing — birinchisi CEO (eng yuqori) bo'ladi.
+        Keyingilar uchun ham boshliqni tanlashingiz mumkin. Kartochkalarni sichqoncha bilan tortib joylashtiring.
+        Har kim faqat <b>o'zidan pastdagi</b> xodimlarga vazifa bera oladi.
       </div>
 
-      <!-- Org chart container -->
-      <div id="ocViewport" style="border:1px solid var(--line); border-radius:14px; background:repeating-linear-gradient(0deg,var(--surface),var(--surface) 22px,var(--surface-2) 23px),repeating-linear-gradient(90deg,var(--surface),var(--surface) 22px,var(--surface-2) 23px); background-blend-mode:multiply; overflow:auto; height: 70vh; position: relative;">
-        <div id="ocStage" style="position:relative; transform-origin: 0 0; transition: transform .12s;"></div>
+      <!-- Canvas -->
+      <div id="ocViewport" style="border:1px solid var(--line); border-radius:14px; background: var(--surface); overflow:auto; height: calc(100vh - 240px); min-height: 500px; position: relative;">
+        <div id="ocStage" style="position:relative; transform-origin: 0 0; transition: transform .12s; min-width: 100%; min-height: 100%;">
+          <!-- SVG lines layer -->
+          <svg id="ocSvg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible;"></svg>
+          <!-- Nodes will be appended here -->
+          <div id="ocEmpty" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; color:var(--muted); text-align:center; padding:20px;">
+            <div style="font-size:54px; opacity:.3;">⛓</div>
+            <div style="font-size:15px; font-weight:600; color:var(--ink);">Bo'sh — qurishni boshlang</div>
+            <div style="font-size:13px; max-width:340px; line-height:1.6;">
+              Yuqoridagi <b>"+ Yangi qo'shish"</b> tugmasini bosib birinchi xodimni qo'shing.
+              Bu odam tuzilmaning eng yuqorisida (masalan CEO) bo'ladi.
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1123,6 +1146,31 @@
     <div class="modal-foot">
       <button class="btn secondary" onclick="setManagerNone()" style="margin-right:auto;color:var(--danger);">Boshliqsiz (yuqori)</button>
       <button class="btn secondary" onclick="closeManagerPick()">Bekor</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="ocAddBd">
+  <div class="modal">
+    <div class="modal-head"><h3 id="ocAddTitle">Tashkilotgа qo'shish</h3><button class="x-btn" onclick="closeOcAdd()">×</button></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Odam tanlang *</label>
+        <input type="text" id="ocAddSearch" placeholder="Qidirish (ism)..." oninput="renderOcAddList()" style="width:100%;margin-bottom:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;" />
+        <div id="ocAddList" style="max-height:260px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px;"></div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">Tanlangan: <span id="ocAddSelectedName" style="color:var(--ink);font-weight:600;">—</span></div>
+      </div>
+      <div class="field">
+        <label>Boshlig'i (ixtiyoriy)</label>
+        <select id="ocAddParent" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;background:#fff;">
+          <option value="">— Boshliqsiz (tepada, root)</option>
+        </select>
+      </div>
+      <div class="msg" id="ocAddMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeOcAdd()">Bekor</button>
+      <button class="btn" id="ocAddSaveBtn" onclick="ocAddSave()">Qo'shish</button>
     </div>
   </div>
 </div>
@@ -2043,11 +2091,11 @@ function renderSidebar() {
       const hasTg = (integrationsCache || []).some(i => i.tool === 'telegram' && i.is_enabled);
       if (hasTg) {
         const inTgSection = ['tgusers', 'botsettings', 'botcommands'].includes(currentPage);
-        // Default — YOPIQ (faqat foydalanuvchi yoki sub-sahifa bossa ochiladi)
-        const userOpened = window._tgSbOpen === undefined
+        // Default — QATTIQ YOPIQ. Faqat foydalanuvchi bossa ochiladi.
+        // Sub-page'дa ham auto-ochilmaydi — lekin "active" belgi parent'da ko'rinadi.
+        const tgExpanded = window._tgSbOpen === undefined
           ? (localStorage.getItem('sidebar_tg_open') === 'true')
-          : window._tgSbOpen;
-        const tgExpanded = userOpened || inTgSection;
+          : !!window._tgSbOpen;
         html += '<button class="side-link side-group ' + (inTgSection ? 'has-active' : '') + '" onclick="toggleTgSidebar()">' +
           '<span class="ic">✈</span> Telegram' +
           '<span style="margin-left:auto;font-size:10px;color:var(--muted);">' + (tgExpanded ? '▼' : '▶') + '</span>' +
@@ -3363,14 +3411,20 @@ async function deleteCurrent() {
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
-// ============ ORG CHART (Tashkilot tuzilmasi) ============
+// ============ ORG CHART (Tashkilot tuzilmasi v2) ============
+// State: hammasi shu yerda
+let _ocNodes = [];        // [{id, kind, raw_id, name, position, branch_id, manager_id, node_x, node_y, linked_user_id}]
 let _ocZoom = 1;
-let _ocNodes = []; // [{id, name, position, branch_name, manager_id, kind: 'tg'|'user'}]
+let _ocDragging = null;   // {id, startX, startY, origX, origY}
+let _ocAddTarget = null;  // selected person id in Add modal (e.g. 't:uuid' or 'u:uuid')
+let _ocPickFor = null;    // who is being assigned a manager
+const NODE_W = 200, NODE_H = 92;
+
 const OC_POS_META = {
   ceo: { icon: '👑', label: 'CEO', cls: 'role-ceo' },
   bugalter: { icon: '📊', label: 'Bugalter', cls: 'role-bugalter' },
   boshliq: { icon: '👔', label: 'Boshliq', cls: 'role-boshliq' },
-  filial_boshligi: { icon: '👔', label: 'Filial boshlig\'i', cls: 'role-filial_boshligi' },
+  filial_boshligi: { icon: '👔', label: "Filial boshlig'i", cls: 'role-filial_boshligi' },
   katta_sotuvchi: { icon: '🛒', label: 'Katta sotuvchi', cls: 'role-katta_sotuvchi' },
   sotuvchi: { icon: '🛒', label: 'Sotuvchi', cls: 'role-sotuvchi' },
   kuryer: { icon: '🚚', label: 'Kuryer', cls: 'role-kuryer' },
@@ -3378,191 +3432,452 @@ const OC_POS_META = {
 };
 function ocPosMeta(p) { return OC_POS_META[p] || { icon: '◯', label: p || 'Lavozimsiz', cls: 'role-default' }; }
 
+// ───── Load ─────
 async function loadOrgChart() {
   if (!currentWs || currentWs.kind !== 'organization') return;
-  const stage = $('ocStage');
-  stage.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);">Yuklanmoqda…</div>';
-
-  // tg_bot_users — completed
   const tgIntg = (integrationsCache || []).find(i => i.tool === 'telegram' && i.is_enabled);
-  let tgUsers = [];
-  if (tgIntg) {
-    const { data } = await sb.from('tg_bot_users')
-      .select('id, full_name, position, branch_id, manager_id, linked_user_id')
-      .eq('integration_id', tgIntg.id)
-      .eq('state', 'completed');
-    tgUsers = data || [];
-  }
 
-  // Sayt foydalanuvchilari (workspace_members)
-  const siteUsers = wsMembers.map(m => ({
-    id: 'u:' + m.user_id,
-    user_id: m.user_id,
+  // Faqat node_x NOT NULL bo'lganlarni olamиz (chartdagi xodimlar)
+  const [tgRes, wmRes] = await Promise.all([
+    tgIntg
+      ? sb.from('tg_bot_users').select('id, full_name, position, branch_id, manager_id, linked_user_id, node_x, node_y')
+          .eq('integration_id', tgIntg.id).eq('state', 'completed').not('node_x', 'is', null)
+      : Promise.resolve({ data: [] }),
+    sb.from('workspace_members').select('user_id, role, manager_user_id, node_x, node_y, profile:profiles(full_name)')
+      .eq('workspace_id', currentWs.id).not('node_x', 'is', null),
+  ]);
+
+  const tgUsers = (tgRes.data || []).map(u => ({
+    id: 't:' + u.id, kind: 'tg', raw_id: u.id,
+    name: u.full_name || '(ism yo\'q)',
+    position: u.position,
+    branch_id: u.branch_id,
+    manager_id: u.manager_id ? 't:' + u.manager_id : null,
+    node_x: u.node_x, node_y: u.node_y,
+    linked_user_id: u.linked_user_id,
+  }));
+  const siteUsers = (wmRes.data || []).map(m => ({
+    id: 'u:' + m.user_id, kind: 'user', raw_id: m.user_id,
     name: m.profile?.full_name || 'A\'zo',
     position: m.role === 'owner' ? 'ceo' : null,
     branch_id: null,
-    manager_id: null, // workspace_members.manager_user_id'gа qaraladi
-    kind: 'user',
+    manager_id: m.manager_user_id ? 'u:' + m.manager_user_id : null,
+    node_x: m.node_x, node_y: m.node_y,
     raw_role: m.role,
   }));
-
-  // Build unified node list. For each tg user — id='t:<uuid>'
-  _ocNodes = [
-    ...siteUsers,
-    ...tgUsers.map(u => ({
-      id: 't:' + u.id,
-      raw_id: u.id,
-      name: u.full_name || '(ism yo\'q)',
-      position: u.position,
-      branch_id: u.branch_id,
-      manager_id: u.manager_id ? 't:' + u.manager_id : null,
-      kind: 'tg',
-      linked_user_id: u.linked_user_id,
-    }))
-  ];
-
-  // workspace_members.manager_user_id mapping (alohida olmadik tezlik uchun — keyingi optimizatsiyada)
-  // Hozircha sayt user'lar boshliqsiz top'da turadi
-
+  _ocNodes = [...siteUsers, ...tgUsers];
   renderOrgChart();
 }
 
+// ───── Render ─────
 function renderOrgChart() {
   const stage = $('ocStage');
+  const svg = $('ocSvg');
+  const empty = $('ocEmpty');
+
+  // Eski node'larni o'chiramιz
+  Array.from(stage.querySelectorAll('.oc-node')).forEach(n => n.remove());
+
   if (!_ocNodes.length) {
-    stage.innerHTML = '<div style="padding:50px;text-align:center;color:var(--muted);"><strong>Ma\'lumot yo\'q</strong><br>Bot foydalanuvchilari va sayt a\'zolar ko\'rinadi.</div>';
+    empty.style.display = 'flex';
+    svg.innerHTML = '';
+    stage.style.width = '100%';
+    stage.style.height = '100%';
     return;
   }
+  empty.style.display = 'none';
 
-  // Layout: build tree from roots (no manager)
-  const byId = new Map(_ocNodes.map(n => [n.id, n]));
-  const childrenOf = new Map();
-  const roots = [];
-  for (const n of _ocNodes) {
-    if (n.manager_id && byId.has(n.manager_id)) {
-      const arr = childrenOf.get(n.manager_id) || [];
-      arr.push(n);
-      childrenOf.set(n.manager_id, arr);
-    } else {
-      roots.push(n);
-    }
-  }
-
-  // BFS layout — har darajada gorizontal joylash
-  const NODE_W = 180, NODE_H = 80, GAP_X = 20, GAP_Y = 60;
-
-  // 1) Subtree width hisoblash (her node uchun)
-  const sizeOf = new Map();
-  function computeSize(n) {
-    const kids = childrenOf.get(n.id) || [];
-    if (!kids.length) { sizeOf.set(n.id, NODE_W); return NODE_W; }
-    let total = 0;
-    kids.forEach(k => { total += computeSize(k) + GAP_X; });
-    total -= GAP_X;
-    const w = Math.max(NODE_W, total);
-    sizeOf.set(n.id, w);
-    return w;
-  }
-  roots.forEach(r => computeSize(r));
-
-  // 2) Pozitsiyalash
-  const positions = new Map(); // id → {x, y}
-  function placeSubtree(n, x, y) {
-    const kids = childrenOf.get(n.id) || [];
-    const myW = sizeOf.get(n.id);
-    // markazga qo'yish
-    const cx = x + myW / 2 - NODE_W / 2;
-    positions.set(n.id, { x: cx, y: y, w: NODE_W });
-    if (!kids.length) return;
-    // bolalarni joylash
-    let cursorX = x;
-    const childY = y + NODE_H + GAP_Y;
-    kids.forEach(k => {
-      const kW = sizeOf.get(k.id);
-      placeSubtree(k, cursorX, childY);
-      cursorX += kW + GAP_X;
-    });
-  }
-
-  let rootCursorX = 0;
-  const rootY = 20;
-  roots.forEach(r => {
-    placeSubtree(r, rootCursorX, rootY);
-    rootCursorX += sizeOf.get(r.id) + GAP_X * 3;
-  });
-
-  // Total dimensions
+  // Hisoblash: canvas o'lchami
   let maxX = 0, maxY = 0;
-  positions.forEach(p => {
-    if (p.x + NODE_W > maxX) maxX = p.x + NODE_W;
-    if (p.y + NODE_H > maxY) maxY = p.y + NODE_H;
+  _ocNodes.forEach(n => {
+    if ((n.node_x || 0) + NODE_W > maxX) maxX = (n.node_x || 0) + NODE_W;
+    if ((n.node_y || 0) + NODE_H > maxY) maxY = (n.node_y || 0) + NODE_H;
   });
-  stage.style.width = (maxX + 40) + 'px';
-  stage.style.height = (maxY + 40) + 'px';
+  const w = Math.max(maxX + 60, 1000);
+  const h = Math.max(maxY + 60, 600);
+  stage.style.width = w + 'px';
+  stage.style.height = h + 'px';
 
-  // 3) Renderlash
-  let html = '';
-  // Lines (manager → child)
-  for (const n of _ocNodes) {
-    const me = positions.get(n.id);
-    if (!me) continue;
-    const kids = childrenOf.get(n.id) || [];
-    if (!kids.length) continue;
-    // pastdan chiqib o'rta vertical
-    const myCx = me.x + NODE_W / 2;
-    const myBottomY = me.y + NODE_H;
-    const childTopY = me.y + NODE_H + GAP_Y;
-    const midY = (myBottomY + childTopY) / 2;
-    // vertical from parent
-    html += '<div class="oc-line v" style="left:' + (myCx - 0.75) + 'px;top:' + myBottomY + 'px;height:' + (midY - myBottomY) + 'px;"></div>';
-    // horizontal across kids
-    if (kids.length > 1) {
-      const xs = kids.map(k => positions.get(k.id).x + NODE_W / 2).filter(x => x !== undefined);
-      const lx = Math.min(...xs);
-      const rx = Math.max(...xs);
-      html += '<div class="oc-line h" style="left:' + lx + 'px;top:' + midY + 'px;width:' + (rx - lx) + 'px;"></div>';
-    }
-    // verticals down to each kid
-    kids.forEach(k => {
-      const kp = positions.get(k.id);
-      if (!kp) return;
-      const kCx = kp.x + NODE_W / 2;
-      html += '<div class="oc-line v" style="left:' + (kCx - 0.75) + 'px;top:' + midY + 'px;height:' + (childTopY - midY) + 'px;"></div>';
-    });
-  }
+  // SVG: parent → child uchun chiziqlar
+  let svgInner = '';
+  const byId = new Map(_ocNodes.map(n => [n.id, n]));
+  _ocNodes.forEach(n => {
+    if (!n.manager_id) return;
+    const parent = byId.get(n.manager_id);
+    if (!parent) return;
+    const px = (parent.node_x || 0) + NODE_W/2;
+    const py = (parent.node_y || 0) + NODE_H;
+    const cx = (n.node_x || 0) + NODE_W/2;
+    const cy = (n.node_y || 0);
+    // Bezier curve
+    const midY = (py + cy) / 2;
+    svgInner += '<path d="M ' + px + ' ' + py + ' C ' + px + ' ' + midY + ', ' + cx + ' ' + midY + ', ' + cx + ' ' + cy + '" stroke="var(--line-strong, #C8C5BA)" stroke-width="1.8" fill="none" />';
+  });
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.innerHTML = svgInner;
 
-  // Nodes
-  for (const n of _ocNodes) {
-    const p = positions.get(n.id);
-    if (!p) continue;
+  // Node'larni qo'shamиz
+  _ocNodes.forEach(n => {
     const meta = ocPosMeta(n.position);
     const branchName = n.branch_id ? ((branchesCache.find(b => b.id === n.branch_id) || {}).name || '') : '';
     const isSiteUser = n.kind === 'user';
-    html += '<div class="oc-node ' + meta.cls + (isSiteUser ? ' is-site-user' : '') + '" style="left:' + p.x + 'px;top:' + p.y + 'px;width:' + NODE_W + 'px;" onclick="openManagerPick(\'' + n.id + '\')">' +
+    const el = document.createElement('div');
+    el.className = 'oc-node ' + meta.cls + (isSiteUser ? ' is-site-user' : '');
+    el.style.left = (n.node_x || 0) + 'px';
+    el.style.top = (n.node_y || 0) + 'px';
+    el.style.width = NODE_W + 'px';
+    el.dataset.id = n.id;
+    el.innerHTML =
+      '<div class="oc-drag-handle" title="Tortib joylashtiring">⋮⋮</div>' +
       '<div class="oc-top"><span class="oc-icon">' + meta.icon + '</span><span class="oc-role">' + meta.label + '</span></div>' +
       '<div class="oc-body">' +
         '<div class="oc-name">' + escapeHtml(n.name) + '</div>' +
         (branchName ? '<div class="oc-sub">▢ ' + escapeHtml(branchName) + '</div>' : (isSiteUser ? '<div class="oc-sub">👤 Sayt foydalanuvchisi</div>' : '')) +
       '</div>' +
-    '</div>';
-  }
+      '<div class="oc-actions">' +
+        '<button class="oc-btn-mini" title="Pastiga qo\'shish" onclick="event.stopPropagation();ocOpenAddModal(\'' + n.id + '\')">+</button>' +
+        '<button class="oc-btn-mini" title="Boshliqni o\'zgartirish" onclick="event.stopPropagation();openManagerPick(\'' + n.id + '\')">↑</button>' +
+        '<button class="oc-btn-mini danger" title="Tashkilotdan olib tashlash" onclick="event.stopPropagation();ocRemoveFromChart(\'' + n.id + '\')">×</button>' +
+      '</div>';
 
-  stage.innerHTML = html;
+    // Drag-and-drop handler
+    el.addEventListener('mousedown', (e) => ocStartDrag(e, n.id));
+    el.addEventListener('touchstart', (e) => ocStartDrag(e, n.id), { passive: false });
+    stage.appendChild(el);
+  });
   ocApplyZoom();
 }
 
+// ───── Drag & Drop ─────
+function ocStartDrag(e, nodeId) {
+  // Ignoring drag if started from a button or input
+  const target = e.target;
+  if (target.tagName === 'BUTTON' || target.closest('button')) return;
+  if (!isOwnerLike()) return;
+
+  const n = _ocNodes.find(x => x.id === nodeId);
+  if (!n) return;
+  const isTouch = e.type === 'touchstart';
+  const point = isTouch ? e.touches[0] : e;
+  _ocDragging = {
+    id: nodeId,
+    startX: point.clientX,
+    startY: point.clientY,
+    origX: n.node_x || 0,
+    origY: n.node_y || 0,
+  };
+  e.preventDefault();
+  document.body.style.cursor = 'grabbing';
+  document.body.style.userSelect = 'none';
+
+  const onMove = (ev) => {
+    if (!_ocDragging) return;
+    const pt = isTouch ? ev.touches[0] : ev;
+    if (!pt) return;
+    const dx = (pt.clientX - _ocDragging.startX) / _ocZoom;
+    const dy = (pt.clientY - _ocDragging.startY) / _ocZoom;
+    const newX = Math.max(0, _ocDragging.origX + dx);
+    const newY = Math.max(0, _ocDragging.origY + dy);
+    // Update locally and DOM
+    const node = _ocNodes.find(x => x.id === _ocDragging.id);
+    if (!node) return;
+    node.node_x = newX;
+    node.node_y = newY;
+    const el = document.querySelector('.oc-node[data-id="' + _ocDragging.id + '"]');
+    if (el) { el.style.left = newX + 'px'; el.style.top = newY + 'px'; }
+    // Redraw SVG lines
+    ocRedrawLines();
+    if (isTouch) ev.preventDefault();
+  };
+  const onUp = async () => {
+    if (!_ocDragging) return;
+    const id = _ocDragging.id;
+    _ocDragging = null;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+    // Saqlash
+    const node = _ocNodes.find(x => x.id === id);
+    if (!node) return;
+    await ocSavePosition(node);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onUp);
+}
+
+async function ocSavePosition(node) {
+  try {
+    if (node.kind === 'tg') {
+      await sb.from('tg_bot_users').update({ node_x: node.node_x, node_y: node.node_y }).eq('id', node.raw_id);
+    } else if (node.kind === 'user') {
+      await sb.from('workspace_members').update({ node_x: node.node_x, node_y: node.node_y })
+        .eq('workspace_id', currentWs.id).eq('user_id', node.raw_id);
+    }
+  } catch (e) {
+    console.warn('Save position failed:', e);
+  }
+}
+
+function ocRedrawLines() {
+  const svg = $('ocSvg');
+  let svgInner = '';
+  const byId = new Map(_ocNodes.map(n => [n.id, n]));
+  _ocNodes.forEach(n => {
+    if (!n.manager_id) return;
+    const parent = byId.get(n.manager_id);
+    if (!parent) return;
+    const px = (parent.node_x || 0) + NODE_W/2;
+    const py = (parent.node_y || 0) + NODE_H;
+    const cx = (n.node_x || 0) + NODE_W/2;
+    const cy = (n.node_y || 0);
+    const midY = (py + cy) / 2;
+    svgInner += '<path d="M ' + px + ' ' + py + ' C ' + px + ' ' + midY + ', ' + cx + ' ' + midY + ', ' + cx + ' ' + cy + '" stroke="var(--line-strong, #C8C5BA)" stroke-width="1.8" fill="none" />';
+  });
+  svg.innerHTML = svgInner;
+}
+
+// ───── Zoom ─────
 function ocZoomIn() { _ocZoom = Math.min(2, _ocZoom + 0.1); ocApplyZoom(); }
 function ocZoomOut() { _ocZoom = Math.max(0.4, _ocZoom - 0.1); ocApplyZoom(); }
 function ocApplyZoom() {
   $('ocStage').style.transform = 'scale(' + _ocZoom + ')';
   $('ocZoomLabel').textContent = Math.round(_ocZoom * 100) + '%';
 }
-function ocRecenter() {
-  const vp = $('ocViewport');
-  vp.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+
+// ───── Auto layout (tree) ─────
+async function ocAutoLayout() {
+  if (!_ocNodes.length) return;
+  if (!confirm('Avtomatik joylash — joriy joylanish o\'zgaradi. Davom etilsinmi?')) return;
+  // BFS daraxti
+  const byId = new Map(_ocNodes.map(n => [n.id, n]));
+  const children = new Map();
+  const roots = [];
+  _ocNodes.forEach(n => {
+    if (n.manager_id && byId.has(n.manager_id)) {
+      const arr = children.get(n.manager_id) || [];
+      arr.push(n);
+      children.set(n.manager_id, arr);
+    } else {
+      roots.push(n);
+    }
+  });
+  // Width hisoblash
+  const GAP_X = 30, GAP_Y = 60;
+  const widthOf = new Map();
+  function calcW(n) {
+    const kids = children.get(n.id) || [];
+    if (!kids.length) { widthOf.set(n.id, NODE_W); return NODE_W; }
+    let total = 0;
+    kids.forEach(k => { total += calcW(k) + GAP_X; });
+    total -= GAP_X;
+    const w = Math.max(NODE_W, total);
+    widthOf.set(n.id, w);
+    return w;
+  }
+  roots.forEach(r => calcW(r));
+
+  function place(n, x, y) {
+    const kids = children.get(n.id) || [];
+    const myW = widthOf.get(n.id);
+    n.node_x = x + myW/2 - NODE_W/2;
+    n.node_y = y;
+    let cursor = x;
+    const childY = y + NODE_H + GAP_Y;
+    kids.forEach(k => {
+      const kW = widthOf.get(k.id);
+      place(k, cursor, childY);
+      cursor += kW + GAP_X;
+    });
+  }
+  let cursorX = 40;
+  roots.forEach(r => {
+    place(r, cursorX, 40);
+    cursorX += widthOf.get(r.id) + GAP_X * 3;
+  });
+
+  renderOrgChart();
+  // Hammaning yangi joylashuvini saqlaymιz
+  await Promise.all(_ocNodes.map(n => ocSavePosition(n)));
+  toast('✓ Joylash saqlandi', 'ok');
 }
 
-let _ocPickFor = null;
+// ───── Add modal ─────
+let _ocAddCandidates = [];
+async function ocOpenAddModal(parentNodeId) {
+  if (!isOwnerLike()) { toast('Faqat owner/admin tashkilotni boshqaradi', 'err'); return; }
+  hideMsg($('ocAddMsg'));
+  _ocAddTarget = null;
+  $('ocAddSelectedName').textContent = '—';
+
+  // Available kishilar: hozir chartda yo'qlar
+  const inChartIds = new Set(_ocNodes.map(n => n.id));
+  const tgIntg = (integrationsCache || []).find(i => i.tool === 'telegram' && i.is_enabled);
+
+  const [tgRes, profsR] = await Promise.all([
+    tgIntg
+      ? sb.from('tg_bot_users').select('id, full_name, position').eq('integration_id', tgIntg.id).eq('state', 'completed')
+      : Promise.resolve({ data: [] }),
+    Promise.resolve({ data: wsMembers.map(m => ({ user_id: m.user_id, role: m.role, full_name: m.profile?.full_name })) }),
+  ]);
+
+  const tgCandidates = (tgRes.data || [])
+    .filter(u => !inChartIds.has('t:' + u.id))
+    .map(u => ({ id: 't:' + u.id, name: u.full_name || '(ism yo\'q)', position: u.position, kind: 'tg' }));
+  const userCandidates = (profsR.data || [])
+    .filter(u => !inChartIds.has('u:' + u.user_id))
+    .map(u => ({ id: 'u:' + u.user_id, name: u.full_name || 'A\'zo', position: u.role === 'owner' ? 'ceo' : null, kind: 'user' }));
+
+  _ocAddCandidates = [...userCandidates, ...tgCandidates];
+
+  // Parent select to'ldirish
+  const parentSel = $('ocAddParent');
+  let parentOpts = '<option value="">— Boshliqsiz (tepada, root)</option>';
+  _ocNodes.forEach(n => {
+    const meta = ocPosMeta(n.position);
+    parentOpts += '<option value="' + n.id + '"' + (parentNodeId === n.id ? ' selected' : '') + '>' + meta.icon + ' ' + escapeHtml(n.name) + (meta.label ? ' — ' + meta.label : '') + '</option>';
+  });
+  parentSel.innerHTML = parentOpts;
+
+  $('ocAddSearch').value = '';
+  renderOcAddList();
+  $('ocAddTitle').textContent = parentNodeId ? 'Pastdagi xodim qo\'shish' : 'Tashkilotgа yangi qo\'shish';
+  $('ocAddBd').classList.add('show');
+  setTimeout(() => $('ocAddSearch').focus(), 50);
+}
+
+function closeOcAdd() { $('ocAddBd').classList.remove('show'); _ocAddTarget = null; }
+
+function renderOcAddList() {
+  const q = ($('ocAddSearch').value || '').trim().toLowerCase();
+  const list = $('ocAddList');
+  const filtered = _ocAddCandidates.filter(c => {
+    if (!q) return true;
+    return (c.name || '').toLowerCase().includes(q) || (c.position || '').toLowerCase().includes(q);
+  });
+  if (!filtered.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">' +
+      (_ocAddCandidates.length === 0 ? 'Barcha xodimlar allaqachon tashkilotgа qo\'shilgan.' : 'Topilmadi.') +
+    '</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(c => {
+    const meta = ocPosMeta(c.position);
+    const selected = (_ocAddTarget === c.id) ? ' style="background:var(--accent-fade);"' : '';
+    return '<div class="item" onclick="ocPickPerson(\'' + c.id + '\')" style="cursor:pointer;padding:8px 12px;border-radius:6px;margin-bottom:2px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;"' + selected + '>' +
+      '<div style="font-size:18px;">' + meta.icon + '</div>' +
+      '<div>' +
+        '<div style="font-size:13px;font-weight:600;">' + escapeHtml(c.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);">' + meta.label + (c.kind === 'tg' ? ' · ✈ TG' : ' · 👤 Sayt') + '</div>' +
+      '</div>' +
+      (_ocAddTarget === c.id ? '<div style="color:var(--accent-ink);font-size:14px;">✓</div>' : '<div></div>') +
+    '</div>';
+  }).join('');
+}
+
+function ocPickPerson(id) {
+  _ocAddTarget = id;
+  const c = _ocAddCandidates.find(x => x.id === id);
+  $('ocAddSelectedName').textContent = c?.name || '—';
+  renderOcAddList();
+}
+
+async function ocAddSave() {
+  if (!_ocAddTarget) { showMsg($('ocAddMsg'), 'Avval odamni tanlang', 'err'); return; }
+  const parentId = $('ocAddParent').value || null;
+
+  const btn = $('ocAddSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
+  try {
+    // Boshlang'ich joylanish: parent ostida yoki markazda
+    let x = 200, y = 60;
+    if (parentId) {
+      const parent = _ocNodes.find(n => n.id === parentId);
+      if (parent) {
+        const sameLevel = _ocNodes.filter(n => n.manager_id === parentId);
+        x = (parent.node_x || 200) + sameLevel.length * (NODE_W + 20);
+        y = (parent.node_y || 60) + NODE_H + 60;
+      }
+    } else {
+      // Yangi root — eng o'ngga
+      const roots = _ocNodes.filter(n => !n.manager_id);
+      if (roots.length) {
+        const lastRoot = roots[roots.length - 1];
+        x = (lastRoot.node_x || 0) + NODE_W + 40;
+        y = 40;
+      } else {
+        x = 240; y = 40;
+      }
+    }
+
+    const targetKind = _ocAddTarget.startsWith('t:') ? 'tg' : 'user';
+    const targetRawId = _ocAddTarget.slice(2);
+    const parentRawId = parentId ? parentId.slice(2) : null;
+    const parentKind = parentId ? (parentId.startsWith('t:') ? 'tg' : 'user') : null;
+
+    // Cross-kind manager (TG <-> sayt) v1'da yo'q
+    if (parentKind && parentKind !== targetKind) {
+      showMsg($('ocAddMsg'), 'Hozircha TG xodim ↔ sayt foydalanuvchisi o\'rtasida boshliq aloqasi qo\'llab-quvvatlanmaydi.', 'err');
+      btn.disabled = false; btn.textContent = 'Qo\'shish';
+      return;
+    }
+
+    if (targetKind === 'tg') {
+      await sb.from('tg_bot_users').update({
+        manager_id: parentRawId,
+        node_x: x, node_y: y,
+      }).eq('id', targetRawId);
+    } else {
+      await sb.from('workspace_members').update({
+        manager_user_id: parentRawId,
+        node_x: x, node_y: y,
+      }).eq('workspace_id', currentWs.id).eq('user_id', targetRawId);
+    }
+
+    closeOcAdd();
+    toast('✓ Qo\'shildi', 'ok');
+    loadOrgChart();
+  } catch (e) {
+    showMsg($('ocAddMsg'), translateErr(e.message), 'err');
+    btn.disabled = false; btn.textContent = 'Qo\'shish';
+  }
+}
+
+// ───── Remove from chart ─────
+async function ocRemoveFromChart(nodeId) {
+  const n = _ocNodes.find(x => x.id === nodeId);
+  if (!n) return;
+  // Bola bormi?
+  const hasKids = _ocNodes.some(x => x.manager_id === nodeId);
+  if (hasKids) {
+    if (!confirm('"' + n.name + '" tashkilotdan olib tashlanadi. Uning pastidagilar ham boshliqsiz qoladi.\n\nDavom etilsinmi?')) return;
+  } else {
+    if (!confirm('"' + n.name + '" tashkilotdan olib tashlansinmi? (Foydalanuvchi o\'chirilmaydi, faqat chartdan chiqariladi.)')) return;
+  }
+  try {
+    if (n.kind === 'tg') {
+      // Bolalardan manager olib tashlash
+      await sb.from('tg_bot_users').update({ manager_id: null }).eq('manager_id', n.raw_id);
+      // O'zini chartdan olib tashlash
+      await sb.from('tg_bot_users').update({ manager_id: null, node_x: null, node_y: null }).eq('id', n.raw_id);
+    } else {
+      await sb.from('workspace_members').update({ manager_user_id: null }).eq('workspace_id', currentWs.id).eq('manager_user_id', n.raw_id);
+      await sb.from('workspace_members').update({ manager_user_id: null, node_x: null, node_y: null })
+        .eq('workspace_id', currentWs.id).eq('user_id', n.raw_id);
+    }
+    toast('🗑 Olib tashlandi', 'ok');
+    loadOrgChart();
+  } catch (e) {
+    toast(translateErr(e.message), 'err');
+  }
+}
+
+// ───── Manager pick (existing modal) ─────
 function openManagerPick(nodeId) {
   if (!isOwnerLike()) { toast('Faqat admin/owner boshliq belgilay oladi', 'err'); return; }
   _ocPickFor = nodeId;
@@ -3578,8 +3893,8 @@ function renderManagerPickList() {
   const q = ($('ocPickSearch').value || '').trim().toLowerCase();
   const list = $('ocPickList');
   const candidates = _ocNodes.filter(n => {
-    if (n.id === _ocPickFor) return false; // o'ziga boshliq emas
-    if (isAncestor(n.id, _ocPickFor)) return false; // bolasini boshliq qilib bo'lmaydi (cycle)
+    if (n.id === _ocPickFor) return false;
+    if (isAncestor(n.id, _ocPickFor)) return false;
     if (!q) return true;
     return (n.name || '').toLowerCase().includes(q) || (n.position || '').toLowerCase().includes(q);
   });
@@ -3591,15 +3906,11 @@ function renderManagerPickList() {
     const meta = ocPosMeta(c.position);
     return '<div class="item" onclick="setManager(\'' + c.id + '\')" style="cursor:pointer;">' +
       '<div style="font-size:18px;margin-right:10px;">' + meta.icon + '</div>' +
-      '<div class="item-mid">' +
-        '<div class="item-title">' + escapeHtml(c.name) + '</div>' +
-        '<div class="item-meta">' + meta.label + '</div>' +
-      '</div>' +
+      '<div class="item-mid"><div class="item-title">' + escapeHtml(c.name) + '</div><div class="item-meta">' + meta.label + '</div></div>' +
     '</div>';
   }).join('');
 }
 
-// Cycle prevention: target'ning ajdodi'mi?
 function isAncestor(candidateId, targetId) {
   if (!targetId) return false;
   const byId = new Map(_ocNodes.map(n => [n.id, n]));
@@ -3624,26 +3935,19 @@ async function setManagerNone() {
 
 async function applyManagerChange(childNodeId, managerNodeId) {
   try {
-    if (childNodeId.startsWith('t:')) {
-      // TG bot user — manager_id ham tg_bot_users.id bo'lishi kerak (saytdagi user bo'lmaydi v1)
-      if (managerNodeId && !managerNodeId.startsWith('t:')) {
-        toast('Hozircha TG xodimga sayt foydalanuvchisini boshliq qilib bo\'lmaydi', 'err');
-        return;
-      }
-      const tgId = childNodeId.slice(2);
-      const mgrTgId = managerNodeId ? managerNodeId.slice(2) : null;
-      const { error } = await sb.from('tg_bot_users').update({ manager_id: mgrTgId }).eq('id', tgId);
+    const childKind = childNodeId.startsWith('t:') ? 'tg' : 'user';
+    const managerKind = managerNodeId ? (managerNodeId.startsWith('t:') ? 'tg' : 'user') : null;
+    if (managerKind && managerKind !== childKind) {
+      toast('Hozircha TG↔sayt o\'rtasida boshliq aloqasi yo\'q', 'err'); return;
+    }
+    const childRaw = childNodeId.slice(2);
+    const mgrRaw = managerNodeId ? managerNodeId.slice(2) : null;
+    if (childKind === 'tg') {
+      const { error } = await sb.from('tg_bot_users').update({ manager_id: mgrRaw }).eq('id', childRaw);
       if (error) throw error;
-    } else if (childNodeId.startsWith('u:')) {
-      // Sayt user — workspace_members.manager_user_id
-      if (managerNodeId && !managerNodeId.startsWith('u:')) {
-        toast('Hozircha sayt foydalanuvchisiga TG xodim boshliq bo\'la olmaydi', 'err');
-        return;
-      }
-      const uid = childNodeId.slice(2);
-      const mgrUid = managerNodeId ? managerNodeId.slice(2) : null;
-      const { error } = await sb.from('workspace_members').update({ manager_user_id: mgrUid })
-        .eq('workspace_id', currentWs.id).eq('user_id', uid);
+    } else {
+      const { error } = await sb.from('workspace_members').update({ manager_user_id: mgrRaw })
+        .eq('workspace_id', currentWs.id).eq('user_id', childRaw);
       if (error) throw error;
     }
     closeManagerPick();
@@ -3653,7 +3957,6 @@ async function applyManagerChange(childNodeId, managerNodeId) {
     toast(translateErr(e.message), 'err');
   }
 }
-
 // ============ BOT SOZLAMALARI ============
 const DEFAULT_BOT_SETTINGS = {
   welcome_message: "👋 Assalomu alaykum!\n\nBotgа xush kelibsiz. Davom etish uchun iltimos to'liq <b>ism va familyangizni</b> yuboring:",
@@ -5681,7 +5984,7 @@ async function init() {
     }
     // Escape => close any open modal
     if (e.key === 'Escape') {
-      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd','addColumnBd','branchBd','editTgBd','pendingBd','cmdEditBd','ocPickBd'].forEach(id => {
+      ['createBd','detailBd','deptBd','inviteBd','tgSetupBd','tgConnectBd','newWsBd','n8nSetupBd','addColumnBd','branchBd','editTgBd','pendingBd','cmdEditBd','ocPickBd','ocAddBd'].forEach(id => {
         const el = $(id);
         if (el && el.classList.contains('show')) el.classList.remove('show');
       });
