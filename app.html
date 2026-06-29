@@ -100,11 +100,18 @@
   .side-section .add-mini:hover { color: var(--side-ink); background: var(--side-hover); }
   .side-spacer { flex: 1; }
   .side-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; margin-top: 12px; }
-  .side-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+  .side-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; transition: background .15s; }
+  .side-user:hover { background: var(--side-hover); }
   .side-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: #3F4351; color: var(--side-ink); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
   .side-user-info { min-width: 0; flex: 1; }
   .side-user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .side-user-mail { font-size: 11px; color: var(--side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-menu { position: absolute; bottom: calc(100% + 6px); left: 8px; right: 8px; background: #22252F; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 6px; box-shadow: 0 12px 28px rgba(0,0,0,.4); z-index: 30; display: none; }
+  .profile-menu.show { display: block; }
+  .profile-menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 7px; cursor: pointer; background: transparent; border: none; width: 100%; text-align: left; color: var(--side-ink); font-size: 13px; font-weight: 500; }
+  .profile-menu-item:hover { background: rgba(255,255,255,.07); }
+  .profile-menu-item.danger { color: #FCA5A5; }
+  .profile-menu-item.danger:hover { background: rgba(239,68,68,.12); }
   .bell-btn { background: none; border: none; color: var(--side-ink); padding: 6px 8px; border-radius: 7px; cursor: pointer; font-size: 16px; position: relative; }
   .bell-btn:hover { background: var(--side-hover); }
   .bell-dot { position: absolute; top: 6px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid var(--side); }
@@ -514,13 +521,16 @@
     <nav class="side-nav" id="sideNav"></nav>
     <div class="side-spacer"></div>
     <div class="side-bottom">
-      <div class="side-user">
+      <div class="side-user" id="sideUserBar" onclick="toggleProfileMenu(event)" style="cursor:pointer;position:relative;">
         <div class="side-user-avatar" id="userAv">?</div>
         <div class="side-user-info"><div class="side-user-name" id="userNm">—</div><div class="side-user-mail" id="userMl">—</div></div>
-        <button class="bell-btn" onclick="openTgConnect()" title="Telegram'ga ulanish" id="tgConnBtn" style="font-size:14px">✈</button>
-        <button class="bell-btn" onclick="toggleNotif(event)" title="Bildirishnomalar">🔔<span class="bell-dot" id="bellDot" style="display:none"></span></button>
+        <button class="bell-btn" onclick="event.stopPropagation();openTgConnect()" title="Telegram'ga ulanish" id="tgConnBtn" style="font-size:14px">✈</button>
+        <button class="bell-btn" onclick="event.stopPropagation();toggleNotif(event)" title="Bildirishnomalar">🔔<span class="bell-dot" id="bellDot" style="display:none"></span></button>
+        <!-- Dropdown menu -->
+        <div id="profileMenu" class="profile-menu">
+          <button class="profile-menu-item danger" onclick="event.stopPropagation();doLogout()"><span style="opacity:.7;">↩</span> Chiqish</button>
+        </div>
       </div>
-      <button class="side-link" onclick="doLogout()" style="margin-top:4px"><span class="ic">↩</span> Chiqish</button>
     </div>
   </aside>
 
@@ -1572,7 +1582,31 @@ async function saveNewPassword() {
     await bootstrap();
   } catch (e) { showMsg($('rMsg'), translateErr(e.message), 'err'); btn.disabled=false; btn.textContent='Saqlash va kirish'; }
 }
+function toggleProfileMenu(e) {
+  const menu = $('profileMenu');
+  if (!menu) return;
+  const isOpen = menu.classList.contains('show');
+  // Yopilgan bo'lsa, ochamιz va outside-click listener qo'shamιz
+  if (!isOpen) {
+    menu.classList.add('show');
+    setTimeout(() => {
+      const onDocClick = (ev) => {
+        if (!menu.contains(ev.target) && !$('sideUserBar').contains(ev.target)) {
+          menu.classList.remove('show');
+          document.removeEventListener('click', onDocClick);
+        }
+      };
+      document.addEventListener('click', onDocClick);
+    }, 10);
+  } else {
+    menu.classList.remove('show');
+  }
+  if (e) e.stopPropagation();
+}
+
 async function doLogout() {
+  // Yopamiz menyuni
+  const menu = $('profileMenu'); if (menu) menu.classList.remove('show');
   if (window._bellTimer) clearInterval(window._bellTimer);
   teardownRealtime();
   await sb.auth.signOut();
@@ -2091,10 +2125,9 @@ function renderSidebar() {
       const hasTg = (integrationsCache || []).some(i => i.tool === 'telegram' && i.is_enabled);
       if (hasTg) {
         const inTgSection = ['tgusers', 'botsettings', 'botcommands'].includes(currentPage);
-        // Default — QATTIQ YOPIQ. Faqat foydalanuvchi bossa ochiladi.
-        // Sub-page'дa ham auto-ochilmaydi — lekin "active" belgi parent'da ko'rinadi.
+        // Default — QATTIQ YOPIQ. Yangi storage key (eski 'sidebar_tg_open' ni ignor).
         const tgExpanded = window._tgSbOpen === undefined
-          ? (localStorage.getItem('sidebar_tg_open') === 'true')
+          ? (localStorage.getItem('sb_tg_v2') === 'open')
           : !!window._tgSbOpen;
         html += '<button class="side-link side-group ' + (inTgSection ? 'has-active' : '') + '" onclick="toggleTgSidebar()">' +
           '<span class="ic">✈</span> Telegram' +
@@ -2336,10 +2369,10 @@ async function createWs() { onbFinish(); }
 // ============ ROUTING ============
 function toggleTgSidebar() {
   const cur = window._tgSbOpen === undefined
-    ? (localStorage.getItem('sidebar_tg_open') !== 'false')
+    ? (localStorage.getItem('sb_tg_v2') === 'open')
     : window._tgSbOpen;
   window._tgSbOpen = !cur;
-  localStorage.setItem('sidebar_tg_open', window._tgSbOpen ? 'true' : 'false');
+  localStorage.setItem('sb_tg_v2', window._tgSbOpen ? 'open' : 'closed');
   renderSidebar();
 }
 
@@ -3714,6 +3747,10 @@ async function ocOpenAddModal(parentNodeId) {
   hideMsg($('ocAddMsg'));
   _ocAddTarget = null;
   $('ocAddSelectedName').textContent = '—';
+  // Button — har safar yangi (oldingisi yarim qolgan bo'lishi mumkin)
+  const saveBtn = $('ocAddSaveBtn');
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Qo\'shish';
 
   // Available kishilar: hozir chartda yo'qlar
   const inChartIds = new Set(_ocNodes.map(n => n.id));
@@ -3787,15 +3824,19 @@ function ocPickPerson(id) {
   renderOcAddList();
 }
 
+let _ocSaving = false;
 async function ocAddSave() {
+  if (_ocSaving) return; // double-click oldini olish
   if (!_ocAddTarget) { showMsg($('ocAddMsg'), 'Avval odamni tanlang', 'err'); return; }
   const parentId = $('ocAddParent').value || null;
 
   const btn = $('ocAddSaveBtn');
+  _ocSaving = true;
   btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
+
   try {
-    // Boshlang'ich joylanish: parent ostida yoki markazda
-    let x = 200, y = 60;
+    // Boshlang'ich joylanish
+    let x = 240, y = 40;
     if (parentId) {
       const parent = _ocNodes.find(n => n.id === parentId);
       if (parent) {
@@ -3804,14 +3845,11 @@ async function ocAddSave() {
         y = (parent.node_y || 60) + NODE_H + 60;
       }
     } else {
-      // Yangi root — eng o'ngga
       const roots = _ocNodes.filter(n => !n.manager_id);
       if (roots.length) {
         const lastRoot = roots[roots.length - 1];
         x = (lastRoot.node_x || 0) + NODE_W + 40;
         y = 40;
-      } else {
-        x = 240; y = 40;
       }
     }
 
@@ -3820,30 +3858,45 @@ async function ocAddSave() {
     const parentRawId = parentId ? parentId.slice(2) : null;
     const parentKind = parentId ? (parentId.startsWith('t:') ? 'tg' : 'user') : null;
 
-    // Cross-kind manager (TG <-> sayt) v1'da yo'q
     if (parentKind && parentKind !== targetKind) {
-      showMsg($('ocAddMsg'), 'Hozircha TG xodim ↔ sayt foydalanuvchisi o\'rtasida boshliq aloqasi qo\'llab-quvvatlanmaydi.', 'err');
-      btn.disabled = false; btn.textContent = 'Qo\'shish';
-      return;
+      throw new Error('Hozircha TG xodim ↔ sayt foydalanuvchisi o\'rtasida boshliq aloqasi qo\'llab-quvvatlanmaydi.');
     }
 
-    if (targetKind === 'tg') {
-      await sb.from('tg_bot_users').update({
-        manager_id: parentRawId,
-        node_x: x, node_y: y,
-      }).eq('id', targetRawId);
-    } else {
-      await sb.from('workspace_members').update({
-        manager_user_id: parentRawId,
-        node_x: x, node_y: y,
-      }).eq('workspace_id', currentWs.id).eq('user_id', targetRawId);
+    console.log('[OrgChart] Saving:', { targetKind, targetRawId, parentRawId, x, y });
+
+    // 8 sekunda timeout
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Server javob bermayapti (8s). Internetni yoki Supabase'ni tekshiring.")), 8000)
+    );
+
+    const savePromise = (targetKind === 'tg')
+      ? sb.from('tg_bot_users').update({ manager_id: parentRawId, node_x: x, node_y: y })
+          .eq('id', targetRawId).select()
+      : sb.from('workspace_members').update({ manager_user_id: parentRawId, node_x: x, node_y: y })
+          .eq('workspace_id', currentWs.id).eq('user_id', targetRawId).select();
+
+    const resp = await Promise.race([savePromise, timeoutPromise]);
+    console.log('[OrgChart] Save response:', resp);
+
+    if (resp.error) {
+      const msg = resp.error.message || '';
+      if (/node_x|node_y|manager_id|manager_user_id/.test(msg) && /does not exist|column/i.test(msg)) {
+        throw new Error("DB migration ishga tushirilmagan! Supabase'дa quyidagini ishlating:\n• 17_org_chart.sql\n• 18_org_chart_positions.sql");
+      }
+      throw new Error(msg);
+    }
+    if (!resp.data || resp.data.length === 0) {
+      throw new Error('Hech qaysi qator yangilanmadi — RLS yoki ID noto\'g\'ri.');
     }
 
     closeOcAdd();
     toast('✓ Qo\'shildi', 'ok');
-    loadOrgChart();
+    await loadOrgChart();
   } catch (e) {
-    showMsg($('ocAddMsg'), translateErr(e.message), 'err');
+    console.error('[OrgChart] Save error:', e);
+    showMsg($('ocAddMsg'), e.message || String(e), 'err');
+  } finally {
+    _ocSaving = false;
     btn.disabled = false; btn.textContent = 'Qo\'shish';
   }
 }
