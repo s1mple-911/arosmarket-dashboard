@@ -354,8 +354,17 @@
   .oc-container:active { cursor: grabbing; }
   .oc-container:hover .oc-actions { opacity: 1; }
   .oc-container:hover .oc-drag-handle { opacity: .5; }
+  .oc-container:hover .oc-connect-handle { opacity: 1; }
   .oc-cont-icon { font-size: 38px; line-height: 1; }
   .oc-cont-label { font-size: 12.5px; font-weight: 600; color: #4A3B1F; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Connect handle — node pastida turadi, drag bilan bola yaratish */
+  .oc-connect-handle { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid #C8A66B; cursor: crosshair; opacity: 0; transition: opacity .15s, transform .15s, background .15s; display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; color: #8C6A36; font-weight: 700; z-index: 5; }
+  .oc-node:hover .oc-connect-handle { opacity: 1; }
+  .oc-connect-handle:hover { background: #C8A66B; color: #fff; transform: translateX(-50%) scale(1.2); }
+  .oc-connect-handle:active { cursor: crosshair; }
+  /* Connect target highlight */
+  .oc-node.oc-target, .oc-container.oc-target { border-color: #10B981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,.2) !important; }
 
   /* Palette */
   .oc-palette-btn { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 8px 4px; cursor: pointer; transition: transform .12s, border-color .12s, background .12s; display: flex; flex-direction: column; align-items: center; text-align: center; color: var(--ink); }
@@ -3722,7 +3731,8 @@ function renderOrgChart() {
           '<button class="oc-btn-mini" title="Pastiga qo\'shish" onclick="event.stopPropagation();ocOpenAddModal(\'' + n.id + '\')">+</button>' +
           '<button class="oc-btn-mini" title="Tahrirlash" onclick="event.stopPropagation();ocOpenContModal(\'' + n.id + '\')">✎</button>' +
           '<button class="oc-btn-mini danger" title="O\'chirish" onclick="event.stopPropagation();ocRemoveFromChart(\'' + n.id + '\')">×</button>' +
-        '</div>';
+        '</div>' +
+        '<div class="oc-connect-handle" title="Pastdagi xodimga ulang" onmousedown="ocStartConnect(event, \'' + n.id + '\')" ontouchstart="ocStartConnect(event, \'' + n.id + '\')">+</div>';
       el.addEventListener('mousedown', (e) => ocStartDrag(e, n.id));
       el.addEventListener('touchstart', (e) => ocStartDrag(e, n.id), { passive: false });
       stage.appendChild(el);
@@ -3747,7 +3757,8 @@ function renderOrgChart() {
           '<button class="oc-btn-mini" title="Pastiga qo\'shish" onclick="event.stopPropagation();ocOpenAddModal(\'' + n.id + '\')">+</button>' +
           '<button class="oc-btn-mini" title="Boshliqni o\'zgartirish" onclick="event.stopPropagation();openManagerPick(\'' + n.id + '\')">↑</button>' +
           '<button class="oc-btn-mini danger" title="Tashkilotdan olib tashlash" onclick="event.stopPropagation();ocRemoveFromChart(\'' + n.id + '\')">×</button>' +
-        '</div>';
+        '</div>' +
+        '<div class="oc-connect-handle" title="Pastdagi xodimga ulang" onmousedown="ocStartConnect(event, \'' + n.id + '\')" ontouchstart="ocStartConnect(event, \'' + n.id + '\')">+</div>';
       el.addEventListener('mousedown', (e) => ocStartDrag(e, n.id));
       el.addEventListener('touchstart', (e) => ocStartDrag(e, n.id), { passive: false });
       stage.appendChild(el);
@@ -3760,6 +3771,7 @@ function renderOrgChart() {
 function ocStartDrag(e, nodeId) {
   const target = e.target;
   if (target.tagName === 'BUTTON' || target.closest('button')) return;
+  if (target.classList && target.classList.contains('oc-connect-handle')) return; // connect handle alohida
   if (!isOwnerLike()) return;
   const n = _ocNodes.find(x => x.id === nodeId);
   if (!n) return;
@@ -3820,6 +3832,110 @@ async function ocSavePosition(node) {
   } catch (e) {
     console.warn('Save position failed:', e);
   }
+}
+
+// ───── Drag-to-CONNECT (ip tortish) ─────
+let _ocConnecting = null; // { sourceId, startX, startY, tempLine, currentTarget }
+
+function ocStartConnect(e, sourceId) {
+  if (!isOwnerLike()) return;
+  e.stopPropagation();
+  e.preventDefault();
+  const isTouch = e.type === 'touchstart';
+  const point = isTouch ? e.touches[0] : e;
+  const sourceNode = _ocNodes.find(n => n.id === sourceId);
+  if (!sourceNode) return;
+
+  const viewport = $('ocViewport');
+  const vpRect = viewport.getBoundingClientRect();
+  const stage = $('ocStage');
+
+  // Source center (bottom of node)
+  const sw = (sourceNode.kind === 'container') ? CONT_W : NODE_W;
+  const sh = (sourceNode.kind === 'container') ? CONT_H : NODE_H;
+  const startX = (sourceNode.node_x || 0) + sw / 2;
+  const startY = (sourceNode.node_y || 0) + sh;
+
+  // Temp SVG path
+  const svg = $('ocSvg');
+  const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  tempPath.setAttribute('stroke', '#10B981');
+  tempPath.setAttribute('stroke-width', '2.5');
+  tempPath.setAttribute('stroke-dasharray', '6,4');
+  tempPath.setAttribute('fill', 'none');
+  svg.appendChild(tempPath);
+
+  _ocConnecting = { sourceId, startX, startY, tempPath, currentTarget: null };
+  document.body.style.cursor = 'crosshair';
+
+  const onMove = (ev) => {
+    if (!_ocConnecting) return;
+    const pt = isTouch ? ev.touches[0] : ev;
+    if (!pt) return;
+    // Cursor pos relative to stage (account for zoom + scroll)
+    const stageRect = stage.getBoundingClientRect();
+    const cursorX = (pt.clientX - stageRect.left) / _ocZoom;
+    const cursorY = (pt.clientY - stageRect.top) / _ocZoom;
+    // Bezier curve from start to cursor
+    const midY = (startY + cursorY) / 2;
+    _ocConnecting.tempPath.setAttribute('d',
+      `M ${startX} ${startY} C ${startX} ${midY}, ${cursorX} ${midY}, ${cursorX} ${cursorY}`);
+    _ocConnecting.lastX = cursorX;
+    _ocConnecting.lastY = cursorY;
+
+    // Highlight node under cursor (target)
+    const elem = document.elementFromPoint(pt.clientX, pt.clientY);
+    const nodeEl = elem?.closest('[data-id]');
+    if (_ocConnecting.currentTarget && _ocConnecting.currentTarget !== nodeEl?.dataset?.id) {
+      const oldEl = document.querySelector('[data-id="' + _ocConnecting.currentTarget + '"]');
+      if (oldEl) oldEl.classList.remove('oc-target');
+      _ocConnecting.currentTarget = null;
+    }
+    if (nodeEl && nodeEl.dataset.id !== sourceId && !isAncestor(sourceId, nodeEl.dataset.id)) {
+      nodeEl.classList.add('oc-target');
+      _ocConnecting.currentTarget = nodeEl.dataset.id;
+    }
+    if (isTouch) ev.preventDefault();
+  };
+
+  const onUp = async (ev) => {
+    if (!_ocConnecting) return;
+    document.body.style.cursor = '';
+    const targetId = _ocConnecting.currentTarget;
+    const dropX = _ocConnecting.lastX || 0;
+    const dropY = _ocConnecting.lastY || 0;
+    // Cleanup temp line and highlight
+    if (_ocConnecting.tempPath?.parentNode) _ocConnecting.tempPath.parentNode.removeChild(_ocConnecting.tempPath);
+    if (targetId) {
+      const tEl = document.querySelector('[data-id="' + targetId + '"]');
+      if (tEl) tEl.classList.remove('oc-target');
+    }
+    _ocConnecting = null;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+
+    if (targetId) {
+      // Mavjud node ustigа tashlangan → bog'lash (target ning boshlig'i = source)
+      await applyManagerChange(targetId, sourceId);
+    } else {
+      // Bo'sh joyga tashlangan → Add modal ochiladi, parent oldindan tanlangan
+      ocOpenAddModalAtPos(sourceId, dropX, dropY);
+    }
+  };
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onUp);
+}
+
+// Add modal'ni belgilangan koordinatalarda ochish (drop pos uchun)
+function ocOpenAddModalAtPos(parentId, dropX, dropY) {
+  // _ocDropPos ni vaqtincha o'zgaruvchida saqlaymιz
+  window._ocDropPos = { x: dropX, y: dropY };
+  ocOpenAddModal(parentId);
 }
 
 function ocRedrawLines() {
@@ -3987,7 +4103,12 @@ async function ocAddSave() {
   try {
     // Joylanish
     let x = 240, y = 40;
-    if (parentId) {
+    if (window._ocDropPos) {
+      // Drag-to-connect bilan drop bo'lgan joy
+      x = Math.max(0, window._ocDropPos.x - NODE_W / 2);
+      y = Math.max(0, window._ocDropPos.y - 20);
+      window._ocDropPos = null;
+    } else if (parentId) {
       const parent = _ocNodes.find(n => n.id === parentId);
       if (parent) {
         const pw = (parent.kind === 'container') ? CONT_W : NODE_W;
@@ -4028,8 +4149,21 @@ async function ocAddSave() {
       }
       throw new Error(msg);
     }
+    // RLS yoki PostgREST sababidan .select() bo'sh kelishi mumkin — bu xato emas.
+    // Update muvaffaqiyatli ekanini tekshirish uchun SEPARATE select qilamiz.
     if (!resp.data || resp.data.length === 0) {
-      throw new Error('Hech qaysi qator yangilanmadi.');
+      // Verification select
+      let verifyResp;
+      if (targetKind === 'tg') {
+        verifyResp = await sb.from('tg_bot_users').select('id, node_x, node_y, manager_id, manager_user_id, manager_container_id').eq('id', targetRawId).maybeSingle();
+      } else {
+        verifyResp = await sb.from('workspace_members').select('user_id, node_x, node_y, manager_user_id, manager_tg_bot_user_id, manager_container_id').eq('workspace_id', currentWs.id).eq('user_id', targetRawId).maybeSingle();
+      }
+      console.log('[OrgChart] Verify:', verifyResp);
+      if (!verifyResp.data || verifyResp.data.node_x === null) {
+        throw new Error("Update qabul qilinmadi (RLS yoki ID muammosi). Migration 19 ishga tushirilganini tekshiring.");
+      }
+      // Verified — update did happen
     }
 
     closeOcAdd();
