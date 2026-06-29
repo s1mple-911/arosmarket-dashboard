@@ -98,8 +98,8 @@
   .brand-top { display: flex; align-items: center; gap: 8px; padding: 2px 10px 12px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; color: var(--side-ink); opacity: .92; }
   .ws-switch { position: relative; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .ws-switch:hover { background: rgba(255,255,255,.07); }
-  .ws-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; flex-shrink: 0; }
-  .ws-avatar.personal { background: #475569; }
+  .ws-avatar { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #2A2E38, #1A1D26); color: #FEF3C7; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; flex-shrink: 0; border: 1px solid rgba(254,243,199,.15); }
+  .ws-avatar.personal { background: linear-gradient(135deg, #3F4351, #2A2E38); color: #FAF7F0; }
   .ws-info { min-width: 0; flex: 1; }
   .ws-name { font-size: 13.5px; font-weight: 600; color: var(--side-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ws-kind { font-size: 11.5px; color: var(--side-muted); margin-top: 1px; }
@@ -235,6 +235,12 @@
   .modal-backdrop { position: fixed; inset: 0; background: rgba(20,22,28,.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
   .modal-backdrop.show { display: flex; }
 
+  /* Profile language picker */
+  .lang-pick { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 11px; border: 1.5px solid var(--line); background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s; font-family: inherit; color: var(--ink); text-align: left; }
+  .lang-pick:hover { border-color: var(--line-strong); background: var(--surface-2); }
+  .lang-pick.active { border-color: #FDE68A; background: #FFFBF1; }
+  .lang-pick .lang-check { color: var(--success); font-weight: 700; opacity: 0; transition: opacity .15s; }
+  .lang-pick.active .lang-check { opacity: 1; }
   /* ⌘K Command palette */
   .cmd-palette-bd { position: fixed; inset: 0; background: rgba(15,20,23,.55); backdrop-filter: blur(3px); display: none; justify-content: center; align-items: flex-start; padding-top: 13vh; z-index: 200; padding-left: 16px; padding-right: 16px; }
   .cmd-palette-bd.show { display: flex; animation: fadeIn .12s ease; }
@@ -1070,7 +1076,29 @@
     <!-- Profile -->
     <section id="page-profile" style="display:none">
       <div class="row-head"><h2 class="h2" style="margin:0">👤 Mening profilim</h2></div>
-      <div style="max-width: 600px;">
+      <div style="max-width: 720px;">
+        <!-- Hero card: avatar + ism -->
+        <div class="settings-section" style="display:flex; gap: 24px; align-items: center;">
+          <div style="position:relative;">
+            <div id="profAvatarBox" style="width: 96px; height: 96px; border-radius: 22px; background: linear-gradient(135deg, #2A2E38, #1A1D26); color: #FEF3C7; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 32px; overflow: hidden; border: 2px solid var(--line);">
+              <span id="profAvatarInitials">?</span>
+              <img id="profAvatarImg" src="" style="display:none; width:100%; height:100%; object-fit: cover;" />
+            </div>
+            <input id="profAvatarFile" type="file" accept="image/*" onchange="uploadAvatar(event)" style="display:none;" />
+            <button onclick="$('profAvatarFile').click()" title="Rasm yuklash" style="position:absolute; bottom:-4px; right:-4px; width:32px; height:32px; border-radius:50%; background: var(--surface); border: 2px solid var(--bg); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </button>
+          </div>
+          <div style="flex:1;">
+            <div id="profHeroName" style="font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.02em; margin-bottom: 4px;">—</div>
+            <div id="profHeroEmail" style="color: var(--muted); font-size: 13.5px; margin-bottom: 10px;">—</div>
+            <div style="display:flex; gap: 8px;">
+              <button class="btn sm" onclick="$('profAvatarFile').click()">📷 Rasm yuklash</button>
+              <button class="btn sm secondary" id="profAvatarRmBtn" onclick="removeAvatar()" style="display:none;">🗑 O'chirish</button>
+            </div>
+          </div>
+        </div>
+
         <div class="settings-section">
           <h3>Shaxsiy ma'lumotlar</h3>
           <div class="field">
@@ -1090,6 +1118,47 @@
             <button class="btn" id="profSaveBtn" onclick="saveProfile()">Saqlash</button>
           </div>
           <div class="msg" id="profMsg"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Til (Language)</h3>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <button class="lang-pick" data-lang="uz-latin" onclick="pickLanguage('uz-latin')">
+              <span style="font-size:20px;">🇺🇿</span>
+              <span style="flex:1; text-align:left;">
+                <div style="font-weight: 600; font-size: 13.5px;">O'zbekcha</div>
+                <div style="font-size: 11.5px; color: var(--muted);">Lotin</div>
+              </span>
+              <span class="lang-check">✓</span>
+            </button>
+            <button class="lang-pick" data-lang="uz-cyril" onclick="pickLanguage('uz-cyril')">
+              <span style="font-size:20px;">🇺🇿</span>
+              <span style="flex:1; text-align:left;">
+                <div style="font-weight: 600; font-size: 13.5px;">Ўзбекча</div>
+                <div style="font-size: 11.5px; color: var(--muted);">Кирилл</div>
+              </span>
+              <span class="lang-check">✓</span>
+            </button>
+            <button class="lang-pick" data-lang="ru" onclick="pickLanguage('ru')">
+              <span style="font-size:20px;">🇷🇺</span>
+              <span style="flex:1; text-align:left;">
+                <div style="font-weight: 600; font-size: 13.5px;">Русский</div>
+                <div style="font-size: 11.5px; color: var(--muted);">Russian</div>
+              </span>
+              <span class="lang-check">✓</span>
+            </button>
+            <button class="lang-pick" data-lang="en" onclick="pickLanguage('en')">
+              <span style="font-size:20px;">🇬🇧</span>
+              <span style="flex:1; text-align:left;">
+                <div style="font-weight: 600; font-size: 13.5px;">English</div>
+                <div style="font-size: 11.5px; color: var(--muted);">English</div>
+              </span>
+              <span class="lang-check">✓</span>
+            </button>
+          </div>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 10px;">
+            ⓘ Til avtomatik saqlanadi. To'liq tarjima yaqin orada.
+          </div>
         </div>
 
         <div class="settings-section">
@@ -2287,7 +2356,16 @@ function renderSidebar() {
 
   $('userNm').textContent = myProfile.full_name || me.email.split('@')[0];
   $('userMl').textContent = me.email;
-  $('userAv').textContent = initials(myProfile.full_name || me.email);
+  // Avatar — rasm bor bo'lsa rasm, yo'q bo'lsa initials
+  const userAv = $('userAv');
+  if (userAv) {
+    const url = myProfile?.avatar_url;
+    if (url) {
+      userAv.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" />';
+    } else {
+      userAv.textContent = initials(myProfile.full_name || me.email);
+    }
+  }
   const tgBtn = $('tgConnBtn');
   if (tgBtn) tgBtn.style.display = (currentWs.kind === 'organization') ? 'inline-block' : 'none';
   // Topbar "Yangi vazifa" tugmasi
@@ -2624,6 +2702,135 @@ async function loadProfilePage() {
   $('profNewPass2').value = '';
   hideMsg($('profMsg'));
   hideMsg($('profPassMsg'));
+
+  // Hero
+  $('profHeroName').textContent = myProfile?.full_name || 'Foydalanuvchi';
+  $('profHeroEmail').textContent = me.email || '';
+
+  // Avatar
+  const ini = initials(myProfile?.full_name || me.email);
+  $('profAvatarInitials').textContent = ini;
+  const url = myProfile?.avatar_url || '';
+  const img = $('profAvatarImg');
+  const inits = $('profAvatarInitials');
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    inits.style.display = 'none';
+    $('profAvatarRmBtn').style.display = 'inline-flex';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    inits.style.display = 'flex';
+    $('profAvatarRmBtn').style.display = 'none';
+  }
+
+  // Til — active belgilab qo'yamiz
+  const curLang = myProfile?.language || 'uz-latin';
+  Array.from(document.querySelectorAll('.lang-pick')).forEach(el => {
+    el.classList.toggle('active', el.dataset.lang === curLang);
+  });
+}
+
+async function pickLanguage(lang) {
+  try {
+    const { error } = await sb.from('profiles').update({ language: lang }).eq('id', me.id);
+    if (error) {
+      // Agar column hali yo'q bo'lsa
+      if (/language|column/i.test(error.message)) {
+        toast("Til o'zgarishi uchun migration 21 ishga tushiring", 'err');
+        return;
+      }
+      throw error;
+    }
+    if (!myProfile) myProfile = {};
+    myProfile.language = lang;
+    Array.from(document.querySelectorAll('.lang-pick')).forEach(el => {
+      el.classList.toggle('active', el.dataset.lang === lang);
+    });
+    toast('✓ Til saqlandi (to\'liq tarjima yaqin orada)', 'ok');
+  } catch (e) {
+    toast(translateErr(e.message), 'err');
+  }
+}
+
+async function uploadAvatar(ev) {
+  const file = ev.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    toast('Faqat rasm fayllar', 'err'); return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    toast('Rasm hajmi 2MB dan oshmasligi kerak', 'err'); return;
+  }
+  try {
+    toast('⏳ Yuklanmoqda...', 'ok');
+    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+    const path = me.id + '/avatar_' + Date.now() + '.' + ext;
+    // Storage'gа yuklash
+    const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      if (/bucket|not found/i.test(upErr.message)) {
+        toast("Avatar storage hali sozlanmagan. Migration 21 ishga tushiring", 'err');
+        return;
+      }
+      throw upErr;
+    }
+    // Public URL olish
+    const { data: pub } = sb.storage.from('avatars').getPublicUrl(path);
+    const url = pub.publicUrl;
+    // Eski rasmni olib tashlash (ixtiyoriy)
+    const oldUrl = myProfile?.avatar_url;
+    // DB'gа yozish
+    const { error: dbErr } = await sb.from('profiles').update({ avatar_url: url }).eq('id', me.id);
+    if (dbErr) throw dbErr;
+    if (!myProfile) myProfile = {};
+    myProfile.avatar_url = url;
+    // UI yangilash
+    loadProfilePage();
+    // Sidebar avatar ham yangilash
+    const sav = $('userAv');
+    if (sav) {
+      sav.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" />';
+    }
+    toast('✓ Avatar yangilandi', 'ok');
+    // Eski rasmni delete (xato bo'lsa ham davom)
+    if (oldUrl && oldUrl !== url) {
+      try {
+        const oldPath = oldUrl.split('/avatars/')[1];
+        if (oldPath) await sb.storage.from('avatars').remove([oldPath]);
+      } catch (_) {}
+    }
+  } catch (e) {
+    toast(translateErr(e.message), 'err');
+  } finally {
+    ev.target.value = '';
+  }
+}
+
+async function removeAvatar() {
+  if (!confirm('Avatar rasm o\'chirilsinmi?')) return;
+  try {
+    const oldUrl = myProfile?.avatar_url;
+    const { error } = await sb.from('profiles').update({ avatar_url: null }).eq('id', me.id);
+    if (error) throw error;
+    if (!myProfile) myProfile = {};
+    myProfile.avatar_url = null;
+    loadProfilePage();
+    // Sidebar avatar — initials'ga qaytaramiz
+    const sav = $('userAv');
+    if (sav) sav.innerHTML = initials(myProfile?.full_name || me.email);
+    // Eski rasmni storage'дan o'chirish
+    if (oldUrl) {
+      try {
+        const oldPath = oldUrl.split('/avatars/')[1];
+        if (oldPath) await sb.storage.from('avatars').remove([oldPath]);
+      } catch (_) {}
+    }
+    toast('🗑 Avatar o\'chirildi', 'ok');
+  } catch (e) {
+    toast(translateErr(e.message), 'err');
+  }
 }
 
 async function saveProfile() {
