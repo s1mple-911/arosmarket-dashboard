@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Boshqaruv</title>
+<title>TaskUz — Vazifalarni boshqaring</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230F1417'/%3E%3Cpath d='M 9 16 L 14 21 L 23 11' stroke='%23FEF3C7' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -73,6 +74,7 @@
   .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
   .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
   .main-col { display: flex; flex-direction: column; min-width: 0; }
+  .brand-top { display: flex; align-items: center; gap: 8px; padding: 2px 10px 12px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; color: var(--side-ink); opacity: .92; }
   .ws-switch { position: relative; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .ws-switch:hover { background: rgba(255,255,255,.07); }
   .ws-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; flex-shrink: 0; }
@@ -495,12 +497,18 @@
 <!-- AUTH -->
 <div class="shell" id="authShell" style="display:none">
   <aside class="brand">
-    <div class="wordmark"><span class="dot"></span> Boshqaruv</div>
+    <div class="wordmark">
+      <svg width="28" height="28" viewBox="0 0 32 32" style="vertical-align:middle;">
+        <rect width="32" height="32" rx="8" fill="#FEF3C7"/>
+        <path d="M 9 16 L 14 21 L 23 11" stroke="#0F1417" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span style="margin-left:8px;letter-spacing:-.02em;">TaskUz</span>
+    </div>
     <div class="brand-hero">
       <h1>Biznesingiz bitta oynada.</h1>
-      <p>Vazifalar, jamoa va bo'limlar — bitta joyda. Yakka ishlatish ham mumkin, kompaniya uchun ham.</p>
+      <p>Vazifalar, jamoa va bo'limlar — bitta joyda. Telegram boti, org chart, statistika — barchasi sizning kompaniyangiz uchun.</p>
     </div>
-    <div class="pills"><span class="pill">14 kun bepul</span><span class="pill">Ko'p bo'lim</span><span class="pill">Telegram bilan</span></div>
+    <div class="pills"><span class="pill">14 kun bepul</span><span class="pill">Ko'p bo'lim</span><span class="pill">Telegram bot</span><span class="pill">Org Chart</span></div>
   </aside>
   <main class="auth">
     <div class="card">
@@ -540,6 +548,10 @@
 <!-- APP -->
 <div class="app" id="appView">
   <aside class="sidebar">
+    <div class="brand-top">
+      <svg width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#FEF3C7"/><path d="M 9 16 L 14 21 L 23 11" stroke="#0F1417" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      <span>TaskUz</span>
+    </div>
     <div class="ws-switch" onclick="toggleWsDrop(event)">
       <div class="ws-avatar" id="wsAvatar">P</div>
       <div class="ws-info"><div class="ws-name" id="wsName">—</div><div class="ws-kind" id="wsKind">—</div></div>
@@ -556,6 +568,7 @@
         <button class="bell-btn" onclick="event.stopPropagation();toggleNotif(event)" title="Bildirishnomalar">🔔<span class="bell-dot" id="bellDot" style="display:none"></span></button>
         <!-- Dropdown menu -->
         <div id="profileMenu" class="profile-menu">
+          <button class="profile-menu-item" onclick="event.stopPropagation();goProfilePage()"><span style="opacity:.7;">👤</span> Mening profilim</button>
           <button class="profile-menu-item danger" onclick="event.stopPropagation();doLogout()"><span style="opacity:.7;">↩</span> Chiqish</button>
         </div>
       </div>
@@ -980,6 +993,47 @@
       </div>
     </section>
 
+    <!-- Profile -->
+    <section id="page-profile" style="display:none">
+      <div class="row-head"><h2 class="h2" style="margin:0">👤 Mening profilim</h2></div>
+      <div style="max-width: 600px;">
+        <div class="settings-section">
+          <h3>Shaxsiy ma'lumotlar</h3>
+          <div class="field">
+            <label>Ism va familya</label>
+            <input id="profFullName" type="text" placeholder="Ism Familya" />
+          </div>
+          <div class="field">
+            <label>Telefon raqami</label>
+            <input id="profPhone" type="tel" placeholder="+998 90 123 45 67" />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input id="profEmail" type="email" readonly style="background:var(--surface-2);color:var(--muted);" />
+            <div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Email o'zgartirib bo'lmaydi</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn" id="profSaveBtn" onclick="saveProfile()">Saqlash</button>
+          </div>
+          <div class="msg" id="profMsg"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Parolni o'zgartirish</h3>
+          <div class="field">
+            <label>Yangi parol</label>
+            <input id="profNewPass" type="password" placeholder="Kamida 6 belgi" />
+          </div>
+          <div class="field">
+            <label>Yangi parolni tasdiqlang</label>
+            <input id="profNewPass2" type="password" placeholder="Yangi parolni qayta yozing" />
+          </div>
+          <button class="btn secondary" id="profPassBtn" onclick="changePassword()">Parolni yangilash</button>
+          <div class="msg" id="profPassMsg"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Settings (faqat owner) -->
     <section id="page-settings" style="display:none">
       <div class="row-head"><h2 class="h2" style="margin:0">Sozlamalar</h2></div>
@@ -1360,7 +1414,7 @@
       <div class="onb-step" data-step="1">
         <h4 style="margin:0 0 6px;font-size:15px;">1. Kompaniyangiz nomi</h4>
         <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.5;">14 kun bepul sinov. Siz egasi bo'lasiz.</p>
-        <div class="field"><input id="onbName" type="text" placeholder="Masalan: Aros Market" /></div>
+        <div class="field"><input id="onbName" type="text" placeholder="Masalan: TaskTeam, MyCompany" /></div>
       </div>
 
       <!-- Step 2: Telegram bot (optional) -->
@@ -1597,6 +1651,9 @@ async function submitAuth() {
       const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: $('fullName').value.trim() }, emailRedirectTo: window.location.origin + window.location.pathname } });
       if (error) {
         if (/already|registered|exists/i.test(error.message)) { showMsg($('authMsg'), 'Bu email allaqachon ro\'yxatdan o\'tgan.', 'err'); $('switchToLogin').style.display='block'; }
+        else if (/rate limit|rate.?limit|too many/i.test(error.message)) {
+          showMsg($('authMsg'), 'Email yuborish limiti tugadi. Bir necha daqiqadan keyin qayta urinib ko\'ring.', 'err');
+        }
         else { showMsg($('authMsg'), translateErr(error.message), 'err'); }
         btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
@@ -1607,7 +1664,7 @@ async function submitAuth() {
         btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
       if (!data.session) {
-        showMsg($('authMsg'), 'Hisob yaratildi. Pochtangizga havola yuborildi.', 'ok');
+        showMsg($('authMsg'), '✓ Hisob yaratildi! Emailingizga tasdiqlash havolasi yuborildi. Spam papkangizni ham tekshiring.', 'ok');
         btn.disabled=false; btn.textContent="Ro'yxatdan o'tish"; return;
       }
     } else {
@@ -2442,7 +2499,7 @@ function goPage(p) {
   currentPage = p;
   if (p !== 'department') currentDeptId = null;
   renderSidebar();
-  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings','stats','botsettings','botcommands','orgchart'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
+  ['dashboard','tasks','departments','department','team','integrations','tgusers','branches','positions','settings','stats','botsettings','botcommands','orgchart','profile'].forEach(x => { const el = $('page-'+x); if (el) el.style.display = (x === p ? 'block' : 'none'); });
   if (p === 'tasks') renderTasksList();
   if (p === 'departments') renderDeptsList();
   if (p === 'team') renderTeam();
@@ -2456,6 +2513,68 @@ function goPage(p) {
   if (p === 'botsettings') loadBotSettings();
   if (p === 'botcommands') loadBotCommands();
   if (p === 'orgchart') loadOrgChart();
+  if (p === 'profile') loadProfilePage();
+}
+
+function goProfilePage() {
+  const menu = $('profileMenu'); if (menu) menu.classList.remove('show');
+  goPage('profile');
+}
+
+async function loadProfilePage() {
+  if (!me) return;
+  $('profEmail').value = me.email || '';
+  $('profFullName').value = myProfile?.full_name || '';
+  $('profPhone').value = myProfile?.phone || '';
+  $('profNewPass').value = '';
+  $('profNewPass2').value = '';
+  hideMsg($('profMsg'));
+  hideMsg($('profPassMsg'));
+}
+
+async function saveProfile() {
+  const fullName = $('profFullName').value.trim();
+  const phone = $('profPhone').value.trim();
+  if (!fullName) { showMsg($('profMsg'), "Ism kerak", 'err'); return; }
+
+  const btn = $('profSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
+  try {
+    const { error } = await sb.from('profiles').update({
+      full_name: fullName, phone: phone || null
+    }).eq('id', me.id);
+    if (error) throw error;
+    if (!myProfile) myProfile = {};
+    myProfile.full_name = fullName;
+    myProfile.phone = phone;
+    // Sidebar'ni yangilash
+    $('userNm').textContent = fullName;
+    showMsg($('profMsg'), '✓ Saqlandi', 'ok');
+  } catch (e) {
+    showMsg($('profMsg'), translateErr(e.message), 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Saqlash';
+  }
+}
+
+async function changePassword() {
+  const p1 = $('profNewPass').value;
+  const p2 = $('profNewPass2').value;
+  if (!p1 || p1.length < 6) { showMsg($('profPassMsg'), "Kamida 6 belgi", 'err'); return; }
+  if (p1 !== p2) { showMsg($('profPassMsg'), "Parollar mos kelmadi", 'err'); return; }
+  const btn = $('profPassBtn');
+  btn.disabled = true; btn.textContent = 'Yangilanmoqda...';
+  try {
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    if (error) throw error;
+    $('profNewPass').value = '';
+    $('profNewPass2').value = '';
+    showMsg($('profPassMsg'), '✓ Parol yangilandi', 'ok');
+  } catch (e) {
+    showMsg($('profPassMsg'), translateErr(e.message), 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Parolni yangilash';
+  }
 }
 
 function goDept(deptId) {
