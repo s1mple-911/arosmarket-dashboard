@@ -1424,7 +1424,7 @@
   <div class="cmd-palette" onclick="event.stopPropagation()">
     <div class="cmd-head">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
-      <input id="cmdPaletteInput" type="text" placeholder="Vazifa, odam, sahifa qidiring…" oninput="renderCmdPalette()" onkeydown="cmdPaletteKey(event)" />
+      <input id="cmdPaletteInput" type="text" placeholder="Vazifa, odam, sahifa qidiring…" oninput="renderCmdPalette()" onkeydown="cmdPaletteKey(event)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       <span class="kbd">esc</span>
     </div>
     <div id="cmdPaletteList" class="cmd-list"></div>
@@ -2249,7 +2249,7 @@ async function loadCurrentContext() {
   const tgIntg = integrationsCache.find(i => i.tool === 'telegram');
 
   const [profsR, tgBusR] = await Promise.all([
-    memberIds.length ? sb.from('profiles').select('id, full_name, phone').in('id', memberIds) : Promise.resolve({ data: [] }),
+    memberIds.length ? sb.from('profiles').select('id, full_name, phone, avatar_url').in('id', memberIds) : Promise.resolve({ data: [] }),
     (isOrg && tgIntg) ? sb.from('tg_bot_users').select('*').eq('integration_id', tgIntg.id).eq('state', 'completed') : Promise.resolve({ data: [] }),
   ]);
 
@@ -3569,7 +3569,8 @@ function renderCommentItem(c, canDelete) {
       displayText = m[2];
     }
   }
-  const av = avatarHtml(displayAuthor, 'sm');
+  const authorAvatarUrl = (!fromTg && author && author.avatar_url) ? author.avatar_url : null;
+  const av = avatarHtml(displayAuthor, 'sm', authorAvatarUrl);
   const time = relTime(c.created_at);
   const canDel = canDelete && (c.author_id === me.id || isOwnerLike());
   return '<div class="cmt-item">' +
@@ -3610,11 +3611,14 @@ function fileIcon(type, name) {
   return '📄';
 }
 
-function avatarHtml(name, size) {
+function avatarHtml(name, size, avatarUrl) {
+  const cls = size === 'sm' ? 'avatar sm' : (size === 'lg' ? 'avatar lg' : 'avatar');
+  if (avatarUrl) {
+    return '<span class="' + cls + '" style="background:#0F1417;"><img src="' + escapeHtml(avatarUrl) + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;" /></span>';
+  }
   const initials = (name || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase() || '?';
   const colors = ['#3B82F6','#10B981','#F59E0B','#EC4899','#8B5CF6','#EF4444','#14B8A6','#F97316'];
   let hash = 0; for (let i = 0; i < (name||'').length; i++) hash = (hash + name.charCodeAt(i)) % colors.length;
-  const cls = size === 'sm' ? 'avatar sm' : (size === 'lg' ? 'avatar lg' : 'avatar');
   return '<span class="' + cls + '" style="background:' + colors[hash] + '">' + escapeHtml(initials) + '</span>';
 }
 
@@ -5968,7 +5972,7 @@ async function renderTeam() {
       }
 
       return '<div class="item static">' +
-        '<div style="padding-right:10px;">' + avatarHtml(name) + '</div>' +
+        '<div style="padding-right:10px;">' + avatarHtml(name, null, p.avatar_url) + '</div>' +
         '<div class="item-mid"><div class="item-title">' + escapeHtml(name) + (isMe?' <span style="color:var(--muted); font-weight:500;">(siz)</span>':'') + '</div><div class="item-meta">' + escapeHtml(p.phone || '—') + '</div></div>' +
         '<div class="item-right">' + badge + roleSelector + (canChange ? ' <button class="link-btn" onclick="removeMember(\''+m.user_id+'\')" style="color:var(--danger); margin-left:8px;">O\'chirish</button>' : '') + '</div>' +
       '</div>';
@@ -6455,8 +6459,13 @@ function renderTgUsers(intg) {
         actions.push('<button class="btn sm" onclick="openInviteFromTg(\''+u.id+'\')">Saytga taklif</button>');
       }
     }
+    let tgAvatarUrl = null;
+    if (u.linked_user_id) {
+      const linked = wsMembers.find(m => m.user_id === u.linked_user_id);
+      if (linked && linked.profile) tgAvatarUrl = linked.profile.avatar_url;
+    }
     return '<div class="item static" style="align-items: flex-start;">' +
-      '<div style="padding-right:10px; padding-top: 2px;">' + avatarHtml(u.full_name || u.tg_username || '?') + '</div>' +
+      '<div style="padding-right:10px; padding-top: 2px;">' + avatarHtml(u.full_name || u.tg_username || '?', null, tgAvatarUrl) + '</div>' +
       '<div class="item-mid">' +
         '<div class="item-title">' + escapeHtml(u.full_name || '(ism yo\'q)') + ' ' + linkedBadge + '</div>' +
         '<div class="item-meta" style="flex-wrap:wrap;">' +
@@ -6867,12 +6876,21 @@ let _cmdIndex = 0;
 
 function openCmdPalette() {
   const bd = $('cmdPaletteBd');
-  if (!bd) return;
+  const input = $('cmdPaletteInput');
+  if (!bd || !input) return;
   bd.classList.add('show');
-  $('cmdPaletteInput').value = '';
+  input.value = '';
   _cmdIndex = 0;
   renderCmdPalette();
-  setTimeout(() => $('cmdPaletteInput').focus(), 50);
+  // Multi-strategy focus: animatsiyalar tugagandan keyin
+  const focusInput = () => { try { input.focus(); } catch (_) {} };
+  focusInput();
+  requestAnimationFrame(() => {
+    focusInput();
+    requestAnimationFrame(focusInput);
+  });
+  setTimeout(focusInput, 100);
+  setTimeout(focusInput, 250);
 }
 
 function closeCmdPalette() {
@@ -6884,7 +6902,20 @@ function buildCmdItems() {
   const q = ($('cmdPaletteInput').value || '').trim().toLowerCase();
   const items = [];
 
-  // Sahifalar (har doim)
+  // Helper: fuzzy match — q ning har bir harfi turli pozitsiyalarda match qilsa ham yetadi
+  const fuzzyMatch = (text, query) => {
+    if (!query) return true;
+    const t = (text || '').toLowerCase();
+    if (t.includes(query)) return true;
+    // Har xil joyda harflar — masalan "vazifa" → "vzfa"
+    let qi = 0;
+    for (let i = 0; i < t.length && qi < query.length; i++) {
+      if (t[i] === query[qi]) qi++;
+    }
+    return qi === query.length;
+  };
+
+  // Sahifalar
   const pages = [
     { label: 'Bosh sahifa', icon: '⌂', page: 'dashboard' },
     { label: 'Vazifalar', icon: '✓', page: 'tasks' },
@@ -6898,7 +6929,7 @@ function buildCmdItems() {
     { label: 'Mening profilim', icon: '👤', page: 'profile' },
   ];
   const filteredPages = q
-    ? pages.filter(p => p.label.toLowerCase().includes(q))
+    ? pages.filter(p => fuzzyMatch(p.label, q))
     : pages.slice(0, 5);
   filteredPages.forEach(p => {
     items.push({
@@ -6914,14 +6945,17 @@ function buildCmdItems() {
   // Vazifalar (cache'дan)
   if (Array.isArray(tasksCache) && tasksCache.length) {
     const tFiltered = q
-      ? tasksCache.filter(t => (t.title || '').toLowerCase().includes(q)).slice(0, 6)
+      ? tasksCache.filter(t => fuzzyMatch(t.title || '', q) || fuzzyMatch(t.description || '', q)).slice(0, 8)
       : tasksCache.slice(0, 4);
     tFiltered.forEach(t => {
+      const statusLabel = t.status === 'completed' ? 'Bajarildi' :
+        t.status === 'in_progress' ? 'Jarayonda' :
+        t.status === 'review' ? 'Tekshiruvda' : 'Yangi';
       items.push({
         group: 'Vazifalar',
         icon: '✓',
         title: t.title || '(nomsiz)',
-        sub: t.status || null,
+        sub: statusLabel,
         kbd: null,
         run: () => { closeCmdPalette(); openDetail(t.id); },
       });
@@ -6931,7 +6965,7 @@ function buildCmdItems() {
   // Bo'limlar
   if (Array.isArray(departments) && departments.length) {
     const dFiltered = q
-      ? departments.filter(d => (d.name || '').toLowerCase().includes(q)).slice(0, 5)
+      ? departments.filter(d => fuzzyMatch(d.name || '', q)).slice(0, 5)
       : [];
     dFiltered.forEach(d => {
       items.push({
@@ -6945,7 +6979,25 @@ function buildCmdItems() {
     });
   }
 
-  // Amallar (har doim)
+  // A'zolar (wsMembers)
+  if (Array.isArray(wsMembers) && wsMembers.length && q) {
+    const mFiltered = wsMembers
+      .filter(m => fuzzyMatch((m.profile && m.profile.full_name) || '', q))
+      .slice(0, 4);
+    mFiltered.forEach(m => {
+      const name = (m.profile && m.profile.full_name) || 'A\'zo';
+      items.push({
+        group: "A'zolar",
+        icon: '👤',
+        title: name,
+        sub: m.role === 'owner' ? 'Egasi' : m.role === 'admin' ? 'Admin' : 'A\'zo',
+        kbd: null,
+        run: () => { closeCmdPalette(); goPage('team'); },
+      });
+    });
+  }
+
+  // Amallar
   const actions = [];
   if (canEditWorkspace()) {
     actions.push({ label: 'Yangi vazifa yaratish', icon: '+', kbd: 'N', run: () => { closeCmdPalette(); openCreate(); } });
@@ -6955,7 +7007,7 @@ function buildCmdItems() {
     actions.push({ label: 'A\'zo taklif qilish', icon: '✉', kbd: null, run: () => { closeCmdPalette(); goPage('team'); setTimeout(() => $('inviteBd')?.classList.add('show'), 100); } });
   }
   const aFiltered = q
-    ? actions.filter(a => a.label.toLowerCase().includes(q))
+    ? actions.filter(a => fuzzyMatch(a.label, q))
     : actions;
   aFiltered.forEach(a => {
     items.push({ group: 'Amallar', icon: a.icon, title: a.label, sub: null, kbd: a.kbd, run: a.run });
