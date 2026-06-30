@@ -686,10 +686,7 @@
 
     <!-- Tasks (workspace-wide) -->
     <section id="page-tasks" style="display:none">
-      <div class="row-head">
-        <h2 class="h2" style="margin:0">Hamma vazifalar</h2>
-        <button class="btn" id="tasksNewBtn" onclick="openCreate()">+ Yangi vazifa</button>
-      </div>
+      <h2 class="h2" style="margin-bottom: 14px;">Hamma vazifalar</h2>
       <div class="view-tabs">
         <button class="view-tab active" data-tv="list"     onclick="setTasksView('list')">Ro'yxat</button>
         <button class="view-tab"        data-tv="kanban"   onclick="setTasksView('kanban')">Kanban</button>
@@ -729,6 +726,7 @@
             <option value="today">📅 Bugun deadline</option>
           </select>
           <div style="flex:1"></div>
+          <button class="btn sm" onclick="openCreate()" style="display:inline-flex;align-items:center;gap:4px;">+ Yangi vazifa</button>
           <button class="btn sm secondary" onclick="openAddColumnModal()">+ Yangi column</button>
         </div>
         <div class="kanban" id="tkGrid"></div>
@@ -739,6 +737,7 @@
           <span id="tkCalMonth" style="font-weight:600;font-size:16px;flex:1;text-align:center;">—</span>
           <button class="btn sm secondary" onclick="tkCalNav(1)">›</button>
           <button class="btn sm secondary" onclick="tkCalNav(0)">Bugun</button>
+          <button class="btn sm" onclick="openCreate()" style="display:inline-flex;align-items:center;gap:4px;">+ Yangi vazifa</button>
         </div>
         <div class="cal-grid" id="tkCalGrid"></div>
       </div>
@@ -2522,7 +2521,7 @@ function renderSidebar() {
 
   // Viewer'дан yaratish tugmalarini yashiramiz
   const editable = canEditWorkspace();
-  const newBtns = ['tasksNewBtn','deptNewBtn'];
+  const newBtns = ['deptNewBtn'];
   newBtns.forEach(id => { const b = $(id); if (b) b.style.display = editable ? 'inline-block' : 'none'; });
 }
 
@@ -3152,12 +3151,15 @@ async function saveNewEmployee() {
     };
     const { data: inv, error: invErr } = await sb.from('invitations').insert(payload).select().single();
     if (invErr) {
-      if (/column|invited_full_name|invited_phone|invited_position|invited_branch_id/i.test(invErr.message)) {
-        showMsg($('empMsg'), 'Migration 23 ishga tushirilmagan: invitations jadvaliga yangi maydonlar qo\'shilishi kerak', 'err');
-        btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
-        return;
+      // Aniq xato xabarini ko'rsatamiz
+      const errMsg = invErr.message || String(invErr);
+      if (/invited_full_name|invited_phone|invited_position|invited_branch_id|pending_task_id/i.test(errMsg)) {
+        showMsg($('empMsg'), 'Migration 23 (BIGINT versiyasi) ishga tushirilishi kerak. Xato: ' + errMsg, 'err');
+      } else {
+        showMsg($('empMsg'), 'Xato: ' + errMsg, 'err');
       }
-      throw invErr;
+      btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
+      return;
     }
 
     // Email yuborish (send-email Edge Function)
