@@ -686,7 +686,10 @@
 
     <!-- Tasks (workspace-wide) -->
     <section id="page-tasks" style="display:none">
-      <h2 class="h2" style="margin-bottom: 14px;">Hamma vazifalar</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;">
+        <h2 class="h2" style="margin:0">Hamma vazifalar</h2>
+        <button class="btn" id="tasksHeaderNewBtn" onclick="openCreate()" style="font-size:13.5px;padding:9px 16px;">+ Yangi vazifa</button>
+      </div>
       <div class="view-tabs">
         <button class="view-tab active" data-tv="list"     onclick="setTasksView('list')">Ro'yxat</button>
         <button class="view-tab"        data-tv="kanban"   onclick="setTasksView('kanban')">Kanban</button>
@@ -712,10 +715,6 @@
         <div id="tasksEmpty" class="empty" style="display:none"><strong>Hali vazifa yo'q</strong>Birinchi vazifani yarating.</div>
       </div>
       <div id="tasksView-kanban" style="display:none">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-          <button class="btn" onclick="openCreate()" style="font-size:13.5px;padding:9px 16px;">+ Yangi vazifa</button>
-          <button class="btn secondary" onclick="openAddColumnModal()" style="font-size:13.5px;padding:9px 14px;">+ Yangi column</button>
-        </div>
         <div class="kanban-toolbar">
           <input type="text" class="search-input" id="tkSearch" placeholder="Vazifa qidirish..." oninput="renderTasksKanban()" style="max-width: 280px;" />
           <select id="tkAsgFilter" onchange="renderTasksKanban()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
@@ -729,6 +728,8 @@
             <option value="high">🔥 Yuqori (P1-P4)</option>
             <option value="today">📅 Bugun deadline</option>
           </select>
+          <div style="flex:1"></div>
+          <button class="btn sm secondary" onclick="openAddColumnModal()">+ Yangi column</button>
         </div>
         <div class="kanban" id="tkGrid"></div>
       </div>
@@ -738,7 +739,6 @@
           <span id="tkCalMonth" style="font-weight:600;font-size:16px;flex:1;text-align:center;">—</span>
           <button class="btn sm secondary" onclick="tkCalNav(1)">›</button>
           <button class="btn sm secondary" onclick="tkCalNav(0)">Bugun</button>
-          <button class="btn sm" onclick="openCreate()" style="display:inline-flex;align-items:center;gap:4px;">+ Yangi vazifa</button>
         </div>
         <div class="cal-grid" id="tkCalGrid"></div>
       </div>
@@ -2522,7 +2522,7 @@ function renderSidebar() {
 
   // Viewer'дан yaratish tugmalarini yashiramiz
   const editable = canEditWorkspace();
-  const newBtns = ['deptNewBtn'];
+  const newBtns = ['deptNewBtn', 'tasksHeaderNewBtn'];
   newBtns.forEach(id => { const b = $(id); if (b) b.style.display = editable ? 'inline-block' : 'none'; });
 }
 
@@ -3159,8 +3159,10 @@ async function saveNewEmployee() {
     }
 
     // Email yuborish (send-email Edge Function)
+    let emailSent = true;
+    let emailErrMsg = '';
     try {
-      await sb.functions.invoke('send-email', {
+      const { data: mailRes, error: mailFnErr } = await sb.functions.invoke('send-email', {
         body: {
           type: 'invitation',
           to: email,
@@ -3171,13 +3173,22 @@ async function saveNewEmployee() {
           full_name: fullName || ''
         }
       });
-    } catch (mailErr) { /* sokin */ }
+      if (mailFnErr) { emailSent = false; emailErrMsg = mailFnErr.message || ''; }
+      else if (mailRes && mailRes.ok === false) { emailSent = false; emailErrMsg = mailRes.error || ''; }
+    } catch (mailErr) {
+      emailSent = false;
+      emailErrMsg = String(mailErr.message || mailErr);
+    }
 
     // Multi-select'da ushbu invitation'ni ko'rsatamiz (pending sifatida)
     msSelected.push({ type: 'invite', id: inv.id, label: '✉ ' + (fullName || email) + ' (taklif)' });
     msUpdateSummary();
     closeAddEmployeeModal();
-    toast('✓ Taklif yuborildi: ' + email, 'ok');
+    if (emailSent) {
+      toast('✓ Taklif yuborildi: ' + email, 'ok');
+    } else {
+      toast('⚠ Taklif yaratildi, lekin email yuborilmadi: ' + (emailErrMsg || 'noma\'lum xato'), 'err');
+    }
   } catch (e) {
     showMsg($('empMsg'), translateErr(e.message), 'err');
     btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
