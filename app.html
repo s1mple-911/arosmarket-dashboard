@@ -1496,7 +1496,7 @@
 </div>
 
 <!-- Yangi xodim qo'shish modal (Add Employee) -->
-<div class="modal-backdrop" id="addEmpBd">
+<div class="modal-backdrop" id="addEmpBd" style="z-index: 150;">
   <div class="modal">
     <div class="modal-head"><h3>Yangi xodim qo'shish</h3><button class="x-btn" onclick="closeAddEmployeeModal()">×</button></div>
     <div class="modal-body">
@@ -3146,7 +3146,6 @@ async function saveNewEmployee() {
       invited_branch_id: branchId,
       token,
       invited_by: me.id,
-      role: 'member',
       status: 'pending'
     };
     const { data: inv, error: invErr } = await sb.from('invitations').insert(payload).select().single();
