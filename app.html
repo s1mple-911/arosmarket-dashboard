@@ -1496,6 +1496,49 @@
   </div>
 </div>
 
+<!-- Yangi xodim qo'shish modal (Add Employee) -->
+<div class="modal-backdrop" id="addEmpBd">
+  <div class="modal">
+    <div class="modal-head"><h3>Yangi xodim qo'shish</h3><button class="x-btn" onclick="closeAddEmployeeModal()">×</button></div>
+    <div class="modal-body">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="field">
+          <label>Ism <span style="color:var(--danger)">*</span></label>
+          <input id="empFirstName" type="text" placeholder="Ism" />
+        </div>
+        <div class="field">
+          <label>Familya</label>
+          <input id="empLastName" type="text" placeholder="Familya" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Email <span style="color:var(--danger)">*</span></label>
+        <input id="empEmail" type="email" placeholder="user@example.com" />
+        <div style="font-size: 11.5px; color: var(--muted); margin-top:4px;">Taklif xati shu emailga yuboriladi</div>
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input id="empPhone" type="tel" placeholder="+998 90 123 45 67" />
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="field">
+          <label>Lavozim</label>
+          <input id="empPosition" type="text" placeholder="Masalan: Menejer" />
+        </div>
+        <div class="field">
+          <label>Filial</label>
+          <select id="empBranch"><option value="">(tanlanmagan)</option></select>
+        </div>
+      </div>
+      <div class="msg" id="empMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeAddEmployeeModal()">Bekor</button>
+      <button class="btn" id="empSaveBtn" onclick="saveNewEmployee()">Yaratish va taklif yuborish</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="cmdEditBd">
   <div class="modal">
     <div class="modal-head"><h3 id="cmdEditTitle">Yangi komanda</h3><button class="x-btn" onclick="closeCmdEdit()">×</button></div>
@@ -3047,6 +3090,102 @@ function msIsSelected(type, id) {
   return msSelected.some(s => s.type === type && s.id === id);
 }
 
+// ============ YANGI XODIM QO'SHISH (Add Employee) ============
+function openAddEmployeeModal() {
+  // Reset
+  $('empFirstName').value = '';
+  $('empLastName').value = '';
+  $('empEmail').value = '';
+  $('empPhone').value = '';
+  $('empPosition').value = '';
+  hideMsg($('empMsg'));
+  // Filial select to'ldirish
+  const br = $('empBranch');
+  br.innerHTML = '<option value="">(tanlanmagan)</option>' + (branchesCache || []).map(b =>
+    '<option value="' + b.id + '">' + escapeHtml(b.name) + '</option>'
+  ).join('');
+  const btn = $('empSaveBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Yaratish va taklif yuborish'; }
+  $('addEmpBd').classList.add('show');
+  setTimeout(() => $('empFirstName').focus(), 50);
+}
+
+function closeAddEmployeeModal() {
+  $('addEmpBd').classList.remove('show');
+}
+
+function isValidEmail(e) {
+  return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(String(e || '').trim());
+}
+
+async function saveNewEmployee() {
+  const firstName = $('empFirstName').value.trim();
+  const lastName = $('empLastName').value.trim();
+  const email = $('empEmail').value.trim().toLowerCase();
+  const phone = $('empPhone').value.trim();
+  const position = $('empPosition').value.trim();
+  const branchId = $('empBranch').value || null;
+
+  if (!firstName) { showMsg($('empMsg'), 'Ism kerak', 'err'); return; }
+  if (!email) { showMsg($('empMsg'), 'Email kerak', 'err'); return; }
+  if (!isValidEmail(email)) { showMsg($('empMsg'), 'Email noto\'g\'ri formatda', 'err'); return; }
+  if (!isOwnerLike()) { showMsg($('empMsg'), 'Bunga huquqingiz yo\'q', 'err'); return; }
+
+  const fullName = (firstName + ' ' + lastName).trim();
+  const btn = $('empSaveBtn');
+  btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
+  try {
+    // Token generatsiya
+    const token = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2)));
+    // Invitation yozish
+    const payload = {
+      workspace_id: currentWs.id,
+      email,
+      invited_full_name: fullName || null,
+      invited_phone: phone || null,
+      invited_position: position || null,
+      invited_branch_id: branchId,
+      token,
+      invited_by: me.id,
+      role: 'member',
+      status: 'pending'
+    };
+    const { data: inv, error: invErr } = await sb.from('invitations').insert(payload).select().single();
+    if (invErr) {
+      if (/column|invited_full_name|invited_phone|invited_position|invited_branch_id/i.test(invErr.message)) {
+        showMsg($('empMsg'), 'Migration 23 ishga tushirilmagan: invitations jadvaliga yangi maydonlar qo\'shilishi kerak', 'err');
+        btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
+        return;
+      }
+      throw invErr;
+    }
+
+    // Email yuborish (send-email Edge Function)
+    try {
+      await sb.functions.invoke('send-email', {
+        body: {
+          type: 'invitation',
+          to: email,
+          invitation_id: inv.id,
+          token,
+          workspace_name: currentWs.name,
+          invited_by_name: myProfile.full_name || me.email,
+          full_name: fullName || ''
+        }
+      });
+    } catch (mailErr) { /* sokin — email yuborilmasa ham invitation bor */ }
+
+    // Multi-select'da ushbu invitation'ni ko'rsatamiz (pending sifatida)
+    msSelected.push({ type: 'invite', id: inv.id, label: '✉ ' + (fullName || email) + ' (taklif)' });
+    msUpdateSummary();
+    closeAddEmployeeModal();
+    toast('✓ Taklif yuborildi: ' + email, 'ok');
+  } catch (e) {
+    showMsg($('empMsg'), translateErr(e.message), 'err');
+    btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
+  }
+}
+
 function msToggle(type, id, label, count) {
   const idx = msSelected.findIndex(s => s.type === type && s.id === id);
   if (idx >= 0) msSelected.splice(idx, 1);
@@ -3126,6 +3265,16 @@ function msFilter() {
   const list = $('msList');
   if (!list) return;
   let html = '';
+
+  // 0. Yangi xodim qo'shish — har doim eng tepada
+  if (!q || msMatchesQuery('xodim qoshish yangi', q)) {
+    html += '<div class="ms-opt ms-add-new" onclick="openAddEmployeeModal()" style="background: rgba(254,243,199,.25); border: 1px dashed #FDE68A; border-radius: 8px; margin-bottom: 8px;">' +
+      '<div class="ms-check" style="background: #FEF3C7; color: #854D0E; border-color: #FDE68A;">+</div>' +
+      '<span class="ic" style="color: #854D0E;">👥</span>' +
+      '<div class="name" style="color: #854D0E; font-weight: 600;">Yangi xodim qo\'shish</div>' +
+      '<span class="sub" style="color: #854D0E; opacity: .7;">Email orqali taklif</span>' +
+    '</div>';
+  }
 
   // 1. Mening o'zimga
   const meName = (myProfile && myProfile.full_name) || 'Siz';
@@ -3322,7 +3471,9 @@ async function saveCreate() {
   // Tanlangan biriktirilganlardan haqiqiy assignee'lar ro'yxatini chiqaramiz
   // Har bir element: { assigned_to (uuid) | assigned_to_tg_bot_user (uuid) }
   const targets = msResolveAssignees();
-  if (!targets.length) { showMsg($('cMsg'), 'Kimga biriktirishni tanlang', 'err'); return; }
+  if (!targets.length && !(window._pendingInvites && window._pendingInvites.length)) {
+    showMsg($('cMsg'), 'Kimga biriktirishni tanlang', 'err'); return;
+  }
 
   const btn = $('cBtn');
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
@@ -3349,7 +3500,21 @@ async function saveCreate() {
       assigned_to_tg_bot_user: t.assigned_to_tg_bot_user || null,
       status: window._cQuickStatus || 'new'
     }));
+    // Pending invitelar uchun ham har biriga bittadan vazifa — assigned_to NULL
+    const pendingInvites = window._pendingInvites || [];
+    pendingInvites.forEach(inv => {
+      inserts.push({
+        workspace_id: currentWs.id, department_id: deptId,
+        title, description: desc || null,
+        deadline: deadlineIso, priority_level: prio,
+        created_by: me.id,
+        assigned_to: null,
+        assigned_to_tg_bot_user: null,
+        status: window._cQuickStatus || 'new'
+      });
+    });
     window._cQuickStatus = null;
+    window._pendingInvites = null;
 
     // AbortController bilan 10s timeout — Promise.race postgrest thenable bilan
     // bug'lar berishi mumkin. AbortController ishonchli.
@@ -3410,6 +3575,17 @@ async function saveCreate() {
     toast(targets.length > 1 ? ('✅ ' + targets.length + ' ta vazifa yaratildi') : '✅ Vazifa yaratildi', 'ok');
     refreshActiveView();
 
+    // Pending invitelar uchun yaratilgan vazifalar pending_task_id'gа yoziladi
+    // Inserts oxirida pending invite uchun ghost task'lar qo'shilgan
+    if (pendingInvites && pendingInvites.length) {
+      const ghostStart = targets.length;
+      pendingInvites.forEach((inv, idx) => {
+        const tk = data[ghostStart + idx];
+        if (!tk) return;
+        sb.from('invitations').update({ pending_task_id: tk.id }).eq('id', inv.invitation_id).then(() => {}, () => {});
+      });
+    }
+
     // Telegram + n8n notify (har vazifa uchun)
     for (const t of data) {
       if (t.assigned_to && t.assigned_to !== me.id) {
@@ -3442,7 +3618,8 @@ async function emailNotify(type, taskId, recipientUserId) {
 
 // Tanlangan multi-select elementlardan oxiri assignee'lar ro'yxati
 function msResolveAssignees() {
-  const out = new Map(); // key -> {assigned_to, assigned_to_tg_bot_user}
+  const out = new Map(); // key -> {assigned_to, assigned_to_tg_bot_user, pending_invitation_id}
+  const invites = []; // [{invitation_id, label}]
   for (const s of msSelected) {
     if (s.type === 'me') {
       out.set('user:'+me.id, { assigned_to: me.id });
@@ -3468,8 +3645,13 @@ function msResolveAssignees() {
           else out.set('tg:'+u.id, { assigned_to_tg_bot_user: u.id });
         }
       });
+    } else if (s.type === 'invite') {
+      // Taklif kutayotgan — vazifa yaratilgandan keyin invitations.pending_task_id ga yoziladi
+      invites.push({ invitation_id: s.id, label: s.label });
     }
   }
+  // Pending invitation'larni alohida ko'rib chiqamiz
+  window._pendingInvites = invites;
   return Array.from(out.values());
 }
 
@@ -3783,6 +3965,9 @@ function editDesc() {
 
 async function updateField(field, value) {
   if (!currentDetailId) return;
+  // Eski qiymatni saqlab qo'yamiz — Telegram notify uchun
+  const oldTask = tasksCache.find(x => x.id === currentDetailId);
+  const oldValue = oldTask ? oldTask[field] : null;
   const patch = {}; patch[field] = value;
   try {
     const { data, error } = await sb.from('tasks').update(patch).eq('id', currentDetailId).select().single();
@@ -3793,6 +3978,10 @@ async function updateField(field, value) {
     renderDetailBody();
     refreshActiveView();
     toast('✓ Saqlandi', 'ok');
+    // Telegram'gа tahrirlangan xabar yuborish (faqat asosiy maydonlar uchun)
+    if (['title','description','deadline','priority_level','status','assigned_to','assigned_to_tg_bot_user'].includes(field)) {
+      tgNotifyTaskEdit(data, field, oldValue, value);
+    }
   } catch (e) { toast(translateErr(e.message), 'err'); }
 }
 
@@ -7085,6 +7274,78 @@ async function tgNotifyAssignment(taskId, target) {
       body: { workspace_id: currentWs.id, target, text: lines, inline_keyboard }
     });
   } catch (e) { /* sokin xato */ }
+}
+
+// Tahrirlash uchun: vazifa biriktirilgan foydalanuvchiga xabar yuborish
+async function tgNotifyTaskEdit(task, field, oldValue, newValue) {
+  if (currentWs.kind !== 'organization') return;
+  if (!task) return;
+  // Faqat biriktirilgan foydalanuvchiga yuboramiz
+  let target = null;
+  if (task.assigned_to && task.assigned_to !== me.id) {
+    target = { user_id: task.assigned_to };
+  } else if (task.assigned_to_tg_bot_user) {
+    target = { tg_bot_user_id: task.assigned_to_tg_bot_user };
+  }
+  if (!target) return;
+
+  // Maydon label'lari (o'zbekcha)
+  const FIELD_LBL = {
+    title: 'Nomi',
+    description: 'Tavsif',
+    deadline: 'Deadline',
+    priority_level: 'Prioritet',
+    status: 'Holat',
+    assigned_to: 'Mas\'ul',
+    assigned_to_tg_bot_user: 'Mas\'ul (Telegram)'
+  };
+  const STATUS_LBL = { new: 'Yangi', in_progress: 'Jarayonda', completed: 'Bajarildi', cancelled: 'Bekor', review: 'Tekshiruvda' };
+
+  // Qiymat formatlash
+  const fmtValue = (f, v) => {
+    if (v === null || v === undefined || v === '') return '(bo\'sh)';
+    if (f === 'deadline') return fmtDeadline(v);
+    if (f === 'priority_level') return v > 0 ? ('P' + v) : '(yo\'q)';
+    if (f === 'status') return STATUS_LBL[v] || v;
+    if (f === 'assigned_to') {
+      const m = wsMembers.find(x => x.user_id === v);
+      return (m && m.profile && m.profile.full_name) || 'A\'zo';
+    }
+    if (f === 'assigned_to_tg_bot_user') {
+      const u = (tgUsersCache || []).find(x => x.id === v);
+      return u ? (u.full_name || u.tg_username || 'Bot foydalanuvchi') : 'Bot foydalanuvchi';
+    }
+    return String(v).slice(0, 200);
+  };
+
+  const fieldLbl = FIELD_LBL[field] || field;
+  const oldStr = fmtValue(field, oldValue);
+  const newStr = fmtValue(field, newValue);
+  // Agar haqiqatan ham o'zgarmagan bo'lsa, yubormaslik
+  if (oldStr === newStr) return;
+
+  const lines = [
+    '✏️ <b>Vazifa tahrirlandi</b>',
+    '',
+    '📝 <b>' + escapeHtml(task.title || '') + '</b>',
+    '',
+    '<b>' + fieldLbl + ':</b>',
+    '<s>' + escapeHtml(oldStr) + '</s>',
+    '↓',
+    '<b>' + escapeHtml(newStr) + '</b>',
+    '',
+    'Tahrirladi: ' + escapeHtml(myProfile.full_name || me.email),
+  ].join('\n');
+
+  // Inline tugmalar — qaytadan ko'rib chiqish uchun (faqat ko'rish)
+  const inline_keyboard = [
+    [{ text: '📋 Batafsil', callback_data: 'taskstatus:view:' + task.id }],
+  ];
+  try {
+    await sb.functions.invoke('tg-send', {
+      body: { workspace_id: currentWs.id, target, text: lines, inline_keyboard }
+    });
+  } catch (e) { /* sokin */ }
 }
 
 async function init() {
