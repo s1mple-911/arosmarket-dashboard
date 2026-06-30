@@ -712,6 +712,10 @@
         <div id="tasksEmpty" class="empty" style="display:none"><strong>Hali vazifa yo'q</strong>Birinchi vazifani yarating.</div>
       </div>
       <div id="tasksView-kanban" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <button class="btn" onclick="openCreate()" style="font-size:13.5px;padding:9px 16px;">+ Yangi vazifa</button>
+          <button class="btn secondary" onclick="openAddColumnModal()" style="font-size:13.5px;padding:9px 14px;">+ Yangi column</button>
+        </div>
         <div class="kanban-toolbar">
           <input type="text" class="search-input" id="tkSearch" placeholder="Vazifa qidirish..." oninput="renderTasksKanban()" style="max-width: 280px;" />
           <select id="tkAsgFilter" onchange="renderTasksKanban()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
@@ -725,9 +729,6 @@
             <option value="high">🔥 Yuqori (P1-P4)</option>
             <option value="today">📅 Bugun deadline</option>
           </select>
-          <div style="flex:1"></div>
-          <button class="btn sm" onclick="openCreate()" style="display:inline-flex;align-items:center;gap:4px;">+ Yangi vazifa</button>
-          <button class="btn sm secondary" onclick="openAddColumnModal()">+ Yangi column</button>
         </div>
         <div class="kanban" id="tkGrid"></div>
       </div>
@@ -3134,9 +3135,7 @@ async function saveNewEmployee() {
   const btn = $('empSaveBtn');
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
   try {
-    // Token generatsiya
-    const token = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2)));
-    // Invitation yozish
+    // Invitation yozish — `id` (UUID) o'zi token sifatida ishlatiladi
     const payload = {
       workspace_id: currentWs.id,
       email,
@@ -3144,16 +3143,14 @@ async function saveNewEmployee() {
       invited_phone: phone || null,
       invited_position: position || null,
       invited_branch_id: branchId,
-      token,
       invited_by: me.id,
       status: 'pending'
     };
     const { data: inv, error: invErr } = await sb.from('invitations').insert(payload).select().single();
     if (invErr) {
-      // Aniq xato xabarini ko'rsatamiz
       const errMsg = invErr.message || String(invErr);
       if (/invited_full_name|invited_phone|invited_position|invited_branch_id|pending_task_id/i.test(errMsg)) {
-        showMsg($('empMsg'), 'Migration 23 (BIGINT versiyasi) ishga tushirilishi kerak. Xato: ' + errMsg, 'err');
+        showMsg($('empMsg'), 'Migration 23 ishga tushirilishi kerak. Xato: ' + errMsg, 'err');
       } else {
         showMsg($('empMsg'), 'Xato: ' + errMsg, 'err');
       }
@@ -3168,13 +3165,13 @@ async function saveNewEmployee() {
           type: 'invitation',
           to: email,
           invitation_id: inv.id,
-          token,
+          token: inv.id, // UUID ni token sifatida ishlatamiz
           workspace_name: currentWs.name,
           invited_by_name: myProfile.full_name || me.email,
           full_name: fullName || ''
         }
       });
-    } catch (mailErr) { /* sokin — email yuborilmasa ham invitation bor */ }
+    } catch (mailErr) { /* sokin */ }
 
     // Multi-select'da ushbu invitation'ni ko'rsatamiz (pending sifatida)
     msSelected.push({ type: 'invite', id: inv.id, label: '✉ ' + (fullName || email) + ' (taklif)' });
