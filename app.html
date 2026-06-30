@@ -3316,19 +3316,20 @@ async function saveCreate() {
 
   const btn = $('cBtn');
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
-  // Safety timeout — agar 20s ichida hech narsa kelmasa, tugmani qaytaramιz
+  // Stale-connection fix: kamroq timeout + DB tekshiruv
   const stuckTimer = setTimeout(() => {
     if (btn.disabled) {
       btn.disabled = false; btn.textContent = 'Yaratish';
       showMsg($('cMsg'), 'Ulanishda xatolik. Internet tekshirib yana urinib ko\'ring.', 'err');
     }
-  }, 20000);
+  }, 25000);
   try {
     let deadlineIso = null;
     if (deadline) { const v = deadline.length === 16 ? deadline + ':00' : deadline; deadlineIso = new Date(v + '+05:00').toISOString(); }
 
     // Parallel insert qilish — har assignee uchun bittadan vazifa
     btn.textContent = targets.length > 1 ? ('Yaratilmoqda… 0/' + targets.length) : 'Yaratilmoqda…';
+    const insertsTime = new Date().toISOString();
     const inserts = targets.map(t => ({
       workspace_id: currentWs.id, department_id: deptId,
       title, description: desc || null,
@@ -3339,8 +3340,48 @@ async function saveCreate() {
       status: window._cQuickStatus || 'new'
     }));
     window._cQuickStatus = null;
-    const { data, error } = await sb.from('tasks').insert(inserts).select();
+
+    // Insert ni 10 sekund timeout bilan race qilamiz.
+    // Agar response stale connection sabab kelmasa, biz DB'дan o'qib tekshiramiz.
+    const insertPromise = sb.from('tasks').insert(inserts).select();
+    const RACE_TIMEOUT = 10000;
+    let raceResult;
+    try {
+      raceResult = await Promise.race([
+        insertPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('INSERT_TIMEOUT')), RACE_TIMEOUT))
+      ]);
+    } catch (raceErr) {
+      if (raceErr.message === 'INSERT_TIMEOUT') {
+        // Stale connection — insert ehtimol muvaffaqiyatli, lekin javob kelmadi
+        btn.textContent = 'Tekshirilmoqda…';
+        // 1 sekund kutib turamiz (server response yetib kelishi uchun)
+        await new Promise(r => setTimeout(r, 1000));
+        // DB'дan oxirgi 60 sekund ichida shu nom bilan vazifa yaratilganmi tekshiramiz
+        const { data: recent } = await sb.from('tasks')
+          .select('*')
+          .eq('workspace_id', currentWs.id)
+          .eq('created_by', me.id)
+          .eq('title', title)
+          .gte('created_at', insertsTime)
+          .order('created_at', { ascending: false });
+        if (recent && recent.length >= inserts.length) {
+          // Yaratilgan — UI ni yangilash
+          raceResult = { data: recent.slice(0, inserts.length), error: null };
+          toast('✓ Ulanish sekin, lekin vazifa yaratildi', 'ok');
+        } else if (recent && recent.length > 0) {
+          // Qisman yaratilgan — yangisi sifatida qabul qilamiz
+          raceResult = { data: recent, error: null };
+        } else {
+          throw new Error('Server javob bermayapti. Sahifani yangilang (F5) va qayta urinib ko\'ring.');
+        }
+      } else {
+        throw raceErr;
+      }
+    }
+    const { data, error } = raceResult;
     if (error) throw error;
+    if (!data || !data.length) throw new Error('Vazifa yaratildi, lekin javob bo\'sh keldi. Sahifani yangilang.');
 
     // Subtasks va fayllarni faqat birinchi vazifaga qo'shamиz (yoki barchasiga? — barchasiga foydaliroq)
     // Soddasi: birinchi vazifaga (asosiy reference)
@@ -7261,6 +7302,34 @@ function scrollCmdToActive() {
 }
 
   // Keyboard shortcuts
+  // STALE CONNECTION FIX: tab background'дan qaytganda
+  // realtime channel'larni qayta ulash + auth session tekshirish.
+  // Bu "qotib qolish" muammosini hal qiladi.
+  let _lastVisible = Date.now();
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden) {
+      _lastVisible = Date.now();
+      return;
+    }
+    const awayMs = Date.now() - _lastVisible;
+    // 30 sekunddan ko'p tashqarida bo'lsa
+    if (awayMs > 30000 && me) {
+      try {
+        // Auth session ni majburiy yangilash
+        await sb.auth.refreshSession();
+        // Realtime kanalni qayta ulash
+        if (currentWs) {
+          setupRealtime();
+        }
+      } catch (e) { /* sokin */ }
+    }
+  });
+  window.addEventListener('online', async () => {
+    if (me && currentWs) {
+      try { await sb.auth.refreshSession(); setupRealtime(); } catch (e) {}
+    }
+  });
+
   document.addEventListener('keydown', e => {
     if (!me) return;
     // Ctrl/Cmd + K => Open command palette
