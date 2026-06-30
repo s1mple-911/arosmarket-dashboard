@@ -3013,6 +3013,10 @@ function openCreateInternal(forceDeptId) {
   $('cNewSub').value = '';
   cPendingSubs = [];
   cPendingFiles = [];
+  // CRITICAL: tugmani har doim reset qilamiz — agar oldingi await hang qilsa,
+  // tugma "Yaratilmoqda..." holatda qoladi va ikkinchi marta xato beradi.
+  const cBtn = $('cBtn');
+  if (cBtn) { cBtn.disabled = false; cBtn.textContent = 'Yaratish'; }
   renderCreateSubs();
   renderCreateAtts();
   hideMsg($('cMsg'));
@@ -3299,7 +3303,13 @@ function renderCreateSubs() {
   ).join('');
 }
 
-function closeCreate() { $('createBd').classList.remove('show'); detachCreatePaste(); window._cQuickStatus = null; }
+function closeCreate() {
+  $('createBd').classList.remove('show');
+  detachCreatePaste();
+  window._cQuickStatus = null;
+  const cBtn = $('cBtn');
+  if (cBtn) { cBtn.disabled = false; cBtn.textContent = 'Yaratish'; }
+}
 
 async function saveCreate() {
   const title = $('cTitle').value.trim();
@@ -3341,23 +3351,22 @@ async function saveCreate() {
     }));
     window._cQuickStatus = null;
 
-    // Insert ni 10 sekund timeout bilan race qilamiz.
-    // Agar response stale connection sabab kelmasa, biz DB'дan o'qib tekshiramiz.
-    const insertPromise = sb.from('tasks').insert(inserts).select();
-    const RACE_TIMEOUT = 10000;
+    // AbortController bilan 10s timeout — Promise.race postgrest thenable bilan
+    // bug'lar berishi mumkin. AbortController ishonchli.
+    const ctrl = new AbortController();
+    const abortTimer = setTimeout(() => ctrl.abort(), 10000);
     let raceResult;
     try {
-      raceResult = await Promise.race([
-        insertPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('INSERT_TIMEOUT')), RACE_TIMEOUT))
-      ]);
-    } catch (raceErr) {
-      if (raceErr.message === 'INSERT_TIMEOUT') {
+      raceResult = await sb.from('tasks').insert(inserts).select().abortSignal(ctrl.signal);
+      clearTimeout(abortTimer);
+    } catch (insertErr) {
+      clearTimeout(abortTimer);
+      const isAbort = ctrl.signal.aborted || /abort|signal/i.test(insertErr.message || '');
+      if (isAbort) {
         // Stale connection — insert ehtimol muvaffaqiyatli, lekin javob kelmadi
         btn.textContent = 'Tekshirilmoqda…';
-        // 1 sekund kutib turamiz (server response yetib kelishi uchun)
-        await new Promise(r => setTimeout(r, 1000));
-        // DB'дan oxirgi 60 sekund ichida shu nom bilan vazifa yaratilganmi tekshiramiz
+        await new Promise(r => setTimeout(r, 800));
+        // DB'дan oxirgi yaratilgan vazifalarni tekshiramiz
         const { data: recent } = await sb.from('tasks')
           .select('*')
           .eq('workspace_id', currentWs.id)
@@ -3366,17 +3375,15 @@ async function saveCreate() {
           .gte('created_at', insertsTime)
           .order('created_at', { ascending: false });
         if (recent && recent.length >= inserts.length) {
-          // Yaratilgan — UI ni yangilash
           raceResult = { data: recent.slice(0, inserts.length), error: null };
           toast('✓ Ulanish sekin, lekin vazifa yaratildi', 'ok');
         } else if (recent && recent.length > 0) {
-          // Qisman yaratilgan — yangisi sifatida qabul qilamiz
           raceResult = { data: recent, error: null };
         } else {
           throw new Error('Server javob bermayapti. Sahifani yangilang (F5) va qayta urinib ko\'ring.');
         }
       } else {
-        throw raceErr;
+        throw insertErr;
       }
     }
     const { data, error } = raceResult;
