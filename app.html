@@ -690,23 +690,58 @@
         <h2 class="h2" style="margin:0">Hamma vazifalar</h2>
         <button class="btn" id="tasksNewBtn" onclick="openCreate()">+ Yangi vazifa</button>
       </div>
-      <div class="search-row">
-        <input type="text" class="search-input" id="tasksSearch" placeholder="Vazifalar bo'yicha qidirish… (nom, tavsif)" oninput="onTasksSearch()" />
-        <select id="tasksAsgFilter" onchange="renderTasksList()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
-          <option value="all">Hamma biriktirilganlar</option>
-          <option value="me">Faqat menga</option>
-          <option value="unassigned">Biriktirilmagan</option>
-        </select>
+      <div class="view-tabs">
+        <button class="view-tab active" data-tv="list"     onclick="setTasksView('list')">Ro'yxat</button>
+        <button class="view-tab"        data-tv="kanban"   onclick="setTasksView('kanban')">Kanban</button>
+        <button class="view-tab"        data-tv="calendar" onclick="setTasksView('calendar')">Kalendar</button>
       </div>
-      <div class="filter-row" style="margin-bottom:16px;">
-        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Hammasi</button>
-        <button class="filter-btn" data-filter="new" onclick="setFilter('new')">Yangi</button>
-        <button class="filter-btn" data-filter="in_progress" onclick="setFilter('in_progress')">Jarayonda</button>
-        <button class="filter-btn" data-filter="completed" onclick="setFilter('completed')">Tugallangan</button>
-        <button class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Muddati o'tgan</button>
+      <div id="tasksView-list">
+        <div class="search-row">
+          <input type="text" class="search-input" id="tasksSearch" placeholder="Vazifalar bo'yicha qidirish… (nom, tavsif)" oninput="onTasksSearch()" />
+          <select id="tasksAsgFilter" onchange="renderTasksList()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+            <option value="all">Hamma biriktirilganlar</option>
+            <option value="me">Faqat menga</option>
+            <option value="unassigned">Biriktirilmagan</option>
+          </select>
+        </div>
+        <div class="filter-row" style="margin-bottom:16px;">
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Hammasi</button>
+          <button class="filter-btn" data-filter="new" onclick="setFilter('new')">Yangi</button>
+          <button class="filter-btn" data-filter="in_progress" onclick="setFilter('in_progress')">Jarayonda</button>
+          <button class="filter-btn" data-filter="completed" onclick="setFilter('completed')">Tugallangan</button>
+          <button class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Muddati o'tgan</button>
+        </div>
+        <div id="tasksList" class="list"></div>
+        <div id="tasksEmpty" class="empty" style="display:none"><strong>Hali vazifa yo'q</strong>Birinchi vazifani yarating.</div>
       </div>
-      <div id="tasksList" class="list"></div>
-      <div id="tasksEmpty" class="empty" style="display:none"><strong>Hali vazifa yo'q</strong>Birinchi vazifani yarating.</div>
+      <div id="tasksView-kanban" style="display:none">
+        <div class="kanban-toolbar">
+          <input type="text" class="search-input" id="tkSearch" placeholder="Vazifa qidirish..." oninput="renderTasksKanban()" style="max-width: 280px;" />
+          <select id="tkAsgFilter" onchange="renderTasksKanban()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+            <option value="all">Hamma biriktirilganlar</option>
+            <option value="me">Faqat menga</option>
+            <option value="unassigned">Biriktirilmagan</option>
+          </select>
+          <select id="tkPrioFilter" onchange="renderTasksKanban()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
+            <option value="all">Hamma prioritetlar</option>
+            <option value="overdue">⏰ Muddati o'tgan</option>
+            <option value="high">🔥 Yuqori (P1-P4)</option>
+            <option value="today">📅 Bugun deadline</option>
+          </select>
+          <div style="flex:1"></div>
+          <button class="btn sm secondary" onclick="openAddColumnModal()">+ Yangi column</button>
+        </div>
+        <div class="kanban" id="tkGrid"></div>
+      </div>
+      <div id="tasksView-calendar" style="display:none">
+        <div class="cal-header">
+          <button class="btn sm secondary" onclick="tkCalNav(-1)">‹</button>
+          <span id="tkCalMonth" style="font-weight:600;font-size:16px;flex:1;text-align:center;">—</span>
+          <button class="btn sm secondary" onclick="tkCalNav(1)">›</button>
+          <button class="btn sm secondary" onclick="tkCalNav(0)">Bugun</button>
+        </div>
+        <div class="cal-grid" id="tkCalGrid"></div>
+      </div>
     </section>
 
     <!-- Departments (list) -->
@@ -756,7 +791,7 @@
           <select id="kanPrioFilter" onchange="renderKanban()" style="padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px; background: var(--surface); font-family:inherit;">
             <option value="all">Hamma prioritetlar</option>
             <option value="overdue">⏰ Muddati o'tgan</option>
-            <option value="high">🔥 Yuqori (P7+)</option>
+            <option value="high">🔥 Yuqori (P1-P4)</option>
             <option value="today">📅 Bugun deadline</option>
           </select>
           <div style="flex:1"></div>
@@ -1641,7 +1676,7 @@
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div class="field" style="margin-bottom:0"><label>Deadline</label><input id="cDeadline" type="datetime-local" /></div>
-        <div class="field" style="margin-bottom:0"><label>Prioritet</label><select id="cPriority"><option value="0">Yo'q</option><option value="1">P1 (past)</option><option value="2">P2</option><option value="3">P3</option><option value="4">P4</option><option value="5">P5 (o'rta)</option><option value="6">P6</option><option value="7">P7</option><option value="8">P8 (yuqori)</option><option value="9">P9</option><option value="10">P10 (eng yuqori)</option></select></div>
+        <div class="field" style="margin-bottom:0"><label>Prioritet</label><select id="cPriority"><option value="0">Yo'q</option><option value="1">P1 (eng yuqori)</option><option value="2">P2</option><option value="3">P3 (yuqori)</option><option value="4">P4</option><option value="5">P5</option><option value="6">P6 (o'rta)</option><option value="7">P7</option><option value="8">P8 (past)</option><option value="9">P9</option><option value="10">P10 (eng past)</option></select></div>
       </div>
       <div class="field" style="margin-top: 12px;">
         <label>Subtask'lar (ixtiyoriy)</label>
@@ -1746,6 +1781,8 @@ let notifs = [];
 // Department detail state
 let currentDeptId = null;
 let currentDeptView = 'kanban';
+let currentTasksView = 'list';
+let tkCalCursor = new Date();
 let deptTeamCache = [];   // department_members for current dept
 let calCursor = new Date();  // month displayed in calendar
 
@@ -2330,6 +2367,7 @@ function setupRealtime() {
       }
       kanbanColumns.sort((a, b) => (a.sort_order||0) - (b.sort_order||0));
       if (currentPage === 'department' && currentDeptView === 'kanban') renderKanban();
+      if (currentPage === 'tasks' && currentTasksView === 'kanban') renderTasksKanban();
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + me.id }, payload => {
       // Yangi notification — bell ko'rsatkichi va list
@@ -3278,6 +3316,13 @@ async function saveCreate() {
 
   const btn = $('cBtn');
   btn.disabled = true; btn.textContent = 'Yaratilmoqda…';
+  // Safety timeout — agar 20s ichida hech narsa kelmasa, tugmani qaytaramιz
+  const stuckTimer = setTimeout(() => {
+    if (btn.disabled) {
+      btn.disabled = false; btn.textContent = 'Yaratish';
+      showMsg($('cMsg'), 'Ulanishda xatolik. Internet tekshirib yana urinib ko\'ring.', 'err');
+    }
+  }, 20000);
   try {
     let deadlineIso = null;
     if (deadline) { const v = deadline.length === 16 ? deadline + ':00' : deadline; deadlineIso = new Date(v + '+05:00').toISOString(); }
@@ -3328,9 +3373,11 @@ async function saveCreate() {
       notifyN8n('task.created', { task: t });
     }
   } catch (e) {
+    clearTimeout(stuckTimer);
     showMsg($('cMsg'), translateErr(e.message), 'err');
     btn.disabled=false; btn.textContent='Yaratish';
   }
+  clearTimeout(stuckTimer);
 }
 
 // Email notify (fire and forget — agar RESEND_API_KEY o'rnatilmagan bo'lsa, sukut qoladi)
@@ -5337,13 +5384,144 @@ function refreshActiveView() {
   // Dashboard
   if (currentPage === 'dashboard') updateDashboard(null);
   // Active page
-  if (currentPage === 'tasks') renderTasksList();
+  if (currentPage === 'tasks') {
+    if (currentTasksView === 'list') renderTasksList();
+    else if (currentTasksView === 'kanban') renderTasksKanban();
+    else if (currentTasksView === 'calendar') renderTasksCalendar();
+  }
   else if (currentPage === 'stats') renderStats();
   else if (currentPage === 'department') {
     if (currentDeptView === 'kanban') renderKanban();
     else if (currentDeptView === 'list') renderDeptList();
     else if (currentDeptView === 'calendar') renderCalendar();
   }
+}
+
+function setTasksView(v) {
+  currentTasksView = v;
+  document.querySelectorAll('#page-tasks [data-tv]').forEach(b => b.classList.toggle('active', b.dataset.tv === v));
+  $('tasksView-list').style.display = v === 'list' ? 'block' : 'none';
+  $('tasksView-kanban').style.display = v === 'kanban' ? 'block' : 'none';
+  $('tasksView-calendar').style.display = v === 'calendar' ? 'block' : 'none';
+  if (v === 'kanban') renderTasksKanban();
+  else if (v === 'calendar') { tkCalCursor = new Date(); renderTasksCalendar(); }
+  else renderTasksList();
+}
+
+function tkFilteredTasks() {
+  let list = (tasksCache || []).slice();
+  const q = ($('tkSearch')?.value || '').trim().toLowerCase();
+  if (q) list = list.filter(t => (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
+  const asgF = $('tkAsgFilter')?.value || 'all';
+  if (asgF === 'me') list = list.filter(t => t.assigned_to === me.id);
+  else if (asgF === 'unassigned') list = list.filter(t => !t.assigned_to && !t.assigned_to_tg_bot_user);
+  const prioF = $('tkPrioFilter')?.value || 'all';
+  if (prioF === 'overdue') list = list.filter(isOverdue);
+  else if (prioF === 'high') list = list.filter(t => { const p = t.priority_level || 0; return p >= 1 && p <= 4; });
+  else if (prioF === 'today') {
+    const today = new Date();
+    list = list.filter(t => {
+      if (!t.deadline || t.status === 'completed' || t.status === 'cancelled') return false;
+      const d = new Date(t.deadline);
+      return d.getUTCDate() === today.getUTCDate() && d.getUTCMonth() === today.getUTCMonth() && d.getUTCFullYear() === today.getUTCFullYear();
+    });
+  }
+  return list;
+}
+
+function renderTasksKanban() {
+  const grid = $('tkGrid'); if (!grid) return;
+  const tasks = tkFilteredTasks();
+  const cols = kanbanColumns.length ? kanbanColumns : STATUS_ORDER.map((s, i) => ({ id: 'fallback-'+s, name: STATUS_LBL[s], status: s, color: '#94A3B8', sort_order: i+1, is_default: true }));
+
+  grid.innerHTML = cols.map(col => {
+    const cards = tasks.filter(t => t.status === col.status);
+    const cardsHtml = cards.map(t => {
+      const ov = isOverdue(t);
+      const dl = t.deadline ? fmtDeadline(t.deadline) : '';
+      let asgName = '';
+      if (t.assigned_to) {
+        const asg = (wsMembers.find(m => m.user_id === t.assigned_to) || {}).profile;
+        asgName = asg && asg.full_name ? '👤 ' + asg.full_name : '👤 A\'zo';
+      } else if (t.assigned_to_tg_bot_user) {
+        const bu = (tgUsersCache || []).find(u => u.id === t.assigned_to_tg_bot_user);
+        asgName = bu ? '✈ ' + (bu.full_name || bu.tg_username || 'Bot') : '✈ Bot';
+      }
+      // Bo'lim ko'rsatish — tasks page'da boshqa bo'limlar bilan aralash bo'lishi mumkin
+      const dept = t.department_id ? departments.find(d => d.id === t.department_id) : null;
+      const deptName = dept ? '▦ ' + dept.name : '';
+      return '<div class="kan-card" draggable="true" data-id="'+t.id+'" ondragstart="kanDragStart(event, '+t.id+')" ondragend="kanDragEnd(event)" onclick="openDetail('+t.id+')">' +
+        '<div class="kan-card-title">' + escapeHtml(t.title) + '</div>' +
+        '<div class="kan-card-meta">' +
+          (deptName ? '<span>' + escapeHtml(deptName) + '</span>' : '') +
+          (asgName ? '<span>' + escapeHtml(asgName) + '</span>' : '') +
+          (dl ? '<span class="' + (ov ? 'task-overdue' : '') + '">⏰ ' + dl + '</span>' : '') +
+          ((t.priority_level||0) > 0 ? '<span>P' + t.priority_level + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    const colId = col.id;
+    const isFb = String(colId).startsWith('fallback-');
+    const colorDot = '<span class="kan-col-color" style="background:' + (col.color || '#94A3B8') + '"></span>';
+    const nameHtml = '<span class="kan-col-name">' + escapeHtml(col.name) + '</span>';
+
+    return '<div class="kan-col" data-col="'+colId+'" data-status="'+col.status+'"' +
+      ' ondragover="kanDragOver(event)" ondragleave="kanDragLeave(event)" ondrop="kanDrop(event, \''+col.status+'\')">' +
+      '<div class="kan-head">' +
+        '<div class="kan-col-head">' + colorDot + nameHtml + '</div>' +
+        '<div style="display:flex; align-items:center; gap:6px;">' +
+          '<span class="kan-count">' + cards.length + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="kan-cards">' + (cardsHtml || '<div class="kan-empty">—</div>') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function tkCalNav(dir) {
+  if (dir === 0) tkCalCursor = new Date();
+  else { tkCalCursor.setDate(1); tkCalCursor.setMonth(tkCalCursor.getMonth() + dir); }
+  renderTasksCalendar();
+}
+
+function renderTasksCalendar() {
+  const grid = $('tkCalGrid'); if (!grid) return;
+  const tasks = (tasksCache || []);
+  const cur = new Date(tkCalCursor.getFullYear(), tkCalCursor.getMonth(), 1);
+  const monthNames = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+  $('tkCalMonth').textContent = monthNames[cur.getMonth()] + ' ' + cur.getFullYear();
+  const firstDay = (cur.getDay() + 6) % 7;
+  const daysInMonth = new Date(cur.getFullYear(), cur.getMonth()+1, 0).getDate();
+  const todayKey = new Date().toISOString().slice(0,10);
+
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push({ day: '', other: true });
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(cur.getFullYear(), cur.getMonth(), d);
+    const dayKey = date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dayTasks = tasks.filter(t => {
+      if (!t.deadline) return false;
+      const td = new Date(t.deadline);
+      return td.getFullYear() === date.getFullYear() && td.getMonth() === date.getMonth() && td.getDate() === d;
+    });
+    cells.push({ day: d, date, dayKey, tasks: dayTasks, isToday: dayKey === todayKey });
+  }
+
+  const headers = ['Du','Se','Cho','Pa','Ju','Sh','Ya'].map(d => '<div class="cal-head">'+d+'</div>').join('');
+  const cellsHtml = cells.map(c => {
+    if (c.other) return '<div class="cal-cell other"></div>';
+    const taskItems = (c.tasks || []).slice(0, 3).map(t =>
+      '<div class="cal-task" onclick="event.stopPropagation();openDetail('+t.id+')" title="' + escapeHtml(t.title) + '">' + escapeHtml(t.title) + '</div>'
+    ).join('');
+    const more = c.tasks.length > 3 ? '<div class="cal-more">+' + (c.tasks.length - 3) + '</div>' : '';
+    return '<div class="cal-cell' + (c.isToday ? ' today' : '') + '">' +
+      '<div class="cal-day">' + c.day + '</div>' +
+      taskItems + more +
+    '</div>';
+  }).join('');
+
+  grid.innerHTML = headers + cellsHtml;
 }
 
 // ============ DEPARTMENTS LIST ============
@@ -5524,7 +5702,7 @@ function kanFilteredTasks() {
   // Prio
   const prioF = $('kanPrioFilter')?.value || 'all';
   if (prioF === 'overdue') list = list.filter(isOverdue);
-  else if (prioF === 'high') list = list.filter(t => (t.priority_level||0) >= 7);
+  else if (prioF === 'high') list = list.filter(t => { const p = t.priority_level || 0; return p >= 1 && p <= 4; });
   else if (prioF === 'today') {
     const today = new Date();
     list = list.filter(t => {
