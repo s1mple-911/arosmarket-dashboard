@@ -686,10 +686,7 @@
 
     <!-- Tasks (workspace-wide) -->
     <section id="page-tasks" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;">
-        <h2 class="h2" style="margin:0">Hamma vazifalar</h2>
-        <button class="btn" id="tasksHeaderNewBtn" onclick="openCreate()" style="font-size:13.5px;padding:9px 16px;">+ Yangi vazifa</button>
-      </div>
+      <h2 class="h2" style="margin-bottom:14px;">Hamma vazifalar</h2>
       <div class="view-tabs">
         <button class="view-tab active" data-tv="list"     onclick="setTasksView('list')">Ro'yxat</button>
         <button class="view-tab"        data-tv="kanban"   onclick="setTasksView('kanban')">Kanban</button>
@@ -2522,7 +2519,7 @@ function renderSidebar() {
 
   // Viewer'дан yaratish tugmalarini yashiramiz
   const editable = canEditWorkspace();
-  const newBtns = ['deptNewBtn', 'tasksHeaderNewBtn'];
+  const newBtns = ['deptNewBtn'];
   newBtns.forEach(id => { const b = $(id); if (b) b.style.display = editable ? 'inline-block' : 'none'; });
 }
 
@@ -3146,16 +3143,45 @@ async function saveNewEmployee() {
       invited_by: me.id,
       status: 'pending'
     };
-    const { data: inv, error: invErr } = await sb.from('invitations').insert(payload).select().single();
+    let inv = null;
+    const { data: invData, error: invErr } = await sb.from('invitations').insert(payload).select().single();
     if (invErr) {
       const errMsg = invErr.message || String(invErr);
-      if (/invited_full_name|invited_phone|invited_position|invited_branch_id|pending_task_id/i.test(errMsg)) {
+      // Bu email'gа allaqachon ochiq taklif bor — uni topib qayta ishlatamiz
+      if (/uniq_inv_open|duplicate key|unique constraint/i.test(errMsg)) {
+        const { data: existing, error: exErr } = await sb.from('invitations')
+          .select('*')
+          .eq('workspace_id', currentWs.id)
+          .eq('email', email)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (existing && !exErr) {
+          inv = existing;
+          // Ma'lumotlarni yangilaymиz (ism, telefon, lavozim o'zgargan bo'lishi mumkin)
+          await sb.from('invitations').update({
+            invited_full_name: fullName || existing.invited_full_name,
+            invited_phone: phone || existing.invited_phone,
+            invited_position: position || existing.invited_position,
+            invited_branch_id: branchId || existing.invited_branch_id
+          }).eq('id', existing.id);
+        } else {
+          showMsg($('empMsg'), 'Bu email allaqachon taklif qilingan, lekin topib bo\'lmadi: ' + errMsg, 'err');
+          btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
+          return;
+        }
+      } else if (/invited_full_name|invited_phone|invited_position|invited_branch_id|pending_task_id/i.test(errMsg)) {
         showMsg($('empMsg'), 'Migration 23 ishga tushirilishi kerak. Xato: ' + errMsg, 'err');
+        btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
+        return;
       } else {
         showMsg($('empMsg'), 'Xato: ' + errMsg, 'err');
+        btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
+        return;
       }
-      btn.disabled=false; btn.textContent='Yaratish va taklif yuborish';
-      return;
+    } else {
+      inv = invData;
     }
 
     // Email yuborish (send-email Edge Function)
