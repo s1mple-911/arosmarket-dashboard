@@ -1617,8 +1617,9 @@ function renderDash(){
       html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:'+rowBg+';border-radius:12px;border:'+rowBorder+';margin-bottom:6px">';
       html+='<div style="font-size:18px;width:24px;text-align:center">'+medal+'</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(f.filial||'—')+(isMe?' · <span style="color:#378ADD;font-size:10px">SIZ</span>':'')+'</div>';
-      var hozFoiz = f.foiz||0;
+      var trophyIcon = (rank===1) ? '<span style="font-size:14px;margin-right:3px">🏆</span>' : '';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+trophyIcon+(f.filial||'—')+(isMe?' · <span style="color:#378ADD;font-size:10px">SIZ</span>':'')+'</div>';
+      var hozFoiz = (f.foiz!=null && f.foiz!=='') ? f.foiz : ((f.plan>0) ? Math.round((f.bajarildi||0)/f.plan*100) : 0);
       var hozColor = hozFoiz>=100?'var(--green)':hozFoiz>=70?'var(--amber)':'var(--red)';
       html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Hozirgi: <span style="color:'+hozColor+';font-weight:700">'+hozFoiz+'%</span></div>';
       html+='</div>';
