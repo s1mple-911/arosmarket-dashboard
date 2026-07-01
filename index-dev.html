@@ -995,7 +995,7 @@ function loadFilialStats(cb){
 // YANGI: Barcha filiallar ma'lumotini olish (Top-5 leaderboard uchun)
 var allFiliallar = [];
 function loadAllFiliallar(cb){
-  fetch(CEO_API+'?uid='+uid)
+  fetch(CEO_API+'?uid='+uid+'&_='+Date.now())
     .then(function(r){return r.text();})
     .then(function(txt){
       try{
