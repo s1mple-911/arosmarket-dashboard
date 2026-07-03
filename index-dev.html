@@ -182,7 +182,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button id="v2Toggle" onclick="toggleV2()" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
     <span style="font-size:15px">📋</span> V2 — Qarz yig'ish
   </button>
-  <div id="v2Counter" style="display:none;align-items:center;gap:5px;padding:9px 12px;border-radius:10px;background:rgba(52,199,89,.15);border:1px solid rgba(52,199,89,.35);color:#34C759;font-weight:800;font-size:14px;white-space:nowrap">
+  <div id="v2Counter" onclick="openCounterDetail()" style="display:none;align-items:center;gap:5px;padding:9px 12px;border-radius:10px;background:rgba(52,199,89,.15);border:1px solid rgba(52,199,89,.35);color:#34C759;font-weight:800;font-size:14px;white-space:nowrap;cursor:pointer">
     <span style="font-size:11px;opacity:.8">Bugun:</span> <span id="v2CounterVal">0</span>
   </div>
 </div>
@@ -248,6 +248,7 @@ var CLIENT_ITEMS_API = 'https://n8n.arosmarket.com/webhook/aros-client-items';
 var ITEM_CHECK_API   = 'https://n8n.arosmarket.com/webhook/aros-item-check';
 var CLIENT_NAME_API  = 'https://n8n.arosmarket.com/webhook/aros-client-name';
 var COUNTER_API      = 'https://n8n.arosmarket.com/webhook/aros-collect-counter';
+var COUNTER_DETAIL_API = 'https://n8n.arosmarket.com/webhook/aros-collect-detail';
 var v2Mode = false;               // V2 rejim yoqilganmi
 var v2Loaded = false, v2Loading = false;
 var v2Debtors = [];               // barcha qarzdorlar (cache dan)
@@ -472,6 +473,24 @@ function renderBarcha(){
 
 function paintBarcha(){
   var pageBarcha = document.getElementById('page-barcha');
+  // Search input + list container'ni bir marta yasaymiz
+  var html = '<div style="padding:10px 12px">';
+  html += '<div style="position:relative;margin-bottom:10px">';
+  html += '<input id="v2Search" type="text" inputmode="search" placeholder="Ism, ID yoki telefon..." oninput="onV2Search(this.value)" style="width:100%;box-sizing:border-box;padding:11px 36px 11px 14px;border-radius:11px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;outline:none">';
+  html += '<div id="v2SearchClear" onclick="clearV2Search()" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px">✕</div>';
+  html += '</div>';
+  html += '<div id="v2ListCount" style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600"></div>';
+  html += '<div id="v2List"></div>';
+  html += '</div>';
+  pageBarcha.innerHTML = html;
+  paintV2List();  // ro'yxatni to'ldirish
+}
+
+// Faqat ro'yxatni yangilaydi (input'ga tegmaydi — fokus buzilmaydi)
+function paintV2List(){
+  var listEl = document.getElementById('v2List');
+  var countEl = document.getElementById('v2ListCount');
+  if(!listEl) return;
   var q = (v2SearchQ||'').trim().toLowerCase();
   var list = v2Debtors;
   if(q){
@@ -482,14 +501,11 @@ function paintBarcha(){
       return nm.indexOf(q)>=0 || String(id).indexOf(q)>=0 || tel.indexOf(q)>=0;
     });
   }
-  var html = '<div style="padding:10px 12px">';
-  // Search input
-  html += '<div style="position:relative;margin-bottom:10px">';
-  html += '<input id="v2Search" type="text" inputmode="search" placeholder="Ism, ID yoki telefon..." value="'+(v2SearchQ.replace(/"/g,'&quot;'))+'" oninput="onV2Search(this.value)" style="width:100%;box-sizing:border-box;padding:11px 36px 11px 14px;border-radius:11px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;outline:none">';
-  if(v2SearchQ) html += '<div onclick="onV2Search(\'\')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px">✕</div>';
-  html += '</div>';
-  html += '<div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600">'+list.length+' ta qarzdor'+(q?' topildi':'')+'</div>';
+  if(countEl) countEl.textContent = list.length+' ta qarzdor'+(q?' topildi':'');
+  var clearEl = document.getElementById('v2SearchClear');
+  if(clearEl) clearEl.style.display = q ? 'block' : 'none';
 
+  var html = '';
   list.forEach(function(d){
     var id = d.user_id!=null ? d.user_id : d.id;
     var name = v2DisplayName(d);
@@ -512,20 +528,21 @@ function paintBarcha(){
     html += '<div style="color:var(--text3);font-size:16px;margin-left:2px">›</div>';
     html += '</div>';
   });
-  html += '</div>';
-  pageBarcha.innerHTML = html;
+  listEl.innerHTML = html;
 }
 
 var _v2SearchTimer=null;
 function onV2Search(val){
   v2SearchQ = val;
+  // faqat ro'yxatni yangilaymiz — input'ga tegmaymiz (fokus saqlanadi)
   if(_v2SearchTimer) clearTimeout(_v2SearchTimer);
-  _v2SearchTimer = setTimeout(function(){
-    paintBarcha();
-    // fokusni saqlash
-    var inp = document.getElementById('v2Search');
-    if(inp){ inp.focus(); var v=inp.value; inp.value=''; inp.value=v; }
-  }, 200);
+  _v2SearchTimer = setTimeout(paintV2List, 350);
+}
+function clearV2Search(){
+  v2SearchQ = '';
+  var inp = document.getElementById('v2Search');
+  if(inp) inp.value = '';
+  paintV2List();
 }
 
 // Counter — bugungi yig'ilgan
@@ -545,6 +562,49 @@ function bumpCounter(delta){
   if(el) el.textContent = fmt(v2CollectTotal);
 }
 
+// Counter bosilganda — bugungi yig'ilgan, user bo'yicha
+function openCounterDetail(){
+  var _wh = wid || userData.warehouse_id || 0;
+  var modal = document.getElementById('v2Modal');
+  modal.style.display = 'flex';
+  modal.innerHTML = '<div class="loading" style="margin:auto"><div class="spinner"></div>Yuklanmoqda...</div>';
+  fetch(COUNTER_DETAIL_API+'?wid='+_wh+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var users = (d && d.users) || [];
+      var total = users.reduce(function(s,u){return s+(Number(u.summa)||0);},0);
+      var cnt = users.reduce(function(s,u){return s+(Number(u.cnt)||0);},0);
+      var html = '';
+      html += '<div style="background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px;position:sticky;top:0;z-index:10">';
+      html += '<div style="display:flex;align-items:center;gap:10px">';
+      html += '<div onclick="closeV2Modal()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
+      html += '<div style="flex:1"><div style="font-size:16px;font-weight:800;color:var(--text)">Bugun yig\'ilgan</div>';
+      html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+users.length+' mijoz · '+cnt+' ta mahsulot</div></div>';
+      html += '<div style="text-align:right"><div style="font-size:18px;font-weight:900;color:#34C759">'+fmt(total)+'</div><div style="font-size:9px;color:var(--text3)">so\'m</div></div>';
+      html += '</div></div>';
+      html += '<div style="flex:1;overflow-y:auto;padding:12px 14px">';
+      if(users.length===0){
+        html += '<div style="text-align:center;color:var(--text3);padding:40px 20px">Bugun hali hech narsa yig\'ilmadi</div>';
+      } else {
+        users.forEach(function(u){
+          var nm = u.client_name || ('ID '+u.user_id);
+          var t = u.last_at ? String(u.last_at).substring(11,16) : '';
+          html += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);margin-bottom:8px">';
+          html += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
+          html += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
+          html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+u.cnt+' ta mahsulot'+(t?' · '+t:'')+'</div></div>';
+          html += '<div style="font-size:15px;font-weight:800;color:#34C759;flex-shrink:0">'+fmt(u.summa)+'</div>';
+          html += '</div>';
+        });
+      }
+      html += '</div>';
+      modal.innerHTML = html;
+    })
+    .catch(function(){
+      modal.innerHTML = '<div style="margin:auto;text-align:center;color:var(--red);padding:40px">Xato<br><button onclick="closeV2Modal()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text)">Yopish</button></div>';
+    });
+}
+
 // Mijoz modalini ochish — LIVE (client-items)
 function openV2Modal(userId){
   var d = null;
@@ -556,14 +616,23 @@ function openV2Modal(userId){
   var modal = document.getElementById('v2Modal');
   modal.style.display = 'flex';
   modal.innerHTML = '<div class="loading" style="margin:auto"><div class="spinner"></div>Yuklanmoqda...</div>';
+  // Telegram pull-to-refresh'ni o'chirish (modal ichida)
+  try{ if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.disableVerticalSwipes) window.Telegram.WebApp.disableVerticalSwipes(); }catch(e){}
   fetchV2Items(userId);
 }
 function closeV2Modal(){
   document.getElementById('v2Modal').style.display = 'none';
   v2ModalUser = null;
+  try{ if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.enableVerticalSwipes) window.Telegram.WebApp.enableVerticalSwipes(); }catch(e){}
 }
 
 function fetchV2Items(userId, isRefresh){
+  if(isRefresh){
+    var sc = document.getElementById('v2ItemsScroll');
+    if(sc) sc.innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div>Yangilanmoqda...</div>';
+    var rb = document.getElementById('v2RefreshBtn');
+    if(rb) rb.textContent = '⏳';
+  }
   fetch(CLIENT_ITEMS_API+'?user_id='+userId+'&_='+Date.now())
     .then(function(r){return r.json();})
     .then(function(data){
@@ -666,12 +735,13 @@ function renderV2Item(it, userId){
   var checked = it.checked;
   var lineStyle = checked ? 'text-decoration:line-through;opacity:.5' : '';
   var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
-  var h = '<div class="v2-item" data-item="'+it.item_id+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
+  var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
+  var h = '<div class="v2-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
   h += '<div class="v2-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;'+lineStyle+';transition:transform .2s;background:var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
-  h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+'</div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+it.quantity+' × '+fmt(it.selling_price)+'</div>';
+  h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+fmt(it.selling_price)+' so\'m</div>';
   h += '</div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(it.total_price)+'</div>';
   h += '<div class="v2-check-badge" style="font-size:10px;margin-top:2px;color:'+(checked?'var(--green)':'var(--text3)')+'">'+(checked?'✓ yig\'ildi':'← surib yig\'ing')+'</div></div>';
@@ -712,11 +782,13 @@ function attachSwipeHandlers(userId){
 
 function toggleV2Item(el, userId, makeChecked){
   var itemId = el.getAttribute('data-item');
+  var unitIdx = el.getAttribute('data-unit');
   var orderId = el.getAttribute('data-order');
   var summa = Number(el.getAttribute('data-summa'))||0;
   var inner = el.querySelector('.v2-item-inner');
   var _wh = wid || userData.warehouse_id || 0;
   var action = makeChecked ? 'check' : 'uncheck';
+  var cname = v2CustomNames[userId] || (v2ModalUser ? (v2ModalUser.ism||'') : '');
 
   // Optimistik UI
   inner.style.transform='translateX(0)';
@@ -730,9 +802,8 @@ function toggleV2Item(el, userId, makeChecked){
   bumpCounter(makeChecked ? summa : -summa);
 
   // Backend
-  var url = ITEM_CHECK_API+'?action='+action+'&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&wid='+_wh+'&summa='+summa;
+  var url = ITEM_CHECK_API+'?action='+action+'&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa+'&client_name='+encodeURIComponent(cname);
   fetch(url, {keepalive:true}).then(function(r){return r.json();}).then(function(){
-    // order to'liq yig'ildimi — tekshiramiz
     checkOrderComplete(userId, orderId);
   }).catch(function(){});
 }
@@ -775,7 +846,7 @@ function editV2Name(userId){
   var nameEl = document.getElementById('v2Name');
   if(nameEl) nameEl.textContent = yangi;
   // ro'yxatni ham yangilash (agar ochiq bo'lsa)
-  if(v2Mode){ paintBarcha(); }
+  if(v2Mode){ paintV2List(); }
   fetch(CLIENT_NAME_API+'?user_id='+userId+'&name='+encodeURIComponent(yangi), {keepalive:true}).catch(function(){});
 }
 
