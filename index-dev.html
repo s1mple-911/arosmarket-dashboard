@@ -587,12 +587,20 @@ function openCounterDetail(){
         html += '<div style="text-align:center;color:var(--text3);padding:40px 20px">Bugun hali hech narsa yig\'ilmadi</div>';
       } else {
         users.forEach(function(u){
-          var nm = u.client_name || ('ID '+u.user_id);
+          // ism: custom_name > allUsers ism > client_name > Noma'lum
+          var du = null;
+          for(var i=0;i<v2Debtors.length;i++){
+            var vid = v2Debtors[i].user_id!=null ? v2Debtors[i].user_id : v2Debtors[i].id;
+            if(String(vid)===String(u.user_id)){ du=v2Debtors[i]; break; }
+          }
+          var nm = v2CustomNames[u.user_id] || u.client_name;
+          if(!nm && du) nm = du.ism || ((du.first_name||'')+' '+(du.last_name||'')).trim();
+          if(!nm) nm = "Noma'lum";
           var t = u.last_at ? String(u.last_at).substring(11,16) : '';
           html += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);margin-bottom:8px">';
           html += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
           html += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
-          html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+u.cnt+' ta mahsulot'+(t?' · '+t:'')+'</div></div>';
+          html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">ID '+u.user_id+' · '+u.cnt+' ta mahsulot'+(t?' · '+t:'')+'</div></div>';
           html += '<div style="font-size:15px;font-weight:800;color:#34C759;flex-shrink:0">'+fmt(u.summa)+'</div>';
           html += '</div>';
         });
