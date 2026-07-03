@@ -437,68 +437,95 @@ function toggleV2(){
   }
 }
 
-// Barcha qarzdorlar ro'yxati (cache dan — debtorsCache.bugun = hamma overdue,
-// lekin bizga muddati o'tgan+bor hammasi kerak. allUsers cache'da yo'q,
-// shuning uchun debtorsCache.paslozim (eng keng ro'yxat) + bugun ni birlashtiramiz)
-function collectAllDebtors(){
-  var map = {};
-  function addFrom(arr){
-    (arr||[]).forEach(function(d){
-      var id = d.id;
-      if(id==null) return;
-      // qarzini to'lagan bo'lsa (outdated=0 va total=0) tashlab yuboramiz
-      var totalDebt = Number(d.total_debts)||0;
-      if(totalDebt<=0) return;
-      if(!map[id]) map[id]=d;
-    });
-  }
-  if(debtorsCache){
-    addFrom(debtorsCache.paslozim && debtorsCache.paslozim.debtors);
-    addFrom(debtorsCache.ertaga && debtorsCache.ertaga.debtors);
-    addFrom(debtorsCache.bugun && debtorsCache.bugun.debtors);
-  }
-  return Object.keys(map).map(function(k){return map[k];});
+// Barcha qarzdorlar — STATS allUsers dan (cache_filial.allUsers, hamma qarzi>0)
+var NAMES_ALL_API = 'https://n8n.arosmarket.com/webhook/aros-client-names-all';
+var v2SearchQ = '';
+
+function loadAllCustomNames(cb){
+  fetch(NAMES_ALL_API+'?_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && typeof d==='object'){ for(var k in d){ v2CustomNames[k]=d[k]; } }
+      if(cb) cb();
+    }).catch(function(){ if(cb) cb(); });
+}
+
+function v2DisplayName(d){
+  var id = d.user_id!=null ? d.user_id : d.id;
+  return v2CustomNames[id] || (d.ism || ((d.first_name||'')+' '+(d.last_name||'')).trim()) || "Noma'lum";
 }
 
 function renderBarcha(){
   var pageBarcha = document.getElementById('page-barcha');
   pageBarcha.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-  loadDebtors(function(){
-    v2Debtors = collectAllDebtors();
+  loadAllCustomNames(function(){
+    // allUsers global — STATS_API dan keladi (73 ta), agar bo'sh bo'lsa cache dan
+    v2Debtors = (allUsers && allUsers.length) ? allUsers.slice() : [];
     if(v2Debtors.length===0){
       pageBarcha.innerHTML = '<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="et">Qarzdor yo\'q</div></div>';
       return;
     }
-    // eng ko'p qarzi borlar tepada
-    v2Debtors.sort(function(a,b){ return (Number(b.total_debts)||0)-(Number(a.total_debts)||0); });
-    var html = '<div style="padding:10px 12px">';
-    html += '<div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600">'+v2Debtors.length+' ta qarzdor · yig\'ish uchun mijozni tanlang</div>';
-    v2Debtors.forEach(function(d){
-      var name = v2CustomNames[d.id] || ((d.first_name||'')+' '+(d.last_name||'')).trim() || "Noma'lum";
-      var totalDebt = Number(d.total_debts)||0;
-      var outdated = Number(d.total_outdated_debts)||0;
-      var wallet = Number(d.wallet_balance)||0;
-      var mod = Number(d.most_outdated_deadline)||0;
-      var dad = Number(d.debt_allowed_days)||0;
-      var utype = dad===1 ? 'M' : (dad>1 ? 'BP' : '');
-      var utypeColor = dad===1 ? '#378ADD' : '#a855f7';
-      var modBadge = mod>0 ? '<span style="font-size:10px;color:var(--red);font-weight:700">'+mod+' kun o\'tgan</span>' : '<span style="font-size:10px;color:var(--green);font-weight:700">muddatida</span>';
-      html += '<div onclick="openV2Modal('+d.id+')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);margin-bottom:8px;cursor:pointer">';
-      html += '<div style="width:38px;height:38px;border-radius:11px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:'+utypeColor+';flex-shrink:0">'+(utype||'?')+'</div>';
-      html += '<div style="flex:1;min-width:0">';
-      html += '<div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+'</div>';
-      html += '<div style="display:flex;align-items:center;gap:8px;margin-top:3px">'+modBadge+'<span style="font-size:10px;color:var(--text3)">'+(d.username||'')+'</span></div>';
-      html += '</div>';
-      html += '<div style="text-align:right;flex-shrink:0">';
-      html += '<div style="font-size:14px;font-weight:800;color:var(--red)">'+fmt(totalDebt)+'</div>';
-      if(wallet>0) html += '<div style="font-size:10px;color:var(--green);margin-top:2px">💰 '+fmt(wallet)+'</div>';
-      html += '</div>';
-      html += '<div style="color:var(--text3);font-size:16px;margin-left:2px">›</div>';
-      html += '</div>';
-    });
-    html += '</div>';
-    pageBarcha.innerHTML = html;
+    v2Debtors.sort(function(a,b){ return (Number(b.total_debt)||0)-(Number(a.total_debt)||0); });
+    paintBarcha();
   });
+}
+
+function paintBarcha(){
+  var pageBarcha = document.getElementById('page-barcha');
+  var q = (v2SearchQ||'').trim().toLowerCase();
+  var list = v2Debtors;
+  if(q){
+    list = v2Debtors.filter(function(d){
+      var id = d.user_id!=null ? d.user_id : d.id;
+      var nm = v2DisplayName(d).toLowerCase();
+      var tel = String(d.telefon||d.username||'').toLowerCase();
+      return nm.indexOf(q)>=0 || String(id).indexOf(q)>=0 || tel.indexOf(q)>=0;
+    });
+  }
+  var html = '<div style="padding:10px 12px">';
+  // Search input
+  html += '<div style="position:relative;margin-bottom:10px">';
+  html += '<input id="v2Search" type="text" inputmode="search" placeholder="Ism, ID yoki telefon..." value="'+(v2SearchQ.replace(/"/g,'&quot;'))+'" oninput="onV2Search(this.value)" style="width:100%;box-sizing:border-box;padding:11px 36px 11px 14px;border-radius:11px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;outline:none">';
+  if(v2SearchQ) html += '<div onclick="onV2Search(\'\')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px">✕</div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600">'+list.length+' ta qarzdor'+(q?' topildi':'')+'</div>';
+
+  list.forEach(function(d){
+    var id = d.user_id!=null ? d.user_id : d.id;
+    var name = v2DisplayName(d);
+    var totalDebt = Number(d.total_debt!=null?d.total_debt:d.total_debts)||0;
+    var wallet = Number(d.wallet_balance)||0;
+    var ut = d.usertype||'';
+    var utShort = ut==='master' ? 'M' : (ut==='business_partner' ? 'BP' : '?');
+    var utColor = ut==='master' ? '#378ADD' : '#a855f7';
+    var tel = d.telefon||d.username||'';
+    html += '<div onclick="openV2Modal('+id+')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);margin-bottom:8px;cursor:pointer">';
+    html += '<div style="width:38px;height:38px;border-radius:11px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:'+utColor+';flex-shrink:0">'+utShort+'</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+'</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+tel+' · ID '+id+'</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;flex-shrink:0">';
+    html += '<div style="font-size:14px;font-weight:800;color:var(--red)">'+fmt(totalDebt)+'</div>';
+    if(wallet>0) html += '<div style="font-size:10px;color:var(--green);margin-top:2px">💰 '+fmt(wallet)+'</div>';
+    html += '</div>';
+    html += '<div style="color:var(--text3);font-size:16px;margin-left:2px">›</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  pageBarcha.innerHTML = html;
+}
+
+var _v2SearchTimer=null;
+function onV2Search(val){
+  v2SearchQ = val;
+  if(_v2SearchTimer) clearTimeout(_v2SearchTimer);
+  _v2SearchTimer = setTimeout(function(){
+    paintBarcha();
+    // fokusni saqlash
+    var inp = document.getElementById('v2Search');
+    if(inp){ inp.focus(); var v=inp.value; inp.value=''; inp.value=v; }
+  }, 200);
 }
 
 // Counter — bugungi yig'ilgan
@@ -521,7 +548,10 @@ function bumpCounter(delta){
 // Mijoz modalini ochish — LIVE (client-items)
 function openV2Modal(userId){
   var d = null;
-  for(var i=0;i<v2Debtors.length;i++){ if(String(v2Debtors[i].id)===String(userId)){ d=v2Debtors[i]; break; } }
+  for(var i=0;i<v2Debtors.length;i++){
+    var id = v2Debtors[i].user_id!=null ? v2Debtors[i].user_id : v2Debtors[i].id;
+    if(String(id)===String(userId)){ d=v2Debtors[i]; break; }
+  }
   v2ModalUser = d;
   var modal = document.getElementById('v2Modal');
   modal.style.display = 'flex';
@@ -549,11 +579,12 @@ function fetchV2Items(userId, isRefresh){
 function renderV2Modal(userId, data){
   var modal = document.getElementById('v2Modal');
   var du = v2ModalUser || {};
-  var name = v2CustomNames[userId] || ((du.first_name||'')+' '+(du.last_name||'')).trim() || "Noma'lum";
-  var totalDebt = Number(du.total_debts)||0;
-  var outdated = Number(du.total_outdated_debts)||0;
+  var name = v2CustomNames[userId] || du.ism || ((du.first_name||'')+' '+(du.last_name||'')).trim() || "Noma'lum";
+  var totalDebt = Number(du.total_debt!=null?du.total_debt:du.total_debts)||0;
+  var outdated = Number(du.otgan_summa!=null?du.otgan_summa:du.total_outdated_debts)||0;
   var wallet = Number(du.wallet_balance)||0;
   var limit = Number(du.debt_limit)||0;
+  var tel = du.telefon||du.username||'';
 
   var orders = (data.orders||[]).filter(function(o){
     // hamma itemlari checked bo'lgan orderlar ko'rinmaydi
@@ -571,7 +602,7 @@ function renderV2Modal(userId, data){
   html += '</div>';
   html += '<div id="v2RefreshBtn" onclick="fetchV2Items('+userId+',true)" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0">🔄</div>';
   html += '</div>';
-  html += '<div style="font-size:11px;color:var(--text3);margin-bottom:10px">ID: '+userId+' · '+(du.username||'')+'</div>';
+  html += '<div style="font-size:11px;color:var(--text3);margin-bottom:10px">ID: '+userId+' · '+tel+'</div>';
   // Stat qatorlar
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += v2StatBox('Jami qarz', fmt(totalDebt), 'var(--red)');
@@ -735,7 +766,7 @@ function checkOrderComplete(userId, orderId){
 
 // Ism tahrirlash
 function editV2Name(userId){
-  var cur = v2CustomNames[userId] || (v2ModalUser ? ((v2ModalUser.first_name||'')+' '+(v2ModalUser.last_name||'')).trim() : '');
+  var cur = v2CustomNames[userId] || (v2ModalUser ? (v2ModalUser.ism || ((v2ModalUser.first_name||'')+' '+(v2ModalUser.last_name||'')).trim()) : '');
   var yangi = prompt('Mijoz ismini kiriting:', cur);
   if(yangi===null) return;
   yangi = yangi.trim();
@@ -743,6 +774,8 @@ function editV2Name(userId){
   v2CustomNames[userId] = yangi;
   var nameEl = document.getElementById('v2Name');
   if(nameEl) nameEl.textContent = yangi;
+  // ro'yxatni ham yangilash (agar ochiq bo'lsa)
+  if(v2Mode){ paintBarcha(); }
   fetch(CLIENT_NAME_API+'?user_id='+userId+'&name='+encodeURIComponent(yangi), {keepalive:true}).catch(function(){});
 }
 
@@ -2076,7 +2109,7 @@ function mapDebtorFromCache(d, tab){
   // usertype
   var dad = Number(d.debt_allowed_days)||0;
   var usertype = dad===1 ? 'master' : (dad>1 ? 'business_partner' : '');
-  var name = ((d.first_name||'')+' '+(d.last_name||'')).trim() || "Noma'lum";
+  var name = v2CustomNames[d.id] || ((d.first_name||'')+' '+(d.last_name||'')).trim() || "Noma'lum";
   return {
     user_id: d.id,
     ism: name,
@@ -2257,6 +2290,7 @@ function load(){
       userData=d.user;
       summary=(d.debts&&d.debts.summary)||{};
       allUsers=(d.debts&&d.debts.allUsers)||[];
+      loadAllCustomNames();  // custom ismlar — hamma tab uchun
       // Leaderboard'ni stats javobidan olamiz (CEO_API o'rniga - hammaga ochiq)
       allFiliallar = d.leaderboard || [];
       document.getElementById('av').textContent=ini(userData.ism);
