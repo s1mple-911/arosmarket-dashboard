@@ -944,8 +944,8 @@ async function saveUserEdit(telegramId){
 
 // =========================================================
 // SCREEN: HODIM SOZLAMALARI
-// Barcha hodimlar — SQL users jadvalining barcha ustunlari.
-// Qatorni tahrirlab Saqlash → admin-user-save → SQL yangilanadi.
+// Barcha hodimlar — SQL users jadvalining barcha ustunlari (parolsiz).
+// admin-hodim-list (o'qish) / admin-hodim-save (yozish) / admin-user-delete.
 // =========================================================
 let hsFilter = { status: 'all', search: '' };
 let hsUsers = [];  // joriy ro'yxat (edit modal shu massivdan oladi)
@@ -955,7 +955,7 @@ async function renderHodimSozlamalari(root){
   const content = document.createElement('div');
   content.innerHTML = `
 <div class="audit-toolbar">
-<input type="text" class="search-box" placeholder="Qidiruv · ism yoki telegram ID" id="hs-search" value="${escapeHtml(hsFilter.search)}">
+<input type="text" class="search-box" placeholder="Qidiruv · ism, telegram ID yoki telefon" id="hs-search" value="${escapeHtml(hsFilter.search)}">
 <div class="pill-sel ${hsFilter.status==='all'?'active':''}" onclick="hsSetFilter('all')">Hammasi</div>
 <div class="pill-sel ${hsFilter.status==='active'?'active':''}" onclick="hsSetFilter('active')">Aktiv</div>
 <div class="pill-sel ${hsFilter.status==='ceo'?'active':''}" onclick="hsSetFilter('ceo')">CEO</div>
@@ -985,17 +985,19 @@ async function hsLoad(){
   const wrap = document.getElementById('hs-wrap');
   if (!wrap) return;
   try {
-    const data = await api('admin-users', { uid: UID, status: hsFilter.status, search: hsFilter.search });
+    const data = await api('admin-hodim-list', { uid: UID, status: hsFilter.status, search: hsFilter.search });
+    if (data.error) throw new Error(data.error);
     const users = data.users || [];
     hsUsers = users;
     if (!users.length){
       wrap.innerHTML = `<div class="empty"><i class="ti ti-users-off"></i><p>Hodim topilmadi</p></div>`;
       return;
     }
+    const GT = '1.5fr 1fr 1.1fr 0.85fr 0.95fr 0.95fr 84px 44px';
     wrap.innerHTML = `
 <div class="table-wrap">
-<div class="table-head" style="grid-template-columns:1.7fr 0.9fr 1.3fr 1fr 1.1fr 90px 46px">
-<div>Hodim</div><div>Telegram ID</div><div>Filial</div><div>Oylik plan</div><div>Rollar</div><div>Status</div><div></div>
+<div class="table-head" style="grid-template-columns:${GT}">
+<div>Hodim</div><div>Telefon</div><div>Filial</div><div>Lavozim</div><div>Oylik plan</div><div>Hodim plan</div><div>Status</div><div></div>
 </div>
 ${users.map((u, i) => {
   const statBadge = u.status === 'active' ? '<span class="badge ok">Aktiv</span>' :
@@ -1004,15 +1006,16 @@ ${users.map((u, i) => {
     u.status === 'waiting_name' ? '<span class="badge muted">No name</span>' :
     `<span class="badge muted">${escapeHtml(u.status||'—')}</span>`;
   return `
-<div class="table-row" style="grid-template-columns:1.7fr 0.9fr 1.3fr 1fr 1.1fr 90px 46px;cursor:pointer" onclick="hsEdit(${i})">
+<div class="table-row" style="grid-template-columns:${GT};cursor:pointer" onclick="hsEdit(${i})">
 <div style="display:flex;align-items:center;gap:10px;min-width:0">
 <div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
-<div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div></div>
+<div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div><div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">@${escapeHtml(u.telegram_id||'')}</div></div>
 </div>
-<div style="font-family:var(--mono);font-size:12px;color:var(--text-2)">${escapeHtml(u.telegram_id||'')}</div>
-<div style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.warehouse_name||'—')}${u.warehouse_id?` <span style="color:var(--text-3);font-size:11px">#${u.warehouse_id}</span>`:''}</div>
+<div style="color:var(--text-2)">${escapeHtml(u.telefon||'—')}</div>
+<div style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.warehouse_name||'—')}${u.warehouse_id?` <span style="color:var(--text-3);font-size:11px">#${escapeHtml(String(u.warehouse_id))}</span>`:''}</div>
+<div><span class="badge muted">${escapeHtml(u.lavozim||'—')}</span></div>
 <div style="font-variant-numeric:tabular-nums">${u.oylik_plan?fmt(u.oylik_plan):'—'}</div>
-<div style="display:flex;flex-wrap:wrap;gap:3px">${(u.roles||[]).slice(0,2).map(tagOf).join('')}${u.roles?.length>2?`<span style="font-size:10.5px;color:var(--text-3)">+${u.roles.length-2}</span>`:''}</div>
+<div style="font-variant-numeric:tabular-nums">${(Number(u.hodim_plan)>0)?fmt(u.hodim_plan):'—'}</div>
 <div>${statBadge}</div>
 <div><button class="btn sm" onclick="event.stopPropagation();hsEdit(${i})"><i class="ti ti-edit"></i></button></div>
 </div>`;
@@ -1031,29 +1034,44 @@ function hsEdit(i){
   const filiallar = rbac.filiallar || [];
   const roles = rbac.roles || [];
   const userRoleKeys = (u.roles || []).map(r => r.key);
-  // Joriy filial ro'yxatda bo'lmasa ham qiymatni yo'qotmaslik uchun qo'shib qo'yamiz
   const inList = filiallar.some(f => String(f.warehouse_id) === String(u.warehouse_id));
+  const grpLbl = t => `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 -2px">${t}</div>`;
 
   openModal(`
 <div class="modal-h">
-<div><h3>${escapeHtml(u.ism || 'Hodim')}</h3><p>Telegram ID: <code class="mono">${escapeHtml(u.telegram_id)}</code> · o'zgartirib bo'lmaydi</p></div>
+<div><h3>${escapeHtml(u.ism || 'Hodim')}</h3><p>Telegram ID: <code class="mono">${escapeHtml(u.telegram_id)}</code> · o'zgartirib bo'lmaydi ${u.has_password?'· <span class="badge ok" style="font-size:10px"><i class="ti ti-lock"></i> parol bor</span>':'· <span class="badge muted" style="font-size:10px">parolsiz</span>'}</p></div>
 <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
+${grpLbl('Asosiy')}
 <div class="ff"><label>Ism</label><input type="text" class="input" id="hs-ism" value="${escapeHtml(u.ism||'')}"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Telefon</label><input type="text" class="input" id="hs-telefon" value="${escapeHtml(u.telefon||'')}" placeholder="+998..."></div>
+<div class="ff"><label>Lavozim</label><input type="text" class="input" id="hs-lavozim" value="${escapeHtml(u.lavozim||'')}" placeholder="sotuvchi"></div>
+</div>
 <div class="ff"><label>Filial</label><select class="select" id="hs-fil">
 <option value="">— filial yo'q —</option>
-${(!inList && u.warehouse_id) ? `<option value="${u.warehouse_id}|${escapeHtml(u.warehouse_name||'')}" selected>${escapeHtml(u.warehouse_name||('#'+u.warehouse_id))} (joriy)</option>` : ''}
+${(!inList && u.warehouse_id) ? `<option value="${escapeHtml(String(u.warehouse_id))}|${escapeHtml(u.warehouse_name||'')}" selected>${escapeHtml(u.warehouse_name||('#'+u.warehouse_id))} (joriy)</option>` : ''}
 ${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}" ${String(f.warehouse_id)===String(u.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('')}
 </select></div>
+${grpLbl('Rejalar — to\'liq oylik qiymat')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
 <div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-plan" value="${u.oylik_plan||''}" min="0"></div>
+<div class="ff"><label>Hodim plan</label><input type="number" class="input" id="hs-hodim-plan" value="${(u.hodim_plan??'')}" min="0"></div>
+<div class="ff"><label>Fiksa</label><input type="number" class="input" id="hs-fiksa" value="${(u.fiksa??'')}" min="0"></div>
+<div class="ff"><label>Fidoyilik</label><input type="number" class="input" id="hs-fidoyilik" value="${(u.fidoyilik??'')}" min="0"></div>
+</div>
+${grpLbl('Tizim')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
 <div class="ff"><label>Status</label><select class="select" id="hs-stat">
 <option value="active" ${u.status==='active'?'selected':''}>Aktiv</option>
 <option value="ceo" ${u.status==='ceo'?'selected':''}>CEO</option>
 <option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
 <option value="waiting_name" ${u.status==='waiting_name'?'selected':''}>Ism kutilmoqda</option>
 </select></div>
-<div class="ff"><label>Rollar</label>
+<div class="ff"><label>Worker ID (Aros)</label><input type="number" class="input" id="hs-worker" value="${(u.worker_id??'')}" placeholder="—"></div>
+</div>
+${grpLbl('Rollar')}
 <div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
 ${roles.length ? roles.map(r => `
 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
@@ -1061,7 +1079,6 @@ ${roles.length ? roles.map(r => `
 ${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
 <span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
 </label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
-</div>
 </div>
 </div>
 <div class="modal-foot">
@@ -1073,19 +1090,20 @@ ${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
 }
 
 async function hsSave(telegramId){
-  const ism = document.getElementById('hs-ism').value.trim();
+  const g = id => (document.getElementById(id)?.value ?? '').trim();
   const filVal = document.getElementById('hs-fil').value;
-  const plan = document.getElementById('hs-plan').value;
-  const stat = document.getElementById('hs-stat').value;
-  const roleKeys = Array.from(document.querySelectorAll('.hs-role-cb:checked')).map(cb => cb.value);
   const [warehouse_id, warehouse_name] = filVal.split('|');
+  const roleKeys = Array.from(document.querySelectorAll('.hs-role-cb:checked')).map(cb => cb.value);
   const btn = document.getElementById('hs-save-btn');
   if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Saqlanyapti...'; }
   try {
-    const r1 = await api('admin-user-save', {
-      uid: UID, telegram_id: telegramId, ism,
+    const r1 = await api('admin-hodim-save', {
+      uid: UID, telegram_id: telegramId,
+      ism: g('hs-ism'), telefon: g('hs-telefon'), lavozim: g('hs-lavozim'),
       warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
-      oylik_plan: plan || '0', status: stat
+      oylik_plan: g('hs-plan'), hodim_plan: g('hs-hodim-plan'),
+      fiksa: g('hs-fiksa'), fidoyilik: g('hs-fidoyilik'),
+      worker_id: g('hs-worker'), status: g('hs-stat')
     });
     if (r1.error) throw new Error(r1.error);
     const r2 = await api('admin-role-assign', { uid: UID, telegram_id: telegramId, role_keys: roleKeys });
@@ -1104,26 +1122,42 @@ function hsNew(){
   const rbac = cache.rbac || { filiallar: [], roles: [] };
   const filiallar = rbac.filiallar || [];
   const roles = rbac.roles || [];
+  const grpLbl = t => `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 -2px">${t}</div>`;
   openModal(`
 <div class="modal-h">
-<div><h3>Yangi hodim</h3><p>Telegram ID + ma'lumotlar. Saqlansa SQL users jadvaliga qo'shiladi.</p></div>
+<div><h3>Yangi hodim</h3><p>Saqlansa SQL users jadvaliga qo'shiladi.</p></div>
 <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
-<div class="ff"><label>Telegram ID *</label><input type="text" inputmode="numeric" class="input" id="hs-new-tgid" placeholder="masalan: 1255605633"></div>
+${grpLbl('Asosiy')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Telegram ID *</label><input type="text" inputmode="numeric" class="input" id="hs-new-tgid" placeholder="1255605633"></div>
+<div class="ff"><label>Telefon</label><input type="text" class="input" id="hs-new-telefon" placeholder="+998..."></div>
+</div>
 <div class="ff"><label>Ism *</label><input type="text" class="input" id="hs-new-ism" placeholder="Ism Familiya"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Lavozim</label><input type="text" class="input" id="hs-new-lavozim" value="sotuvchi"></div>
+<div class="ff"><label>Worker ID (Aros)</label><input type="number" class="input" id="hs-new-worker" placeholder="—"></div>
+</div>
 <div class="ff"><label>Filial</label><select class="select" id="hs-new-fil">
 <option value="">— filial yo'q —</option>
 ${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}">${escapeHtml(f.filial)}</option>`).join('')}
 </select></div>
+${grpLbl('Rejalar — oylik qiymat')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
 <div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-new-plan" value="0" min="0"></div>
+<div class="ff"><label>Hodim plan</label><input type="number" class="input" id="hs-new-hodim-plan" value="0" min="0"></div>
+<div class="ff"><label>Fiksa</label><input type="number" class="input" id="hs-new-fiksa" value="0" min="0"></div>
+<div class="ff"><label>Fidoyilik</label><input type="number" class="input" id="hs-new-fidoyilik" value="0" min="0"></div>
+</div>
+${grpLbl('Tizim')}
 <div class="ff"><label>Status</label><select class="select" id="hs-new-stat">
 <option value="active" selected>Aktiv</option>
 <option value="ceo">CEO</option>
 <option value="pending">Pending</option>
 <option value="waiting_name">Ism kutilmoqda</option>
 </select></div>
-<div class="ff"><label>Rollar</label>
+${grpLbl('Rollar')}
 <div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
 ${roles.length ? roles.map(r=>`
 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
@@ -1131,7 +1165,6 @@ ${roles.length ? roles.map(r=>`
 ${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
 <span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
 </label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
-</div>
 </div>
 </div>
 <div class="modal-foot">
@@ -1142,11 +1175,10 @@ ${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
 }
 
 async function hsCreate(){
-  const tgid = document.getElementById('hs-new-tgid').value.trim();
-  const ism = document.getElementById('hs-new-ism').value.trim();
+  const g = id => (document.getElementById(id)?.value ?? '').trim();
+  const tgid = g('hs-new-tgid');
+  const ism = g('hs-new-ism');
   const filVal = document.getElementById('hs-new-fil').value;
-  const plan = document.getElementById('hs-new-plan').value;
-  const stat = document.getElementById('hs-new-stat').value;
   const roleKeys = Array.from(document.querySelectorAll('.hs-new-role-cb:checked')).map(cb => cb.value);
   if (!/^\d+$/.test(tgid)){ toast('Telegram ID faqat raqam bo\'lishi kerak', 'err'); return; }
   if (!ism){ toast('Ism kiriting', 'err'); return; }
@@ -1155,10 +1187,13 @@ async function hsCreate(){
   const btn = document.getElementById('hs-new-btn');
   if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Qo\'shilyapti...'; }
   try {
-    const r1 = await api('admin-user-save', {
-      uid: UID, telegram_id: tgid, ism,
+    const r1 = await api('admin-hodim-save', {
+      uid: UID, telegram_id: tgid,
+      ism, telefon: g('hs-new-telefon'), lavozim: g('hs-new-lavozim') || 'sotuvchi',
       warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
-      oylik_plan: plan || '0', status: stat
+      oylik_plan: g('hs-new-plan'), hodim_plan: g('hs-new-hodim-plan'),
+      fiksa: g('hs-new-fiksa'), fidoyilik: g('hs-new-fidoyilik'),
+      worker_id: g('hs-new-worker'), status: g('hs-new-stat')
     });
     if (r1.error) throw new Error(r1.error);
     if (roleKeys.length){
