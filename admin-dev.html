@@ -313,6 +313,7 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')" title="Yangi userlar"><i class="ti ti-user-plus"></i><span class="nav-label">Yangi</span><span class="ct" id="nav-pending-ct">0</span></a>
 <a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users"></i><span class="nav-label">Hammasi</span></a>
 <a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock"></i><span class="nav-label">Rollar</span></a>
+<a class="nav-item" data-screen="hodim-sozlamalari" onclick="goto('hodim-sozlamalari')" title="Hodim sozlamalari"><i class="ti ti-user-cog"></i><span class="nav-label">Hodim sozlamalari</span></a>
 <a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store"></i><span class="nav-label">Filiallar</span></a>
 <a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
 <a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder"></i><span class="nav-label">Yuklanmalar</span></a>
@@ -487,6 +488,7 @@ function renderScreen(s){
     case 'users-pending': return renderUsersPending(root);
     case 'users-all': return renderUsersAll(root);
     case 'roles': return renderRoles(root);
+    case 'hodim-sozlamalari': return renderHodimSozlamalari(root);
     case 'filiallar': return renderFiliallar(root);
     case 'ulanmagan': return renderUlanmagan(root);
     case 'yuklanmalar': return renderYuklanmalar(root);
@@ -938,6 +940,269 @@ async function saveUserEdit(telegramId){
     closeModal();
     loadUsersTable();
   } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: HODIM SOZLAMALARI
+// Barcha hodimlar — SQL users jadvalining barcha ustunlari.
+// Qatorni tahrirlab Saqlash → admin-user-save → SQL yangilanadi.
+// =========================================================
+let hsFilter = { status: 'all', search: '' };
+let hsUsers = [];  // joriy ro'yxat (edit modal shu massivdan oladi)
+
+async function renderHodimSozlamalari(root){
+  root.innerHTML = topbar('Boshqaruv', 'Hodim sozlamalari', '<button class="btn primary" onclick="hsNew()"><i class="ti ti-user-plus"></i>Yangi hodim</button><button class="icon-btn" onclick="renderHodimSozlamalari(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<input type="text" class="search-box" placeholder="Qidiruv · ism yoki telegram ID" id="hs-search" value="${escapeHtml(hsFilter.search)}">
+<div class="pill-sel ${hsFilter.status==='all'?'active':''}" onclick="hsSetFilter('all')">Hammasi</div>
+<div class="pill-sel ${hsFilter.status==='active'?'active':''}" onclick="hsSetFilter('active')">Aktiv</div>
+<div class="pill-sel ${hsFilter.status==='ceo'?'active':''}" onclick="hsSetFilter('ceo')">CEO</div>
+<div class="pill-sel ${hsFilter.status==='pending'?'active':''}" onclick="hsSetFilter('pending')">Pending</div>
+</div>
+<div id="hs-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>
+`;
+  root.appendChild(content);
+
+  document.getElementById('hs-search').addEventListener('input', (e) => {
+    hsFilter.search = e.target.value;
+    clearTimeout(window._hssearch);
+    window._hssearch = setTimeout(hsLoad, 300);
+  });
+
+  // Filiallar + rollar (edit modal uchun) — oldindan yuklab qo'yamiz
+  if (!cache.rbac) { try { cache.rbac = await api('admin-rbac', { uid: UID }); } catch(e){} }
+  hsLoad();
+}
+
+function hsSetFilter(status){
+  hsFilter.status = status;
+  renderHodimSozlamalari(document.getElementById('screens'));
+}
+
+async function hsLoad(){
+  const wrap = document.getElementById('hs-wrap');
+  if (!wrap) return;
+  try {
+    const data = await api('admin-users', { uid: UID, status: hsFilter.status, search: hsFilter.search });
+    const users = data.users || [];
+    hsUsers = users;
+    if (!users.length){
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-users-off"></i><p>Hodim topilmadi</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:1.7fr 0.9fr 1.3fr 1fr 1.1fr 90px 46px">
+<div>Hodim</div><div>Telegram ID</div><div>Filial</div><div>Oylik plan</div><div>Rollar</div><div>Status</div><div></div>
+</div>
+${users.map((u, i) => {
+  const statBadge = u.status === 'active' ? '<span class="badge ok">Aktiv</span>' :
+    u.status === 'ceo' ? '<span class="badge info">CEO</span>' :
+    u.status === 'pending' ? '<span class="badge warn">Pending</span>' :
+    u.status === 'waiting_name' ? '<span class="badge muted">No name</span>' :
+    `<span class="badge muted">${escapeHtml(u.status||'—')}</span>`;
+  return `
+<div class="table-row" style="grid-template-columns:1.7fr 0.9fr 1.3fr 1fr 1.1fr 90px 46px;cursor:pointer" onclick="hsEdit(${i})">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
+<div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div></div>
+</div>
+<div style="font-family:var(--mono);font-size:12px;color:var(--text-2)">${escapeHtml(u.telegram_id||'')}</div>
+<div style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.warehouse_name||'—')}${u.warehouse_id?` <span style="color:var(--text-3);font-size:11px">#${u.warehouse_id}</span>`:''}</div>
+<div style="font-variant-numeric:tabular-nums">${u.oylik_plan?fmt(u.oylik_plan):'—'}</div>
+<div style="display:flex;flex-wrap:wrap;gap:3px">${(u.roles||[]).slice(0,2).map(tagOf).join('')}${u.roles?.length>2?`<span style="font-size:10.5px;color:var(--text-3)">+${u.roles.length-2}</span>`:''}</div>
+<div>${statBadge}</div>
+<div><button class="btn sm" onclick="event.stopPropagation();hsEdit(${i})"><i class="ti ti-edit"></i></button></div>
+</div>`;
+}).join('')}
+</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding:0 4px">Jami: ${users.length} ta hodim</div>`;
+  } catch(e){
+    wrap.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function hsEdit(i){
+  const u = hsUsers[i];
+  if (!u){ toast('Hodim topilmadi', 'err'); return; }
+  const rbac = cache.rbac || { filiallar: [], roles: [] };
+  const filiallar = rbac.filiallar || [];
+  const roles = rbac.roles || [];
+  const userRoleKeys = (u.roles || []).map(r => r.key);
+  // Joriy filial ro'yxatda bo'lmasa ham qiymatni yo'qotmaslik uchun qo'shib qo'yamiz
+  const inList = filiallar.some(f => String(f.warehouse_id) === String(u.warehouse_id));
+
+  openModal(`
+<div class="modal-h">
+<div><h3>${escapeHtml(u.ism || 'Hodim')}</h3><p>Telegram ID: <code class="mono">${escapeHtml(u.telegram_id)}</code> · o'zgartirib bo'lmaydi</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Ism</label><input type="text" class="input" id="hs-ism" value="${escapeHtml(u.ism||'')}"></div>
+<div class="ff"><label>Filial</label><select class="select" id="hs-fil">
+<option value="">— filial yo'q —</option>
+${(!inList && u.warehouse_id) ? `<option value="${u.warehouse_id}|${escapeHtml(u.warehouse_name||'')}" selected>${escapeHtml(u.warehouse_name||('#'+u.warehouse_id))} (joriy)</option>` : ''}
+${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}" ${String(f.warehouse_id)===String(u.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('')}
+</select></div>
+<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-plan" value="${u.oylik_plan||''}" min="0"></div>
+<div class="ff"><label>Status</label><select class="select" id="hs-stat">
+<option value="active" ${u.status==='active'?'selected':''}>Aktiv</option>
+<option value="ceo" ${u.status==='ceo'?'selected':''}>CEO</option>
+<option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
+<option value="waiting_name" ${u.status==='waiting_name'?'selected':''}>Ism kutilmoqda</option>
+</select></div>
+<div class="ff"><label>Rollar</label>
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${roles.length ? roles.map(r => `
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+<input type="checkbox" class="hs-role-cb" value="${r.key}" ${userRoleKeys.includes(r.key)?'checked':''}>
+${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
+<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
+</label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
+</div>
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn danger" style="margin-right:auto" onclick="hsDelete('${escapeHtml(u.telegram_id)}')"><i class="ti ti-trash"></i>O'chirish</button>
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" id="hs-save-btn" onclick="hsSave('${escapeHtml(u.telegram_id)}')"><i class="ti ti-check"></i>Saqlash</button>
+</div>
+`);
+}
+
+async function hsSave(telegramId){
+  const ism = document.getElementById('hs-ism').value.trim();
+  const filVal = document.getElementById('hs-fil').value;
+  const plan = document.getElementById('hs-plan').value;
+  const stat = document.getElementById('hs-stat').value;
+  const roleKeys = Array.from(document.querySelectorAll('.hs-role-cb:checked')).map(cb => cb.value);
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  const btn = document.getElementById('hs-save-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Saqlanyapti...'; }
+  try {
+    const r1 = await api('admin-user-save', {
+      uid: UID, telegram_id: telegramId, ism,
+      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
+      oylik_plan: plan || '0', status: stat
+    });
+    if (r1.error) throw new Error(r1.error);
+    const r2 = await api('admin-role-assign', { uid: UID, telegram_id: telegramId, role_keys: roleKeys });
+    if (r2.error) throw new Error(r2.error);
+    toast('SQL\'da saqlandi');
+    closeModal();
+    hsLoad();
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Saqlash'; }
+  }
+}
+
+// --- Yangi hodim qo'shish ---
+function hsNew(){
+  const rbac = cache.rbac || { filiallar: [], roles: [] };
+  const filiallar = rbac.filiallar || [];
+  const roles = rbac.roles || [];
+  openModal(`
+<div class="modal-h">
+<div><h3>Yangi hodim</h3><p>Telegram ID + ma'lumotlar. Saqlansa SQL users jadvaliga qo'shiladi.</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Telegram ID *</label><input type="text" inputmode="numeric" class="input" id="hs-new-tgid" placeholder="masalan: 1255605633"></div>
+<div class="ff"><label>Ism *</label><input type="text" class="input" id="hs-new-ism" placeholder="Ism Familiya"></div>
+<div class="ff"><label>Filial</label><select class="select" id="hs-new-fil">
+<option value="">— filial yo'q —</option>
+${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}">${escapeHtml(f.filial)}</option>`).join('')}
+</select></div>
+<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-new-plan" value="0" min="0"></div>
+<div class="ff"><label>Status</label><select class="select" id="hs-new-stat">
+<option value="active" selected>Aktiv</option>
+<option value="ceo">CEO</option>
+<option value="pending">Pending</option>
+<option value="waiting_name">Ism kutilmoqda</option>
+</select></div>
+<div class="ff"><label>Rollar</label>
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${roles.length ? roles.map(r=>`
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+<input type="checkbox" class="hs-new-role-cb" value="${r.key}">
+${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
+<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
+</label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
+</div>
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" id="hs-new-btn" onclick="hsCreate()"><i class="ti ti-check"></i>Qo'shish</button>
+</div>
+`);
+}
+
+async function hsCreate(){
+  const tgid = document.getElementById('hs-new-tgid').value.trim();
+  const ism = document.getElementById('hs-new-ism').value.trim();
+  const filVal = document.getElementById('hs-new-fil').value;
+  const plan = document.getElementById('hs-new-plan').value;
+  const stat = document.getElementById('hs-new-stat').value;
+  const roleKeys = Array.from(document.querySelectorAll('.hs-new-role-cb:checked')).map(cb => cb.value);
+  if (!/^\d+$/.test(tgid)){ toast('Telegram ID faqat raqam bo\'lishi kerak', 'err'); return; }
+  if (!ism){ toast('Ism kiriting', 'err'); return; }
+  if (hsUsers.some(u => String(u.telegram_id) === tgid)){ toast('Bu Telegram ID allaqachon mavjud', 'err'); return; }
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  const btn = document.getElementById('hs-new-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Qo\'shilyapti...'; }
+  try {
+    const r1 = await api('admin-user-save', {
+      uid: UID, telegram_id: tgid, ism,
+      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
+      oylik_plan: plan || '0', status: stat
+    });
+    if (r1.error) throw new Error(r1.error);
+    if (roleKeys.length){
+      const r2 = await api('admin-role-assign', { uid: UID, telegram_id: tgid, role_keys: roleKeys });
+      if (r2.error) throw new Error(r2.error);
+    }
+    toast('Hodim qo\'shildi');
+    closeModal();
+    hsLoad();
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Qo\'shish'; }
+  }
+}
+
+// --- Hodimni o'chirish ---
+function hsDelete(telegramId){
+  const u = hsUsers.find(x => String(x.telegram_id) === String(telegramId));
+  const ism = u ? (u.ism || telegramId) : telegramId;
+  openModal(`
+<div class="modal-h">
+<div><h3>O'chirilsinmi?</h3><p><b>${escapeHtml(ism)}</b> (<code class="mono">${escapeHtml(telegramId)}</code>) SQL users jadvalidan butunlay o'chiriladi, rollari ham olib tashlanadi. Bu amalni qaytarib bo'lmaydi.</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn danger primary" id="hs-del-btn" style="background:var(--err-text);border-color:var(--err-text);color:#fff" onclick="hsDeleteConfirm('${escapeHtml(telegramId)}')"><i class="ti ti-trash"></i>Ha, o'chir</button>
+</div>
+`);
+}
+
+async function hsDeleteConfirm(telegramId){
+  const btn = document.getElementById('hs-del-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> O\'chirilyapti...'; }
+  try {
+    const r = await api('admin-user-delete', { uid: UID, telegram_id: telegramId });
+    if (r.error) throw new Error(r.error === 'not_found' ? 'Hodim topilmadi' : r.error);
+    toast('Hodim o\'chirildi');
+    closeModal();
+    hsLoad();
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-trash"></i>Ha, o\'chir'; }
+  }
 }
 
 // =========================================================
