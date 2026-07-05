@@ -657,8 +657,9 @@ function renderV2Modal(userId, data){
   var modal = document.getElementById('v2Modal');
   var du = v2ModalUser || {};
   var name = v2CustomNames[userId] || du.ism || ((du.first_name||'')+' '+(du.last_name||'')).trim() || "Noma'lum";
-  var totalDebt = Number(du.total_debt!=null?du.total_debt:du.total_debts)||0;
-  var outdated = Number(du.otgan_summa!=null?du.otgan_summa:du.total_outdated_debts)||0;
+  // LIVE qarz (client-items javobidan) — cache emas; yangi order qo'shilsa darhol ko'rinadi
+  var totalDebt = (data.live_total_debt!=null) ? Number(data.live_total_debt) : (Number(du.total_debt!=null?du.total_debt:du.total_debts)||0);
+  var outdated = (data.live_outdated!=null) ? Number(data.live_outdated) : (Number(du.otgan_summa!=null?du.otgan_summa:du.total_outdated_debts)||0);
   var wallet = Number(du.wallet_balance)||0;
   var limit = Number(du.debt_limit)||0;
   var tel = du.telefon||du.username||'';
