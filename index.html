@@ -466,7 +466,7 @@ function renderBarcha(){
       pageBarcha.innerHTML = '<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="et">Qarzdor yo\'q</div></div>';
       return;
     }
-    v2Debtors.sort(function(a,b){ return (Number(b.total_debt)||0)-(Number(a.total_debt)||0); });
+    v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base"}); });
     paintBarcha();
   });
 }
@@ -509,7 +509,7 @@ function refreshDebtorsLive(){
       if(d && d.allUsers && d.allUsers.length){
         allUsers = d.allUsers;            // yangi ro'yxat
         v2Debtors = allUsers.slice();
-        v2Debtors.sort(function(a,b){ return (Number(b.total_debt)||0)-(Number(a.total_debt)||0); });
+        v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base"}); });
         paintV2List();
         if(cnt) cnt.textContent = v2Debtors.length + " ta qarzdor · ✅ yangilandi";
       } else {
@@ -899,7 +899,7 @@ function editV2Name(userId){
   var nameEl = document.getElementById('v2Name');
   if(nameEl) nameEl.textContent = yangi;
   // ro'yxatni ham yangilash (agar ochiq bo'lsa)
-  if(v2Mode){ paintV2List(); }
+  if(v2Mode){ v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base"}); }); paintV2List(); }
   fetch(CLIENT_NAME_API+'?user_id='+userId+'&name='+encodeURIComponent(yangi), {keepalive:true}).catch(function(){});
 }
 
