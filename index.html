@@ -466,7 +466,7 @@ function renderBarcha(){
       pageBarcha.innerHTML = '<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="et">Qarzdor yo\'q</div></div>';
       return;
     }
-    v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base"}); });
+    v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base",numeric:true}); });
     paintBarcha();
   });
 }
@@ -509,7 +509,7 @@ function refreshDebtorsLive(){
       if(d && d.allUsers && d.allUsers.length){
         allUsers = d.allUsers;            // yangi ro'yxat
         v2Debtors = allUsers.slice();
-        v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base"}); });
+        v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base",numeric:true}); });
         paintV2List();
         if(cnt) cnt.textContent = v2Debtors.length + " ta qarzdor · ✅ yangilandi";
       } else {
@@ -637,11 +637,11 @@ function openCounterDetail(){
           if(!nm && du) nm = du.ism || ((du.first_name||'')+' '+(du.last_name||'')).trim();
           if(!nm) nm = "Noma'lum";
           var t = u.last_at ? String(u.last_at) : '';
-          html += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);margin-bottom:8px">';
+          html += '<div onclick="openCollectUserModal('+u.user_id+',\''+String(nm).replace(/'/g,"\\'")+'\')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);margin-bottom:8px;cursor:pointer">';
           html += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
           html += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
           html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">ID '+u.user_id+' · '+u.cnt+' ta mahsulot'+(t?' · '+t:'')+'</div></div>';
-          html += '<div style="font-size:15px;font-weight:800;color:#34C759;flex-shrink:0">'+fmt(u.summa)+'</div>';
+          html += '<div style="text-align:right;flex-shrink:0"><div style="font-size:15px;font-weight:800;color:#34C759">'+fmt(u.summa)+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">tuzatish ›</div></div>';
           html += '</div>';
         });
       }
@@ -651,6 +651,110 @@ function openCounterDetail(){
     .catch(function(){
       modal.innerHTML = '<div style="margin:auto;text-align:center;color:var(--red);padding:40px">Xato<br><button onclick="closeV2Modal()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text)">Yopish</button></div>';
     });
+}
+
+// Counter'da mijoz bosilganda — bugun yig'ilgan itemlar, uncheck qilish mumkin
+function openCollectUserModal(userId, nm){
+  var modal = document.getElementById('v2Modal');
+  modal.innerHTML = '<div class="loading" style="margin:auto"><div class="spinner"></div>Yuklanmoqda...</div>';
+  fetch(CLIENT_ITEMS_API+'?user_id='+userId+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var d = Array.isArray(data)?data[0]:data;
+      var allItems = (d && d.items) || [];
+      var checkedItems = allItems.filter(function(it){ return it.checked; });
+      var html = '';
+      html += '<div style="background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px;position:sticky;top:0;z-index:10">';
+      html += '<div style="display:flex;align-items:center;gap:10px">';
+      html += '<div onclick="openCounterDetail()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
+      html += '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(nm||'Mijoz')+'</div>';
+      html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">Bugun yig\'ilgan · noto\'g\'ri bo\'lsa qayta suring</div></div>';
+      html += '</div></div>';
+      html += '<div style="flex:1;overflow-y:auto;padding:12px 14px" id="collectItemsScroll">';
+      if(checkedItems.length===0){
+        html += '<div style="text-align:center;color:var(--text3);padding:40px 20px">Bu mijozdan bugun yig\'ilgan item yo\'q</div>';
+      } else {
+        checkedItems.forEach(function(it){
+          html += renderCollectedItem(it, userId);
+        });
+      }
+      html += '</div>';
+      modal.innerHTML = html;
+      attachUncheckHandlers(userId);
+    })
+    .catch(function(){
+      modal.innerHTML = '<div style="margin:auto;text-align:center;color:var(--red);padding:40px">Xato<br><button onclick="openCounterDetail()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text)">Orqaga</button></div>';
+    });
+}
+
+function renderCollectedItem(it, userId){
+  var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
+  var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
+  var catCap = it.cat_label ? (it.cat_label.charAt(0).toUpperCase()+it.cat_label.slice(1).toLowerCase()) : '';
+  var h = '<div class="collect-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:rgba(52,199,89,.08);border:0.5px solid rgba(52,199,89,.3)">';
+  h += '<div class="collect-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;transition:transform .2s;background:var(--bg2)">';
+  h += img;
+  h += '<div style="flex:1;min-width:0">';
+  if(catCap) h += '<div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:2px">'+catCap+'</div>';
+  h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
+  h += '<div style="font-size:11px;color:#34C759;margin-top:3px;font-weight:700">✓ yig\'ildi</div>';
+  h += '</div>';
+  h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(it.total_price)+'</div>';
+  h += '<div style="font-size:10px;margin-top:2px;color:var(--text3)">← surib qaytar</div></div>';
+  h += '</div>';
+  h += '</div>';
+  return h;
+}
+
+function attachUncheckHandlers(userId){
+  var items = document.querySelectorAll('#v2Modal .collect-item');
+  items.forEach(function(el){
+    var startX=0, curX=0, dragging=false;
+    var inner = el.querySelector('.collect-item-inner');
+    function onStart(x){ startX=x; dragging=true; inner.style.transition='none'; }
+    function onMove(x){ if(!dragging) return; curX=x-startX; if(curX<0) curX=Math.max(curX,-100); else curX=Math.min(curX,100); inner.style.transform='translateX('+curX+'px)'; }
+    function onEnd(){
+      if(!dragging) return; dragging=false; inner.style.transition='transform .2s';
+      if(Math.abs(curX)>60){ uncheckCollectedItem(el, userId); }
+      else { inner.style.transform='translateX(0)'; }
+      curX=0;
+    }
+    el.addEventListener('touchstart',function(e){ onStart(e.touches[0].clientX); },{passive:true});
+    el.addEventListener('touchmove',function(e){ onMove(e.touches[0].clientX); },{passive:true});
+    el.addEventListener('touchend',onEnd);
+    el.addEventListener('mousedown',function(e){ onStart(e.clientX); e.preventDefault(); });
+    window.addEventListener('mousemove',function(e){ if(dragging) onMove(e.clientX); });
+    window.addEventListener('mouseup',function(e){ if(dragging) onEnd(); });
+  });
+}
+
+function uncheckCollectedItem(el, userId){
+  var itemId = el.getAttribute('data-item');
+  var unitIdx = el.getAttribute('data-unit');
+  var orderId = el.getAttribute('data-order');
+  var summa = Number(el.getAttribute('data-summa'))||0;
+  var _wh = wid || userData.warehouse_id || 0;
+
+  // Counter kamayadi
+  bumpCounter(-summa);
+
+  // Backend uncheck
+  var url = ITEM_CHECK_API+'?action=uncheck&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa;
+  fetch(url, {keepalive:true}).catch(function(){});
+
+  // UI dan olib tashlash
+  el.style.transition='opacity .3s,height .3s,margin .3s';
+  el.style.opacity='0';
+  setTimeout(function(){
+    el.style.display='none';
+    var left = document.querySelectorAll('#collectItemsScroll .collect-item');
+    var anyVisible=false;
+    left.forEach(function(x){ if(x.style.display!=='none') anyVisible=true; });
+    if(!anyVisible){
+      var sc = document.getElementById('collectItemsScroll');
+      if(sc) sc.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px 20px">Hammasi qaytarildi</div>';
+    }
+  },320);
 }
 
 // Mijoz modalini ochish — LIVE (client-items)
@@ -899,7 +1003,7 @@ function editV2Name(userId){
   var nameEl = document.getElementById('v2Name');
   if(nameEl) nameEl.textContent = yangi;
   // ro'yxatni ham yangilash (agar ochiq bo'lsa)
-  if(v2Mode){ v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base"}); }); paintV2List(); }
+  if(v2Mode){ v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base",numeric:true}); }); paintV2List(); }
   fetch(CLIENT_NAME_API+'?user_id='+userId+'&name='+encodeURIComponent(yangi), {keepalive:true}).catch(function(){});
 }
 
