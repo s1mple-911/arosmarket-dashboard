@@ -473,17 +473,57 @@ function renderBarcha(){
 
 function paintBarcha(){
   var pageBarcha = document.getElementById('page-barcha');
-  // Search input + list container'ni bir marta yasaymiz
+  // Search input + refresh tugma + list container'ni bir marta yasaymiz
   var html = '<div style="padding:10px 12px">';
-  html += '<div style="position:relative;margin-bottom:10px">';
+  html += '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">';
+  html += '<div style="position:relative;flex:1">';
   html += '<input id="v2Search" type="text" inputmode="search" placeholder="Ism, ID yoki telefon..." oninput="onV2Search(this.value)" style="width:100%;box-sizing:border-box;padding:11px 36px 11px 14px;border-radius:11px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;outline:none">';
   html += '<div id="v2SearchClear" onclick="clearV2Search()" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px">✕</div>';
+  html += '</div>';
+  html += '<div id="v2RefreshBtn2" onclick="refreshDebtorsLive()" title="Aros\'dan yangilash" style="flex-shrink:0;width:44px;height:44px;border-radius:11px;border:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">🔄</div>';
   html += '</div>';
   html += '<div id="v2ListCount" style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600"></div>';
   html += '<div id="v2List"></div>';
   html += '</div>';
   pageBarcha.innerHTML = html;
   paintV2List();  // ro'yxatni to'ldirish
+}
+
+// Aros'dan LIVE qarzdorlarni tortib, cache'ni yangilash (faqat allUsers)
+var DEBTORS_REFRESH_API = 'https://n8n.arosmarket.com/webhook/aros-debtors-refresh';
+var v2Refreshing = false;
+function refreshDebtorsLive(){
+  if(v2Refreshing) return;
+  var ok = confirm("Qarzdorlar ro'yxatini Aros'dan yangilaysizmi?\n\n⏱ Bu 20-30 soniya olishi mumkin. Shu vaqt kutib turing.");
+  if(!ok) return;
+  v2Refreshing = true;
+  var _wh = wid || userData.warehouse_id || 0;
+  var btn = document.getElementById('v2RefreshBtn2');
+  if(btn){ btn.textContent = '⏳'; btn.style.pointerEvents='none'; }
+  var cnt = document.getElementById('v2ListCount');
+  if(cnt) cnt.textContent = "Aros'dan yangilanmoqda... (20-30 soniya)";
+
+  fetch(DEBTORS_REFRESH_API+'?wid='+_wh+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.allUsers && d.allUsers.length){
+        allUsers = d.allUsers;            // yangi ro'yxat
+        v2Debtors = allUsers.slice();
+        v2Debtors.sort(function(a,b){ return (Number(b.total_debt)||0)-(Number(a.total_debt)||0); });
+        paintV2List();
+        if(cnt) cnt.textContent = v2Debtors.length + " ta qarzdor · ✅ yangilandi";
+      } else {
+        if(cnt) cnt.textContent = "Yangilashda xato — qayta urinib ko'ring";
+      }
+    })
+    .catch(function(){
+      if(cnt) cnt.textContent = "Yangilashda xato — internet yoki server";
+    })
+    .then(function(){
+      v2Refreshing = false;
+      var b = document.getElementById('v2RefreshBtn2');
+      if(b){ b.textContent = '🔄'; b.style.pointerEvents='auto'; }
+    });
 }
 
 // Faqat ro'yxatni yangilaydi (input'ga tegmaydi — fokus buzilmaydi)
@@ -657,8 +697,9 @@ function renderV2Modal(userId, data){
   var modal = document.getElementById('v2Modal');
   var du = v2ModalUser || {};
   var name = v2CustomNames[userId] || du.ism || ((du.first_name||'')+' '+(du.last_name||'')).trim() || "Noma'lum";
-  var totalDebt = Number(du.total_debt!=null?du.total_debt:du.total_debts)||0;
-  var outdated = Number(du.otgan_summa!=null?du.otgan_summa:du.total_outdated_debts)||0;
+  // LIVE qarz (client-items javobidan) — cache emas; yangi order qo'shilsa darhol ko'rinadi
+  var totalDebt = (data.live_total_debt!=null) ? Number(data.live_total_debt) : (Number(du.total_debt!=null?du.total_debt:du.total_debts)||0);
+  var outdated = (data.live_outdated!=null) ? Number(data.live_outdated) : (Number(du.otgan_summa!=null?du.otgan_summa:du.total_outdated_debts)||0);
   var wallet = Number(du.wallet_balance)||0;
   var limit = Number(du.debt_limit)||0;
   var tel = du.telefon||du.username||'';
