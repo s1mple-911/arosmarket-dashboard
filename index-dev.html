@@ -512,6 +512,7 @@ function refreshDebtorsLive(){
         v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base",numeric:true}); });
         paintV2List();
         if(cnt) cnt.textContent = v2Debtors.length + " ta qarzdor · ✅ yangilandi";
+        loadCounter(); // paid holat yangilandi — counter qayta yuklaymiz
       } else {
         if(cnt) cnt.textContent = "Yangilashda xato — qayta urinib ko'ring";
       }
@@ -586,18 +587,22 @@ function clearV2Search(){
 }
 
 // Counter — bugungi yig'ilgan
+var v2CollectTopshirildi = 0, v2CollectQolda = 0;
 function loadCounter(){
   var _wh = wid || userData.warehouse_id || 0;
   fetch(COUNTER_API+'?wid='+_wh+'&_='+Date.now())
     .then(function(r){return r.json();})
     .then(function(d){
       v2CollectTotal = Number(d.total)||0;
+      v2CollectTopshirildi = Number(d.topshirildi)||0;
+      v2CollectQolda = Number(d.qolda)||0;
       var el = document.getElementById('v2CounterVal');
       if(el) el.textContent = fmt(v2CollectTotal);
     }).catch(function(){});
 }
 function bumpCounter(delta){
   v2CollectTotal = Math.max(0, v2CollectTotal + delta);
+  v2CollectQolda = Math.max(0, v2CollectQolda + delta); // yangi chizilgan = qo'lda
   var el = document.getElementById('v2CounterVal');
   if(el) el.textContent = fmt(v2CollectTotal);
 }
@@ -614,14 +619,22 @@ function openCounterDetail(){
       var users = (d && d.users) || [];
       var total = users.reduce(function(s,u){return s+(Number(u.summa)||0);},0);
       var cnt = users.reduce(function(s,u){return s+(Number(u.cnt)||0);},0);
+      var topsh = users.reduce(function(s,u){return s+(Number(u.topshirildi)||0);},0);
+      var qolda = users.reduce(function(s,u){return s+(Number(u.qolda)||0);},0);
       var html = '';
       html += '<div style="background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px;position:sticky;top:0;z-index:10">';
-      html += '<div style="display:flex;align-items:center;gap:10px">';
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
       html += '<div onclick="closeV2Modal()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
       html += '<div style="flex:1"><div style="font-size:16px;font-weight:800;color:var(--text)">Bugun yig\'ilgan</div>';
       html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+users.length+' mijoz · '+cnt+' ta mahsulot</div></div>';
-      html += '<div style="text-align:right"><div style="font-size:18px;font-weight:900;color:#34C759">'+fmt(total)+'</div><div style="font-size:9px;color:var(--text3)">so\'m</div></div>';
-      html += '</div></div>';
+      html += '</div>';
+      // 3 taqsimot
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+      html += '<div style="background:rgba(52,199,89,.12);border-radius:10px;padding:9px 8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Jami</div><div style="font-size:14px;font-weight:900;color:#34C759;margin-top:2px">'+fmt(total)+'</div></div>';
+      html += '<div style="background:var(--bg3);border-radius:10px;padding:9px 8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qo\'lda</div><div style="font-size:14px;font-weight:900;color:#FF9F0A;margin-top:2px">'+fmt(qolda)+'</div></div>';
+      html += '<div style="background:var(--bg3);border-radius:10px;padding:9px 8px;text-align:center"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Topshirildi</div><div style="font-size:14px;font-weight:900;color:#378ADD;margin-top:2px">'+fmt(topsh)+'</div></div>';
+      html += '</div>';
+      html += '</div>';
       html += '<div style="flex:1;overflow-y:auto;padding:12px 14px">';
       if(users.length===0){
         html += '<div style="text-align:center;color:var(--text3);padding:40px 20px">Bugun hali hech narsa yig\'ilmadi</div>';
@@ -637,10 +650,16 @@ function openCounterDetail(){
           if(!nm && du) nm = du.ism || ((du.first_name||'')+' '+(du.last_name||'')).trim();
           if(!nm) nm = "Noma'lum";
           var t = u.last_at ? String(u.last_at) : '';
+          var uTopsh = Number(u.topshirildi)||0;
+          var uQolda = Number(u.qolda)||0;
+          var badge = '';
+          if(uTopsh>0 && uQolda>0) badge = '<span style="font-size:9px;color:#378ADD;font-weight:700">✅'+fmt(uTopsh)+'</span> <span style="font-size:9px;color:#FF9F0A;font-weight:700">⏳'+fmt(uQolda)+'</span>';
+          else if(uTopsh>0) badge = '<span style="font-size:9px;color:#378ADD;font-weight:700">✅ topshirildi</span>';
+          else badge = '<span style="font-size:9px;color:#FF9F0A;font-weight:700">⏳ qo\'lda</span>';
           html += '<div onclick="openCollectUserModal('+u.user_id+',\''+String(nm).replace(/'/g,"\\'")+'\')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);margin-bottom:8px;cursor:pointer">';
           html += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
           html += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
-          html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">ID '+u.user_id+' · '+u.cnt+' ta mahsulot'+(t?' · '+t:'')+'</div></div>';
+          html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">ID '+u.user_id+' · '+u.cnt+' ta · '+badge+(t?' · '+t:'')+'</div></div>';
           html += '<div style="text-align:right;flex-shrink:0"><div style="font-size:15px;font-weight:800;color:#34C759">'+fmt(u.summa)+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">tuzatish ›</div></div>';
           html += '</div>';
         });
