@@ -656,7 +656,7 @@ function openCounterDetail(){
           if(uTopsh>0 && uQolda>0) badge = '<span style="font-size:9px;color:#378ADD;font-weight:700">✅'+fmt(uTopsh)+'</span> <span style="font-size:9px;color:#FF9F0A;font-weight:700">⏳'+fmt(uQolda)+'</span>';
           else if(uTopsh>0) badge = '<span style="font-size:9px;color:#378ADD;font-weight:700">✅ topshirildi</span>';
           else badge = '<span style="font-size:9px;color:#FF9F0A;font-weight:700">⏳ qo\'lda</span>';
-          html += '<div onclick="openCollectUserModal('+u.user_id+',\''+String(nm).replace(/'/g,"\\'")+'\')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);margin-bottom:8px;cursor:pointer">';
+          html += '<div onclick="openCollectUserModal('+u.user_id+',\''+String(nm).replace(/'/g,"\\'")+'\','+uQolda+','+uTopsh+')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);margin-bottom:8px;cursor:pointer">';
           html += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
           html += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
           html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">ID '+u.user_id+' · '+u.cnt+' ta · '+badge+(t?' · '+t:'')+'</div></div>';
@@ -673,7 +673,8 @@ function openCounterDetail(){
 }
 
 // Counter'da mijoz bosilganda — bugun yig'ilgan itemlar, uncheck qilish mumkin
-function openCollectUserModal(userId, nm){
+function openCollectUserModal(userId, nm, qolda, topsh){
+  qolda = Number(qolda)||0; topsh = Number(topsh)||0;
   var modal = document.getElementById('v2Modal');
   modal.innerHTML = '<div class="loading" style="margin:auto"><div class="spinner"></div>Yuklanmoqda...</div>';
   fetch(CLIENT_ITEMS_API+'?user_id='+userId+'&_='+Date.now())
@@ -688,7 +689,15 @@ function openCollectUserModal(userId, nm){
       html += '<div onclick="openCounterDetail()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
       html += '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(nm||'Mijoz')+'</div>';
       html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">Bugun yig\'ilgan · noto\'g\'ri bo\'lsa qayta suring</div></div>';
-      html += '</div></div>';
+      html += '</div>';
+      // Topshirish tugmasi (toggle)
+      var isDelivered = (qolda<=0 && topsh>0);
+      if(isDelivered){
+        html += '<button id="deliverBtn" onclick="deliverUser('+userId+',\''+String(nm).replace(/'/g,"\\'")+'\',\'undeliver\')" style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:1px solid rgba(255,159,10,.4);background:rgba(255,159,10,.12);color:#FF9F0A;font-size:14px;font-weight:800;cursor:pointer">↩️ Qo\'ldaga qaytarish</button>';
+      } else {
+        html += '<button id="deliverBtn" onclick="deliverUser('+userId+',\''+String(nm).replace(/'/g,"\\'")+'\',\'deliver\')" style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:none;background:#378ADD;color:#fff;font-size:14px;font-weight:800;cursor:pointer">✅ Kassaga topshirildi</button>';
+      }
+      html += '</div>';
       html += '<div style="flex:1;overflow-y:auto;padding:12px 14px" id="collectItemsScroll">';
       if(checkedItems.length===0){
         html += '<div style="text-align:center;color:var(--text3);padding:40px 20px">Bu mijozdan bugun yig\'ilgan item yo\'q</div>';
@@ -703,6 +712,24 @@ function openCollectUserModal(userId, nm){
     })
     .catch(function(){
       modal.innerHTML = '<div style="margin:auto;text-align:center;color:var(--red);padding:40px">Xato<br><button onclick="openCounterDetail()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text)">Orqaga</button></div>';
+    });
+}
+
+// Mijozning bugungi itemlarini Qo'lda ⇄ Topshirildi (manual, Aros'siz)
+var DELIVER_API = 'https://n8n.arosmarket.com/webhook/aros-collect-deliver';
+function deliverUser(userId, nm, action){
+  var _wh = wid || userData.warehouse_id || 0;
+  var btn = document.getElementById('deliverBtn');
+  if(btn){ btn.disabled=true; btn.style.opacity='0.6'; btn.textContent = (action==='deliver'?'Topshirilyapti...':'Qaytarilyapti...'); }
+  fetch(DELIVER_API+'?wid='+_wh+'&user_id='+userId+'&action='+action+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(){
+      loadCounter();        // Jami/Qo'lda/Topshirildi yangilanadi
+      openCounterDetail();  // ro'yxatga qaytadi (yangi holat bilan)
+    })
+    .catch(function(){
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.textContent = (action==='deliver'?'✅ Kassaga topshirildi':'↩️ Qo\'ldaga qaytarish'); }
+      alert("Xato — qayta urinib ko'ring");
     });
 }
 
