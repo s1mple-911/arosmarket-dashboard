@@ -240,6 +240,7 @@ var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
 var REC_LIST_API   = 'https://n8n.arosmarket.com/webhook/aros-recording-list';
 var KASSA_API      = 'https://n8n.arosmarket.com/webhook/aros-bugalter-filial-kassa';
 var KASSA_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-filial-kassa-history';
+var ORDER_ETA_API  = 'https://n8n.arosmarket.com/webhook/aros-order-eta';
 var TILXAT_LIST    = 'https://n8n.arosmarket.com/webhook/aros-tilxat-list';
 var recordingsCache = {}; // user_id -> recordings list
 var tilxatIds = {};        // user_id -> tilxat soni (qaysi mijozda tilxat bor)
@@ -2683,6 +2684,8 @@ function load(){
       loadFilialStats(function(){ renderDash(); loadTab('otgan'); });
       // Kassa info ham parallel yuklaymiz (alohida, dashboard'ga ta'sir qilmaydi)
       loadKassaInfo();
+      // Order ETA (yetkazish countdown — persist qilingan) parallel
+      loadOrderEtas();
       // Tilxatli mijozlar ro'yxati (icon ko'rsatish uchun)
       loadTilxatIds();
     })
@@ -2693,6 +2696,21 @@ function load(){
 }
 
 // ===================== OCHIQ ORDERLAR =====================
+function loadOrderEtas(){
+  var w = wid || userData.warehouse_id || '';
+  if(!w) return;
+  fetch(ORDER_ETA_API+'?wid='+w+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(map){
+      window._orderEtaMap = map || {};
+      // Ochiq tab allaqachon ochilgan bo'lsa — qayta render (countdown chiqishi uchun)
+      if(ochiqLoaded && filialData && filialData.confirmedOrders !== undefined){
+        renderOchiq(filialData.confirmedOrders||[]);
+      }
+    })
+    .catch(function(){ window._orderEtaMap = window._orderEtaMap || {}; });
+}
+
 function loadOchiq(){
   ochiqLoading=true;
   var el=document.getElementById('page-ochiq');
@@ -2830,6 +2848,17 @@ function renderOchiq(confirmedOrders){
   var sortedOrders = confirmedOrders.slice();
   sortedOrders.forEach(function(o){ o._kun = kunHisob(o.created_datetime || o.sana); });
   sortedOrders.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
+
+  // Yetkazish ETA — order'ni transferiga bog'lash (transfer comment ichidagi order_id orqali)
+  var etaByOrderId = {};
+  (filialData && filialData.transfers ? filialData.transfers : []).forEach(function(t){
+    if(!t || !t.comment) return;
+    var mm = String(t.comment).match(/(\d{5,})/);
+    if(!mm) return;
+    var oid = mm[1];
+    // on_way (kutilgan_yetkazish bor) transferni afzal ko'ramiz
+    if(t.kutilgan_yetkazish || !etaByOrderId[oid]) etaByOrderId[oid] = t;
+  });
   
   var tot=sortedOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
   html+='<div class="total-bar"><div class="tb-lbl">Jami ochiq orderlar</div>';
@@ -2853,6 +2882,15 @@ function renderOchiq(confirmedOrders){
     if(isTransfer && o.from_warehouse_name){
       transferBadge = '<div style="display:flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;color:#8b5cf6;font-weight:600"><span style="font-size:11px">🚚</span><span>'+o.from_warehouse_name+' dan</span></div>';
     }
+    // Yetkazish countdown — transfer on_way bo'lsa transferdan, aks holda persist qilingan ETA'dan
+    // (order completed/canceled bo'lguncha countdown davom etadi — confirmedOrders faqat ochiqlarni beradi)
+    var etaT = etaByOrderId[String(o.order_id)];
+    var etaVal = (etaT && etaT.kutilgan_yetkazish) ? etaT.kutilgan_yetkazish
+               : (window._orderEtaMap ? window._orderEtaMap[String(o.order_id)] : null);
+    var etaBadge = '';
+    if(etaVal){
+      etaBadge = '<div style="margin-top:5px">'+kechikishBadge({is_auto:true, kutilgan_yetkazish: etaVal})+'</div>';
+    }
     var cardBorder = isTransfer ? '1px solid rgba(139,92,246,.35)' : '1px solid var(--border)';
     var cardBg = isTransfer ? 'linear-gradient(90deg,rgba(139,92,246,.04),var(--bg2))' : 'var(--bg2)';
     html+='<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
@@ -2862,6 +2900,7 @@ function renderOchiq(confirmedOrders){
     html+='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+utypeBadge+(o.client_id?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD">ID '+o.client_id+'</span>':'')+kunBadge+'</div>';
     html+='<div class="c-phone">Order #'+o.order_id+' · '+dtStr+'</div>';
     html+=transferBadge;
+    html+=etaBadge;
     html+='</div>';
     html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(o.summa)+'</div>';
     html+='<div style="font-size:10px;color:var(--text3);margin-top:2px">Ochiq</div></div>';
