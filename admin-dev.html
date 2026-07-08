@@ -9,7 +9,6 @@
 <meta http-equiv="Expires" content="0">
 <title>AROS Admin</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -76,7 +75,12 @@ input,select,textarea{font:inherit;color:inherit}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px;color:var(--text-2);border-radius:var(--radius);line-height:1;transition:all 0.12s}
 .nav-item:hover{background:var(--bg-3)}
 .nav-item.active{background:var(--bg);color:var(--text);font-weight:500;box-shadow:var(--shadow)}
-.nav-item i{font-size:16px}
+.nav-item i{font-size:16px;transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1),color 0.18s}
+.nav-item:hover i{transform:scale(1.22) rotate(-6deg);color:var(--info-line)}
+.nav-item.active i{color:var(--text);transform:scale(1.08)}
+.nav-item .icon-on{display:none}
+.nav-item:hover .icon-off,.nav-item.active .icon-off{display:none}
+.nav-item:hover .icon-on,.nav-item.active .icon-on{display:inline-block}
 .nav-item .ct{margin-left:auto;font-size:11px;color:var(--text-3);background:var(--bg-3);padding:1px 7px;border-radius:9px;min-width:18px;text-align:center}
 .nav-item.active .ct{background:var(--info-bg);color:var(--info-text)}
 .nav-sub{padding-left:26px;display:flex;flex-direction:column;gap:1px;margin:2px 0 6px}
@@ -308,22 +312,20 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
 <div class="brand"><span class="brand-dot">A</span><span class="brand-text">AROS Admin</span><button class="sb-toggle" onclick="toggleCollapse()" title="Yopish/ochish"><i class="ti ti-chevron-left"></i></button></div>
-<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')" title="Bosh sahifa"><i class="ti ti-layout-dashboard"></i><span class="nav-label">Bosh sahifa</span></a>
+<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')" title="Bosh sahifa"><i class="ti ti-layout-dashboard icon-off"></i><i class="ti ti-layout-dashboard-filled icon-on"></i><span class="nav-label">Bosh sahifa</span></a>
 <div class="sb-grp">Boshqaruv</div>
-<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')" title="Yangi userlar"><i class="ti ti-user-plus"></i><span class="nav-label">Yangi</span><span class="ct" id="nav-pending-ct">0</span></a>
-<a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users"></i><span class="nav-label">Hammasi</span></a>
-<a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock"></i><span class="nav-label">Rollar</span></a>
-<a class="nav-item" data-screen="hodim-sozlamalari" onclick="goto('hodim-sozlamalari')" title="Hodim sozlamalari"><i class="ti ti-user-cog"></i><span class="nav-label">Hodim sozlamalari</span></a>
-<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store"></i><span class="nav-label">Filiallar</span></a>
-<a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
-<a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder"></i><span class="nav-label">Yuklanmalar</span></a>
-<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register"></i><span class="nav-label">Bugalter</span></a>
-<a class="nav-item" data-screen="davomat-hodimlar" onclick="goto('davomat-hodimlar')" title="Davomat hodimlar"><i class="ti ti-user-check"></i><span class="nav-label">Davomat</span></a>
-<a class="nav-item" data-screen="davomat-tarix" onclick="goto('davomat-tarix')" title="Davomat tarixi"><i class="ti ti-clock-hour-4"></i><span class="nav-label">Davomat tarixi</span></a>
+<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')" title="Yangi userlar"><i class="ti ti-user-plus icon-off"></i><i class="ti ti-user-plus icon-on"></i><span class="nav-label">Yangi</span><span class="ct" id="nav-pending-ct">0</span></a>
+<a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users icon-off"></i><i class="ti ti-users-filled icon-on"></i><span class="nav-label">Hammasi</span></a>
+<a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock icon-off"></i><i class="ti ti-shield-lock-filled icon-on"></i><span class="nav-label">Rollar</span></a>
+<a class="nav-item" data-screen="sotuvchi-mijoz" onclick="goto('sotuvchi-mijoz')" title="Sotuvchi & Mijoz"><i class="ti ti-affiliate icon-off"></i><i class="ti ti-affiliate-filled icon-on"></i><span class="nav-label">Sotuvchi & Mijoz</span></a>
+<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store icon-off"></i><i class="ti ti-building-store-filled icon-on"></i><span class="nav-label">Filiallar</span></a>
+<a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x icon-off"></i><i class="ti ti-plug-connected-x icon-on"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
+<a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder icon-off"></i><i class="ti ti-folder-filled icon-on"></i><span class="nav-label">Yuklanmalar</span></a>
+<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register icon-off"></i><i class="ti ti-cash-register icon-on"></i><span class="nav-label">Bugalter</span></a>
 <div class="sb-grp">Sistema</div>
-<a class="nav-item" data-screen="audit" onclick="goto('audit')" title="Kuzatuv"><i class="ti ti-history"></i><span class="nav-label">Kuzatuv</span></a>
-<a class="nav-item" data-screen="workflows" onclick="goto('workflows')" title="Workflow'lar"><i class="ti ti-circuit-bulb"></i><span class="nav-label">Workflow'lar</span></a>
-<a class="nav-item" data-screen="settings" onclick="goto('settings')" title="Sozlamalar"><i class="ti ti-settings"></i><span class="nav-label">Sozlamalar</span></a>
+<a class="nav-item" data-screen="audit" onclick="goto('audit')" title="Kuzatuv"><i class="ti ti-history icon-off"></i><i class="ti ti-history icon-on"></i><span class="nav-label">Kuzatuv</span></a>
+<a class="nav-item" data-screen="workflows" onclick="goto('workflows')" title="Workflow'lar"><i class="ti ti-circuit-bulb icon-off"></i><i class="ti ti-circuit-bulb icon-on"></i><span class="nav-label">Workflow'lar</span></a>
+<a class="nav-item" data-screen="settings" onclick="goto('settings')" title="Sozlamalar"><i class="ti ti-settings icon-off"></i><i class="ti ti-settings-filled icon-on"></i><span class="nav-label">Sozlamalar</span></a>
 <div class="sb-foot">
 <span class="av" id="footer-av">?</span>
 <div class="foot-info" style="flex:1;min-width:0">
@@ -488,13 +490,11 @@ function renderScreen(s){
     case 'users-pending': return renderUsersPending(root);
     case 'users-all': return renderUsersAll(root);
     case 'roles': return renderRoles(root);
-    case 'hodim-sozlamalari': return renderHodimSozlamalari(root);
+    case 'sotuvchi-mijoz': return renderSotuvchiMijoz(root);
     case 'filiallar': return renderFiliallar(root);
     case 'ulanmagan': return renderUlanmagan(root);
     case 'yuklanmalar': return renderYuklanmalar(root);
     case 'bugalter': return renderBugalter(root);
-    case 'davomat-hodimlar': return renderDavomatHodimlar(root);
-    case 'davomat-tarix': return renderDavomatTarix(root);
     case 'audit': return renderAudit(root);
     case 'workflows': return renderWorkflows(root);
     case 'settings': return renderSettings(root);
@@ -943,304 +943,6 @@ async function saveUserEdit(telegramId){
 }
 
 // =========================================================
-// SCREEN: HODIM SOZLAMALARI
-// Barcha hodimlar — SQL users jadvalining barcha ustunlari (parolsiz).
-// admin-hodim-list (o'qish) / admin-hodim-save (yozish) / admin-user-delete.
-// =========================================================
-let hsFilter = { status: 'all', search: '' };
-let hsUsers = [];  // joriy ro'yxat (edit modal shu massivdan oladi)
-
-async function renderHodimSozlamalari(root){
-  root.innerHTML = topbar('Boshqaruv', 'Hodim sozlamalari', '<button class="btn primary" onclick="hsNew()"><i class="ti ti-user-plus"></i>Yangi hodim</button><button class="icon-btn" onclick="renderHodimSozlamalari(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
-  const content = document.createElement('div');
-  content.innerHTML = `
-<div class="audit-toolbar">
-<input type="text" class="search-box" placeholder="Qidiruv · ism, telegram ID yoki telefon" id="hs-search" value="${escapeHtml(hsFilter.search)}">
-<div class="pill-sel ${hsFilter.status==='all'?'active':''}" onclick="hsSetFilter('all')">Hammasi</div>
-<div class="pill-sel ${hsFilter.status==='active'?'active':''}" onclick="hsSetFilter('active')">Aktiv</div>
-<div class="pill-sel ${hsFilter.status==='ceo'?'active':''}" onclick="hsSetFilter('ceo')">CEO</div>
-<div class="pill-sel ${hsFilter.status==='pending'?'active':''}" onclick="hsSetFilter('pending')">Pending</div>
-</div>
-<div id="hs-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>
-`;
-  root.appendChild(content);
-
-  document.getElementById('hs-search').addEventListener('input', (e) => {
-    hsFilter.search = e.target.value;
-    clearTimeout(window._hssearch);
-    window._hssearch = setTimeout(hsLoad, 300);
-  });
-
-  // Filiallar + rollar (edit modal uchun) — oldindan yuklab qo'yamiz
-  if (!cache.rbac) { try { cache.rbac = await api('admin-rbac', { uid: UID }); } catch(e){} }
-  hsLoad();
-}
-
-function hsSetFilter(status){
-  hsFilter.status = status;
-  renderHodimSozlamalari(document.getElementById('screens'));
-}
-
-async function hsLoad(){
-  const wrap = document.getElementById('hs-wrap');
-  if (!wrap) return;
-  try {
-    const data = await api('admin-hodim-list', { uid: UID, status: hsFilter.status, search: hsFilter.search });
-    if (data.error) throw new Error(data.error);
-    const users = data.users || [];
-    hsUsers = users;
-    if (!users.length){
-      wrap.innerHTML = `<div class="empty"><i class="ti ti-users-off"></i><p>Hodim topilmadi</p></div>`;
-      return;
-    }
-    const GT = '1.5fr 1fr 1.1fr 0.85fr 0.95fr 0.95fr 84px 44px';
-    wrap.innerHTML = `
-<div class="table-wrap">
-<div class="table-head" style="grid-template-columns:${GT}">
-<div>Hodim</div><div>Telefon</div><div>Filial</div><div>Lavozim</div><div>Oylik plan</div><div>Hodim plan</div><div>Status</div><div></div>
-</div>
-${users.map((u, i) => {
-  const statBadge = u.status === 'active' ? '<span class="badge ok">Aktiv</span>' :
-    u.status === 'ceo' ? '<span class="badge info">CEO</span>' :
-    u.status === 'pending' ? '<span class="badge warn">Pending</span>' :
-    u.status === 'waiting_name' ? '<span class="badge muted">No name</span>' :
-    `<span class="badge muted">${escapeHtml(u.status||'—')}</span>`;
-  return `
-<div class="table-row" style="grid-template-columns:${GT};cursor:pointer" onclick="hsEdit(${i})">
-<div style="display:flex;align-items:center;gap:10px;min-width:0">
-<div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
-<div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div><div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">@${escapeHtml(u.telegram_id||'')}</div></div>
-</div>
-<div style="color:var(--text-2)">${escapeHtml(u.telefon||'—')}</div>
-<div style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.warehouse_name||'—')}${u.warehouse_id?` <span style="color:var(--text-3);font-size:11px">#${escapeHtml(String(u.warehouse_id))}</span>`:''}</div>
-<div><span class="badge muted">${escapeHtml(u.lavozim||'—')}</span></div>
-<div style="font-variant-numeric:tabular-nums">${u.oylik_plan?fmt(u.oylik_plan):'—'}</div>
-<div style="font-variant-numeric:tabular-nums">${(Number(u.hodim_plan)>0)?fmt(u.hodim_plan):'—'}</div>
-<div>${statBadge}</div>
-<div><button class="btn sm" onclick="event.stopPropagation();hsEdit(${i})"><i class="ti ti-edit"></i></button></div>
-</div>`;
-}).join('')}
-</div>
-<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding:0 4px">Jami: ${users.length} ta hodim</div>`;
-  } catch(e){
-    wrap.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
-  }
-}
-
-function hsEdit(i){
-  const u = hsUsers[i];
-  if (!u){ toast('Hodim topilmadi', 'err'); return; }
-  const rbac = cache.rbac || { filiallar: [], roles: [] };
-  const filiallar = rbac.filiallar || [];
-  const roles = rbac.roles || [];
-  const userRoleKeys = (u.roles || []).map(r => r.key);
-  const inList = filiallar.some(f => String(f.warehouse_id) === String(u.warehouse_id));
-  const grpLbl = t => `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 -2px">${t}</div>`;
-
-  openModal(`
-<div class="modal-h">
-<div><h3>${escapeHtml(u.ism || 'Hodim')}</h3><p>Telegram ID: <code class="mono">${escapeHtml(u.telegram_id)}</code> · o'zgartirib bo'lmaydi ${u.has_password?'· <span class="badge ok" style="font-size:10px"><i class="ti ti-lock"></i> parol bor</span>':'· <span class="badge muted" style="font-size:10px">parolsiz</span>'}</p></div>
-<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
-</div>
-<div class="modal-body">
-${grpLbl('Asosiy')}
-<div class="ff"><label>Ism</label><input type="text" class="input" id="hs-ism" value="${escapeHtml(u.ism||'')}"></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="ff"><label>Telefon</label><input type="text" class="input" id="hs-telefon" value="${escapeHtml(u.telefon||'')}" placeholder="+998..."></div>
-<div class="ff"><label>Lavozim</label><input type="text" class="input" id="hs-lavozim" value="${escapeHtml(u.lavozim||'')}" placeholder="sotuvchi"></div>
-</div>
-<div class="ff"><label>Filial</label><select class="select" id="hs-fil">
-<option value="">— filial yo'q —</option>
-${(!inList && u.warehouse_id) ? `<option value="${escapeHtml(String(u.warehouse_id))}|${escapeHtml(u.warehouse_name||'')}" selected>${escapeHtml(u.warehouse_name||('#'+u.warehouse_id))} (joriy)</option>` : ''}
-${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}" ${String(f.warehouse_id)===String(u.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('')}
-</select></div>
-${grpLbl('Rejalar — to\'liq oylik qiymat')}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-plan" value="${u.oylik_plan||''}" min="0"></div>
-<div class="ff"><label>Hodim plan</label><input type="number" class="input" id="hs-hodim-plan" value="${(u.hodim_plan??'')}" min="0"></div>
-<div class="ff"><label>Fiksa</label><input type="number" class="input" id="hs-fiksa" value="${(u.fiksa??'')}" min="0"></div>
-<div class="ff"><label>Fidoyilik</label><input type="number" class="input" id="hs-fidoyilik" value="${(u.fidoyilik??'')}" min="0"></div>
-</div>
-${grpLbl('Tizim')}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="ff"><label>Status</label><select class="select" id="hs-stat">
-<option value="active" ${u.status==='active'?'selected':''}>Aktiv</option>
-<option value="ceo" ${u.status==='ceo'?'selected':''}>CEO</option>
-<option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
-<option value="waiting_name" ${u.status==='waiting_name'?'selected':''}>Ism kutilmoqda</option>
-</select></div>
-<div class="ff"><label>Worker ID (Aros)</label><input type="number" class="input" id="hs-worker" value="${(u.worker_id??'')}" placeholder="—"></div>
-</div>
-${grpLbl('Rollar')}
-<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
-${roles.length ? roles.map(r => `
-<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-<input type="checkbox" class="hs-role-cb" value="${r.key}" ${userRoleKeys.includes(r.key)?'checked':''}>
-${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
-<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
-</label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
-</div>
-</div>
-<div class="modal-foot">
-<button class="btn danger" style="margin-right:auto" onclick="hsDelete('${escapeHtml(u.telegram_id)}')"><i class="ti ti-trash"></i>O'chirish</button>
-<button class="btn" onclick="closeModal()">Bekor</button>
-<button class="btn primary" id="hs-save-btn" onclick="hsSave('${escapeHtml(u.telegram_id)}')"><i class="ti ti-check"></i>Saqlash</button>
-</div>
-`);
-}
-
-async function hsSave(telegramId){
-  const g = id => (document.getElementById(id)?.value ?? '').trim();
-  const filVal = document.getElementById('hs-fil').value;
-  const [warehouse_id, warehouse_name] = filVal.split('|');
-  const roleKeys = Array.from(document.querySelectorAll('.hs-role-cb:checked')).map(cb => cb.value);
-  const btn = document.getElementById('hs-save-btn');
-  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Saqlanyapti...'; }
-  try {
-    const r1 = await api('admin-hodim-save', {
-      uid: UID, telegram_id: telegramId,
-      ism: g('hs-ism'), telefon: g('hs-telefon'), lavozim: g('hs-lavozim'),
-      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
-      oylik_plan: g('hs-plan'), hodim_plan: g('hs-hodim-plan'),
-      fiksa: g('hs-fiksa'), fidoyilik: g('hs-fidoyilik'),
-      worker_id: g('hs-worker'), status: g('hs-stat')
-    });
-    if (r1.error) throw new Error(r1.error);
-    const r2 = await api('admin-role-assign', { uid: UID, telegram_id: telegramId, role_keys: roleKeys });
-    if (r2.error) throw new Error(r2.error);
-    toast('SQL\'da saqlandi');
-    closeModal();
-    hsLoad();
-  } catch(e){
-    toast('Xato: ' + e.message, 'err');
-    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Saqlash'; }
-  }
-}
-
-// --- Yangi hodim qo'shish ---
-function hsNew(){
-  const rbac = cache.rbac || { filiallar: [], roles: [] };
-  const filiallar = rbac.filiallar || [];
-  const roles = rbac.roles || [];
-  const grpLbl = t => `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 -2px">${t}</div>`;
-  openModal(`
-<div class="modal-h">
-<div><h3>Yangi hodim</h3><p>Saqlansa SQL users jadvaliga qo'shiladi.</p></div>
-<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
-</div>
-<div class="modal-body">
-${grpLbl('Asosiy')}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="ff"><label>Telegram ID *</label><input type="text" inputmode="numeric" class="input" id="hs-new-tgid" placeholder="1255605633"></div>
-<div class="ff"><label>Telefon</label><input type="text" class="input" id="hs-new-telefon" placeholder="+998..."></div>
-</div>
-<div class="ff"><label>Ism *</label><input type="text" class="input" id="hs-new-ism" placeholder="Ism Familiya"></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="ff"><label>Lavozim</label><input type="text" class="input" id="hs-new-lavozim" value="sotuvchi"></div>
-<div class="ff"><label>Worker ID (Aros)</label><input type="number" class="input" id="hs-new-worker" placeholder="—"></div>
-</div>
-<div class="ff"><label>Filial</label><select class="select" id="hs-new-fil">
-<option value="">— filial yo'q —</option>
-${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}">${escapeHtml(f.filial)}</option>`).join('')}
-</select></div>
-${grpLbl('Rejalar — oylik qiymat')}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-new-plan" value="0" min="0"></div>
-<div class="ff"><label>Hodim plan</label><input type="number" class="input" id="hs-new-hodim-plan" value="0" min="0"></div>
-<div class="ff"><label>Fiksa</label><input type="number" class="input" id="hs-new-fiksa" value="0" min="0"></div>
-<div class="ff"><label>Fidoyilik</label><input type="number" class="input" id="hs-new-fidoyilik" value="0" min="0"></div>
-</div>
-${grpLbl('Tizim')}
-<div class="ff"><label>Status</label><select class="select" id="hs-new-stat">
-<option value="active" selected>Aktiv</option>
-<option value="ceo">CEO</option>
-<option value="pending">Pending</option>
-<option value="waiting_name">Ism kutilmoqda</option>
-</select></div>
-${grpLbl('Rollar')}
-<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
-${roles.length ? roles.map(r=>`
-<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-<input type="checkbox" class="hs-new-role-cb" value="${r.key}">
-${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
-<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
-</label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
-</div>
-</div>
-<div class="modal-foot">
-<button class="btn" onclick="closeModal()">Bekor</button>
-<button class="btn primary" id="hs-new-btn" onclick="hsCreate()"><i class="ti ti-check"></i>Qo'shish</button>
-</div>
-`);
-}
-
-async function hsCreate(){
-  const g = id => (document.getElementById(id)?.value ?? '').trim();
-  const tgid = g('hs-new-tgid');
-  const ism = g('hs-new-ism');
-  const filVal = document.getElementById('hs-new-fil').value;
-  const roleKeys = Array.from(document.querySelectorAll('.hs-new-role-cb:checked')).map(cb => cb.value);
-  if (!/^\d+$/.test(tgid)){ toast('Telegram ID faqat raqam bo\'lishi kerak', 'err'); return; }
-  if (!ism){ toast('Ism kiriting', 'err'); return; }
-  if (hsUsers.some(u => String(u.telegram_id) === tgid)){ toast('Bu Telegram ID allaqachon mavjud', 'err'); return; }
-  const [warehouse_id, warehouse_name] = filVal.split('|');
-  const btn = document.getElementById('hs-new-btn');
-  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Qo\'shilyapti...'; }
-  try {
-    const r1 = await api('admin-hodim-save', {
-      uid: UID, telegram_id: tgid,
-      ism, telefon: g('hs-new-telefon'), lavozim: g('hs-new-lavozim') || 'sotuvchi',
-      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
-      oylik_plan: g('hs-new-plan'), hodim_plan: g('hs-new-hodim-plan'),
-      fiksa: g('hs-new-fiksa'), fidoyilik: g('hs-new-fidoyilik'),
-      worker_id: g('hs-new-worker'), status: g('hs-new-stat')
-    });
-    if (r1.error) throw new Error(r1.error);
-    if (roleKeys.length){
-      const r2 = await api('admin-role-assign', { uid: UID, telegram_id: tgid, role_keys: roleKeys });
-      if (r2.error) throw new Error(r2.error);
-    }
-    toast('Hodim qo\'shildi');
-    closeModal();
-    hsLoad();
-  } catch(e){
-    toast('Xato: ' + e.message, 'err');
-    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Qo\'shish'; }
-  }
-}
-
-// --- Hodimni o'chirish ---
-function hsDelete(telegramId){
-  const u = hsUsers.find(x => String(x.telegram_id) === String(telegramId));
-  const ism = u ? (u.ism || telegramId) : telegramId;
-  openModal(`
-<div class="modal-h">
-<div><h3>O'chirilsinmi?</h3><p><b>${escapeHtml(ism)}</b> (<code class="mono">${escapeHtml(telegramId)}</code>) SQL users jadvalidan butunlay o'chiriladi, rollari ham olib tashlanadi. Bu amalni qaytarib bo'lmaydi.</p></div>
-<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
-</div>
-<div class="modal-foot">
-<button class="btn" onclick="closeModal()">Bekor</button>
-<button class="btn danger primary" id="hs-del-btn" style="background:var(--err-text);border-color:var(--err-text);color:#fff" onclick="hsDeleteConfirm('${escapeHtml(telegramId)}')"><i class="ti ti-trash"></i>Ha, o'chir</button>
-</div>
-`);
-}
-
-async function hsDeleteConfirm(telegramId){
-  const btn = document.getElementById('hs-del-btn');
-  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> O\'chirilyapti...'; }
-  try {
-    const r = await api('admin-user-delete', { uid: UID, telegram_id: telegramId });
-    if (r.error) throw new Error(r.error === 'not_found' ? 'Hodim topilmadi' : r.error);
-    toast('Hodim o\'chirildi');
-    closeModal();
-    hsLoad();
-  } catch(e){
-    toast('Xato: ' + e.message, 'err');
-    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-trash"></i>Ha, o\'chir'; }
-  }
-}
-
-// =========================================================
 // SCREEN: ROLES
 // =========================================================
 let selectedRoleKey = null;
@@ -1369,6 +1071,446 @@ async function createRole(){
     selectedRoleKey = key;
     renderRoles(document.getElementById('screens'));
   } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: SOTUVCHI & MIJOZ (Seller ↔ Client management)
+// Bizdagi workerlar va ularning clientlari. Ulanmagan mijozlarni worker'ga biriktirish.
+// =========================================================
+let scmState = {
+  warehouseFilter: '',
+  workers: [],
+  warehouses: [],
+  search: '',
+  // Wizard state
+  wizardStep: 1,           // 1=filter, 2=clients, 3=worker
+  wizardRole: 'master',
+  wizardWarehouse: '',
+  wizardPage: 1,
+  wizardPageSize: 20,
+  wizardClients: [],
+  wizardTotalClients: 0,
+  wizardHasNext: false,
+  selectedClients: new Set(),
+  wizardWorkers: [],
+  targetWorker: null,
+  planCount: 5
+};
+
+async function renderSotuvchiMijoz(root){
+  root.innerHTML = topbar('Boshqaruv', 'Sotuvchi & Mijoz', `
+<button class="btn primary" onclick="scmOpenWizard()"><i class="ti ti-user-plus"></i>Ulanmagan mijozlar</button>
+<button class="icon-btn" onclick="renderSotuvchiMijoz(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+`);
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<select class="select" style="max-width:220px;height:36px" id="scm-wh-filter"><option value="">Filial · hammasi</option></select>
+<input type="text" class="search-box" placeholder="Sotuvchi ismi yoki telefon..." id="scm-search" value="${escapeHtml(scmState.search)}" style="max-width:280px">
+</div>
+<div id="scm-content"><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  root.appendChild(content);
+
+  document.getElementById('scm-search').addEventListener('input', (e) => {
+    scmState.search = e.target.value;
+    clearTimeout(window._scmSearch);
+    window._scmSearch = setTimeout(renderScmWorkers, 250);
+  });
+
+  await loadScmData();
+}
+
+async function loadScmData(){
+  const wrap = document.getElementById('scm-content');
+  try {
+    const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.warehouseFilter });
+    if (data.error) throw new Error(data.error);
+    scmState.workers = data.workers || [];
+    scmState.warehouses = data.warehouses || [];
+
+    const sel = document.getElementById('scm-wh-filter');
+    if (sel) {
+      const cur = scmState.warehouseFilter;
+      sel.innerHTML = '<option value="">Filial · hammasi</option>' +
+        scmState.warehouses.map(w => `<option value="${w.warehouse_id}" ${cur==String(w.warehouse_id)?'selected':''}>${escapeHtml(w.filial)}</option>`).join('');
+      sel.onchange = (e) => { scmState.warehouseFilter = e.target.value; loadScmData(); };
+    }
+    renderScmWorkers();
+  } catch(e){
+    wrap.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderScmWorkers(){
+  const wrap = document.getElementById('scm-content');
+  if (!wrap) return;
+  const q = (scmState.search||'').toLowerCase().trim();
+  let list = scmState.workers.slice();
+  if (q) {
+    list = list.filter(w =>
+      (`${w.first_name||''} ${w.last_name||''}`).toLowerCase().includes(q) ||
+      String(w.username||'').toLowerCase().includes(q) ||
+      String(w.id||'').includes(q)
+    );
+  }
+  list.sort((a,b) => (Number(b.clients_count)||0) - (Number(a.clients_count)||0));
+
+  const totalClients = list.reduce((s,w) => s + (Number(w.clients_count)||0), 0);
+
+  const kpiHtml = `
+<div class="kpi-row" style="margin-bottom:14px">
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-users"></i>Sotuvchilar</div><div class="kpi-val">${list.length}</div><div class="kpi-delta" style="color:var(--text-3)">${scmState.warehouseFilter ? 'filialda' : 'jami'}</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-check"></i>Ulangan mijozlar</div><div class="kpi-val">${totalClients}</div><div class="kpi-delta" style="color:var(--text-3)">biriktirilgan</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-building"></i>Filiallar</div><div class="kpi-val">${scmState.warehouses.length}</div><div class="kpi-delta" style="color:var(--text-3)">bizda</div></div>
+</div>`;
+
+  if (!list.length) {
+    wrap.innerHTML = kpiHtml + `<div class="empty"><i class="ti ti-user-off"></i><p>Sotuvchi topilmadi</p></div>`;
+    return;
+  }
+
+  wrap.innerHTML = kpiHtml + `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:2fr 1.3fr 140px 110px 110px 40px">
+<div>Sotuvchi</div><div>Filial</div><div>Telefon</div><div>Mijozlar</div><div>Cashback</div><div></div>
+</div>
+${list.map((w,i) => `
+<div class="table-row" style="grid-template-columns:2fr 1.3fr 140px 110px 110px 40px;cursor:pointer" onclick="scmOpenWorker(${w.id})">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<div class="av" style="width:32px;height:32px;font-size:11px">${initials((w.first_name||'')+' '+(w.last_name||''))}</div>
+<div style="min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(((w.first_name||'')+' '+(w.last_name||'')).trim())||'Nomsiz'}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id||''} · ${escapeHtml(w.role||'')}</div>
+</div>
+</div>
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-size:12.5px">${escapeHtml(w.warehouse||'—')}</div>
+<div style="font-family:var(--mono);font-size:12px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(w.username||'—')}</div>
+<div><span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}">${w.clients_count||0} ta</span></div>
+<div style="font-variant-numeric:tabular-nums;font-size:12.5px">${fmt(w.cashback_balance||0)}</div>
+<div style="display:flex;justify-content:flex-end;color:var(--text-3)"><i class="ti ti-chevron-right"></i></div>
+</div>
+`).join('')}
+</div>
+`;
+}
+
+function scmOpenWorker(workerId){
+  const w = scmState.workers.find(x => x.id === workerId);
+  if (!w) return;
+  const clients = w.clients || [];
+  const name = `${w.first_name||''} ${w.last_name||''}`.trim() || 'Nomsiz';
+  openModal(`
+<div class="modal-h">
+<div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(w.warehouse||'—')} · ${escapeHtml(w.role||'')} · ${clients.length} ta mijoz</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div style="display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:12.5px">
+<div style="color:var(--text-3)">Sotuvchi ID</div><div><code class="mono">#${w.id||''}</code></div>
+<div style="color:var(--text-3)">Telefon</div><div style="font-family:var(--mono)">${escapeHtml(w.username||'—')}</div>
+<div style="color:var(--text-3)">Cashback</div><div style="font-variant-numeric:tabular-nums">${fmt(w.cashback_balance||0)} so'm</div>
+<div style="color:var(--text-3)">Buyurtma</div><div>${w.is_ordering_enabled?'<span class="badge ok">Yoqilgan</span>':'<span class="badge muted">O\'chiq</span>'}</div>
+</div>
+${clients.length ? `
+<div class="divider"></div>
+<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:500;margin-bottom:8px">Mijozlar (${clients.length})</div>
+<div style="max-height:280px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
+${clients.map(c => `
+<div style="padding:8px 12px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12.5px">
+<div style="min-width:0;flex:1"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.name||('Mijoz #'+c.client))}</div>${c.username?`<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">${escapeHtml(c.username)}</div>`:''}</div>
+<div style="text-align:right;flex-shrink:0"><span class="badge muted">${c.plan_monthly_orders_count||0}/oy</span></div>
+</div>
+`).join('')}
+</div>
+` : '<div class="empty" style="padding:20px 0"><i class="ti ti-users-off"></i><p>Mijoz biriktirilmagan</p></div>'}
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Yopish</button>
+</div>
+`);
+}
+
+// -------- WIZARD: Ulanmagan mijozlarni workerga biriktirish --------
+function scmOpenWizard(){
+  if (!scmState.warehouses.length) {
+    toast('Avval sahifa yuklanishini kutib turing', 'err');
+    return;
+  }
+  scmState.wizardStep = 1;
+  scmState.wizardRole = 'master';
+  scmState.wizardWarehouse = scmState.warehouseFilter || '';
+  scmState.wizardPage = 1;
+  scmState.wizardClients = [];
+  scmState.wizardTotalClients = 0;
+  scmState.selectedClients = new Set();
+  scmState.wizardWorkers = [];
+  scmState.targetWorker = null;
+  scmState.planCount = 5;
+  scmRenderWizard();
+}
+
+function scmRenderWizard(){
+  if (scmState.wizardStep === 1) scmRenderWizardStep1();
+  else if (scmState.wizardStep === 2) scmRenderWizardStep2();
+  else if (scmState.wizardStep === 3) scmRenderWizardStep3();
+}
+
+function scmCloseWizard(){
+  closeModal();
+  document.getElementById('modal-content').style.maxWidth = '';
+}
+
+function scmRenderWizardStep1(){
+  document.getElementById('modal-content').style.maxWidth = '';
+  openModal(`
+<div class="modal-h">
+<div><h3>Ulanmagan mijozlar</h3><p>1/3 · Filial va rol tanlang</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Filial *</label>
+<select class="select" id="wiz-wh">
+<option value="">— tanlang —</option>
+${scmState.warehouses.map(w => `<option value="${w.warehouse_id}" ${String(w.warehouse_id)===String(scmState.wizardWarehouse)?'selected':''}>${escapeHtml(w.filial)}</option>`).join('')}
+</select>
+</div>
+<div class="ff"><label>Rol *</label>
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${[
+  {v:'master', l:'Master', d:'Deadline 1 kun'},
+  {v:'business_partner', l:'Business Partner', d:'Deadline 7+ kun'},
+  {v:'customer', l:'Customer', d:'Oddiy mijoz'}
+].map(r => `
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border-radius:var(--radius);background:${scmState.wizardRole===r.v?'var(--bg)':'transparent'};border:0.5px solid ${scmState.wizardRole===r.v?'var(--info-line)':'transparent'}">
+<input type="radio" name="wiz-role" value="${r.v}" ${scmState.wizardRole===r.v?'checked':''} onchange="scmState.wizardRole=this.value;scmRenderWizardStep1()">
+<div style="flex:1"><div style="font-weight:500">${r.l}</div><div style="font-size:11px;color:var(--text-3);margin-top:1px">${r.d}</div></div>
+</label>`).join('')}
+</div>
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmCloseWizard()">Bekor</button>
+<button class="btn primary" onclick="scmWizardStep1Next()"><i class="ti ti-arrow-right"></i>Ko'rsatish</button>
+</div>
+`);
+}
+
+async function scmWizardStep1Next(){
+  const wh = document.getElementById('wiz-wh').value;
+  if (!wh) { toast('Filial tanlang', 'err'); return; }
+  scmState.wizardWarehouse = wh;
+  scmState.wizardPage = 1;
+  scmState.selectedClients = new Set();
+  scmState.wizardStep = 2;
+  await scmLoadUnassigned();
+}
+
+async function scmLoadUnassigned(){
+  document.getElementById('modal-content').style.maxWidth = '680px';
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Ulanmagan mijozlar</h3><p>2/3 · Yuklanmoqda...</p></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  try {
+    const data = await api('admin-scm-unassigned', {
+      uid: UID,
+      role: scmState.wizardRole,
+      warehouse_id: scmState.wizardWarehouse,
+      page: scmState.wizardPage,
+      page_size: scmState.wizardPageSize
+    });
+    if (data.error) throw new Error(data.error);
+    scmState.wizardClients = data.results || [];
+    scmState.wizardTotalClients = data.count || 0;
+    scmState.wizardHasNext = !!data.next;
+    scmRenderWizardStep2();
+  } catch(e){
+    document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Xato</h3></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p></div></div>
+<div class="modal-foot"><button class="btn" onclick="scmState.wizardStep=1;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button></div>
+`;
+  }
+}
+
+function scmRenderWizardStep2(){
+  const list = scmState.wizardClients;
+  const whName = (scmState.warehouses.find(w => String(w.warehouse_id)===String(scmState.wizardWarehouse)) || {}).filial || '';
+  const roleLabels = {master:'Master', business_partner:'Business Partner', customer:'Customer'};
+  const totalPages = Math.max(1, Math.ceil(scmState.wizardTotalClients / scmState.wizardPageSize));
+  const allSelected = list.length > 0 && list.every(c => scmState.selectedClients.has(c.id));
+
+  document.getElementById('modal-content').style.maxWidth = '680px';
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h">
+<div><h3>Ulanmagan mijozlar</h3><p>2/3 · ${escapeHtml(whName)} · ${roleLabels[scmState.wizardRole]||scmState.wizardRole} · ${scmState.wizardTotalClients} ta jami</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${list.length === 0 ? `<div class="empty"><i class="ti ti-users-off"></i><p>Ushbu filial va rol uchun ulanmagan mijoz yo'q</p></div>` : `
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-2);border-radius:var(--radius)">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500">
+<input type="checkbox" ${allSelected?'checked':''} onchange="scmToggleSelectAll(this.checked)" style="width:16px;height:16px">
+<span>Hammasini tanlash (${list.length} ta)</span>
+</label>
+<span style="font-size:13px;color:var(--info-text);font-weight:600">${scmState.selectedClients.size} ta tanlangan</span>
+</div>
+<div style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:2px">
+${list.map(c => {
+  const sel = scmState.selectedClients.has(c.id);
+  const name = `${c.first_name||''} ${c.last_name||''}`.trim() || 'Nomsiz';
+  return `
+<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${sel?'var(--info-bg)':'var(--bg)'};border:0.5px solid ${sel?'var(--info-line)':'var(--border)'};border-radius:var(--radius-lg);cursor:pointer;transition:all 0.12s">
+<input type="checkbox" ${sel?'checked':''} onchange="scmToggleClient(${c.id})" style="width:16px;height:16px;flex-shrink:0">
+<div class="av" style="width:32px;height:32px;font-size:11px;background:var(--bg-2);color:var(--text-2);flex-shrink:0">${initials(name)}</div>
+<div style="flex:1;min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(name)}</div>
+<div style="font-size:11px;color:var(--text-3);display:flex;gap:8px;flex-wrap:wrap"><span>#${c.id}</span><span style="font-family:var(--mono)">${escapeHtml(c.username||'')}</span></div>
+</div>
+<div style="text-align:right;flex-shrink:0">
+<div style="font-size:12px;font-weight:500;font-variant-numeric:tabular-nums">${fmt(c.cashback_balance||0)}</div>
+<div style="font-size:10px;color:var(--text-3)">cashback</div>
+</div>
+</label>`;
+}).join('')}
+</div>
+${totalPages > 1 ? `
+<div style="display:flex;justify-content:center;align-items:center;gap:10px;padding:10px 0">
+<button class="btn sm" ${scmState.wizardPage<=1?'disabled':''} onclick="scmWizardChangePage(${scmState.wizardPage-1})"><i class="ti ti-chevron-left"></i>Oldingi</button>
+<span style="font-size:12px;color:var(--text-2)">Sahifa <b>${scmState.wizardPage}</b> / ${totalPages}</span>
+<button class="btn sm" ${!scmState.wizardHasNext?'disabled':''} onclick="scmWizardChangePage(${scmState.wizardPage+1})">Keyingi<i class="ti ti-chevron-right"></i></button>
+</div>` : ''}
+`}
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmState.wizardStep=1;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button>
+<button class="btn primary" ${scmState.selectedClients.size===0?'disabled':''} onclick="scmWizardStep2Next()"><i class="ti ti-arrow-right"></i>${scmState.selectedClients.size} ta biriktirish</button>
+</div>
+`;
+}
+
+function scmToggleSelectAll(checked){
+  scmState.wizardClients.forEach(c => {
+    if (checked) scmState.selectedClients.add(c.id);
+    else scmState.selectedClients.delete(c.id);
+  });
+  scmRenderWizardStep2();
+}
+
+function scmToggleClient(id){
+  if (scmState.selectedClients.has(id)) scmState.selectedClients.delete(id);
+  else scmState.selectedClients.add(id);
+  scmRenderWizardStep2();
+}
+
+async function scmWizardChangePage(p){
+  if (p < 1) return;
+  scmState.wizardPage = p;
+  await scmLoadUnassigned();
+}
+
+async function scmWizardStep2Next(){
+  if (scmState.selectedClients.size === 0) { toast('Kamida bitta mijoz tanlang', 'err'); return; }
+  scmState.wizardStep = 3;
+  await scmLoadWorkersForAssign();
+}
+
+async function scmLoadWorkersForAssign(){
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Sotuvchi tanlash</h3><p>3/3 · Yuklanmoqda...</p></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  try {
+    const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.wizardWarehouse });
+    if (data.error) throw new Error(data.error);
+    scmState.wizardWorkers = data.workers || [];
+    scmState.targetWorker = null;
+    scmRenderWizardStep3();
+  } catch(e){
+    document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Xato</h3></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p></div></div>
+<div class="modal-foot"><button class="btn" onclick="scmState.wizardStep=2;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button></div>
+`;
+  }
+}
+
+function scmRenderWizardStep3(){
+  const whName = (scmState.warehouses.find(w => String(w.warehouse_id)===String(scmState.wizardWarehouse)) || {}).filial || '';
+  const workers = scmState.wizardWorkers;
+  document.getElementById('modal-content').style.maxWidth = '680px';
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h">
+<div><h3>Sotuvchi tanlash</h3><p>3/3 · ${escapeHtml(whName)} · ${scmState.selectedClients.size} ta mijoz biriktirilyapti</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${workers.length === 0 ? `<div class="empty"><i class="ti ti-user-off"></i><p>Ushbu filialda sotuvchi yo'q</p></div>` : `
+<div class="ff"><label>Plan (oyiga har mijoz uchun buyurtma soni)</label>
+<input type="number" class="input" id="wiz-plan" value="${scmState.planCount}" min="1" onchange="scmState.planCount=parseInt(this.value)||5">
+<div style="font-size:11px;color:var(--text-3);margin-top:3px">Barcha tanlangan mijozlarga bir xil qiymat qo'yiladi</div>
+</div>
+<div class="ff"><label>Sotuvchi * (${workers.length} ta)</label>
+<div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;padding:2px">
+${workers.map(w => {
+  const sel = scmState.targetWorker === w.id;
+  const name = `${w.first_name||''} ${w.last_name||''}`.trim() || 'Nomsiz';
+  return `
+<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${sel?'var(--info-bg)':'var(--bg)'};border:0.5px solid ${sel?'var(--info-line)':'var(--border)'};border-radius:var(--radius-lg);cursor:pointer;transition:all 0.12s">
+<input type="radio" name="wiz-worker" value="${w.id}" ${sel?'checked':''} onchange="scmState.targetWorker=${w.id};scmRenderWizardStep3()" style="flex-shrink:0">
+<div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${initials(name)}</div>
+<div style="flex:1;min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(name)}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id} · ${escapeHtml(w.username||'')}</div>
+</div>
+<span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}" style="flex-shrink:0">${w.clients_count||0} mijoz</span>
+</label>`;
+}).join('')}
+</div>
+</div>
+`}
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmState.wizardStep=2;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button>
+<button class="btn primary" ${!scmState.targetWorker?'disabled':''} onclick="scmWizardSubmit()"><i class="ti ti-check"></i>Biriktirish</button>
+</div>
+`;
+}
+
+async function scmWizardSubmit(){
+  if (!scmState.targetWorker) { toast('Sotuvchi tanlang', 'err'); return; }
+  const planEl = document.getElementById('wiz-plan');
+  const plan = parseInt(planEl?.value) || scmState.planCount || 5;
+  const clients = Array.from(scmState.selectedClients).map(id => ({
+    client: id,
+    plan_monthly_orders_count: plan,
+    plan_monthly_orders_sum: "0.00"
+  }));
+  const payload = {
+    warehouse: parseInt(scmState.wizardWarehouse),
+    worker: scmState.targetWorker,
+    clients
+  };
+
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Yuborilmoqda...</h3><p>${clients.length} ta mijoz biriktirilmoqda</p></div></div>
+<div class="modal-body"><div style="text-align:center;padding:32px 20px"><div class="spinner" style="margin:0 auto 12px"></div><p style="font-size:13px;color:var(--text-2)">Iltimos kuting...</p></div></div>
+`;
+
+  try {
+    const data = await api('admin-scm-assign', { uid: UID, data: JSON.stringify(payload) });
+    if (data.error) throw new Error(data.error);
+    toast(`✓ ${clients.length} ta mijoz biriktirildi`);
+    scmCloseWizard();
+    await loadScmData();
+  } catch(e){
+    document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Xato</h3></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p></div></div>
+<div class="modal-foot"><button class="btn" onclick="scmState.wizardStep=3;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button></div>
+`;
+  }
 }
 
 // =========================================================
@@ -2256,189 +2398,6 @@ function renderSettings(root){
 // =========================================================
 // START
 // =========================================================
-
-// =========================================================
-// DAVOMAT ADMIN
-// =========================================================
-let davWarehousesCache = null;
-async function davLoadWarehouses(){
-  if(davWarehousesCache) return davWarehousesCache;
-  const d = await api('aros-admin-dav-warehouses', { uid: UID });
-  davWarehousesCache = (d.list||[]);
-  return davWarehousesCache;
-}
-
-async function renderDavomatHodimlar(root){
-  root.innerHTML = topbar('Davomat', 'Hodimlar', '<button class="btn sm" onclick="davSyncCoords(this)" title="Filiallar koordinatasini Aros\'dan yangilash"><i class="ti ti-map-pin"></i>Koordinata sync</button><button class="icon-btn" onclick="renderDavomatHodimlar(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
-  const content = document.createElement('div');
-  content.innerHTML = `<div id="dav-h-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>`;
-  root.appendChild(content);
-  try{
-    const [data] = await Promise.all([ api('aros-admin-dav-hodimlar',{uid:UID}), davLoadWarehouses() ]);
-    const list = data.list||[];
-    window._davHodimlar = list;
-    const wrap = document.getElementById('dav-h-wrap');
-    if(!list.length){ wrap.innerHTML='<div class="empty"><i class="ti ti-users-off"></i><p>Hodim topilmadi</p></div>'; return; }
-    wrap.innerHTML = `
-<div class="table-wrap">
-<div class="table-head" style="grid-template-columns:1.6fr 1.2fr 0.9fr 60px 1.6fr 56px">
-<div>Hodim</div><div>Telefon</div><div>Lavozim</div><div>Yuz</div><div>Filiallar</div><div></div>
-</div>
-${list.map(u=>`
-<div class="table-row" style="grid-template-columns:1.6fr 1.2fr 0.9fr 60px 1.6fr 56px">
-<div style="display:flex;align-items:center;gap:10px;min-width:0">
-<div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
-<div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div>
-<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">@${u.telegram_id}</div></div>
-</div>
-<div style="color:var(--text-2)">${escapeHtml(u.telefon||'—')}</div>
-<div><span class="badge muted">${escapeHtml(u.lavozim||'')}</span></div>
-<div>${u.enrolled?'<span class="badge ok"><i class="ti ti-check"></i></span>':'<span class="badge muted">—</span>'}</div>
-<div style="display:flex;flex-wrap:wrap;gap:3px">${(u.warehouses||[]).map(w=>`<span class="badge info">${escapeHtml(w.warehouse_name||('#'+w.warehouse_id))}</span>`).join('') || '<span style="color:var(--text-3)">—</span>'}</div>
-<div><button class="btn sm" onclick="davEditWarehouses('${u.telegram_id}')"><i class="ti ti-edit"></i></button></div>
-</div>`).join('')}
-</div>`;
-  }catch(e){
-    document.getElementById('dav-h-wrap').innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
-  }
-}
-
-async function davSyncCoords(btn){
-  const orig = btn ? btn.innerHTML : '';
-  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader-2"></i> Sync...'; }
-  try{
-    const d = await api('aros-admin-dav-coords-all', { uid:UID });
-    davWarehousesCache = null;
-    toast((d && d.saved!=null ? d.saved : 0)+'/'+(d && d.total!=null ? d.total : '?')+' filial koordinatasi saqlandi');
-    renderDavomatHodimlar(document.getElementById('screens'));
-  }catch(e){ toast('Xato: '+e.message,'err'); if(btn){ btn.disabled=false; btn.innerHTML=orig; } }
-}
-
-async function davEditWarehouses(telegramId){
-  const u = (window._davHodimlar||[]).find(x=>String(x.telegram_id)===String(telegramId));
-  const whs = await davLoadWarehouses();
-  const sel = new Set((u&&u.warehouses?u.warehouses:[]).map(w=>String(w.warehouse_id)));
-  const rows = whs.map(w=>`
-<label style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:0.5px solid var(--border);cursor:pointer">
-<input type="checkbox" value="${w.warehouse_id}" ${sel.has(String(w.warehouse_id))?'checked':''} style="width:17px;height:17px;accent-color:var(--info-line)">
-<span style="flex:1">${escapeHtml(w.nomi)}</span>
-${w.has_coords?'<span class="badge ok" style="font-size:10px"><i class="ti ti-map-pin"></i> GPS</span>':'<span class="badge muted" style="font-size:10px">GPS yo\'q</span>'}
-</label>`).join('');
-  openModal(`
-<div style="font-size:16px;font-weight:600;margin-bottom:4px">${escapeHtml(u&&u.ism?u.ism:telegramId)}</div>
-<div style="font-size:12px;color:var(--text-3);margin-bottom:10px">Ishlaydigan filiallar (bir nechta tanlash mumkin)</div>
-<div style="max-height:48vh;overflow:auto;border:0.5px solid var(--border);border-radius:var(--radius)">${rows||'<div class="empty">Filial yoq</div>'}</div>
-<div class="modal-foot" style="display:flex;gap:8px;margin-top:14px">
-<button class="btn" onclick="closeModal()">Bekor</button>
-<button class="btn primary" id="dav-save-btn" onclick="davSaveWarehouses('${telegramId}')">Saqlash</button>
-</div>`);
-}
-
-async function davSaveWarehouses(telegramId){
-  const checks = Array.from(document.querySelectorAll('#modal-content input[type=checkbox]:checked'));
-  const ids = checks.map(c=>c.value);
-  const btn = document.getElementById('dav-save-btn');
-  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader-2"></i>'; }
-  try{
-    await api('aros-admin-dav-set', { uid:UID, target_uid:telegramId, warehouse_ids: ids.join(',') });
-    // GPS uchun koordinatalarni Aros API dan sinxronlash (bulk)
-    try{ await api('aros-admin-dav-coords-all', { uid:UID }); }catch(e){}
-    davWarehousesCache = null;
-    closeModal(); toast('Filiallar saqlandi');
-    renderDavomatHodimlar(document.getElementById('screens'));
-  }catch(e){ toast('Xato: '+e.message, 'err'); if(btn){ btn.disabled=false; btn.innerHTML='Saqlash'; } }
-}
-
-// ---- Davomat tarixi ----
-let davHistFilter = { from:'', to:'', wid:'' };
-async function renderDavomatTarix(root){
-  root.innerHTML = topbar('Davomat', 'Davomat tarixi', '<button class="btn primary sm" onclick="davExportExcel()"><i class="ti ti-file-spreadsheet"></i>Excel</button>');
-  const whs = await davLoadWarehouses().catch(()=>[]);
-  const now = new Date(Date.now()+5*3600*1000);
-  const today = now.toISOString().slice(0,10);
-  if(!davHistFilter.to) davHistFilter.to = today;
-  if(!davHistFilter.from){ const d=new Date(now); d.setDate(d.getDate()-7); davHistFilter.from=d.toISOString().slice(0,10); }
-  const content = document.createElement('div');
-  content.innerHTML = `
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
-<input type="date" class="input" id="dav-from" value="${davHistFilter.from}" style="width:auto">
-<span style="color:var(--text-3)">—</span>
-<input type="date" class="input" id="dav-to" value="${davHistFilter.to}" style="width:auto">
-<select class="select" id="dav-wid" style="width:auto;min-width:150px">
-<option value="">Barcha filiallar</option>
-${whs.map(w=>`<option value="${w.warehouse_id}" ${String(davHistFilter.wid)===String(w.warehouse_id)?'selected':''}>${escapeHtml(w.nomi)}</option>`).join('')}
-</select>
-<button class="btn primary" onclick="davApplyHist()"><i class="ti ti-filter"></i>Ko'rsatish</button>
-</div>
-<div id="dav-t-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>`;
-  root.appendChild(content);
-  davLoadHist();
-}
-function davApplyHist(){
-  davHistFilter.from = document.getElementById('dav-from').value;
-  davHistFilter.to = document.getElementById('dav-to').value;
-  davHistFilter.wid = document.getElementById('dav-wid').value;
-  davLoadHist();
-}
-async function davLoadHist(){
-  const wrap = document.getElementById('dav-t-wrap');
-  wrap.innerHTML = '<div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div>';
-  try{
-    const d = await api('aros-admin-dav-history', { uid:UID, from:davHistFilter.from, to:davHistFilter.to, wid:davHistFilter.wid });
-    const list = d.list||[];
-    window._davHist = list;
-    if(!list.length){ wrap.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i><p>Yozuv topilmadi</p></div>'; return; }
-    wrap.innerHTML = `
-<div class="table-wrap">
-<div class="table-head" style="grid-template-columns:0.85fr 0.6fr 1.4fr 1.3fr 0.9fr 0.7fr">
-<div>Sana</div><div>Soat</div><div>Hodim</div><div>Filial</div><div>Amal</div><div>Verif.</div>
-</div>
-${list.map(r=>{
-  const dt = new Date(r.vaqt);
-  const soat = dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
-  const kir = r.turi==='kirish';
-  const verif = r.success ? '<span class="badge ok"><i class="ti ti-check"></i></span>' : '<span class="badge err"><i class="ti ti-x"></i></span>';
-  return `
-<div class="table-row" style="grid-template-columns:0.85fr 0.6fr 1.4fr 1.3fr 0.9fr 0.7fr">
-<div style="font-variant-numeric:tabular-nums">${r.sana}</div>
-<div style="font-variant-numeric:tabular-nums;color:var(--text-2)">${soat}</div>
-<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.hodim||'')}</div>
-<div style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.filial||'')}</div>
-<div>${kir?'<span class="badge ok">Kirish</span>':'<span class="badge warn">Chiqish</span>'}</div>
-<div>${verif}</div>
-</div>`;
-}).join('')}
-</div>
-<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding:0 4px">Jami: ${list.length} ta yozuv</div>`;
-  }catch(e){
-    wrap.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
-  }
-}
-function davExportExcel(){
-  const list = window._davHist||[];
-  if(!list.length){ toast('Eksport uchun maʼlumot yoq','err'); return; }
-  if(typeof XLSX==='undefined'){ toast('Excel kutubxonasi yuklanmadi','err'); return; }
-  const rows = list.map(r=>{
-    const dt = new Date(r.vaqt);
-    return {
-      'Sana': r.sana,
-      'Soat': dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}),
-      'Hodim': r.hodim||'',
-      'Telegram ID': r.telegram_id||'',
-      'Filial': r.filial||'',
-      'Amal': r.turi==='kirish'?'Kirish':'Chiqish',
-      'Verifikatsiya': r.success?'Ha':'Yo\'q',
-      'GPS': r.gps_ok?'Ha':'Yo\'q',
-      'Tiriklik': r.liveness_ok?'Ha':'Yo\'q'
-    };
-  });
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Davomat');
-  XLSX.writeFile(wb, 'davomat_'+(davHistFilter.from||'')+'_'+(davHistFilter.to||'')+'.xlsx');
-}
-
-
 init();
 </script>
 
