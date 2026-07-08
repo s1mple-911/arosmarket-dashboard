@@ -2882,11 +2882,12 @@ function renderOchiq(confirmedOrders){
     if(isTransfer && o.from_warehouse_name){
       transferBadge = '<div style="display:flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;color:#8b5cf6;font-weight:600"><span style="font-size:11px">🚚</span><span>'+o.from_warehouse_name+' dan</span></div>';
     }
-    // Yetkazish countdown — transfer on_way bo'lsa transferdan, aks holda persist qilingan ETA'dan
-    // (order completed/canceled bo'lguncha countdown davom etadi — confirmedOrders faqat ochiqlarni beradi)
+    // Yetkazish countdown — DOIM order_eta (created_datetime asosida) birinchi;
+    // order_eta hali yuklanmagan bo'lsa, transfer cache'dan (zaxira)
     var etaT = etaByOrderId[String(o.order_id)];
-    var etaVal = (etaT && etaT.kutilgan_yetkazish) ? etaT.kutilgan_yetkazish
-               : (window._orderEtaMap ? window._orderEtaMap[String(o.order_id)] : null);
+    var etaVal = (window._orderEtaMap && window._orderEtaMap[String(o.order_id)])
+               ? window._orderEtaMap[String(o.order_id)]
+               : ((etaT && etaT.kutilgan_yetkazish) || null);
     var etaBadge = '';
     if(etaVal){
       etaBadge = '<div style="margin-top:5px">'+kechikishBadge({is_auto:true, kutilgan_yetkazish: etaVal})+'</div>';
