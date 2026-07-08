@@ -1472,22 +1472,21 @@ function renderScmWorkers(){
 
   wrap.innerHTML = kpiHtml + `
 <div class="table-wrap">
-<div class="table-head" style="grid-template-columns:2fr 1.3fr 140px 110px 110px 40px">
-<div>Sotuvchi</div><div>Filial</div><div>Telefon</div><div>Mijozlar</div><div>Cashback</div><div></div>
+<div class="table-head" style="grid-template-columns:2fr 1.4fr 150px 120px 40px">
+<div>Sotuvchi</div><div>Filial</div><div>Telefon</div><div>Mijozlar</div><div></div>
 </div>
 ${list.map((w,i) => `
-<div class="table-row" style="grid-template-columns:2fr 1.3fr 140px 110px 110px 40px;cursor:pointer" onclick="scmOpenWorker(${w.id})">
+<div class="table-row" style="grid-template-columns:2fr 1.4fr 150px 120px 40px;cursor:pointer" onclick="scmOpenWorker(${w.id})">
 <div style="display:flex;align-items:center;gap:10px;min-width:0">
 <div class="av" style="width:32px;height:32px;font-size:11px">${initials((w.first_name||'')+' '+(w.last_name||''))}</div>
 <div style="min-width:0">
-<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(((w.first_name||'')+' '+(w.last_name||'')).trim())||'Nomsiz'}</div>
-<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id||''} · ${escapeHtml(w.role||'')}</div>
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(((w.first_name||'')+' '+(w.last_name||'')).trim())||escapeHtml(w.worker||'Nomsiz')}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id||''}</div>
 </div>
 </div>
 <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-size:12.5px">${escapeHtml(w.warehouse||'—')}</div>
 <div style="font-family:var(--mono);font-size:12px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(w.username||'—')}</div>
 <div><span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}">${w.clients_count||0} ta</span></div>
-<div style="font-variant-numeric:tabular-nums;font-size:12.5px">${fmt(w.cashback_balance||0)}</div>
 <div style="display:flex;justify-content:flex-end;color:var(--text-3)"><i class="ti ti-chevron-right"></i></div>
 </div>
 `).join('')}
@@ -1498,32 +1497,23 @@ ${list.map((w,i) => `
 function scmOpenWorker(workerId){
   const w = scmState.workers.find(x => x.id === workerId);
   if (!w) return;
-  const clients = w.clients || [];
-  const name = `${w.first_name||''} ${w.last_name||''}`.trim() || 'Nomsiz';
+  const name = `${w.first_name||''} ${w.last_name||''}`.trim() || w.worker || 'Nomsiz';
   openModal(`
 <div class="modal-h">
-<div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(w.warehouse||'—')} · ${escapeHtml(w.role||'')} · ${clients.length} ta mijoz</p></div>
+<div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(w.warehouse||'—')} · ${w.clients_count||0} ta mijoz</p></div>
 <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
-<div style="display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:12.5px">
+<div style="display:grid;grid-template-columns:120px 1fr;gap:8px;font-size:12.5px">
 <div style="color:var(--text-3)">Sotuvchi ID</div><div><code class="mono">#${w.id||''}</code></div>
+<div style="color:var(--text-3)">To'liq nomi</div><div>${escapeHtml(w.worker||'—')}</div>
 <div style="color:var(--text-3)">Telefon</div><div style="font-family:var(--mono)">${escapeHtml(w.username||'—')}</div>
-<div style="color:var(--text-3)">Cashback</div><div style="font-variant-numeric:tabular-nums">${fmt(w.cashback_balance||0)} so'm</div>
-<div style="color:var(--text-3)">Buyurtma</div><div>${w.is_ordering_enabled?'<span class="badge ok">Yoqilgan</span>':'<span class="badge muted">O\'chiq</span>'}</div>
+<div style="color:var(--text-3)">Filial</div><div>${escapeHtml(w.warehouse||'—')}${w.warehouse_id?` <span style="color:var(--text-3)">#${w.warehouse_id}</span>`:''}</div>
+<div style="color:var(--text-3)">Mijozlar</div><div><span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}">${w.clients_count||0} ta biriktirilgan</span></div>
 </div>
-${clients.length ? `
-<div class="divider"></div>
-<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:500;margin-bottom:8px">Mijozlar (${clients.length})</div>
-<div style="max-height:280px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius)">
-${clients.map(c => `
-<div style="padding:8px 12px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12.5px">
-<div style="min-width:0;flex:1"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.name||('Mijoz #'+c.client))}</div>${c.username?`<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">${escapeHtml(c.username)}</div>`:''}</div>
-<div style="text-align:right;flex-shrink:0"><span class="badge muted">${c.plan_monthly_orders_count||0}/oy</span></div>
+<div style="background:var(--bg-2);border-radius:var(--radius);padding:10px 12px;font-size:11.5px;color:var(--text-3);line-height:1.5;margin-top:4px">
+<i class="ti ti-info-circle"></i> Ushbu sotuvchiga yangi mijoz biriktirish uchun yuqoridagi <b>"Ulanmagan mijozlar"</b> tugmasidan foydalaning.
 </div>
-`).join('')}
-</div>
-` : '<div class="empty" style="padding:20px 0"><i class="ti ti-users-off"></i><p>Mijoz biriktirilmagan</p></div>'}
 </div>
 <div class="modal-foot">
 <button class="btn" onclick="closeModal()">Yopish</button>
