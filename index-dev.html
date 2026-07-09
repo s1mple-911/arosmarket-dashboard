@@ -1112,16 +1112,24 @@ function attachSwipeHandlers(userId){
       }
       curX=0; moved=false;
     }
-    // touch
-    el.addEventListener('touchstart',function(e){ onStart(e.touches[0].clientX); },{passive:true});
-    el.addEventListener('touchmove',function(e){ onMove(e.touches[0].clientX); },{passive:true});
-    el.addEventListener('touchend',onEnd);
-    // mouse (desktop test)
+    // touch — tap'ni touchend'da aniqlaymiz (mobil uchun ishonchli)
+    var tStart=0, tX=0, tY=0, tMoved=false;
+    el.addEventListener('touchstart',function(e){ tStart=Date.now(); tX=e.touches[0].clientX; tY=e.touches[0].clientY; tMoved=false; onStart(e.touches[0].clientX); },{passive:true});
+    el.addEventListener('touchmove',function(e){ if(Math.abs(e.touches[0].clientX-tX)>10||Math.abs(e.touches[0].clientY-tY)>10) tMoved=true; onMove(e.touches[0].clientX); },{passive:true});
+    el.addEventListener('touchend',function(e){
+      var wasSwipe = Math.abs(curX)>60;
+      onEnd();
+      if(!wasSwipe && !tMoved && (Date.now()-tStart)<600){
+        el._tapHandled = true; setTimeout(function(){ el._tapHandled=false; },500);
+        openItemTypeModal(el, userId);
+      }
+    });
+    // mouse (desktop)
     el.addEventListener('mousedown',function(e){ onStart(e.clientX); e.preventDefault(); });
     window.addEventListener('mousemove',function(e){ if(dragging) onMove(e.clientX); });
     window.addEventListener('mouseup',function(e){ if(dragging) onEnd(); });
-    // tap = Brak/Vozvrat modal (click ishonchli — mobil+desktop; swipe'dan keyin bloklanadi)
-    el.addEventListener('click', function(){ if(el._swiped) return; openItemTypeModal(el, userId); });
+    // desktop tap (click) — touch'dan kelgan ghost click bloklanadi
+    el.addEventListener('click', function(){ if(el._swiped || el._tapHandled) return; openItemTypeModal(el, userId); });
   });
 }
 
@@ -1178,9 +1186,14 @@ function openItemTypeModal(el, userId){
   inner += '</div>';
   ov.innerHTML = inner;
   document.body.appendChild(ov);
-  ov.addEventListener('click', function(e){ if(e.target===ov) closeItemType(); });
+  // Ghost click himoyasi — ochilgandan keyin 450ms ichida fon bosilishi e'tiborsiz
+  var openedAt = Date.now();
+  window._itemTypeOpenedAt = openedAt;
+  ov.addEventListener('click', function(e){ if(e.target===ov && (Date.now()-openedAt)>450) closeItemType(); });
 }
 function pickItemType(type){
+  // Ghost click himoyasi — modal ochilgan zahoti (450ms ichida) tanlash bloklanadi
+  if(window._itemTypeOpenedAt && (Date.now()-window._itemTypeOpenedAt)<450) return;
   var el=_itemTypeEl, userId=_itemTypeUser;
   closeItemType();
   if(!el) return;
