@@ -1105,14 +1105,10 @@ function attachSwipeHandlers(userId){
       if(!dragging) return; dragging=false; inner.style.transition='transform .2s';
       var checked = el.getAttribute('data-checked')==='1';
       if(Math.abs(curX)>60){
-        // swipe = yig'ildi (collect) / uncheck toggle
+        el._swiped = true; setTimeout(function(){ el._swiped=false; }, 400);
         toggleV2Item(el, userId, !checked, 'collect');
       } else {
         inner.style.transform='translateX(0)';
-        if(!moved){
-          // tap (siljimadi) = Brak/Vozvrat modal
-          openItemTypeModal(el, userId);
-        }
       }
       curX=0; moved=false;
     }
@@ -1124,6 +1120,8 @@ function attachSwipeHandlers(userId){
     el.addEventListener('mousedown',function(e){ onStart(e.clientX); e.preventDefault(); });
     window.addEventListener('mousemove',function(e){ if(dragging) onMove(e.clientX); });
     window.addEventListener('mouseup',function(e){ if(dragging) onEnd(); });
+    // tap = Brak/Vozvrat modal (click ishonchli — mobil+desktop; swipe'dan keyin bloklanadi)
+    el.addEventListener('click', function(){ if(el._swiped) return; openItemTypeModal(el, userId); });
   });
 }
 
