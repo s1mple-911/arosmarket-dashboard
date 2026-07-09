@@ -648,13 +648,14 @@ function renderCounterDetail(){
   var topsh = users.reduce(function(s,u){return s+(Number(u.topshirildi)||0);},0);
   var qolda = users.reduce(function(s,u){return s+(Number(u.qolda)||0);},0);
   var cnt = users.reduce(function(s,u){return s+(Number(u.cnt)||0);},0);
+  var retTotal = users.reduce(function(s,u){return s+(Number(u.ret_cnt)||0);},0);
 
   var html = '';
   html += '<div style="background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px;position:sticky;top:0;z-index:10">';
   html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
   html += '<div onclick="closeV2Modal()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
   html += '<div style="flex:1"><div style="font-size:16px;font-weight:800;color:var(--text)">Bugun yig\'ilgan</div>';
-  html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+users.length+' mijoz · '+cnt+' ta mahsulot · surib topshiring</div></div>';
+  html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+users.length+' mijoz · '+cnt+' ta mahsulot'+(retTotal>0?' · <span style="color:#FF9F0A;font-weight:700">↩️'+retTotal+' qaytarildi</span>':'')+'</div></div>';
   html += '</div>';
   // 3 section tab (bosiladigan filter)
   var tab = function(sec,label,val,color,active){
@@ -673,7 +674,7 @@ function renderCounterDetail(){
   var list = users.filter(function(u){
     if(v2CounterSection==='qolda') return (Number(u.qolda)||0) > 0;
     if(v2CounterSection==='topshirildi') return (Number(u.topshirildi)||0) > 0;
-    return (Number(u.summa)||0) > 0;
+    return (Number(u.summa)||0) > 0 || (Number(u.ret_cnt)||0) > 0;
   });
 
   html += '<div style="flex:1;overflow-y:auto;padding:12px 14px" id="counterList">';
@@ -704,13 +705,16 @@ function renderCounterRow(u){
   var badge = '';
   if(uTopsh>0 && uQolda>0) badge = '<span style="color:#378ADD;font-weight:700">✅'+fmt(uTopsh)+'</span> <span style="color:#FF9F0A;font-weight:700">⏳'+fmt(uQolda)+'</span>';
   else if(uTopsh>0) badge = '<span style="color:#378ADD;font-weight:700">✅ topshirildi</span>';
-  else badge = '<span style="color:#FF9F0A;font-weight:700">⏳ qo\'lda</span>';
+  else if(uQolda>0) badge = '<span style="color:#FF9F0A;font-weight:700">⏳ qo\'lda</span>';
+  else badge = '<span style="color:var(--text3)">—</span>';
+  var uRet = Number(u.ret_cnt)||0;
+  var retTxt = uRet>0 ? ' · <span style="color:#FF9F0A;font-weight:700">↩️'+uRet+' qaytdi</span>' : '';
 
   var h = '<div class="counter-row" data-user="'+u.user_id+'" data-name="'+String(nm).replace(/"/g,'&quot;')+'" data-qolda="'+uQolda+'" data-topsh="'+uTopsh+'" data-action="'+action+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px">';
   h += '<div class="counter-row-inner" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;transition:transform .2s;position:relative;z-index:1">';
   h += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
   h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
-  h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+u.cnt+' ta · '+badge+(t?' · '+t:'')+'</div></div>';
+  h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+u.cnt+' ta · '+badge+retTxt+(t?' · '+t:'')+'</div></div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:15px;font-weight:800;color:'+accent+'">'+fmt(showSumma)+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">'+hint+'</div></div>';
   h += '</div>';
   h += '</div>';
@@ -804,9 +808,22 @@ function openCollectUserModal(userId, nm, qolda, topsh){
       if(checkedItems.length===0){
         html += '<div style="text-align:center;color:var(--text3);padding:40px 20px">Bu mijozdan bugun yig\'ilgan item yo\'q</div>';
       } else {
-        checkedItems.forEach(function(it){
-          html += renderCollectedItem(it, userId);
-        });
+        var collects = checkedItems.filter(function(it){ var c=it.check_type||'collect'; return c==='collect'; });
+        var returns  = checkedItems.filter(function(it){ var c=it.check_type||'collect'; return c==='brak'||c==='vozvrat'; });
+        var collSum = collects.reduce(function(s,it){ return s+(Number(it.total_price)||0); },0);
+        // Xulosa
+        html += '<div style="display:flex;gap:8px;margin-bottom:12px">';
+        html += '<div style="flex:1;background:rgba(52,199,89,.1);border:1px solid rgba(52,199,89,.25);border-radius:10px;padding:8px 10px"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Yig\'ildi</div><div style="font-size:14px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(collSum)+'</div><div style="font-size:9px;color:var(--text3)">'+collects.length+' ta</div></div>';
+        html += '<div style="flex:1;background:rgba(255,159,10,.1);border:1px solid rgba(255,159,10,.25);border-radius:10px;padding:8px 10px"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qaytarildi</div><div style="font-size:14px;font-weight:800;color:#FF9F0A;margin-top:2px">'+returns.length+' ta</div><div style="font-size:9px;color:var(--text3)">puli hisoblanmaydi</div></div>';
+        html += '</div>';
+        if(collects.length){
+          html += '<div style="font-size:11px;color:var(--green);font-weight:700;margin:4px 0 6px">🟢 Yig\'ilgan</div>';
+          collects.forEach(function(it){ html += renderCollectedItem(it, userId); });
+        }
+        if(returns.length){
+          html += '<div style="font-size:11px;color:#FF9F0A;font-weight:700;margin:12px 0 6px">🔴🟠 Qaytarilgan</div>';
+          returns.forEach(function(it){ html += renderCollectedItem(it, userId); });
+        }
       }
       html += '</div>';
       modal.innerHTML = html;
@@ -836,18 +853,22 @@ function deliverUser(userId, nm, action){
 }
 
 function renderCollectedItem(it, userId){
+  var ct = it.check_type || 'collect';
+  var isReturn = (ct==='brak'||ct==='vozvrat');
+  var bd = v2BadgeInfo(true, ct);
+  var borderCol = isReturn ? (ct==='brak'?'rgba(255,59,48,.3)':'rgba(255,159,10,.3)') : 'rgba(52,199,89,.3)';
   var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
   var catCap = it.cat_label ? (it.cat_label.charAt(0).toUpperCase()+it.cat_label.slice(1).toLowerCase()) : '';
-  var h = '<div class="collect-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:rgba(52,199,89,.08);border:0.5px solid rgba(52,199,89,.3)">';
+  var h = '<div class="collect-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checktype="'+ct+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;border:0.5px solid '+borderCol+'">';
   h += '<div class="collect-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;transition:transform .2s;background:var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
   if(catCap) h += '<div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:2px">'+catCap+'</div>';
   h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
-  h += '<div style="font-size:11px;color:#34C759;margin-top:3px;font-weight:700">✓ yig\'ildi</div>';
+  h += '<div style="font-size:11px;color:'+bd.color+';margin-top:3px;font-weight:700">'+bd.txt+' <span style="opacity:.5;font-weight:400;margin-left:4px">#'+it.item_id+'</span></div>';
   h += '</div>';
-  h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(it.total_price)+'</div>';
+  h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:'+(isReturn?'var(--text3)':'var(--text)')+'">'+fmt(it.total_price)+'</div>';
   h += '<div style="font-size:10px;margin-top:2px;color:var(--text3)">← surib qaytar</div></div>';
   h += '</div>';
   h += '</div>';
@@ -881,10 +902,11 @@ function uncheckCollectedItem(el, userId){
   var unitIdx = el.getAttribute('data-unit');
   var orderId = el.getAttribute('data-order');
   var summa = Number(el.getAttribute('data-summa'))||0;
+  var ct = el.getAttribute('data-checktype') || 'collect';
   var _wh = wid || userData.warehouse_id || 0;
 
-  // Counter kamayadi
-  bumpCounter(-summa);
+  // Counter — faqat collect pulni kamaytiradi (brak/vozvrat pul emas)
+  if(ct==='collect') bumpCounter(-summa);
 
   // Backend uncheck
   var url = ITEM_CHECK_API+'?action=uncheck&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa;
@@ -1033,11 +1055,13 @@ function v2StatBox(label, val, color){
 }
 
 function renderV2Item(it, userId){
+  var ct = it.check_type || '';        // 'collect' | 'brak' | 'vozvrat' | ''
   var checked = it.checked;
   var lineStyle = checked ? 'text-decoration:line-through;opacity:.5' : '';
   var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
-  var h = '<div class="v2-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
+  var bd = v2BadgeInfo(checked, ct);
+  var h = '<div class="v2-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
   h += '<div class="v2-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;'+lineStyle+';transition:transform .2s;background:var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
@@ -1046,13 +1070,27 @@ function renderV2Item(it, userId){
     h += '<div style="font-size:10px;color:var(--text3);font-weight:600;line-height:1.2;margin-bottom:2px">'+catCap+'</div>';
   }
   h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+fmt(it.selling_price)+' so\'m</div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+fmt(it.selling_price)+' so\'m <span style="opacity:.5;margin-left:4px">#'+it.item_id+'</span></div>';
   h += '</div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(it.total_price)+'</div>';
-  h += '<div class="v2-check-badge" style="font-size:10px;margin-top:2px;color:'+(checked?'var(--green)':'var(--text3)')+'">'+(checked?'✓ yig\'ildi':'← surib yig\'ing')+'</div></div>';
+  h += '<div class="v2-check-badge" style="font-size:10px;margin-top:2px;color:'+bd.color+'">'+bd.txt+'</div></div>';
   h += '</div>';
   h += '</div>';
   return h;
+}
+
+// Badge matni/rangi check_type bo'yicha
+function v2BadgeInfo(checked, ct){
+  if(!checked) return { txt:'← suring / bosing', color:'var(--text3)' };
+  if(ct==='brak') return { txt:'🔴 Brak', color:'#FF3B30' };
+  if(ct==='vozvrat') return { txt:'🟠 Vozvrat', color:'#FF9F0A' };
+  return { txt:'✓ yig\'ildi', color:'var(--green)' };
+}
+function updateV2Badge(el, checked, ct){
+  var badge = el.querySelector('.v2-check-badge');
+  if(!badge) return;
+  var bd = v2BadgeInfo(checked, ct);
+  badge.textContent = bd.txt; badge.style.color = bd.color;
 }
 
 // Swipe handlerlar
@@ -1067,8 +1105,12 @@ function attachSwipeHandlers(userId){
       if(!dragging) return; dragging=false; inner.style.transition='transform .2s';
       var checked = el.getAttribute('data-checked')==='1';
       if(Math.abs(curX)>60){
-        // toggle
-        toggleV2Item(el, userId, !checked);
+        // swipe = yig'ildi (collect) / uncheck toggle
+        toggleV2Item(el, userId, !checked, 'collect');
+      } else if(Math.abs(curX)<8){
+        // tap = Brak/Vozvrat modal
+        inner.style.transform='translateX(0)';
+        openItemTypeModal(el, userId);
       } else {
         inner.style.transform='translateX(0)';
       }
@@ -1085,7 +1127,9 @@ function attachSwipeHandlers(userId){
   });
 }
 
-function toggleV2Item(el, userId, makeChecked){
+function toggleV2Item(el, userId, makeChecked, type){
+  type = type || 'collect';
+  var prevType = el.getAttribute('data-checktype') || 'collect';
   var itemId = el.getAttribute('data-item');
   var unitIdx = el.getAttribute('data-unit');
   var orderId = el.getAttribute('data-order');
@@ -1094,24 +1138,58 @@ function toggleV2Item(el, userId, makeChecked){
   var _wh = wid || userData.warehouse_id || 0;
   var action = makeChecked ? 'check' : 'uncheck';
   var cname = v2CustomNames[userId] || (v2ModalUser ? (v2ModalUser.ism||'') : '');
+  var newType = makeChecked ? type : '';
 
   // Optimistik UI
   inner.style.transform='translateX(0)';
   el.setAttribute('data-checked', makeChecked?'1':'0');
+  el.setAttribute('data-checktype', newType);
   inner.style.textDecoration = makeChecked?'line-through':'none';
   inner.style.opacity = makeChecked?'.5':'1';
-  var badge = el.querySelector('.v2-check-badge');
-  if(badge){ badge.textContent = makeChecked?'✓ yig\'ildi':'← surib yig\'ing'; badge.style.color = makeChecked?'var(--green)':'var(--text3)'; }
+  updateV2Badge(el, makeChecked, type);
 
-  // Counter
-  bumpCounter(makeChecked ? summa : -summa);
+  // Counter — FAQAT collect pul hisoblanadi (brak/vozvrat qo'shilmaydi)
+  if(makeChecked){ if(type==='collect') bumpCounter(summa); }
+  else { if(prevType==='collect') bumpCounter(-summa); }
 
   // Backend
-  var url = ITEM_CHECK_API+'?action='+action+'&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa+'&client_name='+encodeURIComponent(cname);
+  var url = ITEM_CHECK_API+'?action='+action+'&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa+'&client_name='+encodeURIComponent(cname)+'&type='+type;
   fetch(url, {keepalive:true}).then(function(r){return r.json();}).then(function(){
     checkOrderComplete(userId, orderId);
   }).catch(function(){});
 }
+
+// Item type modal (tap orqali) — Brak / Vozvrat / Yig'ildi / Bekor
+var _itemTypeEl=null, _itemTypeUser=null;
+function openItemTypeModal(el, userId){
+  closeItemType();
+  var checked = el.getAttribute('data-checked')==='1';
+  var nm = (el.querySelector('.v2-item-inner div[style*="font-weight:600"]') || {}).textContent || 'Mahsulot';
+  _itemTypeEl = el; _itemTypeUser = userId;
+  var ov = document.createElement('div');
+  ov.id='itemTypeOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
+  function btn(t,label,bg,fg){ return '<div onclick="pickItemType(\''+t+'\')" style="padding:15px;border-radius:12px;background:'+bg+';color:'+fg+';font-size:15px;font-weight:700;text-align:center;cursor:pointer">'+label+'</div>'; }
+  var inner = '<div style="background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:14px 14px 20px;display:flex;flex-direction:column;gap:9px">';
+  inner += '<div style="font-size:12px;color:var(--text3);text-align:center;padding:2px 0 6px;font-weight:600">Holatni tanlang</div>';
+  inner += btn('collect','🟢 Yig\'ildi','rgba(52,199,89,.15)','var(--green)');
+  inner += btn('brak','🔴 Brak','rgba(255,59,48,.15)','#FF3B30');
+  inner += btn('vozvrat','🟠 Vozvrat','rgba(255,159,10,.15)','#FF9F0A');
+  if(checked) inner += btn('uncheck','↩️ Bekor qilish','var(--bg3)','var(--text2)');
+  inner += '<div onclick="closeItemType()" style="padding:13px;border-radius:12px;background:var(--bg3);color:var(--text3);font-size:14px;text-align:center;cursor:pointer;margin-top:2px">✕ Yopish</div>';
+  inner += '</div>';
+  ov.innerHTML = inner;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', function(e){ if(e.target===ov) closeItemType(); });
+}
+function pickItemType(type){
+  var el=_itemTypeEl, userId=_itemTypeUser;
+  closeItemType();
+  if(!el) return;
+  if(type==='uncheck'){ toggleV2Item(el, userId, false); }
+  else { toggleV2Item(el, userId, true, type); }
+}
+function closeItemType(){ var ov=document.getElementById('itemTypeOverlay'); if(ov) ov.remove(); _itemTypeEl=null; _itemTypeUser=null; }
 
 // Order ichidagi hamma item checked bo'lsa — orderni yo'qotamiz
 function checkOrderComplete(userId, orderId){
