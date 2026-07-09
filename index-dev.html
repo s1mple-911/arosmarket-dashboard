@@ -866,7 +866,7 @@ function renderCollectedItem(it, userId){
   h += '<div style="flex:1;min-width:0">';
   if(catCap) h += '<div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:2px">'+catCap+'</div>';
   h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
-  h += '<div style="font-size:11px;color:'+bd.color+';margin-top:3px;font-weight:700">'+bd.txt+' <span style="opacity:.5;font-weight:400;margin-left:4px">#'+it.item_id+'</span></div>';
+  h += '<div style="font-size:11px;color:'+bd.color+';margin-top:3px;font-weight:700">'+bd.txt+' <span style="opacity:.5;font-weight:400;margin-left:4px">#'+(it.product_id||it.item_id)+'</span></div>';
   h += '</div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:'+(isReturn?'var(--text3)':'var(--text)')+'">'+fmt(it.total_price)+'</div>';
   h += '<div style="font-size:10px;margin-top:2px;color:var(--text3)">← surib qaytar</div></div>';
@@ -1070,7 +1070,7 @@ function renderV2Item(it, userId){
     h += '<div style="font-size:10px;color:var(--text3);font-weight:600;line-height:1.2;margin-bottom:2px">'+catCap+'</div>';
   }
   h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+fmt(it.selling_price)+' so\'m <span style="opacity:.5;margin-left:4px">#'+it.item_id+'</span></div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+fmt(it.selling_price)+' so\'m <span style="opacity:.5;margin-left:4px">#'+(it.product_id||it.item_id)+'</span></div>';
   h += '</div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(it.total_price)+'</div>';
   h += '<div class="v2-check-badge" style="font-size:10px;margin-top:2px;color:'+bd.color+'">'+bd.txt+'</div></div>';
@@ -1097,24 +1097,24 @@ function updateV2Badge(el, checked, ct){
 function attachSwipeHandlers(userId){
   var items = document.querySelectorAll('#v2Modal .v2-item');
   items.forEach(function(el){
-    var startX=0, curX=0, dragging=false;
+    var startX=0, curX=0, dragging=false, moved=false;
     var inner = el.querySelector('.v2-item-inner');
-    function onStart(x){ startX=x; dragging=true; inner.style.transition='none'; }
-    function onMove(x){ if(!dragging) return; curX=x-startX; if(curX<0) curX=Math.max(curX,-100); else curX=Math.min(curX,100); inner.style.transform='translateX('+curX+'px)'; }
+    function onStart(x){ startX=x; dragging=true; moved=false; inner.style.transition='none'; }
+    function onMove(x){ if(!dragging) return; curX=x-startX; if(Math.abs(curX)>10) moved=true; if(curX<0) curX=Math.max(curX,-100); else curX=Math.min(curX,100); inner.style.transform='translateX('+curX+'px)'; }
     function onEnd(){
       if(!dragging) return; dragging=false; inner.style.transition='transform .2s';
       var checked = el.getAttribute('data-checked')==='1';
       if(Math.abs(curX)>60){
         // swipe = yig'ildi (collect) / uncheck toggle
         toggleV2Item(el, userId, !checked, 'collect');
-      } else if(Math.abs(curX)<8){
-        // tap = Brak/Vozvrat modal
-        inner.style.transform='translateX(0)';
-        openItemTypeModal(el, userId);
       } else {
         inner.style.transform='translateX(0)';
+        if(!moved){
+          // tap (siljimadi) = Brak/Vozvrat modal
+          openItemTypeModal(el, userId);
+        }
       }
-      curX=0;
+      curX=0; moved=false;
     }
     // touch
     el.addEventListener('touchstart',function(e){ onStart(e.touches[0].clientX); },{passive:true});
