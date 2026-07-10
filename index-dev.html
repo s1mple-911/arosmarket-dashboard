@@ -248,12 +248,15 @@ var tilxatIds = {};        // user_id -> tilxat soni (qaysi mijozda tilxat bor)
 var CLIENT_ITEMS_API = 'https://n8n.arosmarket.com/webhook/aros-client-items';
 var ITEM_CHECK_API   = 'https://n8n.arosmarket.com/webhook/aros-item-check';
 var SALES_WINDOW_API = 'https://n8n.arosmarket.com/webhook/aros-sales-window';
+var DONE_MARK_API = 'https://n8n.arosmarket.com/webhook/aros-debtor-done';
+var DONE_LIST_API = 'https://n8n.arosmarket.com/webhook/aros-debtor-done-list';
 var CLIENT_NAME_API  = 'https://n8n.arosmarket.com/webhook/aros-client-name';
 var COUNTER_API      = 'https://n8n.arosmarket.com/webhook/aros-collect-counter';
 var COUNTER_DETAIL_API = 'https://n8n.arosmarket.com/webhook/aros-collect-detail';
 var v2Mode = false;               // V2 rejim yoqilganmi
 var v2Loaded = false, v2Loading = false;
 var v2Debtors = [];               // barcha qarzdorlar (cache dan)
+var v2DoneSet = {};               // bugun to'liq yig'ilgan (done) debtor id'lari — ro'yxatdan yashiriladi
 var v2CustomNames = {};           // user_id -> custom_name (client-items dan keladi)
 var v2ModalUser = null;           // ochilgan mijoz
 var v2CollectTotal = 0;           // bugungi yig'ilgan (counter)
@@ -461,7 +464,8 @@ function v2DisplayName(d){
 function renderBarcha(){
   var pageBarcha = document.getElementById('page-barcha');
   pageBarcha.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-  loadAllCustomNames(function(){
+  loadDoneList(function(){
+   loadAllCustomNames(function(){
     // allUsers global — STATS_API dan keladi (73 ta), agar bo'sh bo'lsa cache dan
     v2Debtors = (allUsers && allUsers.length) ? allUsers.slice() : [];
     if(v2Debtors.length===0){
@@ -470,7 +474,32 @@ function renderBarcha(){
     }
     v2Debtors.sort(function(a,b){ return v2DisplayName(a).localeCompare(v2DisplayName(b),"uz",{sensitivity:"base",numeric:true}); });
     paintBarcha();
+   });
   });
+}
+
+// Bugun to'liq yig'ilgan (done) debtorlar ro'yxatini yuklaydi
+function loadDoneList(cb){
+  var _wh = wid || userData.warehouse_id || 0;
+  fetch(DONE_LIST_API+'?wid='+_wh+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      v2DoneSet = {};
+      (d && d.ids ? d.ids : []).forEach(function(id){ v2DoneSet[String(id)] = true; });
+    })
+    .catch(function(){})
+    .then(function(){ if(cb) cb(); });
+}
+
+// Debtorni "done" (to'liq yig'ilgan) belgilash yoki bekor qilish
+function markDebtorDone(userId, isDone){
+  var _wh = wid || userData.warehouse_id || 0;
+  var key = String(userId);
+  if(isDone && v2DoneSet[key]) return;       // allaqachon done
+  if(!isDone && !v2DoneSet[key]) { }          // undone — baribir yuboramiz
+  if(isDone) v2DoneSet[key] = true; else delete v2DoneSet[key];
+  fetch(DONE_MARK_API+'?user_id='+userId+'&wid='+_wh+'&action='+(isDone?'done':'undone'), {keepalive:true}).catch(function(){});
+  if(v2Mode){ paintV2List(); }
 }
 
 function paintBarcha(){
@@ -535,9 +564,10 @@ function paintV2List(){
   var countEl = document.getElementById('v2ListCount');
   if(!listEl) return;
   var q = (v2SearchQ||'').trim().toLowerCase();
-  var list = v2Debtors;
+  // done (to'liq yig'ilgan) debtorlarni ro'yxatdan chiqaramiz
+  var list = v2Debtors.filter(function(d){ var id = d.user_id!=null ? d.user_id : d.id; return !v2DoneSet[String(id)]; });
   if(q){
-    list = v2Debtors.filter(function(d){
+    list = list.filter(function(d){
       var id = d.user_id!=null ? d.user_id : d.id;
       var nm = v2DisplayName(d).toLowerCase();
       var tel = String(d.telefon||d.username||'').toLowerCase();
@@ -923,6 +953,8 @@ function uncheckCollectedItem(el, userId){
   // Backend uncheck
   var url = ITEM_CHECK_API+'?action=uncheck&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa;
   fetch(url, {keepalive:true}).catch(function(){});
+  // uncheck qilindi — debtor endi to'liq emas → ro'yxatga qaytadi
+  markDebtorDone(userId, false);
 
   // UI dan olib tashlash
   el.style.transition='opacity .3s,height .3s,margin .3s';
@@ -994,6 +1026,11 @@ function renderV2Modal(userId, data){
     // hamma itemlari checked bo'lgan orderlar ko'rinmaydi
     return o.items.some(function(it){ return !it.checked; });
   });
+  // Done holatini sinxronlash: hamma yig'ilgan bo'lsa done, aks holda undone
+  if(data.items && data.items.length>0){
+    if(orders.length===0) markDebtorDone(userId, true);
+    else if(v2DoneSet[String(userId)]) markDebtorDone(userId, false);
+  }
 
   var html = '';
   // Header
@@ -1212,6 +1249,8 @@ function toggleV2Item(el, userId, makeChecked, type, pay){
   fetch(url, {keepalive:true}).then(function(r){return r.json();}).then(function(){
     checkOrderComplete(userId, orderId);
   }).catch(function(){});
+  // uncheck qilinsa — debtor endi to'liq emas → ro'yxatga qaytadi
+  if(!makeChecked) markDebtorDone(userId, false);
 }
 
 // To'lov usuli modali — Naxt / Karta (yig'ildi qilinganда)
@@ -1302,6 +1341,7 @@ function checkOrderComplete(userId, orderId){
           visible.forEach(function(x){ if(x.style.display!=='none') anyVisible=true; });
           if(!anyVisible){
             document.getElementById('v2ItemsScroll').innerHTML='<div style="text-align:center;color:var(--green);padding:40px 20px;font-weight:700">✅ Hamma item yig\'ildi!</div>';
+            markDebtorDone(userId, true);   // to'liq yig'ildi — ro'yxatdan yashiriladi
           }
         },320);
       }
