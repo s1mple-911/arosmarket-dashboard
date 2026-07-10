@@ -715,7 +715,10 @@ function renderCounterRow(u){
   h += '<div class="counter-row-inner" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;transition:transform .2s;position:relative;z-index:1">';
   h += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
   h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
-  h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+u.cnt+' ta · '+badge+retTxt+(t?' · '+t:'')+'</div></div>';
+  h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+u.cnt+' ta · '+badge+retTxt+(t?' · '+t:'')+'</div>';
+  var uCash=Number(u.cash_sum)||0, uCard=Number(u.card_sum)||0;
+  if(uCash>0||uCard>0){ h += '<div style="font-size:10px;margin-top:2px">'+(uCash>0?'<span style="color:var(--green);font-weight:700">💵 '+fmt(uCash)+'</span>':'')+(uCard>0?((uCash>0?' · ':'')+'<span style="color:#378ADD;font-weight:700">💳 '+fmt(uCard)+'</span>'):'')+'</div>'; }
+  h += '</div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:15px;font-weight:800;color:'+accent+'">'+fmt(showSumma)+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">'+hint+'</div></div>';
   h += '</div>';
   h += '</div>';
@@ -812,11 +815,19 @@ function openCollectUserModal(userId, nm, qolda, topsh){
         var collects = checkedItems.filter(function(it){ var c=it.check_type||'collect'; return c==='collect'; });
         var returns  = checkedItems.filter(function(it){ var c=it.check_type||'collect'; return c==='brak'||c==='vozvrat'; });
         var collSum = collects.reduce(function(s,it){ return s+(Number(it.total_price)||0); },0);
+        var cashSum = collects.reduce(function(s,it){ return s+((it.pay_method==='cash')?(Number(it.total_price)||0):0); },0);
+        var cardSum = collects.reduce(function(s,it){ return s+((it.pay_method==='card')?(Number(it.total_price)||0):0); },0);
         // Xulosa
-        html += '<div style="display:flex;gap:8px;margin-bottom:12px">';
+        html += '<div style="display:flex;gap:8px;margin-bottom:8px">';
         html += '<div style="flex:1;background:rgba(52,199,89,.1);border:1px solid rgba(52,199,89,.25);border-radius:10px;padding:8px 10px"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Yig\'ildi</div><div style="font-size:14px;font-weight:800;color:var(--green);margin-top:2px">'+fmt(collSum)+'</div><div style="font-size:9px;color:var(--text3)">'+collects.length+' ta</div></div>';
         html += '<div style="flex:1;background:rgba(255,159,10,.1);border:1px solid rgba(255,159,10,.25);border-radius:10px;padding:8px 10px"><div style="font-size:9px;color:var(--text3);text-transform:uppercase">Qaytarildi</div><div style="font-size:14px;font-weight:800;color:#FF9F0A;margin-top:2px">'+returns.length+' ta</div><div style="font-size:9px;color:var(--text3)">puli hisoblanmaydi</div></div>';
         html += '</div>';
+        if(cashSum>0||cardSum>0){
+          html += '<div style="display:flex;gap:8px;margin-bottom:12px">';
+          html += '<div style="flex:1;background:rgba(52,199,89,.06);border-radius:10px;padding:7px 10px;text-align:center"><span style="font-size:11px;color:var(--green);font-weight:700">💵 Naxt</span><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(cashSum)+'</div></div>';
+          html += '<div style="flex:1;background:rgba(55,138,221,.06);border-radius:10px;padding:7px 10px;text-align:center"><span style="font-size:11px;color:#378ADD;font-weight:700">💳 Karta</span><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(cardSum)+'</div></div>';
+          html += '</div>';
+        }
         if(collects.length){
           html += '<div style="font-size:11px;color:var(--green);font-weight:700;margin:4px 0 6px">🟢 Yig\'ilgan</div>';
           collects.forEach(function(it){ html += renderCollectedItem(it, userId); });
@@ -856,7 +867,7 @@ function deliverUser(userId, nm, action){
 function renderCollectedItem(it, userId){
   var ct = it.check_type || 'collect';
   var isReturn = (ct==='brak'||ct==='vozvrat');
-  var bd = v2BadgeInfo(true, ct);
+  var bd = v2BadgeInfo(true, ct, it.pay_method||'');
   var borderCol = isReturn ? (ct==='brak'?'rgba(255,59,48,.3)':'rgba(255,159,10,.3)') : 'rgba(52,199,89,.3)';
   var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
@@ -1089,12 +1100,13 @@ function v2StatBox(label, val, color){
 
 function renderV2Item(it, userId){
   var ct = it.check_type || '';        // 'collect' | 'brak' | 'vozvrat' | ''
+  var pay = it.pay_method || '';       // 'cash' | 'card' | ''
   var checked = it.checked;
   var lineStyle = checked ? 'text-decoration:line-through;opacity:.5' : '';
   var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
-  var bd = v2BadgeInfo(checked, ct);
-  var h = '<div class="v2-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
+  var bd = v2BadgeInfo(checked, ct, pay);
+  var h = '<div class="v2-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" data-pay="'+pay+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
   h += '<div class="v2-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;'+lineStyle+';transition:transform .2s;background:var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
@@ -1113,16 +1125,17 @@ function renderV2Item(it, userId){
 }
 
 // Badge matni/rangi check_type bo'yicha
-function v2BadgeInfo(checked, ct){
+function v2BadgeInfo(checked, ct, pay){
   if(!checked) return { txt:'← suring / bosing', color:'var(--text3)' };
   if(ct==='brak') return { txt:'🔴 Brak', color:'#FF3B30' };
   if(ct==='vozvrat') return { txt:'🟠 Vozvrat', color:'#FF9F0A' };
-  return { txt:'✓ yig\'ildi', color:'var(--green)' };
+  var pt = pay==='card' ? ' 💳 Karta' : (pay==='cash' ? ' 💵 Naxt' : '');
+  return { txt:'✓ yig\'ildi'+pt, color:'var(--green)' };
 }
-function updateV2Badge(el, checked, ct){
+function updateV2Badge(el, checked, ct, pay){
   var badge = el.querySelector('.v2-check-badge');
   if(!badge) return;
-  var bd = v2BadgeInfo(checked, ct);
+  var bd = v2BadgeInfo(checked, ct, pay);
   badge.textContent = bd.txt; badge.style.color = bd.color;
 }
 
@@ -1139,7 +1152,8 @@ function attachSwipeHandlers(userId){
       var checked = el.getAttribute('data-checked')==='1';
       if(Math.abs(curX)>60){
         el._swiped = true; setTimeout(function(){ el._swiped=false; }, 400);
-        toggleV2Item(el, userId, !checked, 'collect');
+        if(checked){ toggleV2Item(el, userId, false); }   // uncheck
+        else { openPayModal(el, userId); }                 // yig'ildi → Naxt/Karta tanlov
       } else {
         inner.style.transform='translateX(0)';
       }
@@ -1166,8 +1180,8 @@ function attachSwipeHandlers(userId){
   });
 }
 
-function toggleV2Item(el, userId, makeChecked, type){
-  type = type || 'collect';
+function toggleV2Item(el, userId, makeChecked, type, pay){
+  type = type || 'collect'; pay = pay || '';
   var prevType = el.getAttribute('data-checktype') || 'collect';
   var itemId = el.getAttribute('data-item');
   var unitIdx = el.getAttribute('data-unit');
@@ -1183,20 +1197,52 @@ function toggleV2Item(el, userId, makeChecked, type){
   inner.style.transform='translateX(0)';
   el.setAttribute('data-checked', makeChecked?'1':'0');
   el.setAttribute('data-checktype', newType);
+  el.setAttribute('data-pay', (makeChecked && type==='collect') ? pay : '');
   inner.style.textDecoration = makeChecked?'line-through':'none';
   inner.style.opacity = makeChecked?'.5':'1';
-  updateV2Badge(el, makeChecked, type);
+  updateV2Badge(el, makeChecked, type, pay);
 
   // Counter — FAQAT collect pul hisoblanadi (brak/vozvrat qo'shilmaydi)
   if(makeChecked){ if(type==='collect') bumpCounter(summa); }
   else { if(prevType==='collect') bumpCounter(-summa); }
 
   // Backend
-  var url = ITEM_CHECK_API+'?action='+action+'&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa+'&client_name='+encodeURIComponent(cname)+'&type='+type;
+  var payParam = (type==='collect' && pay) ? '&pay='+pay : '';
+  var url = ITEM_CHECK_API+'?action='+action+'&user_id='+userId+'&order_id='+orderId+'&item_id='+itemId+'&unit_index='+unitIdx+'&wid='+_wh+'&summa='+summa+'&client_name='+encodeURIComponent(cname)+'&type='+type+payParam;
   fetch(url, {keepalive:true}).then(function(r){return r.json();}).then(function(){
     checkOrderComplete(userId, orderId);
   }).catch(function(){});
 }
+
+// To'lov usuli modali — Naxt / Karta (yig'ildi qilinganда)
+var _payEl=null, _payUser=null;
+function openPayModal(el, userId){
+  closePayModal();
+  _payEl=el; _payUser=userId;
+  var ov=document.createElement('div');
+  ov.id='payOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
+  var inner='<div style="background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:16px 14px 22px;display:flex;flex-direction:column;gap:12px">';
+  inner+='<div style="font-size:13px;color:var(--text2);text-align:center;font-weight:700">To\'lov usuli</div>';
+  inner+='<div style="display:flex;gap:12px">';
+  inner+='<div onclick="pickPay(\'cash\')" style="flex:1;padding:20px 10px;border-radius:16px;background:rgba(52,199,89,.12);border:1.5px solid rgba(52,199,89,.35);display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer"><div style="font-size:34px">💵</div><div style="font-size:15px;font-weight:800;color:var(--green)">Naxt</div></div>';
+  inner+='<div onclick="pickPay(\'card\')" style="flex:1;padding:20px 10px;border-radius:16px;background:rgba(55,138,221,.12);border:1.5px solid rgba(55,138,221,.35);display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer"><div style="font-size:34px">💳</div><div style="font-size:15px;font-weight:800;color:#378ADD">Karta</div></div>';
+  inner+='</div>';
+  inner+='<div onclick="closePayModal()" style="padding:12px;border-radius:12px;background:var(--bg3);color:var(--text3);font-size:14px;text-align:center;cursor:pointer">✕ Bekor</div>';
+  inner+='</div>';
+  ov.innerHTML=inner;
+  document.body.appendChild(ov);
+  window._payOpenedAt=Date.now();
+  ov.addEventListener('click',function(e){ if(e.target===ov && (Date.now()-window._payOpenedAt)>450) closePayModal(); });
+}
+function pickPay(method){
+  if(window._payOpenedAt && (Date.now()-window._payOpenedAt)<450) return;
+  var el=_payEl, userId=_payUser;
+  closePayModal();
+  if(!el) return;
+  toggleV2Item(el, userId, true, 'collect', method);
+}
+function closePayModal(){ var ov=document.getElementById('payOverlay'); if(ov) ov.remove(); _payEl=null; _payUser=null; }
 
 // Item type modal (tap orqali) — Brak / Vozvrat / Yig'ildi / Bekor
 var _itemTypeEl=null, _itemTypeUser=null;
@@ -1231,7 +1277,8 @@ function pickItemType(type){
   closeItemType();
   if(!el) return;
   if(type==='uncheck'){ toggleV2Item(el, userId, false); }
-  else { toggleV2Item(el, userId, true, type); }
+  else if(type==='collect'){ openPayModal(el, userId); }   // yig'ildi → Naxt/Karta tanlov
+  else { toggleV2Item(el, userId, true, type); }           // brak/vozvrat — pul yo'q
 }
 function closeItemType(){ var ov=document.getElementById('itemTypeOverlay'); if(ov) ov.remove(); _itemTypeEl=null; _itemTypeUser=null; }
 
