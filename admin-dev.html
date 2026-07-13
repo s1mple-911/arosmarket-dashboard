@@ -320,6 +320,7 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <a class="nav-item" data-screen="hodim-sozlamalari" onclick="goto('hodim-sozlamalari')" title="Hodim sozlamalari"><i class="ti ti-user-cog icon-off"></i><i class="ti ti-user-cog icon-on"></i><span class="nav-label">Hodim sozlamalari</span></a>
 <a class="nav-item" data-screen="sotuvchi-mijoz" onclick="goto('sotuvchi-mijoz')" title="Sotuvchi & Mijoz"><i class="ti ti-affiliate icon-off"></i><i class="ti ti-affiliate-filled icon-on"></i><span class="nav-label">Sotuvchi & Mijoz</span></a>
 <a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store icon-off"></i><i class="ti ti-building-store-filled icon-on"></i><span class="nav-label">Filiallar</span></a>
+<a class="nav-item" data-screen="filial-plan" onclick="goto('filial-plan')" title="Filial Plan"><i class="ti ti-target-arrow icon-off"></i><i class="ti ti-target-arrow icon-on"></i><span class="nav-label">Filial Plan</span></a>
 <a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x icon-off"></i><i class="ti ti-plug-connected-x icon-on"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
 <a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder icon-off"></i><i class="ti ti-folder-filled icon-on"></i><span class="nav-label">Yuklanmalar</span></a>
 <a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register icon-off"></i><i class="ti ti-cash-register icon-on"></i><span class="nav-label">Bugalter</span></a>
@@ -494,6 +495,7 @@ function renderScreen(s){
     case 'hodim-sozlamalari': return renderHodimSozlamalari(root);
     case 'sotuvchi-mijoz': return renderSotuvchiMijoz(root);
     case 'filiallar': return renderFiliallar(root);
+    case 'filial-plan': return renderFilialPlan(root);
     case 'ulanmagan': return renderUlanmagan(root);
     case 'yuklanmalar': return renderYuklanmalar(root);
     case 'bugalter': return renderBugalter(root);
@@ -557,6 +559,109 @@ document.getElementById('modal-bg').addEventListener('click', (e) => {
 // HELPERS
 // =========================================================
 const fmt = n => Math.round(Number(n)||0).toLocaleString('en-US').replaceAll(',', ' ');
+
+/* ===== FILIAL PLAN (oy 2 yarim, editable override) ===== */
+let planFilter = { oy: null, yil: null };
+const PLAN_OYNOM = ['','Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+
+async function renderFilialPlan(root){
+  const now = new Date(Date.now()+5*3600*1000);
+  if(!planFilter.oy){ planFilter.oy = now.getUTCMonth()+1; planFilter.yil = now.getUTCFullYear(); }
+  let oyOpts=''; for(let m=1;m<=12;m++) oyOpts += `<option value="${m}" ${m===planFilter.oy?'selected':''}>${PLAN_OYNOM[m]}</option>`;
+  let yilOpts=''; for(let y=now.getUTCFullYear()-1;y<=now.getUTCFullYear()+1;y++) yilOpts += `<option value="${y}" ${y===planFilter.yil?'selected':''}>${y}</option>`;
+  root.innerHTML = topbar('Filial Plan', 'Har oy 2 yarim, default proporsiya, tahrirlansa override', `
+    <select class="select" style="height:34px;width:auto" id="plan-oy">${oyOpts}</select>
+    <select class="select" style="height:34px;width:auto" id="plan-yil">${yilOpts}</select>
+    <button class="icon-btn" onclick="renderFilialPlan(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+  `);
+  const content = document.createElement('div');
+  content.innerHTML = '<div class="skeleton" style="height:120px;margin-bottom:12px"></div><div class="skeleton" style="height:120px;margin-bottom:12px"></div><div class="skeleton" style="height:120px"></div>';
+  root.appendChild(content);
+  document.getElementById('plan-oy').addEventListener('change', e=>{ planFilter.oy=parseInt(e.target.value); renderFilialPlan(document.getElementById('screens')); });
+  document.getElementById('plan-yil').addEventListener('change', e=>{ planFilter.yil=parseInt(e.target.value); renderFilialPlan(document.getElementById('screens')); });
+
+  try {
+    const data = await api('aros-filial-plan-list', { oy: planFilter.oy, yil: planFilter.yil });
+    const filials = (data && data.filiallar) || [];
+    if(!filials.length){ content.innerHTML = '<div class="empty">Bu oy uchun filial topilmadi</div>'; return; }
+    const meta = `<div style="font-size:11px;color:var(--text-3);margin-bottom:10px">Oy ${data.oy_kunlari} kun · Y1 = ${data.y1_kun} kun · Y2 = ${data.y2_kun} kun</div>`;
+    content.innerHTML = meta + filials.map(planCardHtml).join('');
+  } catch(e){
+    content.innerHTML = '<div class="empty">Xato: '+escapeHtml(String(e.message||e))+'</div>';
+  }
+}
+
+function planCardHtml(f){
+  return `<div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <div><div style="font-size:15px;font-weight:600">${escapeHtml(f.filial||'')} <span style="font-size:11px;color:var(--text-3);font-weight:400">#${f.warehouse_id}</span></div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:2px">Oylik plan: <b style="color:var(--text-2)">${fmt(f.oylik_plan)}</b> · qarz limit: ${fmt(f.oylik_qarz_limit)}</div></div>
+      <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:var(--bg-3);color:var(--text-2);font-weight:500">${escapeHtml(f.profil||'')}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">
+      ${planHalfHtml(f.warehouse_id,1,f.yarim['1'],'Y1 · 1–15 kun')}
+      ${planHalfHtml(f.warehouse_id,2,f.yarim['2'],'Y2 · 16–oxiri')}
+    </div>
+  </div>`;
+}
+
+function planHalfHtml(wid, yarim, v, title){
+  v = v || { plan:0, qarz_limit:0, hodim_plan:0, fiksa:0, edited:false };
+  const ed = !!v.edited;
+  return `<div class="plan-half" data-wid="${wid}" data-yarim="${yarim}" style="background:var(--bg-2);border:1px solid ${ed?'var(--warn-line)':'var(--border)'};border-radius:10px;padding:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <b style="font-size:13px">${title}</b>
+      <span class="plan-badge" style="font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600;background:${ed?'var(--warn-bg)':'var(--bg-3)'};color:${ed?'var(--warn-text)':'var(--text-3)'}">${ed?'✎ tahrirlangan':'proporsiya'}</span>
+    </div>
+    ${planFld('Plan','plan',v.plan)}
+    ${planFld('Qarz limit','qarz_limit',v.qarz_limit)}
+    ${planFld('Hodim plan','hodim_plan',v.hodim_plan)}
+    ${planFld('Fiksa','fiksa',v.fiksa)}
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn primary" style="flex:1" onclick="savePlanHalf(${wid},${yarim},this)">Saqlash</button>
+      <button class="btn ghost plan-reset" style="flex:1" onclick="resetPlanHalf(${wid},${yarim},this)" ${ed?'':'disabled'}>Reset</button>
+    </div>
+  </div>`;
+}
+
+function planFld(label,key,val){
+  return `<div style="margin-bottom:8px"><label style="display:block;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${label}</label>
+    <input type="text" data-key="${key}" value="${fmt(val)}" oninput="planFmtInput(this)" style="width:100%;background:var(--bg);border:0.5px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:14px;font-variant-numeric:tabular-nums;outline:none"></div>`;
+}
+
+function planFmtInput(el){
+  const raw = el.value.replace(/[^\d]/g,'');
+  el.value = raw ? Number(raw).toLocaleString('en-US').replaceAll(',',' ') : '';
+}
+function planParse(s){ return Math.round(Number(String(s).replace(/\s/g,'').replace(/,/g,''))||0); }
+function planHalfEl(wid,yarim){ return document.querySelector('.plan-half[data-wid="'+wid+'"][data-yarim="'+yarim+'"]'); }
+
+async function savePlanHalf(wid, yarim, btn){
+  const el = planHalfEl(wid,yarim); const vals = {};
+  el.querySelectorAll('input[data-key]').forEach(i=>{ vals[i.getAttribute('data-key')]=planParse(i.value); });
+  btn.disabled=true; const old=btn.textContent; btn.textContent='...';
+  try {
+    await api('aros-filial-plan-set', { wid, oy: planFilter.oy, yil: planFilter.yil, yarim, plan: vals.plan, qarz_limit: vals.qarz_limit, hodim_plan: vals.hodim_plan, fiksa: vals.fiksa });
+    fetch(API_BASE + '/aros-plan-apply?_='+Date.now()).catch(()=>{});
+    planMarkEdited(el, true); toast('Saqlandi ✓','ok');
+  } catch(e){ toast('Xato: '+(e.message||e),'err'); }
+  btn.disabled=false; btn.textContent=old;
+}
+
+async function resetPlanHalf(wid, yarim, btn){
+  btn.disabled=true;
+  try {
+    await api('aros-filial-plan-set', { action:'reset', wid, oy: planFilter.oy, yil: planFilter.yil, yarim });
+    fetch(API_BASE + '/aros-plan-apply?_='+Date.now()).catch(()=>{});
+    toast('Proporsiyaga qaytdi','ok'); renderFilialPlan(document.getElementById('screens'));
+  } catch(e){ toast('Xato: '+(e.message||e),'err'); btn.disabled=false; }
+}
+
+function planMarkEdited(el, ed){
+  el.style.borderColor = ed?'var(--warn-line)':'var(--border)';
+  const b=el.querySelector('.plan-badge'); if(b){ b.style.background=ed?'var(--warn-bg)':'var(--bg-3)'; b.style.color=ed?'var(--warn-text)':'var(--text-3)'; b.textContent=ed?'✎ tahrirlangan':'proporsiya'; }
+  const rb=el.querySelector('.plan-reset'); if(rb) rb.disabled=!ed;
+}
 const fmtShort = n => {
   n = Number(n)||0;
   if (n >= 1e9) return (n/1e9).toFixed(2).replace('.00','') + ' mlrd';
