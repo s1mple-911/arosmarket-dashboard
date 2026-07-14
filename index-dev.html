@@ -1142,7 +1142,7 @@ function v2SearchItems(query){
   var q = String(query||'').trim().toLowerCase();
   var scroll = document.getElementById('v2ItemsScroll');
   if(!scroll) return;
-  var blocks = scroll.querySelectorAll('div[data-order]');
+  var blocks = scroll.querySelectorAll(':scope > div[data-order]');
   var totalVisible = 0;
   blocks.forEach(function(block){
     var items = block.querySelectorAll('.v2-item');
