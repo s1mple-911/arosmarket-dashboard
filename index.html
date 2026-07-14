@@ -1055,6 +1055,9 @@ function renderV2Modal(userId, data){
   // Savdo oynasi banneri (ochiq savdo bo'lsa — alohida, itemlardan tepada)
   html += '<div id="v2SalesWindow"></div>';
 
+  // Qidiruv (product_id yoki nomi bo'yicha)
+  html += '<div style="padding:8px 14px;background:var(--bg);border-bottom:0.5px solid var(--border)"><input id="v2ItemSearch" type="text" placeholder="🔍 Nomi yoki ID bo\'yicha qidirish..." oninput="v2SearchItems(this.value)" autocomplete="off" style="width:100%;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-size:13px;outline:none"></div>';
+
   // Itemlar (scroll)
   html += '<div style="flex:1;overflow-y:auto;padding:12px 14px" id="v2ItemsScroll">';
   if(orders.length===0){
@@ -1135,6 +1138,36 @@ function v2StatBox(label, val, color){
   return '<div style="background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+label+'</div><div style="font-size:14px;font-weight:800;color:'+color+';margin-top:2px">'+val+'</div></div>';
 }
 
+function v2SearchItems(query){
+  var q = String(query||'').trim().toLowerCase();
+  var scroll = document.getElementById('v2ItemsScroll');
+  if(!scroll) return;
+  var blocks = scroll.querySelectorAll(':scope > div[data-order]');
+  var totalVisible = 0;
+  blocks.forEach(function(block){
+    var items = block.querySelectorAll('.v2-item');
+    var anyVisible = false;
+    items.forEach(function(it){
+      var s = it.getAttribute('data-search')||'';
+      var match = !q || s.indexOf(q) >= 0;
+      it.style.display = match ? '' : 'none';
+      if(match){ anyVisible = true; totalVisible++; }
+    });
+    block.style.display = anyVisible ? '' : 'none';
+  });
+  var noRes = document.getElementById('v2NoRes');
+  if(q && totalVisible===0){
+    if(!noRes){
+      noRes = document.createElement('div');
+      noRes.id = 'v2NoRes';
+      noRes.style.cssText = 'text-align:center;color:var(--text3);padding:30px 20px;font-size:13px';
+      noRes.textContent = 'Topilmadi';
+      scroll.appendChild(noRes);
+    }
+    noRes.style.display = '';
+  } else if(noRes){ noRes.style.display = 'none'; }
+}
+
 function renderV2Item(it, userId){
   var ct = it.check_type || '';        // 'collect' | 'brak' | 'vozvrat' | ''
   var pay = it.pay_method || '';       // 'cash' | 'card' | ''
@@ -1143,7 +1176,8 @@ function renderV2Item(it, userId){
   var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
   var bd = v2BadgeInfo(checked, ct, pay);
-  var h = '<div class="v2-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" data-pay="'+pay+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
+  var v2Search = String((it.product_id||it.item_id)+' '+(it.name||'')+' '+(it.cat_label||'')).toLowerCase().replace(/["'<>]/g,' ');
+  var h = '<div class="v2-item" data-search="'+v2Search+'" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" data-pay="'+pay+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
   h += '<div class="v2-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;'+lineStyle+';transition:transform .2s;background:var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
