@@ -321,6 +321,7 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <a class="nav-item" data-screen="sotuvchi-mijoz" onclick="goto('sotuvchi-mijoz')" title="Sotuvchi & Mijoz"><i class="ti ti-affiliate icon-off"></i><i class="ti ti-affiliate-filled icon-on"></i><span class="nav-label">Sotuvchi & Mijoz</span></a>
 <a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store icon-off"></i><i class="ti ti-building-store-filled icon-on"></i><span class="nav-label">Filiallar</span></a>
 <a class="nav-item" data-screen="filial-plan" onclick="goto('filial-plan')" title="Filial Plan"><i class="ti ti-target-arrow icon-off"></i><i class="ti ti-target-arrow icon-on"></i><span class="nav-label">Filial Plan</span></a>
+<a class="nav-item" data-screen="hodim-plan" onclick="goto('hodim-plan')" title="Hodim Plan"><i class="ti ti-user-check icon-off"></i><i class="ti ti-user-check icon-on"></i><span class="nav-label">Hodim Plan</span></a>
 <a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x icon-off"></i><i class="ti ti-plug-connected-x icon-on"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
 <a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder icon-off"></i><i class="ti ti-folder-filled icon-on"></i><span class="nav-label">Yuklanmalar</span></a>
 <a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register icon-off"></i><i class="ti ti-cash-register icon-on"></i><span class="nav-label">Bugalter</span></a>
@@ -496,6 +497,7 @@ function renderScreen(s){
     case 'sotuvchi-mijoz': return renderSotuvchiMijoz(root);
     case 'filiallar': return renderFiliallar(root);
     case 'filial-plan': return renderFilialPlan(root);
+    case 'hodim-plan': return renderHodimPlan(root);
     case 'ulanmagan': return renderUlanmagan(root);
     case 'yuklanmalar': return renderYuklanmalar(root);
     case 'bugalter': return renderBugalter(root);
@@ -661,6 +663,119 @@ function planMarkEdited(el, ed){
   el.style.borderColor = ed?'var(--warn-line)':'var(--border)';
   const b=el.querySelector('.plan-badge'); if(b){ b.style.background=ed?'var(--warn-bg)':'var(--bg-3)'; b.style.color=ed?'var(--warn-text)':'var(--text-3)'; b.textContent=ed?'✎ tahrirlangan':'proporsiya'; }
   const rb=el.querySelector('.plan-reset'); if(rb) rb.disabled=!ed;
+}
+
+/* ===== HODIM PLAN (oy 2 yarim, editable override) ===== */
+let hpFilter = { oy: null, yil: null };
+
+async function renderHodimPlan(root){
+  const now = new Date(Date.now()+5*3600*1000);
+  if(!hpFilter.oy){ hpFilter.oy = now.getUTCMonth()+1; hpFilter.yil = now.getUTCFullYear(); }
+  let oyOpts=''; for(let m=1;m<=12;m++) oyOpts += `<option value="${m}" ${m===hpFilter.oy?'selected':''}>${PLAN_OYNOM[m]}</option>`;
+  let yilOpts=''; for(let y=now.getUTCFullYear()-1;y<=now.getUTCFullYear()+1;y++) yilOpts += `<option value="${y}" ${y===hpFilter.yil?'selected':''}>${y}</option>`;
+  root.innerHTML = topbar('Hodim Plan', 'Har oy 2 yarim, default proporsiya, tahrirlansa override', `
+    <select class="select" style="height:34px;width:auto" id="hp-oy">${oyOpts}</select>
+    <select class="select" style="height:34px;width:auto" id="hp-yil">${yilOpts}</select>
+    <button class="icon-btn" onclick="renderHodimPlan(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+  `);
+  const content = document.createElement('div');
+  content.innerHTML = '<div class="skeleton" style="height:120px;margin-bottom:12px"></div><div class="skeleton" style="height:120px;margin-bottom:12px"></div><div class="skeleton" style="height:120px"></div>';
+  root.appendChild(content);
+  document.getElementById('hp-oy').addEventListener('change', e=>{ hpFilter.oy=parseInt(e.target.value); renderHodimPlan(document.getElementById('screens')); });
+  document.getElementById('hp-yil').addEventListener('change', e=>{ hpFilter.yil=parseInt(e.target.value); renderHodimPlan(document.getElementById('screens')); });
+
+  try {
+    const data = await api('aros-hodim-plan-list', { oy: hpFilter.oy, yil: hpFilter.yil });
+    const hodimlar = (data && data.hodimlar) || [];
+    if(!hodimlar.length){ content.innerHTML = '<div class="empty">Hodim topilmadi</div>'; return; }
+    const meta = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="hp-search" placeholder="Ism yoki filial..." oninput="hpSearch(this.value)" class="input" style="max-width:260px;height:34px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="hp-only" checked onchange="hpSearch(document.getElementById('hp-search').value)"> Faqat plani borlar</label>
+      <span style="font-size:11px;color:var(--text-3);margin-left:auto">Oy ${data.oy_kunlari} kun · Y1 = ${data.y1_kun} kun · Y2 = ${data.y2_kun} kun · <b id="hp-count">0</b> hodim</span>
+    </div><div id="hp-list"></div>`;
+    content.innerHTML = meta;
+    document.getElementById('hp-list').innerHTML = hodimlar.map(hpCardHtml).join('');
+    hpSearch('');
+  } catch(e){
+    content.innerHTML = '<div class="empty">Xato: '+escapeHtml(String(e.message||e))+'</div>';
+  }
+}
+
+function hpSearch(q){
+  q = String(q||'').trim().toLowerCase();
+  const onlyPlan = document.getElementById('hp-only') ? document.getElementById('hp-only').checked : false;
+  const cards = document.querySelectorAll('#hp-list > .hp-card');
+  let n = 0;
+  cards.forEach(c=>{
+    const s = c.getAttribute('data-search')||'';
+    const hasPlan = c.getAttribute('data-hasplan') === '1';
+    const show = (!q || s.indexOf(q)>=0) && (!onlyPlan || hasPlan);
+    c.style.display = show ? '' : 'none';
+    if(show) n++;
+  });
+  const cnt = document.getElementById('hp-count'); if(cnt) cnt.textContent = n;
+}
+
+function hpCardHtml(h){
+  const searchStr = String((h.ism||'')+' '+(h.warehouse_name||'')+' '+h.telegram_id).toLowerCase().replace(/["'<>]/g,' ');
+  const hasPlan = (h.oylik_hodim_plan>0 || h.oylik_fiksa>0 || h.oylik_fidoyilik>0 || h.oylik_plan>0) ? '1' : '0';
+  return `<div class="hp-card card" data-search="${searchStr}" data-hasplan="${hasPlan}" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <div><div style="font-size:15px;font-weight:600">${escapeHtml(h.ism||'—')} <span style="font-size:11px;color:var(--text-3);font-weight:400;font-family:var(--mono)">@${escapeHtml(h.telegram_id)}</span></div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:2px">${escapeHtml(h.warehouse_name||'— filial yo\\u2019q —')} · Oylik hodim plan: <b style="color:var(--text-2)">${fmt(h.oylik_hodim_plan)}</b> · fiksa: ${fmt(h.oylik_fiksa)}</div></div>
+      <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:var(--bg-3);color:var(--text-2);font-weight:500">${escapeHtml(h.lavozim||'—')}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">
+      ${hpHalfHtml(h.telegram_id,1,h.yarim['1'],'Y1 · 1–15 kun')}
+      ${hpHalfHtml(h.telegram_id,2,h.yarim['2'],'Y2 · 16–oxiri')}
+    </div>
+  </div>`;
+}
+
+function hpHalfHtml(tid, yarim, v, title){
+  v = v || { oylik_plan:0, hodim_plan:0, fiksa:0, fidoyilik:0, edited:false };
+  const ed = !!v.edited;
+  return `<div class="hp-half" data-tid="${tid}" data-yarim="${yarim}" style="background:var(--bg-2);border:1px solid ${ed?'var(--warn-line)':'var(--border)'};border-radius:10px;padding:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <b style="font-size:13px">${title}</b>
+      <span class="hp-badge" style="font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600;background:${ed?'var(--warn-bg)':'var(--bg-3)'};color:${ed?'var(--warn-text)':'var(--text-3)'}">${ed?'✎ tahrirlangan':'proporsiya'}</span>
+    </div>
+    ${planFld('Hodim plan','hodim_plan',v.hodim_plan)}
+    ${planFld('Fiksa','fiksa',v.fiksa)}
+    ${planFld('Fidoyilik','fidoyilik',v.fidoyilik)}
+    ${planFld('Oylik plan','oylik_plan',v.oylik_plan)}
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn primary" style="flex:1" onclick="saveHodimHalf('${tid}',${yarim},this)">Saqlash</button>
+      <button class="btn ghost hp-reset" style="flex:1" onclick="resetHodimHalf('${tid}',${yarim},this)" ${ed?'':'disabled'}>Reset</button>
+    </div>
+  </div>`;
+}
+
+function hpHalfEl(tid,yarim){ return document.querySelector('.hp-half[data-tid="'+tid+'"][data-yarim="'+yarim+'"]'); }
+
+async function saveHodimHalf(tid, yarim, btn){
+  const el = hpHalfEl(tid,yarim); const vals = {};
+  el.querySelectorAll('input[data-key]').forEach(i=>{ vals[i.getAttribute('data-key')]=planParse(i.value); });
+  btn.disabled=true; const old=btn.textContent; btn.textContent='...';
+  try {
+    await api('aros-hodim-plan-set', { tid, oy: hpFilter.oy, yil: hpFilter.yil, yarim, hodim_plan: vals.hodim_plan, fiksa: vals.fiksa, fidoyilik: vals.fidoyilik, oylik_plan: vals.oylik_plan });
+    hpMarkEdited(el, true); toast('Saqlandi ✓','ok');
+  } catch(e){ toast('Xato: '+(e.message||e),'err'); }
+  btn.disabled=false; btn.textContent=old;
+}
+
+async function resetHodimHalf(tid, yarim, btn){
+  btn.disabled=true;
+  try {
+    await api('aros-hodim-plan-set', { action:'reset', tid, oy: hpFilter.oy, yil: hpFilter.yil, yarim });
+    toast('Proporsiyaga qaytdi','ok'); renderHodimPlan(document.getElementById('screens'));
+  } catch(e){ toast('Xato: '+(e.message||e),'err'); btn.disabled=false; }
+}
+
+function hpMarkEdited(el, ed){
+  el.style.borderColor = ed?'var(--warn-line)':'var(--border)';
+  const b=el.querySelector('.hp-badge'); if(b){ b.style.background=ed?'var(--warn-bg)':'var(--bg-3)'; b.style.color=ed?'var(--warn-text)':'var(--text-3)'; b.textContent=ed?'✎ tahrirlangan':'proporsiya'; }
+  const rb=el.querySelector('.hp-reset'); if(rb) rb.disabled=!ed;
 }
 const fmtShort = n => {
   n = Number(n)||0;
