@@ -1193,12 +1193,10 @@ function v2DaysLeft(deadline){
   return Math.round((b-a)/86400000);
 }
 
-// Rang darajasi: <=3 kun qizil · 4-6 sariq · 7+ yashil
+// Rang darajasi: muddati o'tgan = qizil · muddat bor = yashil
 function v2Tier(d){
   if(d === null || d === undefined) return null;
-  if(d <= 3) return 'red';
-  if(d <= 6) return 'amber';
-  return 'green';
+  return (d < 0) ? 'red' : 'green';
 }
 function v2TierStyle(t){
   if(t === 'red')   return { bg:'rgba(255,59,48,.12)',  border:'rgba(255,59,48,.40)',  col:'#FF3B30', chip:'rgba(255,59,48,.16)' };
