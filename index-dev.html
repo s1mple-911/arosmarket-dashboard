@@ -1168,6 +1168,36 @@ function v2SearchItems(query){
   } else if(noRes){ noRes.style.display = 'none'; }
 }
 
+// Deadline'gacha necha kun (UZB sanasi bo'yicha). Manfiy = muddat o'tgan
+function v2DaysLeft(deadline){
+  if(!deadline) return null;
+  var bugun = new Date(Date.now()+5*3600*1000).toISOString().slice(0,10);
+  var a = Date.parse(bugun+'T00:00:00Z');
+  var b = Date.parse(String(deadline).slice(0,10)+'T00:00:00Z');
+  if(isNaN(a) || isNaN(b)) return null;
+  return Math.round((b-a)/86400000);
+}
+
+// Rang darajasi: <=3 kun qizil · 4-6 sariq · 7+ yashil
+function v2Tier(d){
+  if(d === null || d === undefined) return null;
+  if(d <= 3) return 'red';
+  if(d <= 6) return 'amber';
+  return 'green';
+}
+function v2TierStyle(t){
+  if(t === 'red')   return { bg:'rgba(255,59,48,.12)',  border:'rgba(255,59,48,.40)',  col:'#FF3B30', chip:'rgba(255,59,48,.16)' };
+  if(t === 'amber') return { bg:'rgba(255,159,10,.12)', border:'rgba(255,159,10,.40)', col:'#FF9F0A', chip:'rgba(255,159,10,.16)' };
+  if(t === 'green') return { bg:'rgba(52,199,89,.09)',  border:'rgba(52,199,89,.32)',  col:'#34C759', chip:'rgba(52,199,89,.14)' };
+  return { bg:'var(--bg2)', border:'var(--border)', col:'var(--text3)', chip:'var(--bg3)' };
+}
+function v2DaysTxt(d){
+  if(d === null) return '';
+  if(d < 0) return Math.abs(d)+' kun o\'tdi';
+  if(d === 0) return 'bugun';
+  return d+' kun';
+}
+
 // Sana: "2026-07-09" -> "09.07" (boshqa yil bo'lsa "09.07.25")
 function v2ShortDate(s){
   if(!s) return '';
@@ -1177,21 +1207,19 @@ function v2ShortDate(s){
   return p[2]+'.'+p[1] + (p[0] !== curYear ? '.'+p[0].slice(2) : '');
 }
 
-// Item kartasidagi 2 sana: 🛒 olingan sana (ko'k, mono) · ⏳ deadline (sariq/qizil, qalin)
+// Item kartasidagi 2 sana: 🛒 olingan sana (ko'k, mono) · ⏳ deadline + qolgan kun (daraja rangida)
 function v2DateRow(it){
   var sana = v2ShortDate(it.sana || it.created_date || '');
   var dl = v2ShortDate(it.deadline || '');
   if(!sana && !dl) return '';
-  var bugun = new Date(Date.now()+5*3600*1000).toISOString().slice(0,10);
-  var late = it.deadline && String(it.deadline).slice(0,10) < bugun;
+  var d = v2DaysLeft(it.deadline);
+  var st = v2TierStyle(v2Tier(d));
   var h = '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">';
   if(sana){
     h += '<span title="Olingan sana" style="font-size:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#0A84FF;background:rgba(10,132,255,.12);padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">🛒 '+sana+'</span>';
   }
   if(dl){
-    var col = late ? '#FF3B30' : '#FF9F0A';
-    var bg = late ? 'rgba(255,59,48,.13)' : 'rgba(255,159,10,.13)';
-    h += '<span title="To\'lov muddati" style="font-size:10.5px;font-weight:800;color:'+col+';background:'+bg+';padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">⏳ '+dl+'</span>';
+    h += '<span title="To\'lov muddati" style="font-size:10.5px;font-weight:800;color:'+st.col+';background:'+st.chip+';padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">⏳ '+dl+(d!==null?' · '+v2DaysTxt(d):'')+'</span>';
   }
   h += '</div>';
   return h;
@@ -1206,8 +1234,9 @@ function renderV2Item(it, userId){
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
   var bd = v2BadgeInfo(checked, ct, pay);
   var v2Search = String((it.product_id||it.item_id)+' '+(it.name||'')+' '+(it.cat_label||'')).toLowerCase().replace(/["'<>]/g,' ');
-  var h = '<div class="v2-item" data-search="'+v2Search+'" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" data-pay="'+pay+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid var(--border)">';
-  h += '<div class="v2-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;'+lineStyle+';transition:transform .2s;background:var(--bg2)">';
+  var tSt = v2TierStyle(v2Tier(v2DaysLeft(it.deadline)));
+  var h = '<div class="v2-item" data-search="'+v2Search+'" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" data-pay="'+pay+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid '+tSt.border+'">';
+  h += '<div class="v2-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;'+lineStyle+';transition:transform .2s;background:linear-gradient(0deg,'+tSt.bg+','+tSt.bg+'),var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
   if(it.cat_label){
