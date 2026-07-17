@@ -1220,19 +1220,34 @@ function v2ShortDate(s){
   return p[2]+'.'+p[1] + (p[0] !== curYear ? '.'+p[0].slice(2) : '');
 }
 
-// Item kartasidagi 2 sana: 🛒 olingan sana (ko'k, mono) · ⏳ deadline + qolgan kun (daraja rangida)
+// To'liq datetime'dan UZB soati: "2026-07-09T14:23:11+05:00" -> "14:23"
+function v2TimeOf(raw){
+  if(!raw) return '';
+  var s = String(raw);
+  if(s.indexOf('T') < 0) return '';
+  var ms = Date.parse(s);
+  if(isNaN(ms)) return '';
+  var d = new Date(ms + 5*3600*1000); // UZB (UTC+5)
+  var hh = ('0'+d.getUTCHours()).slice(-2), mi = ('0'+d.getUTCMinutes()).slice(-2);
+  if(hh === '00' && mi === '00') return '';
+  return hh+':'+mi;
+}
+
+// Item kartasidagi 2 sana: 🛒 olingan sana+soat (ko'k, mono) · ⏳ deadline+soat + qolgan kun
 function v2DateRow(it){
   var sana = v2ShortDate(it.sana || it.created_date || '');
+  var sanaT = v2TimeOf(it.sana_dt);
   var dl = v2ShortDate(it.deadline || '');
+  var dlT = v2TimeOf(it.deadline_dt);
   if(!sana && !dl) return '';
   var d = v2DaysLeft(it.deadline);
   var st = v2TierStyle(v2Tier(d));
   var h = '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">';
   if(sana){
-    h += '<span title="Olingan sana" style="font-size:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#0A84FF;background:rgba(10,132,255,.12);padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">🛒 '+sana+'</span>';
+    h += '<span title="Olingan sana" style="font-size:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#0A84FF;background:rgba(10,132,255,.12);padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">🛒 '+sana+(sanaT?' <span style="opacity:.75">'+sanaT+'</span>':'')+'</span>';
   }
   if(dl){
-    h += '<span title="To\'lov muddati" style="font-size:10.5px;font-weight:800;color:'+st.col+';background:'+st.chip+';padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">⏳ '+dl+(d!==null?' · '+v2DaysTxt(d):'')+'</span>';
+    h += '<span title="To\'lov muddati" style="font-size:10.5px;font-weight:800;color:'+st.col+';background:'+st.chip+';padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">⏳ '+dl+(dlT?' <span style="opacity:.8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600">'+dlT+'</span>':'')+(d!==null?' · '+v2DaysTxt(d):'')+'</span>';
   }
   h += '</div>';
   return h;
