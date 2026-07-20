@@ -205,6 +205,51 @@ input,select,textarea{font:inherit;color:inherit}
 .perm-name{font-size:13px;color:var(--text);flex:1}
 .perm-desc{font-size:11px;color:var(--text-3);margin-top:1px}
 
+/* === Provodka sozlamalari === */
+.pvs-layout{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start}
+.pvs-list{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:6px;display:flex;flex-direction:column;gap:1px;max-height:calc(100vh - 160px);overflow-y:auto}
+.pvs-user{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;color:var(--text-2);line-height:1.25}
+.pvs-user:hover{background:var(--bg-2)}
+.pvs-user.active{background:var(--bg-2);color:var(--text);font-weight:500}
+.pvs-user.locked{cursor:default;opacity:0.7}
+.pvs-user.locked:hover{background:transparent}
+.pvs-user i{font-size:15px;flex-shrink:0}
+.pvs-uname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-detail{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
+.pvs-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--border)}
+.pvs-head h3{font-size:16px;font-weight:500}
+.pvs-head p{margin-top:3px;font-size:12px;color:var(--text-3)}
+.pvs-blk{margin-bottom:20px}
+.pvs-blk:last-child{margin-bottom:0}
+.pvs-blk-h{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.pvs-blk-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:500}
+.pvs-blk-h .pvs-acts{margin-left:auto;display:flex;gap:6px}
+.pvs-hint{font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.45}
+.pvs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.pvs-grid.wide{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.pvs-ck{display:flex;align-items:center;gap:9px;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12.5px;color:var(--text-2);transition:all 0.12s;min-width:0}
+.pvs-ck:hover{background:var(--bg-2)}
+.pvs-ck.on{border-color:var(--ok-line);background:var(--ok-bg);color:var(--text)}
+.pvs-ck.dis{opacity:0.4;cursor:not-allowed}
+.pvs-ck.dis:hover{background:transparent}
+.pvs-box{width:16px;height:16px;border-radius:4px;border:1px solid var(--border-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg)}
+.pvs-box i{font-size:11px;color:transparent}
+.pvs-ck.on .pvs-box{background:var(--ok-line);border-color:var(--ok-line)}
+.pvs-ck.on .pvs-box i{color:#fff}
+.pvs-ktxt{min-width:0;flex:1}
+.pvs-kname{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-ksub{display:block;font-size:10.5px;color:var(--text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-radios{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.pvs-radio{display:flex;align-items:center;gap:7px;padding:7px 12px;border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12.5px;color:var(--text-2)}
+.pvs-radio:hover{background:var(--bg-2)}
+.pvs-radio.on{border-color:var(--text);color:var(--text);font-weight:500}
+.pvs-dot{width:13px;height:13px;border-radius:50%;border:1px solid var(--border-2);flex-shrink:0;position:relative}
+.pvs-radio.on .pvs-dot{border-color:var(--text)}
+.pvs-radio.on .pvs-dot::after{content:'';position:absolute;inset:2.5px;border-radius:50%;background:var(--text)}
+.pvs-grp{margin-top:12px}
+.pvs-grp:first-child{margin-top:0}
+.pvs-grp-lbl{font-size:10.5px;color:var(--text-3);margin-bottom:6px;font-weight:500}
+
 /* === Audit log === */
 .audit-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .search-box{flex:1;min-width:200px;height:34px;padding:0 12px 0 36px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);font-size:13px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f5e5a' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");background-repeat:no-repeat;background-position:12px center}
@@ -247,6 +292,8 @@ input,select,textarea{font:inherit;color:inherit}
   .topbar h1{font-size:18px}
   .uc-form{grid-template-columns:1fr}
   .roles-layout{grid-template-columns:1fr}
+  .pvs-layout{grid-template-columns:1fr}
+  .pvs-list{max-height:none}
   .audit-toolbar{flex-direction:column;align-items:stretch}
   .search-box{width:100%}
   .table-row,.table-head{padding:10px 12px}
@@ -325,6 +372,7 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x icon-off"></i><i class="ti ti-plug-connected-x icon-on"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
 <a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder icon-off"></i><i class="ti ti-folder-filled icon-on"></i><span class="nav-label">Yuklanmalar</span></a>
 <a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register icon-off"></i><i class="ti ti-cash-register icon-on"></i><span class="nav-label">Bugalter</span></a>
+<a class="nav-item" data-screen="provodka-sozlama" onclick="goto('provodka-sozlama')" title="Provodka sozlamalari"><i class="ti ti-adjustments-dollar icon-off"></i><i class="ti ti-adjustments-dollar icon-on"></i><span class="nav-label">Provodka sozlama</span></a>
 <div class="sb-grp">Sistema</div>
 <a class="nav-item" data-screen="audit" onclick="goto('audit')" title="Kuzatuv"><i class="ti ti-history icon-off"></i><i class="ti ti-history icon-on"></i><span class="nav-label">Kuzatuv</span></a>
 <a class="nav-item" data-screen="workflows" onclick="goto('workflows')" title="Workflow'lar"><i class="ti ti-circuit-bulb icon-off"></i><i class="ti ti-circuit-bulb icon-on"></i><span class="nav-label">Workflow'lar</span></a>
@@ -501,6 +549,7 @@ function renderScreen(s){
     case 'ulanmagan': return renderUlanmagan(root);
     case 'yuklanmalar': return renderYuklanmalar(root);
     case 'bugalter': return renderBugalter(root);
+    case 'provodka-sozlama': return renderProvodkaSozlama(root);
     case 'audit': return renderAudit(root);
     case 'workflows': return renderWorkflows(root);
     case 'settings': return renderSettings(root);
@@ -1591,6 +1640,373 @@ async function createRole(){
     selectedRoleKey = key;
     renderRoles(document.getElementById('screens'));
   } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: PROVODKA SOZLAMALARI
+// Har bir Provodka userига: qaysi sahifalar ochiq, qaysi kassalarni
+// ko'radi, qaysi kassalar bilan amaliyot qiladi, konvert ruxsati.
+// Endpointlar: aros-provodka-users / -perms / -perms-save (n8n GET).
+//
+// RUXSAT: hozircha admin-check'ning has_admin_access'i yetarli (ekranga
+// kirgan har bir admin sozlay oladi). Server tomonda RBAC'ga alohida
+// 'provodka_settings' permission kaliti qo'shilsa — bu yerda
+// hasPerm('provodka_settings') tekshiruvi va sidebar'ni yashirish
+// qo'shiladi (n8n endpointlari ham o'sha kalitni tekshirishi kerak).
+// =========================================================
+const PVS_PAGES = [
+  { key:'kassa',        label:'Kassa' },
+  { key:'jurnal',       label:'Jurnal' },
+  { key:'professional', label:'Professional' },
+  { key:'hisobot',      label:'Hisobot' },
+  { key:'balans',       label:'Balans' },
+  { key:'cashflow',     label:'Cashflow' },
+  { key:'qarzdor',      label:'Qarzdor' },
+  { key:'filial',       label:'Filial' },
+  { key:'valyuta',      label:'Valyuta' },
+  { key:'konvert',      label:'Konvert' },
+  { key:'sozlama',      label:'Sozlama' },
+  { key:'provodka',     label:'Provodka' }
+];
+
+const PVS_TURI = [
+  { key:'markaziy', label:'Markaziy kassalar' },
+  { key:'filial',   label:'Filial kassalari' },
+  { key:'xarajat',  label:'Xarajat (hodim) kassalari' },
+  { key:'boshqa',   label:'Boshqa' }
+];
+
+let pvsState = {
+  users: [],
+  kassalar: [],
+  selectedId: null,
+  perms: null,
+  loading: false,
+  saving: false
+};
+
+async function renderProvodkaSozlama(root){
+  root.innerHTML = topbar('Boshqaruv', 'Provodka sozlamalari');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="skeleton" style="height:300px"></div>`;
+  root.appendChild(content);
+
+  try {
+    const data = await api('aros-provodka-users', { uid: UID });
+    if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    pvsState.users = data.users || [];
+  } catch(e){
+    content.innerHTML = `
+<div class="empty">
+<i class="ti ti-plug-connected-x"></i>
+<p>n8n endpoint hali ulanmagan</p>
+<p style="margin-top:6px;font-size:11.5px;color:var(--text-3)">aros-provodka-users · ${escapeHtml(e.message)}</p>
+<button class="btn sm" style="margin-top:14px" onclick="renderProvodkaSozlama(document.getElementById('screens'))"><i class="ti ti-refresh"></i>Qayta urinish</button>
+</div>`;
+    return;
+  }
+
+  // Birinchi admin bo'lmagan userni avto-tanlash
+  if (!pvsState.users.some(u => u.id === pvsState.selectedId)) {
+    pvsState.selectedId = (pvsState.users.find(u => u.role !== 'admin') || {}).id || null;
+    pvsState.perms = null;
+  }
+
+  content.innerHTML = `
+<div class="pvs-layout">
+<div class="pvs-list" id="pvs-users"></div>
+<div class="pvs-detail" id="pvs-detail"></div>
+</div>`;
+  pvsRenderUsers();
+  if (pvsState.selectedId) pvsLoadPerms(pvsState.selectedId);
+  else pvsRenderDetail();
+}
+
+function pvsRenderUsers(){
+  const box = document.getElementById('pvs-users');
+  if (!box) return;
+  if (!pvsState.users.length){
+    box.innerHTML = `<div class="empty" style="padding:24px 12px"><i class="ti ti-users-off"></i><p>User yo'q</p></div>`;
+    return;
+  }
+  box.innerHTML = pvsState.users.map(u => {
+    const isAdmin = u.role === 'admin';
+    const name = escapeHtml(u.full_name || '—');
+    if (isAdmin) return `
+<div class="pvs-user locked" title="Admin — doim to'liq huquqli, cheklanmaydi">
+<i class="ti ti-shield-check" style="color:var(--ok-text)"></i>
+<span class="pvs-uname">${name}</span>
+<span class="badge ok" style="flex-shrink:0">to'liq</span>
+</div>`;
+    return `
+<div class="pvs-user ${u.id===pvsState.selectedId?'active':''}" onclick="pvsSelectUser('${escapeHtml(u.id)}')">
+<i class="ti ti-user"></i>
+<span class="pvs-uname">${name}</span>
+<span class="badge muted" style="flex-shrink:0">${escapeHtml(u.role || '—')}</span>
+</div>`;
+  }).join('');
+}
+
+function pvsSelectUser(id){
+  if (id === pvsState.selectedId && pvsState.perms) return;
+  pvsState.selectedId = id;
+  pvsState.perms = null;
+  pvsRenderUsers();
+  pvsLoadPerms(id);
+}
+
+function pvsNormPerms(p, userId){
+  p = p || {};
+  return {
+    user_id:        userId,
+    allowed_pages:  Array.isArray(p.allowed_pages)  ? p.allowed_pages.slice()  : [],
+    kassa_scope:    p.kassa_scope === 'list' ? 'list' : 'all',
+    view_kassa_ids: Array.isArray(p.view_kassa_ids) ? p.view_kassa_ids.slice() : [],
+    op_kassa_ids:   Array.isArray(p.op_kassa_ids)   ? p.op_kassa_ids.slice()   : [],
+    can_convert:    p.can_convert !== false
+  };
+}
+
+async function pvsLoadPerms(userId){
+  const box = document.getElementById('pvs-detail');
+  if (box) box.innerHTML = `<div class="skeleton" style="height:260px"></div>`;
+  pvsState.loading = true;
+  try {
+    const data = await api('aros-provodka-perms', { uid: UID, user_id: userId });
+    if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    if (pvsState.selectedId !== userId) return;   // boshqa user tanlandi
+    pvsState.kassalar = data.kassalar || [];
+    pvsState.perms = pvsNormPerms(data.perms, userId);
+    pvsState.loading = false;
+    pvsRenderDetail();
+  } catch(e){
+    pvsState.loading = false;
+    if (pvsState.selectedId !== userId) return;
+    const b = document.getElementById('pvs-detail');
+    if (b) b.innerHTML = `
+<div class="empty">
+<i class="ti ti-plug-connected-x"></i>
+<p>Ruxsatlar yuklanmadi</p>
+<p style="margin-top:6px;font-size:11.5px;color:var(--text-3)">aros-provodka-perms · ${escapeHtml(e.message)}</p>
+<button class="btn sm" style="margin-top:14px" onclick="pvsLoadPerms('${escapeHtml(userId)}')"><i class="ti ti-refresh"></i>Qayta urinish</button>
+</div>`;
+  }
+}
+
+// scope='all' bo'lsa hamma kassa ko'rinadi — amaliyot ham hammasidan tanlanadi
+function pvsViewableIds(){
+  const p = pvsState.perms;
+  if (!p) return [];
+  if (p.kassa_scope === 'all') return pvsState.kassalar.map(k => k.id);
+  return p.view_kassa_ids;
+}
+
+function pvsGroupKassalar(list){
+  const groups = {};
+  list.forEach(k => {
+    const t = (k.kassa_turi || '').toString().toLowerCase();
+    const key = PVS_TURI.some(g => g.key === t && t !== 'boshqa') ? t : 'boshqa';
+    (groups[key] = groups[key] || []).push(k);
+  });
+  return groups;
+}
+
+function pvsKassaCk(k, checked, disabled, onclick){
+  const sub = k.subtitle ? `<span class="pvs-ksub">${escapeHtml(k.subtitle)}</span>` : '';
+  const title = escapeHtml([k.code, k.name, k.subtitle].filter(Boolean).join(' · '));
+  return `
+<div class="pvs-ck ${checked?'on':''} ${disabled?'dis':''}" title="${title}" ${disabled?'':`onclick="${onclick}"`}>
+<span class="pvs-box"><i class="ti ti-check"></i></span>
+<span class="pvs-ktxt"><span class="pvs-kname">${escapeHtml(k.name || k.code || '—')}</span>${sub}</span>
+</div>`;
+}
+
+// mode: 'view' | 'op'
+function pvsKassaBlock(mode){
+  const p = pvsState.perms;
+  const source = mode === 'op'
+    ? pvsState.kassalar.filter(k => pvsViewableIds().includes(k.id))
+    : pvsState.kassalar;
+  if (!source.length){
+    return `<div class="empty" style="padding:20px 12px"><i class="ti ti-wallet-off"></i><p>${mode==='op'?'Avval ko\'rish kassalarini tanlang':'Kassa ro\'yxati bo\'sh'}</p></div>`;
+  }
+  const selected = mode === 'op' ? p.op_kassa_ids : p.view_kassa_ids;
+  const disabled = mode === 'view' && p.kassa_scope === 'all';
+  const groups = pvsGroupKassalar(source);
+  return PVS_TURI.filter(g => groups[g.key]?.length).map(g => `
+<div class="pvs-grp">
+<div class="pvs-grp-lbl">${escapeHtml(g.label)} · ${groups[g.key].length}</div>
+<div class="pvs-grid wide">
+${groups[g.key].map(k => pvsKassaCk(
+    k,
+    selected.includes(k.id),
+    disabled,
+    `pvsToggleKassa('${mode}','${escapeHtml(k.id)}')`
+  )).join('')}
+</div>
+</div>`).join('');
+}
+
+function pvsRenderDetail(){
+  const box = document.getElementById('pvs-detail');
+  if (!box) return;
+  const user = pvsState.users.find(u => u.id === pvsState.selectedId);
+  if (!user || !pvsState.perms){
+    box.innerHTML = `<div class="empty"><i class="ti ti-user-search"></i><p>Chapdan user tanlang</p></div>`;
+    return;
+  }
+  const p = pvsState.perms;
+  const allPages = p.allowed_pages.length === 0;
+  const opCount = p.op_kassa_ids.length;
+  const viewable = pvsViewableIds();
+
+  box.innerHTML = `
+<div class="pvs-head">
+<div>
+<h3>${escapeHtml(user.full_name || '—')}</h3>
+<p>${escapeHtml(user.role || '—')} · ${allPages ? 'hamma sahifa' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot</p>
+</div>
+<button class="btn primary sm" id="pvs-save" onclick="pvsSave()"><i class="ti ti-check"></i>Saqlash</button>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h">
+<span class="pvs-blk-lbl">Sahifalar</span>
+<div class="pvs-acts">
+<button class="btn sm ghost" onclick="pvsAllPages(true)">Hammasi</button>
+<button class="btn sm ghost" onclick="pvsAllPages(false)" title="Ro'yxatni bo'shatish = cheklovsiz">Cheklovsiz</button>
+</div>
+</div>
+<div class="pvs-grid">
+${PVS_PAGES.map(pg => pvsKassaCk(
+    { name: pg.label },
+    p.allowed_pages.includes(pg.key),
+    false,
+    `pvsTogglePage('${pg.key}')`
+  )).join('')}
+</div>
+<div class="pvs-hint">${allPages
+    ? '<i class="ti ti-info-circle"></i> Bo\'sh ro\'yxat = <b>hamma sahifa ochiq</b> (cheklov yo\'q).'
+    : 'Faqat belgilangan sahifalar ochiq qoladi. Hammasini olib tashlasangiz — cheklov bekor bo\'ladi.'}</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h"><span class="pvs-blk-lbl">Ko'rish kassalari</span></div>
+<div class="pvs-radios">
+<div class="pvs-radio ${p.kassa_scope==='all'?'on':''}" onclick="pvsSetScope('all')"><span class="pvs-dot"></span>Barcha kassalar</div>
+<div class="pvs-radio ${p.kassa_scope==='list'?'on':''}" onclick="pvsSetScope('list')"><span class="pvs-dot"></span>Faqat tanlanganlar${p.kassa_scope==='list'?` · ${p.view_kassa_ids.length}`:''}</div>
+</div>
+${pvsKassaBlock('view')}
+${p.kassa_scope==='all' ? '<div class="pvs-hint">Barcha kassalar rejimida ro\'yxat o\'chirilgan — user hamma kassani ko\'radi.</div>' : ''}
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h">
+<span class="pvs-blk-lbl">Amaliyot kassalari · ${opCount}</span>
+<div class="pvs-acts">
+<button class="btn sm ghost" onclick="pvsAllOps(true)">Hammasi</button>
+<button class="btn sm ghost" onclick="pvsAllOps(false)">Tozalash</button>
+</div>
+</div>
+${pvsKassaBlock('op')}
+<div class="pvs-hint">Transfer / kirim / chiqim shu kassalar bilan qilinadi. Faqat ko'rish ro'yxatidagi ${viewable.length} kassadan tanlanadi — ko'rishdan olib tashlansa, bu yerdan ham avtomatik o'chadi.</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h"><span class="pvs-blk-lbl">Konvert</span></div>
+<div class="perm-row" style="border-bottom:none;padding-top:0">
+<span class="toggle ${p.can_convert?'on':''}" onclick="pvsToggleConvert()"><span class="toggle-knob"></span></span>
+<div class="perm-name">Valyuta konvert qilish<div class="perm-desc">O'chirilsa — konvert tugmasi yashirinadi va server rad etadi</div></div>
+</div>
+</div>
+`;
+}
+
+function pvsTogglePage(key){
+  const a = pvsState.perms.allowed_pages;
+  const i = a.indexOf(key);
+  if (i >= 0) a.splice(i, 1); else a.push(key);
+  pvsRenderDetail();
+}
+
+// on=true  → 12 sahifani ochiq deb belgilaydi
+// on=false → ro'yxatni bo'shatadi (bo'sh = cheklovsiz, hammasi ochiq)
+function pvsAllPages(on){
+  pvsState.perms.allowed_pages = on ? PVS_PAGES.map(pg => pg.key) : [];
+  pvsRenderDetail();
+}
+
+function pvsSetScope(scope){
+  const p = pvsState.perms;
+  p.kassa_scope = scope;
+  if (scope === 'all'){
+    p.view_kassa_ids = [];
+  } else {
+    // 'all' dan qaytganda op ro'yxati bo'sh view bilan mos kelishi uchun tozalanadi
+    p.op_kassa_ids = p.op_kassa_ids.filter(id => p.view_kassa_ids.includes(id));
+  }
+  pvsRenderDetail();
+}
+
+function pvsToggleKassa(mode, id){
+  const p = pvsState.perms;
+  if (mode === 'view'){
+    if (p.kassa_scope !== 'list') return;
+    const i = p.view_kassa_ids.indexOf(id);
+    if (i >= 0){
+      p.view_kassa_ids.splice(i, 1);
+      // view'dan chiqsa — op'dan ham avtomatik o'chadi
+      p.op_kassa_ids = p.op_kassa_ids.filter(x => x !== id);
+    } else {
+      p.view_kassa_ids.push(id);
+    }
+  } else {
+    if (!pvsViewableIds().includes(id)) return;
+    const i = p.op_kassa_ids.indexOf(id);
+    if (i >= 0) p.op_kassa_ids.splice(i, 1); else p.op_kassa_ids.push(id);
+  }
+  pvsRenderDetail();
+}
+
+function pvsAllOps(on){
+  pvsState.perms.op_kassa_ids = on ? pvsViewableIds().slice() : [];
+  pvsRenderDetail();
+}
+
+function pvsToggleConvert(){
+  pvsState.perms.can_convert = !pvsState.perms.can_convert;
+  pvsRenderDetail();
+}
+
+async function pvsSave(){
+  const p = pvsState.perms;
+  if (!p || pvsState.saving) return;
+  const btn = document.getElementById('pvs-save');
+  // op ⊆ view kafolati (server ham majburlaydi, lekin yubormaymiz ham)
+  const viewable = pvsViewableIds();
+  const payload = {
+    user_id:        p.user_id,
+    allowed_pages:  p.allowed_pages.slice(),
+    kassa_scope:    p.kassa_scope,
+    view_kassa_ids: p.kassa_scope === 'list' ? p.view_kassa_ids.slice() : [],
+    op_kassa_ids:   p.op_kassa_ids.filter(id => viewable.includes(id)),
+    can_convert:    !!p.can_convert
+  };
+  pvsState.saving = true;
+  if (btn){ btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:13px;height:13px;margin:0;border-width:1.5px"></div>Saqlanmoqda'; }
+  try {
+    // data — JSON matn. api() ichidagi URLSearchParams uni encodeURIComponent
+    // bilan bir xil kodlaydi; qo'lda yana kodlasak ikki marta bo'lib ketadi ('%' → '%25').
+    const r = await api('aros-provodka-perms-save', { uid: UID, data: JSON.stringify(payload) });
+    if (!r.ok) throw new Error(r.error || 'Saqlanmadi');
+    pvsState.perms = pvsNormPerms(payload, p.user_id);
+    toast('Ruxsatlar saqlandi');
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+  } finally {
+    pvsState.saving = false;
+    pvsRenderDetail();
+  }
 }
 
 // =========================================================
