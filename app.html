@@ -562,6 +562,9 @@
 
 <div id="loadingView" class="loading">Yuklanmoqda…</div>
 
+<!-- Workspace topilmadi / xato holati (cheksiz loading o'rniga) -->
+<div id="noWsView" class="loading" style="display:none;flex-direction:column;gap:16px;padding:24px;text-align:center;"></div>
+
 <!-- AUTH -->
 <div class="shell" id="authShell" style="display:none">
   <aside class="brand">
@@ -1871,8 +1874,47 @@ function setMode(m) {
   hideMsg($('authMsg'));
 }
 function switchToLoginKeepEmail() { setMode('login'); $('password').value = ''; $('password').focus(); }
-function showAuth() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show'); $('authStep').style.display = 'block'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'none'; }
-function showApp() { $('loadingView').style.display = 'none'; $('authShell').style.display = 'none'; $('appView').classList.add('show'); }
+function showAuth() { $('loadingView').style.display = 'none'; $('noWsView').style.display = 'none'; $('authShell').style.display = 'grid'; $('appView').classList.remove('show'); $('authStep').style.display = 'block'; $('forgotStep').style.display = 'none'; $('resetStep').style.display = 'none'; }
+function showApp() { $('loadingView').style.display = 'none'; $('noWsView').style.display = 'none'; $('authShell').style.display = 'none'; $('appView').classList.add('show'); }
+
+// Workspace topilmadi yoki bootstrap xatosi — cheksiz "Yuklanmoqda…" o'rniga
+// aniq ekran ko'rsatamiz. kind: 'empty' (kompaniya yaratish) | 'error' (xato + retry)
+function showNoWs(kind, detail) {
+  $('loadingView').style.display = 'none';
+  $('authShell').style.display = 'none';
+  $('appView').classList.remove('show');
+  const v = $('noWsView');
+  if (!v) return;
+  v.style.display = 'flex';
+  if (kind === 'error') {
+    v.innerHTML =
+      '<div style="font-size:40px;line-height:1">⚠️</div>' +
+      '<div style="font-size:16px;font-weight:600;color:var(--ink)">Ma\'lumotlarni yuklab bo\'lmadi</div>' +
+      '<div style="font-size:13.5px;max-width:380px;line-height:1.5">' +
+        escapeHtml(detail || 'Server bilan bog\'lanishda xatolik. Internet aloqangizni tekshirib, qayta urinib ko\'ring.') + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:6px">' +
+        '<button class="btn" onclick="retryBootstrap(this)">Qaytadan urinish</button>' +
+        '<button class="btn secondary" onclick="doLogout()">Chiqish</button>' +
+      '</div>';
+  } else {
+    v.innerHTML =
+      '<div style="font-size:40px;line-height:1">🏢</div>' +
+      '<div style="font-size:16px;font-weight:600;color:var(--ink)">Kompaniyangizni yarating</div>' +
+      '<div style="font-size:13.5px;max-width:380px;line-height:1.5">Boshlash uchun kompaniya (workspace) oching — bir necha soniya oladi. 14 kun bepul.</div>' +
+      '<div style="display:flex;gap:8px;margin-top:6px">' +
+        '<button class="btn" onclick="openNewWs()">Kompaniya yaratish</button>' +
+        '<button class="btn secondary" onclick="doLogout()">Chiqish</button>' +
+      '</div>' +
+      (detail ? '<div style="font-size:12px;color:var(--muted);max-width:380px">' + escapeHtml(detail) + '</div>' : '');
+  }
+}
+
+async function retryBootstrap(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Yuklanmoqda…'; }
+  $('noWsView').style.display = 'none';
+  $('loadingView').style.display = 'flex';
+  await bootstrap();
+}
 function goForgot() { $('loadingView').style.display='none'; $('authShell').style.display='grid'; $('appView').classList.remove('show'); $('authStep').style.display='none'; $('forgotStep').style.display='block'; $('resetStep').style.display='none'; $('fEmail').value = $('email').value.trim(); hideMsg($('fMsg')); }
 function backToLogin() { setMode('login'); showAuth(); }
 function showResetStep() { $('loadingView').style.display='none'; $('authShell').style.display='grid'; $('appView').classList.remove('show'); $('authStep').style.display='none'; $('forgotStep').style.display='none'; $('resetStep').style.display='block'; hideMsg($('rMsg')); }
@@ -2261,33 +2303,60 @@ async function notifyN8n(event, payload) {
 }
 
 async function bootstrap() {
-  const { data: { user } } = await sb.auth.getUser();
-  me = user;
-  if (!me) { showAuth(); return; }
+  // Har qadam xatosi ushlanadi va foydalanuvchiga ko'rinadi (jimgina yiqilmaydi,
+  // cheksiz "Yuklanmoqda…" da qolib ketmaydi).
+  try {
+    const { data: { user }, error: uErr } = await sb.auth.getUser();
+    if (uErr) throw new Error('Sessiyani tekshirib bo\'lmadi: ' + uErr.message);
+    me = user;
+    if (!me) { showAuth(); return; }
 
-  const { data: prof } = await sb.from('profiles').select('*').eq('id', me.id).maybeSingle();
-  myProfile = prof || { id: me.id };
+    // Profil — bo'lmasa o'zimiz yaratamiz (profiles_self_insert policy: id = auth.uid()).
+    // Yangi signup'da profil triggeri ulgurmasligi mumkin — shu yerda kafolatlaymiz.
+    let { data: prof, error: pErr } = await sb.from('profiles').select('*').eq('id', me.id).maybeSingle();
+    if (pErr) throw new Error('Profil o\'qishda xato: ' + pErr.message);
+    if (!prof) {
+      const md = me.user_metadata || {};
+      const fullName = (md.full_name || md.name || '').trim();
+      const { data: created, error: insErr } = await sb.from('profiles')
+        .insert({ id: me.id, full_name: fullName || null })
+        .select().single();
+      // 23505 = allaqachon mavjud (trigger ulgurgan) — bu xato emas
+      if (insErr && insErr.code !== '23505') throw new Error('Profil yaratishda xato: ' + insErr.message);
+      prof = created || { id: me.id, full_name: fullName };
+    }
+    myProfile = prof;
 
-  await loadWorkspaces();
-  if (!workspaces.length) {
-    await new Promise(r => setTimeout(r, 800));
     await loadWorkspaces();
+    if (!workspaces.length) {
+      // Signup triggeri (personal workspace) ulgurishi uchun bir marta kutamiz
+      await new Promise(r => setTimeout(r, 800));
+      await loadWorkspaces();
+    }
+    if (!workspaces.length) {
+      // Xato emas — shunchaki workspace yo'q → kompaniya yaratish onboarding'i
+      showNoWs('empty');
+      return;
+    }
+
+    const stored = localStorage.getItem('current_ws_' + me.id);
+    currentWs = workspaces.find(w => w.id === stored) || workspaces.find(w => w.kind === 'personal') || workspaces[0];
+
+    await loadCurrentContext();
+    showApp();
+    goPage('dashboard');
+    loadNotifs();
+    if (window._bellTimer) clearInterval(window._bellTimer);
+    window._bellTimer = setInterval(loadNotifs, 30000);
+  } catch (e) {
+    console.error('bootstrap xato:', e);
+    showNoWs('error', e && e.message ? e.message : String(e));
   }
-  if (!workspaces.length) { toast('Workspace topilmadi — qaytadan kiring', 'err'); return; }
-
-  const stored = localStorage.getItem('current_ws_' + me.id);
-  currentWs = workspaces.find(w => w.id === stored) || workspaces.find(w => w.kind === 'personal') || workspaces[0];
-
-  await loadCurrentContext();
-  showApp();
-  goPage('dashboard');
-  loadNotifs();
-  if (window._bellTimer) clearInterval(window._bellTimer);
-  window._bellTimer = setInterval(loadNotifs, 30000);
 }
 
 async function loadWorkspaces() {
-  const { data } = await sb.from('workspaces').select('*').order('kind', { ascending: true }).order('created_at', { ascending: true });
+  const { data, error } = await sb.from('workspaces').select('*').order('kind', { ascending: true }).order('created_at', { ascending: true });
+  if (error) throw new Error('Kompaniyalar ro\'yxatini o\'qishda xato: ' + error.message);
   workspaces = data || [];
 }
 
@@ -2724,7 +2793,12 @@ async function onbFinish() {
     currentWs = workspaces.find(w => w.id === ws.id);
     await loadCurrentContext();
     closeNewWs();
+    showApp();            // no-workspace holatidan yaratilgan bo'lsa — app'ni ko'rsatamiz
     goPage('dashboard');
+    // Yangi kompaniya uchun bildirishnoma taymerini ham ishga tushiramiz
+    loadNotifs();
+    if (window._bellTimer) clearInterval(window._bellTimer);
+    window._bellTimer = setInterval(loadNotifs, 30000);
     toast('🎉 Kompaniya yaratildi! Xush kelibsiz.', 'ok');
   } catch (e) {
     showMsg($('newWsMsg'), translateErr(e.message), 'err');
