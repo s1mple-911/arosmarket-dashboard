@@ -1763,6 +1763,8 @@ function pvsNormPerms(p, userId){
     kassa_scope:    p.kassa_scope === 'list' ? 'list' : 'all',
     view_kassa_ids: Array.isArray(p.view_kassa_ids) ? p.view_kassa_ids.slice() : [],
     op_kassa_ids:   Array.isArray(p.op_kassa_ids)   ? p.op_kassa_ids.slice()   : [],
+    filial_scope:   p.filial_scope === 'list' ? 'list' : 'all',
+    filial_ids:     Array.isArray(p.filial_ids)     ? p.filial_ids.slice()     : [],
     can_convert:    p.can_convert !== false
   };
 }
@@ -1847,6 +1849,28 @@ ${groups[g.key].map(k => pvsKassaCk(
 </div>`).join('');
 }
 
+// FILIALLAR — yangi endpoint kerak emas: kassalar ro'yxatidan kassa_turi='filial'
+// (5201–5231) filtrlanadi. Bu op_kassa'dan alohida — faqat xarajat metadata'si.
+function pvsFilialList(){
+  return pvsState.kassalar.filter(k => (k.kassa_turi || '').toString().toLowerCase() === 'filial');
+}
+
+function pvsFilialBlock(){
+  const p = pvsState.perms;
+  if (p.filial_scope !== 'list') return '';
+  const filials = pvsFilialList();
+  if (!filials.length) return '<div class="pvs-hint">Filial kassalari topilmadi (kassa_turi=\'filial\').</div>';
+  return `
+<div class="pvs-grid wide">
+${filials.map(k => pvsKassaCk(
+    k,
+    p.filial_ids.includes(k.id),
+    false,
+    `pvsToggleFilial('${escapeHtml(k.id)}')`
+  )).join('')}
+</div>`;
+}
+
 function pvsRenderDetail(){
   const box = document.getElementById('pvs-detail');
   if (!box) return;
@@ -1864,7 +1888,7 @@ function pvsRenderDetail(){
 <div class="pvs-head">
 <div>
 <h3>${escapeHtml(user.full_name || '—')}</h3>
-<p>${escapeHtml(user.role || '—')} · ${allPages ? 'hamma sahifa' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot</p>
+<p>${escapeHtml(user.role || '—')} · ${allPages ? 'hamma sahifa' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot · ${p.filial_scope==='all' ? 'hamma filial' : p.filial_ids.length + ' filial'}</p>
 </div>
 <button class="btn primary sm" id="pvs-save" onclick="pvsSave()"><i class="ti ti-check"></i>Saqlash</button>
 </div>
@@ -1910,6 +1934,22 @@ ${p.kassa_scope==='all' ? '<div class="pvs-hint">Barcha kassalar rejimida ro\'yx
 </div>
 ${pvsKassaBlock('op')}
 <div class="pvs-hint">Transfer / kirim / chiqim shu kassalar bilan qilinadi. Faqat ko'rish ro'yxatidagi ${viewable.length} kassadan tanlanadi — ko'rishdan olib tashlansa, bu yerdan ham avtomatik o'chadi.</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h">
+<span class="pvs-blk-lbl">Filiallar</span>
+${p.filial_scope==='list' ? `<div class="pvs-acts">
+<button class="btn sm ghost" onclick="pvsAllFilials(true)">Hammasi</button>
+<button class="btn sm ghost" onclick="pvsAllFilials(false)">Tozalash</button>
+</div>` : ''}
+</div>
+<div class="pvs-radios">
+<div class="pvs-radio ${p.filial_scope==='all'?'on':''}" onclick="pvsSetFilialScope('all')"><span class="pvs-dot"></span>Barcha filiallar</div>
+<div class="pvs-radio ${p.filial_scope==='list'?'on':''}" onclick="pvsSetFilialScope('list')"><span class="pvs-dot"></span>Faqat tanlanganlar${p.filial_scope==='list'?` · ${p.filial_ids.length}`:''}</div>
+</div>
+${pvsFilialBlock()}
+<div class="pvs-hint">Xarajatga qaysi filial(lar) biriktirilishi mumkinligini belgilaydi (metadata — pul harakati emas). ${p.filial_scope==='all' ? 'Barcha filiallar rejimida — user hamma filialni tanlay oladi.' : 'Faqat belgilangan filiallar hodim.html multiselect\'ida ko\'rinadi.'}</div>
 </div>
 
 <div class="pvs-blk">
@@ -1973,6 +2013,25 @@ function pvsAllOps(on){
   pvsRenderDetail();
 }
 
+function pvsSetFilialScope(scope){
+  pvsState.perms.filial_scope = scope;
+  if (scope === 'all') pvsState.perms.filial_ids = [];
+  pvsRenderDetail();
+}
+
+function pvsToggleFilial(id){
+  const p = pvsState.perms;
+  if (p.filial_scope !== 'list') return;
+  const i = p.filial_ids.indexOf(id);
+  if (i >= 0) p.filial_ids.splice(i, 1); else p.filial_ids.push(id);
+  pvsRenderDetail();
+}
+
+function pvsAllFilials(on){
+  pvsState.perms.filial_ids = on ? pvsFilialList().map(k => k.id) : [];
+  pvsRenderDetail();
+}
+
 function pvsToggleConvert(){
   pvsState.perms.can_convert = !pvsState.perms.can_convert;
   pvsRenderDetail();
@@ -1990,6 +2049,8 @@ async function pvsSave(){
     kassa_scope:    p.kassa_scope,
     view_kassa_ids: p.kassa_scope === 'list' ? p.view_kassa_ids.slice() : [],
     op_kassa_ids:   p.op_kassa_ids.filter(id => viewable.includes(id)),
+    filial_scope:   p.filial_scope,
+    filial_ids:     p.filial_scope === 'list' ? p.filial_ids.slice() : [],
     can_convert:    !!p.can_convert
   };
   pvsState.saving = true;
