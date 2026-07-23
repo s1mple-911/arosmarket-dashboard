@@ -214,7 +214,9 @@ input,select,textarea{font:inherit;color:inherit}
 .pvs-user.locked{cursor:default;opacity:0.7}
 .pvs-user.locked:hover{background:transparent}
 .pvs-user i{font-size:15px;flex-shrink:0}
-.pvs-uname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-uname{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.pvs-uname>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-usub{font-size:11px;color:var(--text-3);font-weight:400}
 .pvs-detail{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
 .pvs-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--border)}
 .pvs-head h3{font-size:16px;font-weight:500}
@@ -1722,6 +1724,15 @@ async function renderProvodkaSozlama(root){
   else pvsRenderDetail();
 }
 
+// full_name bor bo'lsa: ism (asosiy) + email (kulrang ostida); bo'lmasa: faqat label (email/id)
+function pvsUserName(u){
+  const fn = (u.full_name || '').trim();
+  const label = escapeHtml(u.label || u.email || u.id || '—');
+  if (!fn) return `<span>${label}</span>`;
+  const email = (u.email || '').trim();
+  return `<span>${escapeHtml(fn)}</span>${email ? `<span class="pvs-usub">${escapeHtml(email)}</span>` : ''}`;
+}
+
 function pvsRenderUsers(){
   const box = document.getElementById('pvs-users');
   if (!box) return;
@@ -1731,7 +1742,7 @@ function pvsRenderUsers(){
   }
   box.innerHTML = pvsState.users.map(u => {
     const isAdmin = u.role === 'admin';
-    const name = escapeHtml(u.full_name || '—');
+    const name = pvsUserName(u);
     if (isAdmin) return `
 <div class="pvs-user locked" title="Admin — doim to'liq huquqli, cheklanmaydi">
 <i class="ti ti-shield-check" style="color:var(--ok-text)"></i>
@@ -1887,7 +1898,8 @@ function pvsRenderDetail(){
   box.innerHTML = `
 <div class="pvs-head">
 <div>
-<h3>${escapeHtml(user.full_name || '—')}</h3>
+<h3>${escapeHtml((user.full_name || '').trim() || user.label || user.email || user.id || '—')}</h3>
+${(user.full_name || '').trim() && (user.email || '').trim() ? `<p style="color:var(--text-3);font-size:11.5px;margin:2px 0 0">${escapeHtml(user.email)}</p>` : ''}
 <p>${escapeHtml(user.role || '—')} · ${allPages ? 'hamma sahifa' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot · ${p.filial_scope==='all' ? 'hamma filial' : p.filial_ids.length + ' filial'}</p>
 </div>
 <button class="btn primary sm" id="pvs-save" onclick="pvsSave()"><i class="ti ti-check"></i>Saqlash</button>
