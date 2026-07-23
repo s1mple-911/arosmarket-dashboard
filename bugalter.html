@@ -627,7 +627,10 @@ function renderFiliallarTab(d) {
   const renderFilialCard = f => {
     const statusLabel = STATUS_LABELS[f.status] || '';
     const showAmount = f.status === 'overdue' || f.status === 'pending' || f.status === 'open_today';
-    const amount = f.current_open_amount || 0;
+    // Yopilmagan smena (overdue) uchun ochiq smena balansi; boshqalar uchun current_open_amount
+    const amount = f.status === 'overdue'
+      ? Math.max(0, f.current_open_balance || 0)
+      : (f.current_open_amount || f.current_open_balance || 0);
     let statusLine = statusLabel;
     if (f.status === 'overdue') statusLine = `${statusLabel} <span class="days-badge">${f.current_open_days} kun</span>`;
     else if (f.status === 'open_today' && f.current_open_opened_at) statusLine = `${statusLabel} · ${fmtDate(f.current_open_opened_at)}`;
