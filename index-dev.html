@@ -2577,7 +2577,7 @@ function renderDash(){
     html+='<div class="progress-card">';
     html+='<div class="pc-top">';
     html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+profBadgeIdx+'</div>';
-    html+='<div class="pc-plan">'+fmt(fd.bajarildi)+' so\'m</div></div>';
+    html+='<div class="pc-plan">'+fmt(fd.plan)+' so\'m</div></div>';
     html+='<div style="display:flex;align-items:center;gap:10px">';
     html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px">📅</div>';
     html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'%</div>';
