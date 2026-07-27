@@ -89,7 +89,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <script>
-var HODIM_API = 'https://n8n.arosmarket.com/webhook/aros-hodim-clients';
+var HODIM_API = 'https://n8n.arosmarket.com/webhook/aros-hodim-stats-v2';
 var STATS_API = 'https://n8n.arosmarket.com/webhook/aros-cache-stats';
 var hodimData = null;
 var uid = new URLSearchParams(window.location.search).get('uid') || '';
@@ -98,6 +98,26 @@ var OY = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr
 var now = new Date(new Date().getTime() + 5*60*60*1000);
 var curOy = now.getUTCMonth() + 1;
 var curYil = now.getUTCFullYear();
+
+// BI-MONTHLY (Iyun 2026 dan)
+var BIMONTHLY_START_YIL = 2026, BIMONTHLY_START_OY = 6;
+function isBimonthly(y, m){
+  return (y > BIMONTHLY_START_YIL) || (y === BIMONTHLY_START_YIL && m >= BIMONTHLY_START_OY);
+}
+function defaultYarim(y, m){
+  if(!isBimonthly(y, m)) return 0;
+  if(y === now.getUTCFullYear() && m === (now.getUTCMonth()+1)){
+    return now.getUTCDate() <= 15 ? 1 : 2;
+  }
+  return 1;
+}
+var curYarim = defaultYarim(curYil, curOy);
+function getOyNomi(m, y, yarim){
+  if(!yarim) return OY[m-1] + ' ' + y;
+  return OY[m-1] + ' ' + yarim + '-yarim ' + y;
+}
+function buildYarimSuffix(){ return curYarim ? '&yarim=' + curYarim : ''; }
+
 var userIsm = '';
 var userLavozim = '';
 var oylikPlan = 0;
@@ -119,25 +139,43 @@ function goBack(){
 function setupOySelect(){
   var sel = document.getElementById('oy-select');
   sel.innerHTML = '';
-  for(var i=1;i<=12;i++){
-    var o = document.createElement('option');
-    o.value = i;
-    o.textContent = OY[i-1];
-    if(i===curOy) o.selected = true;
-    sel.appendChild(o);
+  for(var y=2026;y<=curYil;y++){
+    var endM = y===curYil ? curOy : 12;
+    for(var m=1;m<=endM;m++){
+      if(isBimonthly(y, m)){
+        // Joriy oy bo'lsa faqat hozirgi yarimgacha ko'rsatish
+        var maxYarim = (y===curYil && m===curOy) ? defaultYarim(y, m) : 2;
+        for(var yr=1; yr<=maxYarim; yr++){
+          var o = document.createElement('option');
+          o.value = y+'-'+m+'-'+yr;
+          o.textContent = OY[m-1] + ' ' + yr + '-yarim ' + y;
+          if(y===curYil && m===curOy && yr===curYarim) o.selected = true;
+          sel.appendChild(o);
+        }
+      } else {
+        var o = document.createElement('option');
+        o.value = y+'-'+m+'-0';
+        o.textContent = OY[m-1] + ' ' + y;
+        sel.appendChild(o);
+      }
+    }
   }
+  // Eski yil-select yashirin qilamiz
   var ysel = document.getElementById('yil-select');
-  ysel.innerHTML = '';
-  for(var y=curYil-1;y<=curYil+1;y++){
-    var o = document.createElement('option');
-    o.value = y;
-    o.textContent = y;
-    if(y===curYil) o.selected = true;
-    ysel.appendChild(o);
-  }
+  if(ysel) ysel.style.display = 'none';
 }
 
-function changeOy(v){ curOy = parseInt(v); load(); }
+function changeOy(v){
+  var p = String(v).split('-');
+  if(p.length === 3){
+    curYil = parseInt(p[0]);
+    curOy = parseInt(p[1]);
+    curYarim = parseInt(p[2]) || 0;
+  } else {
+    curOy = parseInt(v);
+  }
+  load();
+}
 function changeYil(v){ curYil = parseInt(v); load(); }
 
 function loadUserInfo(){
@@ -173,7 +211,7 @@ function load(){
 function loadHodimData(){
   var main = document.getElementById('main');
   // uid + oy/yil — joriy oy: Aros API; o'tgan oy: history PG
-  fetch(HODIM_API+'?uid='+encodeURIComponent(uid)+(wid?'&wid='+wid:'')+'&oy='+curOy+'&yil='+curYil)
+  fetch(HODIM_API+'?uid='+encodeURIComponent(uid)+(wid?'&wid='+wid:'')+'&oy='+curOy+'&yil='+curYil+buildYarimSuffix())
     .then(function(r){return r.text();})
     .then(function(txt){
       var d;
@@ -311,14 +349,21 @@ function renderHodim(d){
   // KPI bonus
   var filialFoizTxt = isArchive ? d.filial_foiz : d.filial_foiz;
   html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
-  html += '<span style="color:var(--text2)">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(filial '+filialFoizTxt+'% → '+(d.kpi_foiz||0)+'%)</span></span>';
+  html += '<span style="color:var(--text2)">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(shaxsiy savdo × '+(d.kpi_foiz||0)+'%, filial '+filialFoizTxt+'%)</span></span>';
   html += '<span style="font-weight:700;color:'+((d.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+(d.kpi_bonus>0?'+':'')+fmt(d.kpi_bonus||0)+' so\'m</span>';
   html += '</div>';
-  // Boshqaruv bonus (faqat boshliq)
+  // Boshqaruv bonus (faqat boshliq) — endi FILIAL savdo'ga ko'paytiriladi
   if(isBoshliq){
     html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
-    html += '<span style="color:var(--text2)">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">('+(d.boshqaruv_foiz||0)+'%)</span></span>';
+    html += '<span style="color:var(--text2)">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">(filial savdo × '+(d.boshqaruv_foiz||0)+'%)</span></span>';
     html += '<span style="font-weight:700;color:'+((d.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+(d.boshqaruv_bonus>0?'+':'')+fmt(d.boshqaruv_bonus||0)+' so\'m</span>';
+    html += '</div>';
+  }
+  // Fidoyilik bonusi — faqat > 0 bo'lsa
+  if((d.fidoyilik||0) > 0){
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+    html += '<span style="color:var(--text2)">💎 Fidoyilik bonusi</span>';
+    html += '<span style="font-weight:700;color:#fbbf24">+'+fmt(d.fidoyilik)+' so\'m</span>';
     html += '</div>';
   }
   html += '</div>';
@@ -338,6 +383,9 @@ function renderHodim(d){
     html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz KPI ('+(d.prognoz_kpi_foiz||0)+'%)</span><span style="font-weight:700;color:var(--green)">+'+fmt(d.prognoz_kpi_bonus||0)+'</span></div>';
     if(isBoshliq){
       html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz boshqaruv ('+(d.prognoz_boshqaruv_foiz||0)+'%)</span><span style="font-weight:700;color:var(--purple)">+'+fmt(d.prognoz_boshqaruv_bonus||0)+'</span></div>';
+    }
+    if((d.prognoz_fidoyilik||d.fidoyilik||0) > 0){
+      html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">💎 Prognoz fidoyilik</span><span style="font-weight:700;color:#fbbf24">+'+fmt(d.prognoz_fidoyilik||d.fidoyilik||0)+'</span></div>';
     }
     html += '</div></details>';
   }
