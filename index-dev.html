@@ -253,6 +253,7 @@ var DONE_LIST_API = 'https://n8n.arosmarket.com/webhook/aros-debtor-done-list';
 var CLIENT_NAME_API  = 'https://n8n.arosmarket.com/webhook/aros-client-name';
 var COUNTER_API      = 'https://n8n.arosmarket.com/webhook/aros-collect-counter';
 var COUNTER_DETAIL_API = 'https://n8n.arosmarket.com/webhook/aros-collect-detail';
+var COLLECT_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-collect-history';
 var v2Mode = false;               // V2 rejim yoqilganmi
 var v2Loaded = false, v2Loading = false;
 var v2Debtors = [];               // barcha qarzdorlar (cache dan)
@@ -687,6 +688,7 @@ function renderCounterDetail(){
   html += '<div onclick="closeV2Modal()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
   html += '<div style="flex:1"><div style="font-size:16px;font-weight:800;color:var(--text)">Bugun yig\'ilgan</div>';
   html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+users.length+' mijoz · '+cnt+' ta mahsulot'+(retTotal>0?' · <span style="color:#FF9F0A;font-weight:700">↩️'+retTotal+' qaytarildi</span>':'')+'</div></div>';
+    html += '<div onclick="openCollectHistory()" title="Tarix" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0">📅</div>';
   html += '</div>';
   // 3 section tab (bosiladigan filter)
   var tab = function(sec,label,val,color,active){
@@ -802,7 +804,7 @@ function toggleCounterRow(el){
   }
 
   // backend
-  fetch(DELIVER_API+'?wid='+_wh+'&user_id='+userId+'&action='+action+'&_='+Date.now(), {keepalive:true}).catch(function(){});
+  fetch(DELIVER_API+'?wid='+_wh+'&user_id='+userId+'&action='+action+hodimSuffix()+'&_='+Date.now(), {keepalive:true}).catch(function(){});
   loadCounter();
 
   // animatsiya: chiqib ketadi, keyin re-render
@@ -878,11 +880,15 @@ function openCollectUserModal(userId, nm, qolda, topsh){
 
 // Mijozning bugungi itemlarini Qo'lda ⇄ Topshirildi (manual, Aros'siz)
 var DELIVER_API = 'https://n8n.arosmarket.com/webhook/aros-collect-deliver';
+function hodimSuffix(){
+  var hism = (userData && userData.ism) ? userData.ism : '';
+  return '&hodim_id='+encodeURIComponent(uid||'')+'&hodim_ism='+encodeURIComponent(hism);
+}
 function deliverUser(userId, nm, action){
   var _wh = wid || userData.warehouse_id || 0;
   var btn = document.getElementById('deliverBtn');
   if(btn){ btn.disabled=true; btn.style.opacity='0.6'; btn.textContent = (action==='deliver'?'Topshirilyapti...':'Qaytarilyapti...'); }
-  fetch(DELIVER_API+'?wid='+_wh+'&user_id='+userId+'&action='+action+'&_='+Date.now())
+  fetch(DELIVER_API+'?wid='+_wh+'&user_id='+userId+'&action='+action+hodimSuffix()+'&_='+Date.now())
     .then(function(r){return r.json();})
     .then(function(){
       loadCounter();        // Jami/Qo'lda/Topshirildi yangilanadi
@@ -892,6 +898,111 @@ function deliverUser(userId, nm, action){
       if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.textContent = (action==='deliver'?'✅ Kassaga topshirildi':'↩️ Qo\'ldaga qaytarish'); }
       alert("Xato — qayta urinib ko'ring");
     });
+}
+
+// ===== TOPSHIRISH TARIXI (kunlik, kim yig'di) =====
+var collectHistDate = '';
+function ymdLocal(dt){ return dt.getUTCFullYear()+'-'+('0'+(dt.getUTCMonth()+1)).slice(-2)+'-'+('0'+dt.getUTCDate()).slice(-2); }
+function openCollectHistory(){
+  var nowUZB = new Date(new Date().getTime()+5*60*60*1000);
+  var y = new Date(nowUZB.getTime()-24*60*60*1000);
+  collectHistDate = ymdLocal(y);
+  var m = document.getElementById('collectHistModal');
+  if(!m){
+    m = document.createElement('div');
+    m.id = 'collectHistModal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column';
+    document.body.appendChild(m);
+  }
+  m.style.display = 'flex';
+  loadCollectHistory();
+}
+function closeCollectHistory(){ var m=document.getElementById('collectHistModal'); if(m) m.style.display='none'; }
+function collectHistShift(days){
+  var d = new Date(collectHistDate+'T00:00:00Z');
+  d = new Date(d.getTime()+days*24*60*60*1000);
+  var nowUZB = new Date(new Date().getTime()+5*60*60*1000);
+  var todayStr = ymdLocal(nowUZB);
+  var nd = ymdLocal(d);
+  if(nd > todayStr) return;
+  collectHistDate = nd;
+  loadCollectHistory();
+}
+function loadCollectHistory(){
+  var _wh = wid || userData.warehouse_id || 0;
+  var m = document.getElementById('collectHistModal');
+  m.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3)">Yuklanmoqda...</div>';
+  fetch(COLLECT_HISTORY_API+'?wid='+_wh+'&date='+collectHistDate+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){ renderCollectHistory(d); })
+    .catch(function(){ m.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3)"><div>Xato — qayta urinib ko\'ring</div><div onclick="closeCollectHistory()" style="padding:8px 18px;background:var(--bg3);border-radius:10px;cursor:pointer">Yopish</div></div>'; });
+}
+function renderCollectHistory(d){
+  var m = document.getElementById('collectHistModal');
+  var pay = d.pay_breakdown || {cash:0,card:0,other:0};
+  var hodimlar = d.hodimlar || [];
+  var items = d.items || [];
+  var dparts = (collectHistDate||'').split('-');
+  var oyNom = ['','Yan','Fev','Mar','Apr','May','Iyun','Iyul','Avg','Sen','Okt','Noy','Dek'];
+  var sanaLabel = dparts.length===3 ? (parseInt(dparts[2])+' '+oyNom[parseInt(dparts[1])]) : collectHistDate;
+
+  var h = '';
+  h += '<div style="background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px;position:sticky;top:0;z-index:10">';
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
+  h += '<div onclick="closeCollectHistory()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
+  h += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--text)">Topshirish tarixi</div></div>';
+  h += '<div style="width:34px;flex-shrink:0"></div>';
+  h += '</div>';
+  h += '<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px">';
+  h += '<div onclick="collectHistShift(-1)" style="width:36px;height:36px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">‹</div>';
+  h += '<div style="font-size:15px;font-weight:800;color:var(--text);min-width:110px;text-align:center">'+sanaLabel+'</div>';
+  h += '<div onclick="collectHistShift(1)" style="width:36px;height:36px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">›</div>';
+  h += '</div>';
+  h += '<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:2px">';
+  h += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;font-weight:700">Jami yig\'ilgan</div>';
+  h += '<div style="font-size:22px;font-weight:900;color:#34C759;margin:2px 0 8px">'+fmt(d.jami_summa||0)+' <span style="font-size:13px;color:var(--text3);font-weight:600">so\'m</span></div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+  h += '<div style="text-align:center"><div style="font-size:9px;color:var(--text3);font-weight:700">💵 NAQD</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+fmt(pay.cash||0)+'</div></div>';
+  h += '<div style="text-align:center"><div style="font-size:9px;color:var(--text3);font-weight:700">💳 KARTA</div><div style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">'+fmt(pay.card||0)+'</div></div>';
+  h += '<div style="text-align:center"><div style="font-size:9px;color:var(--text3);font-weight:700">↩️ VOZVRAT</div><div style="font-size:13px;font-weight:800;color:#FF9F0A;margin-top:2px">'+fmt(pay.other||0)+'</div></div>';
+  h += '</div>';
+  h += '<div style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center">'+(d.jami_mijoz||0)+' mijoz · '+(d.jami_item||0)+' ta mahsulot</div>';
+  h += '</div>';
+  h += '</div>';
+
+  h += '<div style="flex:1;overflow-y:auto;padding:12px 14px">';
+  if((d.jami_item||0)===0){
+    h += '<div style="text-align:center;color:var(--text3);padding:40px 20px">Bu kunda hech narsa topshirilmagan</div>';
+  } else {
+    var anyHodim = hodimlar.some(function(x){ return x.hodim_id != null; });
+    h += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;font-weight:700;margin:4px 2px 8px">Kim yig\'di</div>';
+    if(!anyHodim){
+      h += '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text3)">Bu kun uchun hodim ma\'lumoti yozilmagan</div>';
+    }
+    for(var i=0;i<hodimlar.length;i++){
+      var hh = hodimlar[i];
+      h += '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">';
+      h += '<div style="width:38px;height:38px;border-radius:10px;background:rgba(52,199,89,.14);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#34C759;flex-shrink:0">'+(hh.hodim_ism?hh.hodim_ism.charAt(0).toUpperCase():'?')+'</div>';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(hh.hodim_ism||'Noma\'lum')+'</div><div style="font-size:11px;color:var(--text3);margin-top:1px">'+hh.mijoz_soni+' mijoz · '+hh.item_soni+' mahsulot</div></div>';
+      h += '<div style="font-size:15px;font-weight:900;color:#34C759;flex-shrink:0">'+fmt(hh.summa)+'</div>';
+      h += '</div>';
+    }
+    h += '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;font-weight:700;margin:16px 2px 8px">Batafsil</div>';
+    for(var j=0;j<items.length;j++){
+      var it = items[j];
+      var isRet = (it.check_type==='vozvrat'||it.check_type==='brak');
+      var payIcon = it.pay_method==='cash'?'💵':(it.pay_method==='card'?'💳':(isRet?'↩️':'•'));
+      var col = isRet ? '#FF9F0A' : 'var(--text)';
+      h += '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:center;gap:10px">';
+      h += '<div style="font-size:16px;flex-shrink:0">'+payIcon+'</div>';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(it.client_name||'Mijoz')+'</div><div style="font-size:10px;color:var(--text3);margin-top:1px">'+it.vaqt+(it.hodim_ism&&it.hodim_ism!=='Nomalum'?' · '+it.hodim_ism:'')+'</div></div>';
+      h += '<div style="font-size:14px;font-weight:800;color:'+col+';flex-shrink:0">'+(isRet?'-':'')+fmt(it.summa)+'</div>';
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+
+  m.innerHTML = h;
 }
 
 function renderCollectedItem(it, userId){
