@@ -1694,8 +1694,16 @@ async function renderProvodkaSozlama(root){
   root.appendChild(content);
 
   try {
-    const data = await api('aros-provodka-users', { uid: UID });
-    if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    // -v2 profiles + auth.users'ni qo'shib email/telefon ham qaytaradi.
+    // Eski endpoint faqat id/full_name/role beradi — fallback sifatida qoladi.
+    let data;
+    try {
+      data = await api('aros-provodka-users-v2', { uid: UID });
+      if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    } catch(e2){
+      data = await api('aros-provodka-users', { uid: UID });
+      if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    }
     pvsState.users = data.users || [];
   } catch(e){
     content.innerHTML = `
@@ -1724,13 +1732,28 @@ async function renderProvodkaSozlama(root){
   else pvsRenderDetail();
 }
 
-// full_name bor bo'lsa: ism (asosiy) + email (kulrang ostida); bo'lmasa: faqat label (email/id)
-function pvsUserName(u){
-  const fn = (u.full_name || '').trim();
-  const label = escapeHtml(u.label || u.email || u.id || '—');
-  if (!fn) return `<span>${label}</span>`;
+// Asosiy qator: ism → email → telefon → (oxirgi chora) qisqartirilgan id.
+// Ostidagi kulrang qator: asosiyda ishlatilmagan birinchi identifikator.
+function pvsUserTitle(u){
+  return (u.full_name || '').trim()
+      || (u.email || '').trim()
+      || (u.phone || '').trim()
+      || (u.label || '').trim()
+      || (u.id ? 'ID ' + String(u.id).slice(0, 8) : '—');
+}
+
+function pvsUserSub(u){
+  const title = pvsUserTitle(u);
   const email = (u.email || '').trim();
-  return `<span>${escapeHtml(fn)}</span>${email ? `<span class="pvs-usub">${escapeHtml(email)}</span>` : ''}`;
+  const phone = (u.phone || '').trim();
+  if (email && email !== title) return email;
+  if (phone && phone !== title) return phone;
+  return '';
+}
+
+function pvsUserName(u){
+  const sub = pvsUserSub(u);
+  return `<span>${escapeHtml(pvsUserTitle(u))}</span>${sub ? `<span class="pvs-usub">${escapeHtml(sub)}</span>` : ''}`;
 }
 
 function pvsRenderUsers(){
@@ -1898,8 +1921,8 @@ function pvsRenderDetail(){
   box.innerHTML = `
 <div class="pvs-head">
 <div>
-<h3>${escapeHtml((user.full_name || '').trim() || user.label || user.email || user.id || '—')}</h3>
-${(user.full_name || '').trim() && (user.email || '').trim() ? `<p style="color:var(--text-3);font-size:11.5px;margin:2px 0 0">${escapeHtml(user.email)}</p>` : ''}
+<h3>${escapeHtml(pvsUserTitle(user))}</h3>
+${pvsUserSub(user) ? `<p style="color:var(--text-3);font-size:11.5px;margin:2px 0 0">${escapeHtml(pvsUserSub(user))}</p>` : ''}
 <p>${escapeHtml(user.role || '—')} · ${allPages ? 'hamma sahifa' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot · ${p.filial_scope==='all' ? 'hamma filial' : p.filial_ids.length + ' filial'}</p>
 </div>
 <button class="btn primary sm" id="pvs-save" onclick="pvsSave()"><i class="ti ti-check"></i>Saqlash</button>
