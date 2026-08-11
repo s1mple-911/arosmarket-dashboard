@@ -1889,20 +1889,73 @@ function pvsFilialList(){
   return pvsState.kassalar.filter(k => (k.kassa_turi || '').toString().toLowerCase() === 'filial');
 }
 
+// Accounts'da bitta filial to'lov turiga qarab bir necha kassaga bo'lingan
+// ("Izza Showroom Naqd", "Izza Showroom Click" ...). Hodim esa FILIALNI
+// tanlaydi — to'lov turini emas. Shuning uchun ro'yxat filial nomi bo'yicha
+// guruhlanadi: bitta filial = bitta checkbox, ichida o'sha filialning hamma
+// kassa id'lari (filial_ids'ga hammasi yoziladi — hodim qaysi kassa orqali
+// yozilganidan qat'i nazar filial ruxsatiga tushadi).
+const PVS_TOLOV = [
+  'naqd','nal','naqt','click','payme','uzum','humo','uzcard','visa','mastercard',
+  'karta','plastik','plastic','terminal','bank','beznal','p2p','transfer',
+  'kredit','muddatli','bolib','tolash','apelsin','anor','paynet','oson'
+];
+
+function pvsNormTxt(s){
+  return (s || '').toString().toLowerCase()
+    .replace(/[’'`ʼ]/g, '')
+    .replace(/[^0-9a-zа-яё]+/gi, ' ')
+    .trim().replace(/\s+/g, ' ');
+}
+
+// Nom oxiridagi to'lov turi so'zlarini kesib tashlaydi (asl yozuvni saqlagan holda)
+function pvsFilialLabel(k){
+  let s = (k.name || k.code || '').toString().trim();
+  for (;;){
+    const m = s.match(/[\s·\-–—/|,()]*([^\s·\-–—/|,()]+)[\s)]*$/);
+    if (!m || !m.index || !PVS_TOLOV.includes(pvsNormTxt(m[1]))) break;
+    s = s.slice(0, m.index).trim();
+  }
+  return s || (k.name || k.code || '—');
+}
+
+function pvsFilialGroups(){
+  const map = new Map();
+  pvsFilialList().forEach(k => {
+    const label = pvsFilialLabel(k);
+    const key = pvsNormTxt(label) || pvsNormTxt(k.code || k.id);
+    let g = map.get(key);
+    if (!g){ g = { key, label, ids: [], turlar: [] }; map.set(key, g); }
+    g.ids.push(k.id);
+    // "Izza Showroom Click" → "Click"; nomda bo'lmasa subtitle'dan
+    const tail = (k.name || '').toString().trim().slice(label.length)
+      .replace(/^[\s·\-–—/|,()]+/, '').replace(/[\s)]+$/, '');
+    const turi = tail || (k.subtitle || '').toString().trim();
+    if (turi && !g.turlar.includes(turi)) g.turlar.push(turi);
+  });
+  return [...map.values()];
+}
+
 function pvsFilialBlock(){
   const p = pvsState.perms;
   if (p.filial_scope !== 'list') return '';
-  const filials = pvsFilialList();
-  if (!filials.length) return '<div class="pvs-hint">Filial kassalari topilmadi (kassa_turi=\'filial\').</div>';
+  const groups = pvsFilialGroups();
+  if (!groups.length) return '<div class="pvs-hint">Filial kassalari topilmadi (kassa_turi=\'filial\').</div>';
   return `
 <div class="pvs-grid wide">
-${filials.map(k => pvsKassaCk(
-    k,
-    p.filial_ids.includes(k.id),
+${groups.map(g => pvsKassaCk(
+    { name: g.label, subtitle: g.ids.length > 1 ? `${g.ids.length} kassa${g.turlar.length ? ' · ' + g.turlar.join(', ') : ''}` : '' },
+    g.ids.some(id => p.filial_ids.includes(id)),
     false,
-    `pvsToggleFilial('${escapeHtml(k.id)}')`
+    `pvsToggleFilial('${escapeHtml(g.key)}')`
   )).join('')}
 </div>`;
+}
+
+// Nechta FILIAL tanlangan (kassa soni emas — bitta filial bir necha kassa bo'lishi mumkin)
+function pvsFilialCount(){
+  const ids = pvsState.perms.filial_ids;
+  return pvsFilialGroups().filter(g => g.ids.some(id => ids.includes(id))).length;
 }
 
 function pvsRenderDetail(){
@@ -1914,16 +1967,18 @@ function pvsRenderDetail(){
     return;
   }
   const p = pvsState.perms;
-  const allPages = p.allowed_pages.length === 0;
+  // Bo'sh ro'yxat = HECH QAYSI sahifa ochiq emas (cheklovsiz emas!)
+  const noPages = p.allowed_pages.length === 0;
   const opCount = p.op_kassa_ids.length;
   const viewable = pvsViewableIds();
+  const filialCount = pvsFilialCount();
 
   box.innerHTML = `
 <div class="pvs-head">
 <div>
 <h3>${escapeHtml(pvsUserTitle(user))}</h3>
 ${pvsUserSub(user) ? `<p style="color:var(--text-3);font-size:11.5px;margin:2px 0 0">${escapeHtml(pvsUserSub(user))}</p>` : ''}
-<p>${escapeHtml(user.role || '—')} · ${allPages ? 'hamma sahifa' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot · ${p.filial_scope==='all' ? 'hamma filial' : p.filial_ids.length + ' filial'}</p>
+<p>${escapeHtml(user.role || '—')} · ${noPages ? 'sahifa yo\'q' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot · ${p.filial_scope==='all' ? 'hamma filial' : filialCount + ' filial'}</p>
 </div>
 <button class="btn primary sm" id="pvs-save" onclick="pvsSave()"><i class="ti ti-check"></i>Saqlash</button>
 </div>
@@ -1933,7 +1988,7 @@ ${pvsUserSub(user) ? `<p style="color:var(--text-3);font-size:11.5px;margin:2px 
 <span class="pvs-blk-lbl">Sahifalar</span>
 <div class="pvs-acts">
 <button class="btn sm ghost" onclick="pvsAllPages(true)">Hammasi</button>
-<button class="btn sm ghost" onclick="pvsAllPages(false)" title="Ro'yxatni bo'shatish = cheklovsiz">Cheklovsiz</button>
+<button class="btn sm ghost" onclick="pvsAllPages(false)" title="Ro'yxatni bo'shatish = hech qaysi sahifa ochiq emas">Tozalash</button>
 </div>
 </div>
 <div class="pvs-grid">
@@ -1944,9 +1999,9 @@ ${PVS_PAGES.map(pg => pvsKassaCk(
     `pvsTogglePage('${pg.key}')`
   )).join('')}
 </div>
-<div class="pvs-hint">${allPages
-    ? '<i class="ti ti-info-circle"></i> Bo\'sh ro\'yxat = <b>hamma sahifa ochiq</b> (cheklov yo\'q).'
-    : 'Faqat belgilangan sahifalar ochiq qoladi. Hammasini olib tashlasangiz — cheklov bekor bo\'ladi.'}</div>
+<div class="pvs-hint">${noPages
+    ? '<i class="ti ti-alert-triangle" style="color:var(--warn-text,#e0a800)"></i> Hech qaysi sahifa belgilanmagan = <b>userga hech qaysi sahifa ochiq emas</b>. Kirish uchun kamida bitta sahifa tanlang.'
+    : 'Faqat belgilangan sahifalar ochiq. Hammasini olib tashlasangiz — user hech qaysi sahifaga kira olmaydi.'}</div>
 </div>
 
 <div class="pvs-blk">
@@ -1981,10 +2036,10 @@ ${p.filial_scope==='list' ? `<div class="pvs-acts">
 </div>
 <div class="pvs-radios">
 <div class="pvs-radio ${p.filial_scope==='all'?'on':''}" onclick="pvsSetFilialScope('all')"><span class="pvs-dot"></span>Barcha filiallar</div>
-<div class="pvs-radio ${p.filial_scope==='list'?'on':''}" onclick="pvsSetFilialScope('list')"><span class="pvs-dot"></span>Faqat tanlanganlar${p.filial_scope==='list'?` · ${p.filial_ids.length}`:''}</div>
+<div class="pvs-radio ${p.filial_scope==='list'?'on':''}" onclick="pvsSetFilialScope('list')"><span class="pvs-dot"></span>Faqat tanlanganlar${p.filial_scope==='list'?` · ${filialCount}`:''}</div>
 </div>
 ${pvsFilialBlock()}
-<div class="pvs-hint">Xarajatga qaysi filial(lar) biriktirilishi mumkinligini belgilaydi (metadata — pul harakati emas). ${p.filial_scope==='all' ? 'Barcha filiallar rejimida — user hamma filialni tanlay oladi.' : 'Faqat belgilangan filiallar hodim.html multiselect\'ida ko\'rinadi.'}</div>
+<div class="pvs-hint">Xarajatga qaysi filial(lar) biriktirilishi mumkinligini belgilaydi (metadata — pul harakati emas). ${p.filial_scope==='all' ? 'Barcha filiallar rejimida — user hamma filialni tanlay oladi.' : 'Faqat belgilangan filiallar hodim.html multiselect\'ida ko\'rinadi.'} Bitta filial = bitta qator: to\'lov turiga bo\'lingan kassalar (naqd/click/terminal) birga belgilanadi.</div>
 </div>
 
 <div class="pvs-blk">
@@ -2054,11 +2109,17 @@ function pvsSetFilialScope(scope){
   pvsRenderDetail();
 }
 
-function pvsToggleFilial(id){
+// key — filial guruhi (pvsFilialGroups().key), bitta filialning hamma kassasi birga
+function pvsToggleFilial(key){
   const p = pvsState.perms;
   if (p.filial_scope !== 'list') return;
-  const i = p.filial_ids.indexOf(id);
-  if (i >= 0) p.filial_ids.splice(i, 1); else p.filial_ids.push(id);
+  const g = pvsFilialGroups().find(x => x.key === key);
+  if (!g) return;
+  if (g.ids.some(id => p.filial_ids.includes(id))){
+    p.filial_ids = p.filial_ids.filter(id => !g.ids.includes(id));
+  } else {
+    g.ids.forEach(id => { if (!p.filial_ids.includes(id)) p.filial_ids.push(id); });
+  }
   pvsRenderDetail();
 }
 
@@ -2096,7 +2157,9 @@ async function pvsSave(){
     const r = await api('aros-provodka-perms-save', { uid: UID, data: JSON.stringify(payload) });
     if (!r.ok) throw new Error(r.error || 'Saqlanmadi');
     pvsState.perms = pvsNormPerms(payload, p.user_id);
-    toast('Ruxsatlar saqlandi');
+    // Bo'sh allowed_pages = hech qanday ruxsat yo'q (Provodka tomonda ham shunday
+    // talqin qilinishi kerak — my_perms/nav guard'da bo'sh ro'yxat 'hammasi' emas)
+    toast(payload.allowed_pages.length ? 'Ruxsatlar saqlandi' : 'Saqlandi — bu userga hech qaysi sahifa ochiq emas');
   } catch(e){
     toast('Xato: ' + e.message, 'err');
   } finally {
