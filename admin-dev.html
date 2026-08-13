@@ -1656,6 +1656,9 @@ async function createRole(){
 // hasPerm('provodka_settings') tekshiruvi va sidebar'ni yashirish
 // qo'shiladi (n8n endpointlari ham o'sha kalitni tekshirishi kerak).
 // =========================================================
+// ⚠️ Bu ro'yxat Provodka'dagi perm_pages() va perms.js PAGES bilan AYNAN mos
+//    bo'lishi shart. Bu yerda yo'q kalitni admin_set_provodka_perms "noma'lum"
+//    deb jimgina tashlab yuboradi — ya'ni o'sha sahifaga ruxsat berib bo'lmaydi.
 const PVS_PAGES = [
   { key:'kassa',        label:'Kassa' },
   { key:'jurnal',       label:'Jurnal' },
@@ -1668,7 +1671,10 @@ const PVS_PAGES = [
   { key:'valyuta',      label:'Valyuta' },
   { key:'konvert',      label:'Konvert' },
   { key:'sozlama',      label:'Sozlama' },
-  { key:'provodka',     label:'Provodka' }
+  { key:'provodka',     label:'Provodka' },
+  { key:'yuklar',       label:'Yuklar' },
+  { key:'standart',     label:'Standart' },
+  { key:'tannarx',      label:'Tannarx' }
 ];
 
 const PVS_TURI = [
@@ -2111,8 +2117,8 @@ function pvsTogglePage(key){
   pvsRenderDetail();
 }
 
-// on=true  → 12 sahifani ochiq deb belgilaydi
-// on=false → ro'yxatni bo'shatadi (bo'sh = cheklovsiz, hammasi ochiq)
+// on=true  → PVS_PAGES dagi hamma sahifani ochiq deb belgilaydi
+// on=false → ro'yxatni bo'shatadi (bo'sh = HECH QAYSI sahifa ochiq emas)
 function pvsAllPages(on){
   pvsState.perms.allowed_pages = on ? PVS_PAGES.map(pg => pg.key) : [];
   pvsRenderDetail();
