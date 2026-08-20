@@ -273,6 +273,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;
 .cal-legend{display:flex;justify-content:center;align-items:center;gap:6px 12px;margin-top:16px;font-size:11px;color:var(--text2);flex-wrap:wrap}
 .cal-legend-i{display:flex;align-items:center;gap:5px;white-space:nowrap}
 .cal-sw{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cal-warn{display:flex;align-items:flex-start;gap:9px;background:var(--tint-amber);border:1px solid var(--tint-amber-b);border-radius:var(--r-md);padding:10px 12px;margin-bottom:14px}
+.cal-warn-t{font-size:12px;font-weight:600;color:var(--amber);letter-spacing:-.1px}
+.cal-warn-s{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.35;font-variant-numeric:tabular-nums}
 /* ============ Modal yopish tugmasi (izchil) ============ */
 .close-btn{background:var(--bg3);border:none;width:32px;height:32px;border-radius:50%;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .12s ease,background .15s ease}
 .close-btn:active{transform:scale(.92)}
@@ -2873,7 +2876,55 @@ function showUnsentModal(){
 // =============================================
 // renderDash - eski kod + filial plan bloki qo'shildi
 // =============================================
+// ===== Dashboard qayta chizish nazorati =====
+// renderDashNow() butun #page-dash ni innerHTML bilan ALMASHTIRADI. U proc()
+// oxirida har bir tab yuklangach chaqiriladi (otgan/bugun/ertaga) — sahifa
+// ochilgandan keyingi bir necha soniyada 3-4 marta ishga tushadi.
+//
+// MUAMMO: agar foydalanuvchi shu payt tugmani bossa, touchstart bir elementga,
+// touchend esa allaqachon ALMASHTIRILGAN boshqa elementga tushadi. Brauzer bunda
+// `click` hodisasini UMUMAN yubormaydi — tugma "bosilmadi" bo'lib qoladi.
+// Aynan shu sabab kalendar tugmasi ba'zan 2-3 marta bosishni talab qilardi,
+// va filialga qarab har xil ishlardi (ma'lumot hajmi -> yuklanish vaqti har xil).
+//
+// YECHIM: (a) ketma-ket chaqiruvlarni bitta qayta chizishga birlashtiramiz,
+//         (b) barmoq/sichqoncha bosilgan holatda qayta chizishni kechiktiramiz.
+var _dashPending = false, _dashTimer = null, _dashPointerDown = false;
+
 function renderDash(){
+  _dashPending = true;
+  if(_dashTimer) clearTimeout(_dashTimer);
+  _dashTimer = setTimeout(_dashFlush, 120);
+}
+
+function _dashFlush(){
+  _dashTimer = null;
+  if(!_dashPending) return;
+  if(_dashPointerDown){
+    // Barmoq hali ekranda — biroz kutamiz (pointerup ham darhol chaqiradi)
+    _dashTimer = setTimeout(_dashFlush, 250);
+    return;
+  }
+  _dashPending = false;
+  renderDashNow();
+}
+
+(function(){
+  function down(){ _dashPointerDown = true; }
+  function up(){
+    _dashPointerDown = false;
+    if(_dashPending){ if(_dashTimer) clearTimeout(_dashTimer); _dashTimer = setTimeout(_dashFlush, 0); }
+  }
+  document.addEventListener('pointerdown', down, true);
+  document.addEventListener('pointerup', up, true);
+  document.addEventListener('pointercancel', up, true);
+  // pointer hodisalari yo'q brauzerlar uchun zaxira
+  document.addEventListener('touchstart', down, true);
+  document.addEventListener('touchend', up, true);
+  document.addEventListener('touchcancel', up, true);
+})();
+
+function renderDashNow(){
   var plan=Number(userData.oylik_plan)||0;
   // BUGFIX: bajarildi ishlatamiz (yigilgan emas - bu hamyon balansi edi)
   var yig=Number((filialData && filialData.bajarildi) || (userData && userData.bajarildi) || summary.yigilgan || 0);
@@ -2951,7 +3002,7 @@ function renderDash(){
       html+='<div><div class="pc-lbl">'+fd.filial+' · '+(fd.oy||'')+profBadgeIdx+'</div>';
       html+='<div class="pc-plan">'+fmt(fd.plan)+' so\'m</div></div>';
       html+='<div style="display:flex;align-items:center;gap:10px">';
-      html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" style="width:36px;height:36px;border-radius:11px;background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer">'+ic('calendar-days',18)+'</div>';
+      html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" style="width:36px;height:36px;border-radius:11px;background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation">'+ic('calendar-days',18)+'</div>';
       html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'%</div>';
       html+='</div>';
       html+='</div>';
@@ -3029,7 +3080,7 @@ function renderDash(){
     html+='<div style="min-width:0"><div class="pc-lbl">'+ic('building',13,'var(--text3)')+'<span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+fd.filial+' · '+(fd.oy||'')+'</span>'+profBadgeIdx+'</div>';
     html+='<div class="pc-plan">'+fmt(fd.plan)+'<span class="cur">so\'m</span></div></div>';
     html+='<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">';
-    html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" role="button" tabindex="0" title="Kalendar" style="width:36px;height:36px;border-radius:11px;background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer">'+ic('calendar-days',18)+'</div>';
+    html+='<div onclick="openCalendar(\''+(fd.warehouse_id||wid)+'\',\''+String(fd.filial||'').replace(/\'/g,"\\\\'")+'\',\''+(fd.oy_raqami||curOy)+'\',\''+(fd.yil||curYil)+'\','+(fd.oy_yarim||curYarim||0)+')" role="button" tabindex="0" title="Kalendar" style="width:36px;height:36px;border-radius:11px;background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation">'+ic('calendar-days',18)+'</div>';
     html+='<div class="pc-pct" style="color:'+fpColor+'">'+ffoiz+'<span style="font-size:18px;letter-spacing:0">%</span></div>';
     html+='</div>';
     html+='</div>';
@@ -4104,6 +4155,80 @@ function renderRecordings(userId, recs){
   el.innerHTML = html;
 }
 
+// ===== Bo'limlar orasida swipe (chapga/o'ngga surib tab almashtirish) =====
+// Mavjud swipe'larga xalaqit bermaydi: ro'yxat qatorlari (.swipe-content),
+// gorizontal scroll qiluvchi bloklar, modallar va V2 rejimi chetlab o'tiladi.
+(function(){
+  var TABS = ['dash','ochiq','otgan','bugun','ertaga'];  // #mainTabs tartibi bilan bir xil
+  var x0 = null, y0 = null;
+
+  function joriyTab(){
+    var p = document.querySelector('.page.active');
+    return p ? p.id.replace('page-','') : null;
+  }
+
+  function modalOchiqmi(){
+    // DIQQAT: offsetParent bu yerda ishlamaydi — position:fixed elementlarda u
+    // HAR DOIM null bo'ladi. Shuning uchun hisoblangan display'ni tekshiramiz.
+    var m = document.querySelectorAll('[id$="-modal"], [id$="Modal"], [id$="Overlay"]');
+    for(var i=0;i<m.length;i++){
+      var st = window.getComputedStyle(m[i]);
+      if(st.display !== 'none' && st.visibility !== 'hidden' && st.opacity !== '0') return true;
+    }
+    return false;
+  }
+
+  function bloklanganmi(t){
+    if(!t || !t.closest) return true;
+    // Ro'yxat qatorining o'z swipe'i bor
+    if(t.closest('.swipe-content')) return true;
+    // Interaktiv elementlar
+    if(t.closest('input, textarea, select, button, a, [contenteditable]')) return true;
+    // Gorizontal scroll qiluvchi ota-blok (masalan kalendar gridi, chiplar qatori)
+    var el = t;
+    while(el && el !== document.body){
+      if(el.scrollWidth > el.clientWidth + 4){
+        var ox = window.getComputedStyle(el).overflowX;
+        if(ox === 'auto' || ox === 'scroll') return true;
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+
+  document.addEventListener('touchstart', function(e){
+    x0 = null;
+    if(!e.touches || e.touches.length !== 1) return;
+    if(typeof v2Mode !== 'undefined' && v2Mode) return;
+    if(modalOchiqmi()) return;
+    if(bloklanganmi(e.target)) return;
+    x0 = e.touches[0].clientX;
+    y0 = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e){
+    if(x0 === null) return;
+    var t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+    var sx = x0, sy = y0;
+    x0 = null;
+    if(!t) return;
+    var dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Math.abs(dx) < 60) return;                  // yetarlicha uzoq emas
+    if(Math.abs(dx) < Math.abs(dy) * 1.5) return;  // vertikal scroll
+    if(modalOchiqmi()) return;                     // harakat davomida modal ochilgan bo'lsa
+
+    var i = TABS.indexOf(joriyTab());
+    if(i < 0) return;
+    var j = (dx < 0) ? i + 1 : i - 1;
+    if(j < 0 || j >= TABS.length) return;
+
+    var tabEls = document.querySelectorAll('#mainTabs .tab');
+    if(!tabEls[j]) return;
+    showTab(TABS[j], tabEls[j]);
+    try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(err){ window.scrollTo(0,0); }
+  }, { passive: true });
+})();
+
 // Swipe handler — touch yoki mouse bilan
 (function(){
   var startX=0, currentEl=null, startScrollLeft=0;
@@ -4325,6 +4450,22 @@ function renderWalletTx(d){
 }
 
 // ===================== CALENDAR =====================
+// Dashboard (aros-cache-filial) bo'yicha shu ombor uchun jami vozvrat.
+// Kalendar API (aros-cache-calendar) 2026-yil iyulidan buyon vozvratlarning
+// bir qismini ushlamayapti — shuning uchun ikkovini solishtirib ogohlantiramiz.
+// null qaytsa — solishtirib bo'lmaydi (boshqa davr yoki ma'lumot yo'q).
+function dashReturnsFor(w, oy, yil, yarim){
+  try{
+    if(!filialData) return null;
+    if(String(filialData.warehouse_id) !== String(w)) return null;
+    // faqat dashboard ko'rsatayotgan davr bilan bir xil bo'lsa solishtiramiz
+    if(Number(oy) !== Number(curOy) || Number(yil) !== Number(curYil)) return null;
+    if(Number(yarim||0) !== Number(curYarim||0)) return null;
+    var v = Number(filialData.returns_summa);
+    return isNaN(v) ? null : v;
+  }catch(e){ return null; }
+}
+
 function openCalendar(wid, filialNomi, oy, yil, yarim){
   var modal = document.getElementById('cal-modal');
   var title = document.getElementById('cal-title');
@@ -4426,6 +4567,16 @@ function renderCalendar(d){
     html += '<div class="cal-kpi"><div class="kpi-val" style="color:var(--text2)">'+dayOffCount+'</div><div class="kpi-lbl">Dam</div></div>';
   }
   html += '</div></div>';
+  // Vozvrat manbalari nomuvofiqligi — raqamni yashirmaymiz, ogohlantiramiz
+  var calRet = davrDays.reduce(function(s,x){return s+(x.qaytarilgan||0);},0);
+  var dashRet = dashReturnsFor(d.warehouse_id, d.oy, d.yil, d.oy_yarim);
+  if(dashRet !== null && dashRet > 0 && calRet < dashRet * 0.9){
+    html += '<div class="cal-warn">'+ic('alert-triangle',15,'var(--amber)')+'<div>';
+    html += '<div class="cal-warn-t">Vozvrat ma\'lumoti to\'liq emas</div>';
+    html += '<div class="cal-warn-s">Kalendar: '+fmt(calRet)+' · Dashboard: '+fmt(dashRet)+'</div>';
+    html += '<div class="cal-warn-s">Kunlik vozvrat raqamlariga tayanmang — dashboarddagi summa to\'g\'ri.</div>';
+    html += '</div></div>';
+  }
   // Kalendar grid - hafta nomlari
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
   html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-bottom:6px;width:100%">';

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="uz" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
@@ -16,113 +16,155 @@
 <link rel="apple-touch-startup-image" href="icons/splash-iphone.png">
 <title>AROS CEO</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap');
 :root{
+/* --- Palitra (dark) --- */
 --bg:#060610;--bg2:#0e0e20;--bg3:#161628;--border:#1e1e38;
---text:#f0f0ff;--text2:#8888aa;--text3:#444466;
---green:#00e5a0;--green-bg:rgba(0,229,160,.1);--green-border:rgba(0,229,160,.25);
+--text:#f0f0ff;--text2:#9393b8;--text3:#5e5e83;
+--green:#00e5a0;--green-bg:rgba(0,229,160,.12);--green-border:rgba(0,229,160,.28);
 --red:#ff4d6d;--amber:#ffb800;
+--blue:#378ADD;--violet:#a855f7;--purple:#a855f7;--cyan:#22d3ee;
+/* --- Radius shkalasi --- */
+--r-xs:6px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-full:999px;
+/* --- Status tint'lari (dark) --- */
+--tint-green:rgba(0,229,160,.13);  --tint-green-b:rgba(0,229,160,.28);
+--tint-amber:rgba(255,184,0,.13);  --tint-amber-b:rgba(255,184,0,.30);
+--tint-red:rgba(255,77,109,.13);   --tint-red-b:rgba(255,77,109,.30);
+--tint-blue:rgba(55,138,221,.14);  --tint-blue-b:rgba(55,138,221,.32);
+--tint-violet:rgba(168,85,247,.15);--tint-violet-b:rgba(168,85,247,.32);
+--tint-neutral:rgba(148,148,190,.13);--tint-neutral-b:rgba(148,148,190,.26);
+--shadow-card:none;
 }
 [data-theme="light"]{
---bg:#f0f0f8;--bg2:#ffffff;--bg3:#e8e8f2;--border:#d8d8ee;
---text:#0a0a1a;--text2:#555570;--text3:#9999bb;
---green:#00a870;--green-bg:rgba(0,168,112,.1);--green-border:rgba(0,168,112,.3);
+--bg:#f4f4fa;--bg2:#ffffff;--bg3:#f1f1f7;--border:#e2e2ee;
+--text:#0a0a1a;--text2:#54546e;--text3:#84849c;
+/* Light'da ochiq ranglar kontrastsiz — quyuqroq variant */
+--green:#00875a;--green-bg:rgba(0,135,90,.10);--green-border:rgba(0,135,90,.28);
+--red:#d92646;--amber:#a06400;
+--blue:#185FA5;--violet:#7C3AED;--purple:#7C3AED;--cyan:#0e7490;
+/* Light'da rgba(...,.15) juda kuchsiz — alohida qiymatlar */
+--tint-green:rgba(0,135,90,.10);   --tint-green-b:rgba(0,135,90,.24);
+--tint-amber:rgba(160,100,0,.11);  --tint-amber-b:rgba(160,100,0,.26);
+--tint-red:rgba(217,38,70,.09);    --tint-red-b:rgba(217,38,70,.24);
+--tint-blue:rgba(24,95,165,.10);   --tint-blue-b:rgba(24,95,165,.26);
+--tint-violet:rgba(124,58,237,.10);--tint-violet-b:rgba(124,58,237,.26);
+--tint-neutral:rgba(30,30,60,.06); --tint-neutral-b:rgba(30,30,60,.16);
+--shadow-card:0 1px 2px rgba(16,24,40,.05);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+input,select,button,textarea{font-family:inherit}
+/* Lucide ikon bazasi */
+.lu{display:inline-block;vertical-align:middle;flex-shrink:0}
+/* Pul/foiz raqamlari — bir xil kenglikdagi raqamlar */
+.jami-summa,.jami-foiz,.jami-nums,.jq-val,.fc-foiz,.fc-nums,.fc-m-val,.sc-val,.sc-sub,.tb-val,.c-amt{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:var(--r-xs)}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:100}
 .hdr-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green);letter-spacing:2px;flex-shrink:0}
-.dev-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(255,184,0,.15);color:#ffb800;border:1px solid rgba(255,184,0,.3);flex-shrink:0}
-.hdr-info{flex:1}
-.hdr-title{font-size:13px;font-weight:800}
-.hdr-sub{font-size:10px;color:var(--text2);margin-top:1px}
-.theme-btn{width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.dev-badge{font-size:11px;font-weight:800;padding:2px 7px;border-radius:var(--r-xs);background:var(--tint-amber);color:var(--amber);border:1px solid var(--tint-amber-b);flex-shrink:0}
+.hdr-info{flex:1;min-width:0}
+.hdr-title{font-size:14px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-sub{font-size:11px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Header ikon tugmalari — 36px teginish zonasi */
+.theme-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text2);transition:transform .12s ease,background .15s ease,color .15s ease}
+.theme-btn:active{transform:scale(.92)}
 .bug-btn{
-  width:32px;height:32px;border-radius:50%;
+  width:36px;height:36px;border-radius:50%;
   background:linear-gradient(135deg,#8b5cf6,#6366f1);
   border:none;display:none;align-items:center;justify-content:center;
-  cursor:pointer;font-size:14px;color:#fff;
-  box-shadow:0 2px 8px rgba(139,92,246,0.4);
-  transition:transform .15s ease, box-shadow .15s ease;
+  cursor:pointer;color:#fff;
+  box-shadow:0 2px 8px rgba(139,92,246,0.35);
+  transition:transform .12s ease, box-shadow .15s ease;
   flex-shrink:0;
 }
 .bug-btn:active{transform:scale(0.92);box-shadow:0 1px 4px rgba(139,92,246,0.3)}
-.filter-bar{padding:12px 16px 0;display:flex;gap:8px}
-.filter-bar select{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;appearance:none;-webkit-appearance:none;font-family:'Manrope',sans-serif;font-weight:600}
-.refresh-btn{width:38px;height:38px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
+/* Menejer tab'lari */
+.mgr-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border)}
+.mgr-tab{flex:1;min-height:44px;padding:10px 4px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;letter-spacing:-.1px;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:color .18s ease,border-color .18s ease}
+.filter-bar{padding:12px 14px 0;display:flex;gap:8px}
+.filter-bar select{flex:1;min-width:0;min-height:40px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;color:var(--text);font-size:13px;outline:none;appearance:none;-webkit-appearance:none;font-weight:600;cursor:pointer}
+.refresh-btn{width:40px;height:40px;border-radius:var(--r-md);background:var(--tint-green);border:1px solid var(--tint-green-b);color:var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .12s ease}
+.refresh-btn:active{transform:scale(.94)}
 .page{padding:14px}
-.jami-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:18px;margin-bottom:14px}
-.jami-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.jami-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
-.jami-summa{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green);letter-spacing:1px;line-height:1}
-.jami-foiz{font-size:22px;font-weight:900;color:var(--text);opacity:.7}
-.jami-bar-bg{background:var(--bg3);border-radius:6px;height:6px;margin-bottom:8px;overflow:hidden}
-.jami-bar{height:100%;border-radius:6px;background:var(--green);transition:width 1.2s ease}
-.jami-nums{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:10px}
+/* --- Kompaniya jami --- */
+.jami-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:16px;box-shadow:var(--shadow-card)}
+.jami-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.jami-row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px}
+.jami-summa{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--green);letter-spacing:1px;line-height:1}
+.jami-foiz{font-size:24px;font-weight:800;color:var(--text2);letter-spacing:-.8px;line-height:1}
+.jami-bar-bg{background:var(--bg3);border-radius:var(--r-full);height:8px;margin-bottom:8px;overflow:hidden}
+.jami-bar{height:100%;border-radius:var(--r-full);background:var(--green);transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.jami-nums{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:8px}
 .jami-nums b{color:var(--text);font-weight:700}
-.jami-qarz{display:flex;gap:8px;margin-top:10px}
-.jq-box{flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px}
-.jq-lbl{font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
-.jq-val{font-size:13px;font-weight:800}
+.jami-qarz{display:flex;gap:8px;margin-top:8px}
+.jq-box{flex:1;min-width:0;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px}
+.jq-lbl{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px;line-height:1.25;margin-bottom:4px}
+.jq-val{font-size:13px;font-weight:800;letter-spacing:-.3px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.sec-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
-.sec-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-.filial-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;cursor:pointer;transition:opacity .15s}
-.filial-card:active{opacity:.8}
-.fc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.fc-name{font-size:14px;font-weight:800;text-transform:capitalize}
-.fc-oy{font-size:10px;color:var(--text3);margin-top:2px}
-.fc-foiz{font-size:22px;font-weight:900;line-height:1}
-.fc-bar-bg{background:var(--bg3);border-radius:6px;height:5px;margin-bottom:8px;overflow:hidden}
-.fc-bar{height:100%;border-radius:6px;transition:width 1s ease}
-.fc-nums{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:8px}
+.sec-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.sec-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);background:var(--tint-green);color:var(--green);border:1px solid var(--tint-green-b)}
+/* --- Filial kartochkasi (asosiy ekran) --- */
+.filial-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;position:relative;overflow:hidden;cursor:pointer;box-shadow:var(--shadow-card);transition:transform .12s ease,border-color .15s ease}
+.filial-card:active{transform:scale(.985)}
+.fc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.fc-top>div:first-child{min-width:0}
+.fc-name{font-size:15px;font-weight:800;letter-spacing:-.3px;text-transform:capitalize;line-height:1.25}
+.fc-oy{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.3}
+.fc-foiz{font-size:26px;font-weight:800;line-height:1;letter-spacing:-1px}
+.fc-bar-bg{background:var(--bg3);border-radius:var(--r-full);height:6px;margin-bottom:8px;overflow:hidden}
+.fc-bar{height:100%;border-radius:var(--r-full);transition:width 1s cubic-bezier(.22,1,.36,1)}
+.fc-nums{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text3);margin-bottom:8px}
 .fc-nums b{color:var(--text);font-weight:700}
-.fc-mini{display:flex;gap:6px;margin-bottom:6px}
-.fc-m{flex:1;background:var(--bg3);border-radius:8px;padding:6px 8px}
-.fc-m-lbl{font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
-.fc-m-val{font-size:11px;font-weight:800}
-.fc-qarz{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.2);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;font-size:11px}
-.fc-qarz-lbl{color:var(--text3);font-weight:600}
+.fc-mini{display:flex;gap:8px;margin-bottom:8px}
+.fc-m{flex:1;min-width:0;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:8px 10px}
+.fc-m-lbl{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px;line-height:1.25;margin-bottom:4px}
+.fc-m-val{font-size:12px;font-weight:800;letter-spacing:-.2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-m-sub{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.25}
+.fc-qarz{background:var(--tint-red);border:1px solid var(--tint-red-b);border-radius:var(--r-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center;font-size:11px}
+.fc-qarz-lbl{color:var(--text2);font-weight:600}
 .fc-qarz-val{font-weight:800;color:var(--red)}
-.fc-prognoz{margin-top:6px;padding:6px 10px;background:var(--bg3);border-radius:8px;font-size:10px;color:var(--text2);display:flex;justify-content:space-between}
-.fc-loading{position:absolute;inset:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;border-radius:16px}
+.fc-prognoz{margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:var(--r-sm);font-size:11px;color:var(--text2);display:flex;justify-content:space-between}
+.fc-loading{position:absolute;inset:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;border-radius:var(--r-lg)}
 .mini-spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+/* --- Detal paneli --- */
 .det-panel{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;flex-direction:column}
 .det-panel.open{display:flex}
-.det-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.det-back{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
+.det-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.det-back{width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .12s ease}
+.det-back:active{transform:scale(.92)}
 .det-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
-.det-tab{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s}
+.det-tab{flex:1;min-height:44px;padding:10px 4px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;letter-spacing:-.1px;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:color .18s ease,border-color .18s ease}
 .det-tab.active{color:var(--green);border-bottom-color:var(--green)}
 .det-body{flex:1;overflow-y:auto}
 .det-page{display:none;padding:14px}
 .det-page.active{display:block}
-.progress-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:13px}
-.sc-lbl{font-size:10px;color:var(--text3);font-weight:600;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
-.sc-val{font-size:17px;font-weight:800}
-.sc-sub{font-size:10px;color:var(--text3);margin-top:3px}
-.total-bar{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-.tb-lbl{font-size:11px;color:var(--text2);font-weight:600}
-.tb-val{font-size:15px;font-weight:800}
-.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
-.b-red{background:rgba(255,77,109,.15);color:var(--red);border:1px solid rgba(255,77,109,.25)}
-.b-amber{background:rgba(255,184,0,.15);color:var(--amber);border:1px solid rgba(255,184,0,.25)}
-.client-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden}
-.client-main{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
-.c-av{width:38px;height:38px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--text2);flex-shrink:0;border:1px solid var(--border)}
+.progress-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-card)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-card)}
+.sc-lbl{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;letter-spacing:-.1px}
+.sc-val{font-size:19px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+.sc-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.total-bar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tb-lbl{font-size:12px;color:var(--text2);font-weight:600}
+.tb-val{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:var(--r-full)}
+.b-red{background:var(--tint-red);color:var(--red);border:1px solid var(--tint-red-b)}
+.b-amber{background:var(--tint-amber);color:var(--amber);border:1px solid var(--tint-amber-b)}
+.client-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow-card)}
+.client-main{display:flex;align-items:center;gap:8px;padding:10px 12px;min-height:56px;cursor:pointer}
+.c-av{width:38px;height:38px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--text2);flex-shrink:0;border:1px solid var(--border);letter-spacing:.2px}
 .c-info{flex:1;min-width:0}
-.c-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-name{font-size:13px;font-weight:700;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .c-phone{font-size:11px;color:var(--text3);margin-top:2px}
 .c-right{text-align:right;flex-shrink:0}
-.c-amt{font-size:13px;font-weight:800}
-.call-btn{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(0,229,160,.35);background:rgba(0,229,160,.1);text-decoration:none}
-.arr{color:var(--text3);font-size:11px;flex-shrink:0;margin-left:4px;transition:transform .2s}
+.c-amt{font-size:13px;font-weight:800;letter-spacing:-.2px}
+.call-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--tint-green-b);background:var(--tint-green);color:var(--green);text-decoration:none;transition:transform .12s ease}
+.call-btn:active{transform:scale(.92)}
+.arr{color:var(--text3);flex-shrink:0;margin-left:4px;display:inline-flex;align-items:center;transition:transform .2s ease}
 .arr.open{transform:rotate(180deg)}
 .orders-list{border-top:1px solid var(--border);background:var(--bg3);max-height:0;overflow:hidden;transition:max-height .5s ease}
 .orders-list.exp{max-height:2000px}
-.order-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 10px 62px;border-bottom:1px solid var(--border)}
+.order-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px 10px 60px;border-bottom:1px solid var(--border)}
 .order-row:last-child{border-bottom:none}
 .loading{text-align:center;padding:60px 16px;color:var(--text3);font-size:13px}
 .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
@@ -133,18 +175,28 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 .tr-created{animation:brdBlue 2s ease-in-out infinite}
 .empty{text-align:center;padding:60px 16px}
 .et{font-size:13px;color:var(--text3)}
-.err-box{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:12px;padding:14px;font-size:13px;color:var(--red);text-align:center}
-.kechikish-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:600;white-space:nowrap}
-.kechikish-badge.kech-warn{background:rgba(245,158,11,.15);color:#d97706;border:1px solid rgba(245,158,11,.3)}
-.kechikish-badge.kech-bad{background:rgba(239,68,68,.15);color:#dc2626;border:1px solid rgba(239,68,68,.3)}
-.kechikish-badge.kech-crit{background:rgba(220,38,38,.25);color:#fff;border:1px solid rgba(220,38,38,.5);animation:kechPulse 1.8s infinite}
+.err-box{background:var(--tint-red);border:1px solid var(--tint-red-b);border-radius:var(--r-md);padding:14px;font-size:13px;color:var(--red);text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}
+.kechikish-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:var(--r-xs);font-size:11px;font-weight:600;white-space:nowrap;line-height:1.2}
+.kechikish-badge.kech-warn{background:var(--tint-amber);color:var(--amber);border:1px solid var(--tint-amber-b)}
+.kechikish-badge.kech-bad{background:var(--tint-red);color:var(--red);border:1px solid var(--tint-red-b)}
+.kechikish-badge.kech-crit{background:var(--red);color:#fff;border:1px solid var(--red);animation:kechPulse 1.8s infinite}
 @keyframes kechPulse{0%,100%{opacity:1}50%{opacity:.65}}
-.kech-ok{display:inline-block;padding:1px 5px;border-radius:4px;font-size:9px;background:rgba(34,197,94,.15);color:#16a34a;font-weight:600}
-.tr-auto{display:inline-block;padding:1px 4px;border-radius:3px;font-size:8px;background:rgba(99,102,241,.18);color:#6366f1;font-weight:600;letter-spacing:.3px}
-[data-theme="dark"] .kechikish-badge.kech-warn{background:rgba(245,158,11,.22);color:#fbbf24}
-[data-theme="dark"] .kechikish-badge.kech-bad{background:rgba(239,68,68,.25);color:#f87171}
-[data-theme="dark"] .kech-ok{background:rgba(34,197,94,.22);color:#4ade80}
-[data-theme="dark"] .tr-auto{background:rgba(99,102,241,.3);color:#a5b4fc}
+.kech-ok{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:var(--r-xs);font-size:11px;background:var(--tint-green);color:var(--green);border:1px solid var(--tint-green-b);font-weight:600;line-height:1.2}
+.tr-auto{display:inline-block;padding:2px 5px;border-radius:var(--r-xs);font-size:11px;background:var(--tint-violet);color:var(--violet);font-weight:700;letter-spacing:.3px;line-height:1.2}
+/* Qidiruv input'i — placeholder ichida SVG ishlamaydi, ikon absolute */
+.srch{position:relative}
+.srch-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;color:var(--text3);pointer-events:none}
+.srch input{width:100%;min-height:44px;padding:11px 12px 11px 38px;font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text);outline:none}
+.srch input::placeholder{color:var(--text3)}
+/* Modal yopish tugmasi */
+.x-btn{background:var(--bg3);border:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;flex-shrink:0;transition:transform .12s ease}
+.x-btn:active{transform:scale(.92)}
+/* Kichik ekranlar (360px) — header siqilmasin */
+@media (max-width:400px){
+  .hdr{gap:6px;padding:10px}
+  .hdr-logo{font-size:20px;letter-spacing:1.5px}
+  .theme-btn,.bug-btn{width:34px;height:34px}
+}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -157,39 +209,39 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
     <div class="hdr-title" id="hdr-title">CEO Dashboard</div>
     <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
   </div>
-  <div id="tasksBtn" class="bug-btn" onclick="goTasks()" title="Vazifalar" style="display:none;background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:var(--green)">📋</div>
-  <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi">💼</div>
-  <div id="hodimlarBtn" class="bug-btn" onclick="goHodimlar()" title="Hodimlar KPI" style="display:none;background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--purple)">👥</div>
-  <div id="tilxatBtn" class="bug-btn" onclick="openTilxatPanel()" title="Tilxatlar" style="display:none">📄</div>
-  <div class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</div>
-  <div class="theme-btn" onclick="doLogout()" id="logoutBtn" style="background:rgba(255,81,81,.12);border-color:rgba(255,81,81,.3);color:var(--red)" title="Chiqish">⏻</div>
+  <div id="tasksBtn" class="bug-btn" onclick="goTasks()" title="Vazifalar" style="display:none;background:var(--tint-green);border:1px solid var(--tint-green-b);box-shadow:none;color:var(--green)"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div>
+  <div id="bugBtn" class="bug-btn" onclick="goBugalter()" title="Buxgalter sahifasi"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+  <div id="hodimlarBtn" class="bug-btn" onclick="goHodimlar()" title="Hodimlar KPI" style="display:none;background:var(--tint-violet);border:1px solid var(--tint-violet-b);box-shadow:none;color:var(--violet)"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+  <div id="tilxatBtn" class="bug-btn" onclick="openTilxatPanel()" title="Tilxatlar" style="display:none"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg></div>
+  <div class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Tema"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>
+  <div class="theme-btn" onclick="doLogout()" id="logoutBtn" style="background:var(--tint-red);border-color:var(--tint-red-b);color:var(--red)" title="Chiqish"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
 </div>
 
-<div style="display:flex;background:var(--bg2);border-bottom:1px solid var(--border)">
-  <div class="mgr-tab active" onclick="changeMgr('all',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Hammasi</div>
-  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Giyosbek</div>
-  <div class="mgr-tab" onclick="changeMgr('sherdil',this)" style="flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s">Sherdil</div>
+<div class="mgr-tabs">
+  <div class="mgr-tab active" onclick="changeMgr('all',this)" style="color:var(--green);border-bottom-color:var(--green)">Hammasi</div>
+  <div class="mgr-tab" onclick="changeMgr('giyosbek',this)">Giyosbek</div>
+  <div class="mgr-tab" onclick="changeMgr('sherdil',this)">Sherdil</div>
 </div>
 
 <div class="filter-bar" style="gap:8px">
   <select id="oy-select" onchange="changeOy(this.value)"></select>
-  <select id="profil-select" onchange="changeProfil(this.value)" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px;font-family:inherit;cursor:pointer">
+  <select id="profil-select" onchange="changeProfil(this.value)">
     <option value="all">Hammasi</option>
     <option value="Zapchast" selected>Zapchast</option>
     <option value="Aksessuar">Aksessuar</option>
     <option value="Franshiza">Franshiza</option>
   </select>
-  <div class="refresh-btn" onclick="load()">🔄</div>
+  <div class="refresh-btn" onclick="load()" role="button" tabindex="0" title="Yangilash"><svg class="lu" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></div>
 </div>
 
-<div id="tasksBanner" style="display:none;padding:10px 12px 0">
-  <div onclick="goTasks()" style="cursor:pointer;background:linear-gradient(135deg,#10b981,#059669);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(16,185,129,.3)">
-    <div style="font-size:26px">📋</div>
-    <div style="flex:1">
-      <div style="font-size:15px;font-weight:800;color:#fff">Vazifalar (Tasks)</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:1px">Xodimlarga vazifa berish va nazorat</div>
+<div id="tasksBanner" style="display:none;padding:12px 14px 0">
+  <div onclick="goTasks()" role="button" tabindex="0" style="cursor:pointer;background:linear-gradient(135deg,#10b981,#059669);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(16,185,129,.28)">
+    <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff"><svg class="lu" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:-.2px">Vazifalar (Tasks)</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px">Xodimlarga vazifa berish va nazorat</div>
     </div>
-    <div style="font-size:20px;color:#fff">›</div>
+    <div style="display:flex;color:rgba(255,255,255,.9);flex-shrink:0"><svg class="lu" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
   </div>
 </div>
 
@@ -198,31 +250,31 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <!-- DEADLINE MODAL -->
-<div id="dl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--bg2);border-radius:20px;padding:20px;width:100%;max-width:360px;border:1px solid var(--border)">
-    <div style="font-size:14px;font-weight:800;margin-bottom:4px" id="dl-ism"></div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Jami qarz: <span id="dl-summa" style="color:var(--red);font-weight:800"></span></div>
+<div id="dl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg2);border-radius:var(--r-lg);padding:20px;width:100%;max-width:360px;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="font-size:15px;font-weight:800;letter-spacing:-.2px;margin-bottom:4px" id="dl-ism"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Jami qarz: <span id="dl-summa" style="color:var(--red);font-weight:800"></span></div>
     <input type="hidden" id="dl-user-id">
     <input type="hidden" id="dl-total-summa">
     <div style="margin-bottom:12px">
-      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Deadline summasi</label>
-      <input type="number" id="dl-qarz-summa" placeholder="Summa (so'm)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+      <label style="font-size:11px;color:var(--text2);font-weight:700;letter-spacing:-.1px;display:block;margin-bottom:6px">Deadline summasi</label>
+      <input type="number" id="dl-qarz-summa" placeholder="Summa (so'm)" style="width:100%;min-height:44px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;color:var(--text);font-size:14px;outline:none">
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:10px">
-      <input type="checkbox" id="dl-all" onchange="dlAllToggle(this)" style="width:18px;height:18px;cursor:pointer">
-      <label for="dl-all" style="font-size:13px;font-weight:600;cursor:pointer">Hammasi — barcha qarzga deadline</label>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;min-height:44px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md)">
+      <input type="checkbox" id="dl-all" onchange="dlAllToggle(this)" style="width:18px;height:18px;cursor:pointer;accent-color:var(--green);flex-shrink:0">
+      <label for="dl-all" style="font-size:13px;font-weight:600;cursor:pointer;line-height:1.3">Hammasi — barcha qarzga deadline</label>
     </div>
     <div style="margin-bottom:12px">
-      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Deadline sanasi</label>
-      <input type="date" id="dl-date" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+      <label style="font-size:11px;color:var(--text2);font-weight:700;letter-spacing:-.1px;display:block;margin-bottom:6px">Deadline sanasi</label>
+      <input type="date" id="dl-date" style="width:100%;min-height:44px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;color:var(--text);font-size:14px;outline:none">
     </div>
     <div style="margin-bottom:16px">
-      <label style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Vaqt</label>
-      <input type="time" id="dl-time" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+      <label style="font-size:11px;color:var(--text2);font-weight:700;letter-spacing:-.1px;display:block;margin-bottom:6px">Vaqt</label>
+      <input type="time" id="dl-time" style="width:100%;min-height:44px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;color:var(--text);font-size:14px;outline:none">
     </div>
-    <div style="display:flex;gap:10px">
-      <button onclick="closeDlModal()" style="flex:1;padding:12px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">Bekor</button>
-      <button onclick="saveDlModal()" style="flex:2;padding:12px;border-radius:12px;background:#ff4d6d;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer">⏰ Deadline qo'y</button>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeDlModal()" style="flex:1;min-height:44px;padding:12px;border-radius:var(--r-md);background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">Bekor</button>
+      <button onclick="saveDlModal()" style="flex:2;min-height:44px;padding:12px;border-radius:var(--r-md);background:var(--red);border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg class="lu" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></svg>Deadline qo'y</button>
     </div>
   </div>
 </div>
@@ -231,8 +283,8 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 <div id="det-ochiq-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:flex-end;justify-content:center">
   <div style="background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-height:70vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 16px 0">
-      <div style="font-size:14px;font-weight:800">Ochiq buyurtmalar</div>
-      <button onclick="document.getElementById('det-ochiq-modal').style.display='none'" style="background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer">✕</button>
+      <div style="font-size:15px;font-weight:800;letter-spacing:-.2px">Ochiq buyurtmalar</div>
+      <button class="x-btn" onclick="document.getElementById('det-ochiq-modal').style.display='none'" aria-label="Yopish"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div id="det-ochiq-content"></div>
   </div>
@@ -240,10 +292,10 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="det-panel" id="det-panel">
   <div class="det-hdr">
-    <div class="det-back" onclick="closeDetail()">←</div>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:800" id="det-title">Filial</div>
-      <div style="font-size:10px;color:var(--text2)" id="det-sub"></div>
+    <div class="det-back" onclick="closeDetail()" role="button" tabindex="0" aria-label="Orqaga"><svg class="lu" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="det-title">Filial</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="det-sub"></div>
     </div>
   </div>
   <div class="det-tabs">
@@ -439,6 +491,104 @@ function buildYarimSuffix(){
 var bugunStr = now.getUTCFullYear() + '-' + String(now.getUTCMonth()+1).padStart(2,'0') + '-' + String(now.getUTCDate()).padStart(2,'0');
 var _ert = new Date(now.getTime()+86400000); var ertagaStr = _ert.getUTCFullYear() + '-' + String(_ert.getUTCMonth()+1).padStart(2,'0') + '-' + String(_ert.getUTCDate()).padStart(2,'0');
 
+// =====================================================
+// LUCIDE IKONLAR — offline, inline SVG (CDN yo'q)
+// lucide.dev 24x24 grid, stroke-width 2
+// ic('nom', o'lcham, rang, qo'shimcha-style) -> SVG string
+// =====================================================
+var LUCIDE = {
+  // --- Vaqt / sana ---
+  'calendar':'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>',
+  'calendar-days':'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/>',
+  'calendar-clock':'<path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><circle cx="16" cy="16" r="6"/><path d="M16 14v2l1.5 1"/>',
+  'calendar-check':'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/>',
+  'clock':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  'alarm-clock':'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/>',
+  'timer':'<line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/>',
+  'hourglass':'<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+  'history':'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  // --- Holat ---
+  'check':'<path d="M20 6 9 17l-5-5"/>',
+  'check-circle-2':'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  'x':'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  'x-circle':'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+  'alert-triangle':'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  'alert-circle':'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+  'info':'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  'siren':'<path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="M5.5 4.5 6 5"/>',
+  'dot':'<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>',
+  'circle':'<circle cx="12" cy="12" r="9"/>',
+  'lock':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  'power':'<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>',
+  // --- Pul ---
+  'wallet':'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+  'banknote':'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01"/><path d="M18 12h.01"/>',
+  'credit-card':'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
+  'coins':'<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+  'circle-dollar':'<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>',
+  'receipt':'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+  'percent':'<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  'gem':'<path d="M6 3h12l4 6-10 12L2 9Z"/><path d="M11 3 8 9l4 12 4-12-3-6"/><path d="M2 9h20"/>',
+  // --- Obyekt / hujjat ---
+  'package':'<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  'clipboard-list':'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+  'file-text':'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+  'folder':'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  'briefcase':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  'save':'<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>',
+  'pencil':'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  'eye':'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  // --- Harakat ---
+  'download':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  'upload':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  'send':'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  'refresh-cw':'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>',
+  'undo-2':'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>',
+  'search':'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  'log-out':'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  'plus':'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  'minus':'<path d="M5 12h14"/>',
+  'chevron-right':'<path d="m9 18 6-6-6-6"/>',
+  'chevron-left':'<path d="m15 18-6-6 6-6"/>',
+  'chevron-down':'<path d="m6 9 6 6 6-6"/>',
+  'chevron-up':'<path d="m18 15-6-6-6 6"/>',
+  'arrow-left':'<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
+  'arrow-right':'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  'external-link':'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  // --- Odam / mukofot ---
+  'user':'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  'users':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  'trophy':'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  'award':'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+  'star':'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  'flame':'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/>',
+  'zap':'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  'party-popper':'<path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 12"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H16"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V8"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/>',
+  'gift':'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+  'palette':'<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2Z"/>',
+  // --- Tahlil ---
+  'bar-chart-3':'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+  'trending-up':'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  'trending-down':'<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>',
+  'target':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  'activity':'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  // --- Navigatsiya / UI ---
+  'moon':'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  'sun':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  // --- Aloqa / logistika ---
+  'phone':'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z"/>',
+  'message-square':'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  'truck':'<path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  'building':'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>'
+};
+// Ikon SVG string qaytaradi. Noma'lum nom -> bo'sh string (xato bermaydi)
+function ic(name, size, color, extra){
+  var p = (typeof LUCIDE !== 'undefined' && LUCIDE) ? LUCIDE[name] : null;
+  if(!p) return '';
+  var s = size || 16;
+  return '<svg class="lu" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"'+(extra?' style="'+extra+'"':'')+'>'+p+'</svg>';
+}
+
 function fmt(n){
   return Math.round(Number(n)||0).toLocaleString('uz-UZ');
 }
@@ -498,12 +648,12 @@ function kechikishBadge(t){
     ttl='Kutilgan: '+String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
   }catch(e){}
   if(diffMs>=0){
-    return '<span class="tr-auto">AUTO</span> <span class="kech-ok" title="'+ttl+'">⏳ +'+label+' bor</span>';
+    return '<span class="tr-auto">AUTO</span> <span class="kech-ok" title="'+ttl+'">'+ic('hourglass',11)+'+'+label+' bor</span>';
   } else {
     var cls='kech-warn';
     if(totalSoat>=24&&totalSoat<72) cls='kech-bad';
     if(totalSoat>=72) cls='kech-crit';
-    return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge '+cls+'" title="'+ttl+'">⏰ -'+label+' kechikdi</span>';
+    return '<span class="tr-auto">AUTO</span> <span class="kechikish-badge '+cls+'" title="'+ttl+'">'+ic('alarm-clock',11)+'-'+label+' kechikdi</span>';
   }
 }
 
@@ -616,29 +766,29 @@ function renderFromCache(){
   html+='<div class="jami-row"><div class="jami-summa">0</div><div class="jami-foiz">0%</div></div>';
   html+='<div class="jami-bar-bg"><div class="jami-bar" style="width:0%"></div></div>';
   html+='<div class="jami-nums"><span>Bajarildi: <b id="jami-baj">0</b></span><span>Plan: <b id="jami-plan">'+fmt(jPlan)+'</b></span></div>';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
-  html+='<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz (oy oxirigacha)</div><div style="font-size:14px;font-weight:800;margin-top:2px"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600">so\'m</span></div></div>';
-  html+='<div style="text-align:right"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px">0%</div></div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;background:var(--bg3);border-radius:var(--r-md);margin-top:8px;border:0.5px solid var(--border)">';
+  html+='<div style="min-width:0"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Prognoz (oy oxirigacha)</div><div style="font-size:16px;font-weight:800;letter-spacing:-.3px;margin-top:4px;font-variant-numeric:tabular-nums"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0">so\'m</span></div></div>';
+  html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--amber);margin-top:4px;font-variant-numeric:tabular-nums">0%</div></div>';
   html+='</div>';
-  html+='<div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+  html+='<div style="padding:10px 12px;background:var(--bg3);border-radius:var(--r-md);margin-top:8px;border:0.5px solid var(--border)">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  html+='<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Umumiy qarz limit</span>';
-  html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2)">0 / 0 · 0%</span>';
+  html+='<span style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Umumiy qarz limit</span>';
+  html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums">0 / 0 · 0%</span>';
   html+='</div>';
-  html+='<div style="background:var(--bg2);border-radius:6px;height:6px;overflow:hidden">';
-  html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
+  html+='<div style="background:var(--bg2);border-radius:var(--r-full);height:6px;overflow:hidden">';
+  html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s cubic-bezier(.22,1,.36,1);border-radius:var(--r-full)"></div>';
   html+='</div>';
   html+='</div>';
   // MML Download tugma
-  html+='<button id="mml-dl-btn" onclick="downloadMmlBatch()" style="width:100%;margin-top:8px;padding:11px 14px;background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s">';
-  html+='<span style="font-size:15px">📥</span><span id="mml-dl-text">MML yetishmovchi tovarlarni yuklash</span>';
+  html+='<button id="mml-dl-btn" onclick="downloadMmlBatch()" style="width:100%;min-height:44px;margin-top:8px;padding:11px 14px;background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border:none;border-radius:var(--r-md);color:#fff;font-size:13px;font-weight:700;letter-spacing:-.1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .12s ease">';
+  html+='<span id="mml-dl-ic" style="display:flex">'+ic('download',16,'#fff')+'</span><span id="mml-dl-text">MML yetishmovchi tovarlarni yuklash</span>';
   html+='</button>';
   html+='<div class="jami-qarz">';
   html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
   html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
   html+='<div class="jq-box"><div class="jq-lbl">Savdo oyna</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-savdo">0</div></div>';
   html+='</div></div>';
-  html+='<div style="margin:14px 0 8px"><input id="ceo-search-input" type="search" placeholder="🔍 Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)" style="width:100%;padding:10px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);outline:none"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
+  html+='<div class="srch" style="margin:16px 0 12px"><span class="srch-ic">'+ic('search',16)+'</span><input id="ceo-search-input" type="search" placeholder="Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
   var allData=new Array(filiallar.length);
   for(var i=0;i<filiallar.length;i++){
     allData[i]=filiallar[i];
@@ -664,8 +814,9 @@ setInterval(function(){
     var h = Math.floor((abs%86400000)/3600000);
     var m = Math.floor((abs%3600000)/60000);
     var s = Math.floor((abs%60000)/1000);
-    el.textContent = (expired?'⚠️ -':'')+(days>0?days+'k ':'')+h+'s '+m+'d '+s+'s';
-    bar.style.background = expired ? '#aa0022' : '#ff4d6d';
+    // Ikon SVG — textContent SVG'ni render qilmaydi, shuning uchun innerHTML
+    el.innerHTML = (expired?ic('alert-triangle',12,'#fff','margin-right:4px')+'-':'')+(days>0?days+'k ':'')+h+'s '+m+'d '+s+'s';
+    bar.style.background = expired ? '#aa0022' : 'var(--red)';
   });
 }, 1000);
 
@@ -770,17 +921,18 @@ function renderCard(f,idx){
   var profil = f.profil || (f.is_franchise ? 'Franshiza' : 'Zapchast');
   var isFr = profil === 'Franshiza';
   var isAks = profil === 'Aksessuar';
+  // Chap chetdagi rangli chiziq — profil (franshiza/aksessuar) yoki bajarilish holati
   if(isFr){
-    el.style.borderLeft = '3px solid #a855f7';
+    el.style.borderLeft = '3px solid var(--violet)';
   } else if(isAks){
-    el.style.borderLeft = '3px solid #06b6d4';
+    el.style.borderLeft = '3px solid var(--cyan)';
   } else {
-    var brColor = foiz>=80?'#22c55e':foiz>=50?'#fbbf24':'#ef4444';
+    var brColor = foiz>=80?'var(--green)':foiz>=50?'var(--amber)':'var(--red)';
     el.style.borderLeft = '3px solid '+brColor;
   }
   var profBadge = '';
-  if(isFr) profBadge = ' · <span style="color:#a855f7;font-weight:700">FRANSHIZA</span>';
-  else if(isAks) profBadge = ' · <span style="color:#06b6d4;font-weight:700">AKSESSUAR</span>';
+  if(isFr) profBadge = ' · <span style="color:var(--violet);font-weight:700;letter-spacing:.2px">FRANSHIZA</span>';
+  else if(isAks) profBadge = ' · <span style="color:var(--cyan);font-weight:700;letter-spacing:.2px">AKSESSUAR</span>';
 
   // Qarz limit — 3 ustunli minimal box (Limit / Berilgan / Muddati o'tgan)
   function buildQarzLimitBar() {
@@ -793,22 +945,22 @@ function renderCard(f,idx){
     var muddatiFoiz = qFakt>0 ? Math.round(qMuddati/qFakt*100) : 0;
     var berilganColor = berilganFoiz<=80 ? 'var(--green)' : berilganFoiz<=100 ? 'var(--amber)' : 'var(--red)';
     var muddatiColor = qMuddati>0 ? 'var(--red)' : 'var(--text2)';
-    var html = '<div style="margin-top:8px;background:var(--bg3);border-radius:12px;border:0.5px solid var(--border);padding:10px 6px">';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center">';
-    html += '<div>';
-    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Qarz limit</div>';
-    html += '<div style="font-size:13px;font-weight:800;color:var(--text2);margin-top:5px">'+fmtShort(qLimit)+'</div>';
-    html += '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+qarzdorSoni+' qarzdor</div>';
+    var html = '<div style="margin-top:8px;background:var(--bg3);border-radius:var(--r-md);border:0.5px solid var(--border);padding:10px 4px">';
+    html += '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;text-align:center;font-variant-numeric:tabular-nums">';
+    html += '<div style="min-width:0;padding:0 4px">';
+    html += '<div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px;line-height:1.25">Qarz limit</div>';
+    html += '<div style="font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--text2);margin-top:4px;line-height:1.15">'+fmtShort(qLimit)+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.25">'+qarzdorSoni+' qarzdor</div>';
     html += '</div>';
-    html += '<div style="border-left:0.5px solid var(--border);border-right:0.5px solid var(--border)">';
-    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Berilgan qarz</div>';
-    html += '<div style="font-size:13px;font-weight:800;color:'+berilganColor+';margin-top:5px">'+fmtShort(qFakt)+'</div>';
-    html += '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+berilganFoiz+'%</div>';
+    html += '<div style="min-width:0;padding:0 4px;border-left:0.5px solid var(--border);border-right:0.5px solid var(--border)">';
+    html += '<div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px;line-height:1.25">Berilgan</div>';
+    html += '<div style="font-size:15px;font-weight:800;letter-spacing:-.3px;color:'+berilganColor+';margin-top:4px;line-height:1.15">'+fmtShort(qFakt)+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.25">'+berilganFoiz+'%</div>';
     html += '</div>';
-    html += '<div>';
-    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3">Muddati o\'tgan</div>';
-    html += '<div style="font-size:13px;font-weight:800;color:'+muddatiColor+';margin-top:5px">'+fmtShort(qMuddati)+'</div>';
-    html += '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+muddatiFoiz+'%</div>';
+    html += '<div style="min-width:0;padding:0 4px">';
+    html += '<div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px;line-height:1.25">Muddati o\'tgan</div>';
+    html += '<div style="font-size:15px;font-weight:800;letter-spacing:-.3px;color:'+muddatiColor+';margin-top:4px;line-height:1.15">'+fmtShort(qMuddati)+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.25">'+muddatiFoiz+'%</div>';
     html += '</div>';
     html += '</div></div>';
     return html;
@@ -818,7 +970,7 @@ function renderCard(f,idx){
       '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+'</div>'+
       '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+' \u00b7 Plan: '+fmt(f.plan)+'</div></div>'+
       '<div style="display:flex;align-items:center;gap:8px">'+
-      '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
+      '<div data-cal-icon="1" role="button" tabindex="0" title="Kalendar" style="width:40px;height:40px;border-radius:var(--r-md);background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">'+ic('calendar-days',18)+'</div>'+
       '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'+
       '</div></div>'+
       '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
@@ -828,21 +980,21 @@ function renderCard(f,idx){
         var h = '<div class="fc-mini">';
         h += '<div class="fc-m"><div class="fc-m-lbl">Prognoz foiz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div>';
         if(fkunlikA>0){
-          h += '<div style="font-size:9px;color:var(--text3);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border)">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlikA)+'</b></div>';
+          h += '<div style="font-size:11px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);line-height:1.3">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlikA)+'</b></div>';
         } else if(foiz>=100){
-          h += '<div style="font-size:9px;color:var(--green);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
+          h += '<div style="font-size:11px;color:var(--green);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);font-weight:700;display:flex;align-items:center;gap:4px">'+ic('check-circle-2',12)+'Bajarildi</div>';
         }
         h += '</div>';
-        h += '<div class="fc-m"><div class="fc-m-lbl">Prognoz summa</div><div class="fc-m-val" style="color:#06b6d4">'+fmt(f.prognoz||0)+'</div>';
+        h += '<div class="fc-m"><div class="fc-m-lbl">Prognoz summa</div><div class="fc-m-val" style="color:var(--cyan)">'+fmt(f.prognoz||0)+'</div>';
         if(qolganKun>0 || foiz>=100){
-          h += '<div style="font-size:9px;color:var(--text3);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border)">'+getKunDisplay(f)+' kun</div>';
+          h += '<div style="font-size:11px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);line-height:1.3">'+getKunDisplay(f)+' kun</div>';
         }
         h += '</div>';
         h += '</div>';
         return h;
       })()+
       buildQarzLimitBar()+
-      ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
+      ((f.updated_at_str||f.updated_at)?'<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:11px;color:var(--text3);padding:6px 0 0">'+ic('clock',12)+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
     // AKSESSUAR uchun ham transferlarni qo'shamiz
     var allTrListAks=f.transfers||[];
     var fWidAks = String(f.warehouse_id || '');
@@ -870,12 +1022,12 @@ function renderCard(f,idx){
       window['_tr_'+idx]=trListAks;
       window['_tf_'+idx]=f.filial||'';
       window['_trb_'+idx]=brakListAks;
-      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
-        '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
-        '<span style="font-size:11px;font-weight:700">'+(trCA>0?'<span style="color:#378ADD">'+trCA+' ta</span> ':'')+
-        (trOA>0?'<span style="color:#ff9f0a">'+trOA+' yo\'lda</span> ':'')+
-        (trXA>0?'<span style="color:#ef4444">'+trXA+' bekor</span> ':'')+
-        (brakListAks.length>0?'<span style="color:#a855f7">'+brakListAks.length+' brak</span>':'')+'</span>'+
+      var trHtmlAks='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" role="button" tabindex="0" style="margin:8px 0 0;min-height:40px;background:var(--tint-blue);border:1px solid var(--tint-blue-b);border-radius:var(--r-sm);padding:8px 10px;cursor:pointer;display:flex;gap:8px;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:11px;color:var(--blue);font-weight:700;display:flex;align-items:center;gap:5px">'+ic('truck',13)+'Transferlar</span>'+
+        '<span style="font-size:11px;font-weight:700;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">'+(trCA>0?'<span style="color:var(--blue)">'+trCA+' ta</span>':'')+
+        (trOA>0?'<span style="color:var(--amber)">'+trOA+' yo\'lda</span>':'')+
+        (trXA>0?'<span style="color:var(--red)">'+trXA+' bekor</span>':'')+
+        (brakListAks.length>0?'<span style="color:var(--violet)">'+brakListAks.length+' brak</span>':'')+'</span>'+
         '</div>';
       el.innerHTML+=trHtmlAks;
     }
@@ -889,15 +1041,17 @@ function renderCard(f,idx){
   var qarzFakt = parseFloat(f.qarz_fakt||0);
   var transferSom = parseFloat(f.transfer_balance||0);
   var balansUsd = omborUsd + (qarzFakt/USD_RATE) + (turganPul/USD_RATE) + (transferSom/USD_RATE);
-  var balansColor = balansUsd >= 0 ? '#16a34a' : '#ef4444';
+  var balansColor = balansUsd >= 0 ? 'var(--green)' : 'var(--red)';
+  var balansTint  = balansUsd >= 0 ? 'var(--tint-green)' : 'var(--tint-red)';
+  var balansBd    = balansUsd >= 0 ? 'var(--tint-green-b)' : 'var(--tint-red-b)';
   var balansSign = balansUsd < 0 ? '-' : '';
   window['_om_'+idx]=f;
-  var omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" style="background:var(--bg3);border:0.5px solid var(--border);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;cursor:pointer;margin-left:4px;color:'+balansColor+'">💎 '+balansSign+'$'+fmtShort(Math.abs(balansUsd))+'</span>';
+  var omborBadge = ' <span onclick="event.stopPropagation();showOmborModal(window[\'_om_'+idx+'\'])" role="button" tabindex="0" style="background:'+balansTint+';border:0.5px solid '+balansBd+';font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--r-full);white-space:nowrap;display:inline-flex;align-items:center;gap:4px;cursor:pointer;margin-left:6px;vertical-align:middle;font-variant-numeric:tabular-nums;color:'+balansColor+'">'+ic('gem',12)+balansSign+'$'+fmtShort(Math.abs(balansUsd))+'</span>';
   el.innerHTML=
     '<div class="fc-top"><div><div class="fc-name">'+(f.filial||'')+omborBadge+'</div>'+
     '<div class="fc-oy">'+(f.oy||OY[curOy-1])+profBadge+(profBadge?' · ':' · ')+'Plan: '+fmt(f.plan)+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px">'+
-    '<div data-cal-icon="1" style="width:32px;height:32px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">📅</div>'+
+    '<div data-cal-icon="1" role="button" tabindex="0" title="Kalendar" style="width:40px;height:40px;border-radius:var(--r-md);background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">'+ic('calendar-days',18)+'</div>'+
     '<div class="fc-foiz" style="color:'+fColor(foiz)+'">'+foiz+'%</div>'+
     '</div></div>'+
     '<div class="fc-bar-bg"><div class="fc-bar" style="width:'+barW+'%;background:'+bColor(foiz)+'"></div></div>'+
@@ -909,21 +1063,21 @@ function renderCard(f,idx){
       var fkunlik = (qolganKun>0 && f.qoldi>0 && foiz<100) ? Math.round(f.qoldi/qolganKun) : 0;
       var h = '<div class="fc-m"><div class="fc-m-lbl">Prognoz</div><div class="fc-m-val" style="color:'+fColor(pFoiz)+'">'+pFoiz+'%</div>';
       if(fkunlik>0){
-        h += '<div style="font-size:9px;color:var(--text3);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);line-height:1.3">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
-        h += '<div style="font-size:9px;color:var(--text3);margin-top:1px;line-height:1.3">'+getKunDisplay(f)+' kun</div>';
+        h += '<div style="font-size:11px;color:var(--text3);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);line-height:1.3">100%/kun: <b style="color:var(--amber);font-weight:700">'+fmt(fkunlik)+'</b></div>';
+        h += '<div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.3">'+getKunDisplay(f)+' kun</div>';
       } else if(foiz>=100){
-        h += '<div style="font-size:9px;color:var(--green);margin-top:3px;padding-top:3px;border-top:0.5px solid var(--border);font-weight:700">✅ Bajarildi</div>';
+        h += '<div style="font-size:11px;color:var(--green);margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border);font-weight:700;display:flex;align-items:center;gap:4px">'+ic('check-circle-2',12)+'Bajarildi</div>';
       }
       h += '</div>';
       return h;
     })()+
     '</div>'+
     '<div class="fc-mini" style="margin-top:0">'+
-    '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</span></div></div>'+
-    '<div class="fc-m"><div class="fc-m-lbl">Savdo oyna</div><div class="fc-m-val" style="color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'<span style="font-size:9px;color:var(--text3);margin-left:2px">'+(f.tugallanmagan_savdo_son||0)+' ta</span></div></div>'+
+    '<div class="fc-m" style="cursor:pointer" onclick="openDetailFromCard('+JSON.stringify(f).replace(/'/g,"\\'")+')"><div class="fc-m-lbl">Ochiq buyurtma</div><div class="fc-m-val" style="color:var(--amber)">'+fmt((f.confirmedOrders||[]).reduce(function(s,o){return s+Number(o.summa||0);},0))+'</div><div class="fc-m-sub">'+( f.confirmedOrders ? f.confirmedOrders.length : 0)+' ta</div></div>'+
+    '<div class="fc-m"><div class="fc-m-lbl">Savdo oyna</div><div class="fc-m-val" style="color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div><div class="fc-m-sub">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>'+
     '</div>'+
     buildQarzLimitBar()+
-    ((f.updated_at_str||f.updated_at)?'<div style="text-align:right;font-size:9px;color:var(--text3);padding:4px 0">🕐 '+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
+    ((f.updated_at_str||f.updated_at)?'<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:11px;color:var(--text3);padding:6px 0 0">'+ic('clock',12)+(f.updated_at_str||(function(){var d=new Date(f.updated_at);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);})())+'</div>':'');
   var allTrList=f.transfers||[];
   var fWid = String(f.warehouse_id || '');
   var fApiWid = String(f.api_warehouse_id || f.warehouse_id || '');
@@ -951,12 +1105,12 @@ function renderCard(f,idx){
     window['_tr_'+idx]=trList;
     window['_tf_'+idx]=f.filial||'';
     window['_trb_'+idx]=f.brak_transfers||[];
-    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" style="margin:8px 0 0;background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
-      '<span style="font-size:10px;color:#378ADD;font-weight:600">Transferlar</span>'+
-      '<span style="font-size:11px;font-weight:700">'+(trC>0?'<span style="color:#378ADD">'+trC+' ta</span> ':'')+
-      (trO>0?'<span style="color:#ff9f0a">'+trO+' yo\'lda</span> ':'')+
-      (trX>0?'<span style="color:#ef4444">'+trX+' bekor</span> ':'')+
-      (brakList.length>0?'<span style="color:#a855f7">'+brakList.length+' brak</span>':'')+'</span>'+
+    trHtmlBlock='<div onclick="event.stopPropagation();showTransfersModal(window[\'_tr_'+idx+'\'],window[\'_tf_'+idx+'\'],window[\'_trb_'+idx+'\'])" role="button" tabindex="0" style="margin:8px 0 0;min-height:40px;background:var(--tint-blue);border:1px solid var(--tint-blue-b);border-radius:var(--r-sm);padding:8px 10px;cursor:pointer;display:flex;gap:8px;justify-content:space-between;align-items:center">'+
+      '<span style="font-size:11px;color:var(--blue);font-weight:700;display:flex;align-items:center;gap:5px">'+ic('truck',13)+'Transferlar</span>'+
+      '<span style="font-size:11px;font-weight:700;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">'+(trC>0?'<span style="color:var(--blue)">'+trC+' ta</span>':'')+
+      (trO>0?'<span style="color:var(--amber)">'+trO+' yo\'lda</span>':'')+
+      (trX>0?'<span style="color:var(--red)">'+trX+' bekor</span>':'')+
+      (brakList.length>0?'<span style="color:var(--violet)">'+brakList.length+' brak</span>':'')+'</span>'+
       '</div>';
   }
   var cardEl=document.getElementById('fc-'+idx);
@@ -1118,23 +1272,23 @@ function renderDetDash(){
   var fpColor=fColor(foiz);
   var html='';
   html+='<div class="progress-card">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
-  html+='<div><div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase">'+f.filial+' · '+(f.oy||'')+'</div>';
-  html+='<div style="font-size:17px;font-weight:800;margin-top:3px">'+fmt(f.plan)+' so\'m</div></div>';
-  html+='<div style="font-size:26px;font-weight:800;color:'+fpColor+'">'+foiz+'%</div></div>';
-  html+='<div style="background:var(--bg3);border-radius:8px;height:7px;margin-bottom:10px;overflow:hidden"><div style="width:'+barW+'%;height:100%;border-radius:8px;background:'+fpColor+'"></div></div>';
-  html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:10px">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">';
+  html+='<div style="min-width:0"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">'+f.filial+' · '+(f.oy||'')+'</div>';
+  html+='<div style="font-size:22px;font-weight:800;letter-spacing:-.6px;margin-top:6px;line-height:1.1;font-variant-numeric:tabular-nums">'+fmt(f.plan)+' <span style="font-size:13px;font-weight:600;color:var(--text3);letter-spacing:0">so\'m</span></div></div>';
+  html+='<div style="font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:1;flex-shrink:0;font-variant-numeric:tabular-nums;color:'+fpColor+'">'+foiz+'%</div></div>';
+  html+='<div style="background:var(--bg3);border-radius:var(--r-full);height:8px;margin-bottom:10px;overflow:hidden"><div style="width:'+barW+'%;height:100%;border-radius:var(--r-full);background:'+fpColor+';transition:width .8s cubic-bezier(.22,1,.36,1)"></div></div>';
+  html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:12px;font-variant-numeric:tabular-nums">';
   html+='<span>Bajarildi: <b style="color:var(--text)">'+fmt(f.bajarildi)+'</b></span><span>Qoldi: <b style="color:var(--text)">'+fmt(f.qoldi)+'</b></span></div>';
-  html+='<div style="display:flex;gap:8px;margin-bottom:8px">';
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Tushum</div><div style="font-size:13px;font-weight:800;color:var(--green)">'+fmt(f.orders_summa)+'</div></div>';
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Qaytarilgan</div><div style="font-size:13px;font-weight:800;color:var(--red)">'+fmt(f.returns_summa)+'</div></div>';
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Prognoz</div><div style="font-size:13px;font-weight:800;color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px">';
+  html+='<div style="min-width:0;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Tushum</div><div style="font-size:14px;font-weight:800;letter-spacing:-.3px;margin-top:4px;color:var(--green);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+fmt(f.orders_summa)+'</div></div>';
+  html+='<div style="min-width:0;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Qaytarilgan</div><div style="font-size:14px;font-weight:800;letter-spacing:-.3px;margin-top:4px;color:var(--red);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+fmt(f.returns_summa)+'</div></div>';
+  html+='<div style="min-width:0;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Prognoz</div><div style="font-size:14px;font-weight:800;letter-spacing:-.3px;margin-top:4px;font-variant-numeric:tabular-nums;color:'+fColor(pFoiz)+'">'+pFoiz+'%</div></div>';
   html+='</div>';
   html+='<div style="display:flex;gap:8px">';
   var dConfOrders = detFilialCache ? (detFilialCache.confirmedOrders||[]) : (f.confirmedOrders||[]);
   var dConfSum = dConfOrders.reduce(function(s,o){return s+Number(o.summa||0);},0);
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px;cursor:pointer" onclick="showConfirmedModal()"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Ochiq buyurtma</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(dConfSum)+'</div><div style="font-size:10px;color:var(--text3);margin-top:2px">'+dConfOrders.length+' ta →</div></div>';
-  html+='<div style="flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Savdo oyna</div><div style="font-size:13px;font-weight:800;color:var(--amber)">'+fmt(f.tugallanmagan_savdo||0)+'</div><div style="font-size:10px;color:var(--text3);margin-top:2px">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>';
+  html+='<div style="flex:1;min-width:0;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px;cursor:pointer" onclick="showConfirmedModal()" role="button" tabindex="0"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Ochiq buyurtma</div><div style="font-size:15px;font-weight:800;letter-spacing:-.3px;margin-top:4px;color:var(--amber);font-variant-numeric:tabular-nums">'+fmt(dConfSum)+'</div><div style="font-size:11px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:3px">'+dConfOrders.length+' ta'+ic('chevron-right',12)+'</div></div>';
+  html+='<div style="flex:1;min-width:0;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Savdo oyna</div><div style="font-size:15px;font-weight:800;letter-spacing:-.3px;margin-top:4px;color:var(--amber);font-variant-numeric:tabular-nums">'+fmt(f.tugallanmagan_savdo||0)+'</div><div style="font-size:11px;color:var(--text3);margin-top:4px">'+(f.tugallanmagan_savdo_son||0)+' ta</div></div>';
   html+='</div>';
   var allTrAll=detFilialCache?(detFilialCache.transfers||[]):[];
   var detWid = detFilialCache ? String(detFilialCache.warehouse_id || '') : String(f.warehouse_id || '');
@@ -1158,22 +1312,22 @@ function renderDetDash(){
     var trCreated=trAll.filter(function(t){return t.status==='created';});
     var trOnWay=trAll.filter(function(t){return t.status==='on_way';});
     var trCancl=trAll.filter(function(t){return t.status==='canceled'||t.status==='returned';});
-    html+='<div style="margin-top:8px;cursor:pointer" id="det-tr-btn">';
-    html+='<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.2);border-radius:10px;padding:8px 10px">';
-    html+='<div style="font-size:10px;color:#378ADD;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;font-weight:600">Transferlar</div>';
-    html+='<div style="display:flex;gap:8px;align-items:center">';
-    if(trCreated.length>0) html+='<span style="font-size:12px;font-weight:700;color:#378ADD">'+trCreated.length+' yaratilgan</span>';
-    if(trOnWay.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ff9f0a">'+trOnWay.length+' yo\'lda</span>';
-    if(trCancl.length>0) html+='<span style="font-size:12px;font-weight:700;color:#ef4444">'+trCancl.length+' bekor</span>';
-    html+='</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Bosib ko\'ring →</div>';
+    html+='<div style="margin-top:8px;cursor:pointer" id="det-tr-btn" role="button" tabindex="0">';
+    html+='<div style="background:var(--tint-blue);border:1px solid var(--tint-blue-b);border-radius:var(--r-md);padding:10px 12px">';
+    html+='<div style="font-size:11px;color:var(--blue);margin-bottom:6px;letter-spacing:-.1px;font-weight:700;display:flex;align-items:center;gap:5px">'+ic('truck',13)+'Transferlar</div>';
+    html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+    if(trCreated.length>0) html+='<span style="font-size:12px;font-weight:700;color:var(--blue)">'+trCreated.length+' yaratilgan</span>';
+    if(trOnWay.length>0) html+='<span style="font-size:12px;font-weight:700;color:var(--amber)">'+trOnWay.length+' yo\'lda</span>';
+    if(trCancl.length>0) html+='<span style="font-size:12px;font-weight:700;color:var(--red)">'+trCancl.length+' bekor</span>';
+    html+='</div><div style="font-size:11px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:3px">Bosib ko\'ring'+ic('chevron-right',12)+'</div>';
     html+='</div></div>';
   }
   if(qolganKun>0&&f.qoldi>0&&foiz<100){
-    html+='<div style="margin-top:8px;padding:7px 10px;background:var(--bg3);border-radius:10px;font-size:11px;color:var(--text2);display:flex;justify-content:space-between">';
+    html+='<div style="margin-top:8px;padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);font-size:12px;color:var(--text2);display:flex;gap:8px;justify-content:space-between;font-variant-numeric:tabular-nums">';
     html+='<span>100% uchun kuniga: <b style="color:var(--amber)">'+fmt(Math.round(f.qoldi/qolganKun))+'</b></span>';
     html+='<span style="color:var(--text3)">'+getKunDisplay(f)+' kun</span></div>';
   } else if(foiz>=100){
-    html+='<div style="margin-top:8px;padding:7px 10px;background:rgba(0,229,160,.1);border-radius:10px;font-size:11px;color:var(--green);text-align:center;font-weight:700">✅ Plan bajarildi!</div>';
+    html+='<div style="margin-top:8px;padding:10px 12px;background:var(--tint-green);border:0.5px solid var(--tint-green-b);border-radius:var(--r-md);font-size:12px;color:var(--green);display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700">'+ic('check-circle-2',15)+'Plan bajarildi!</div>';
   }
   html+='</div>';
   html+='<div class="stats-grid">';
@@ -1267,7 +1421,7 @@ function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
   var total=list.reduce(function(s,r){return s+Number(r.summa||0);},0);
   var html='<div class="total-bar"><div class="tb-lbl">Jami</div><div class="tb-val" style="color:'+color+'">'+fmtFull(total)+' so\'m</div></div>';
   html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
-  html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Mijozlar</div>';
+  html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">Mijozlar</div>';
   html+='<span class="badge '+badgeClass+'">'+list.length+' ta</span></div>';
   list = list.slice().sort(function(a,b){
     var da = detDeadlines[String(a.user_id)] ? 1 : 0;
@@ -1280,7 +1434,7 @@ function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
     var clickFn=lazy?('toggleDetOrd(\''+id+'\','+r.user_id+','+(r.wallet_balance||0)+')'):('toggleDetInline(\''+id+'\')');
     var dl = detDeadlines[String(r.user_id)];
     var hasDl = dl && dl.quyilgan_deadline;
-    html+='<div class="client-card" style="'+(hasDl?'border-color:#ff4d6d;border-width:2px':'')+ '">';
+    html+='<div class="client-card" style="'+(hasDl?'border-color:var(--red);border-width:1.5px':'')+ '">';
     if(hasDl){
       var dlMs = new Date(dl.quyilgan_deadline).getTime()-new Date().getTime();
       var dlExpired = dlMs < 0;
@@ -1289,22 +1443,22 @@ function renderDetList(pageId,list,color,badgeClass,emptyText,lazy){
       var dlH = Math.floor((absDl%86400000)/3600000);
       var dlM = Math.floor((absDl%3600000)/60000);
       var dlS = Math.floor((absDl%60000)/1000);
-      var dlStr = (dlExpired?'⚠️ -':'')+(dlDays>0?dlDays+'k ':'')+dlH+'s '+dlM+'d '+dlS+'s';
-      html+='<div style="background:#ff4d6d;padding:5px 14px;display:flex;justify-content:space-between;align-items:center" id="dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">';
-      html+='<div style="font-size:10px;color:#fff;font-weight:700">⏰ DEADLINE: <span id="dl-cnt-'+r.user_id+'">'+dlStr+'</span></div>';
-      if(isCeo) html+='<button onclick="okDeadline('+r.user_id+')" style="background:#fff;color:#ff4d6d;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:800;cursor:pointer">OK ✓</button>';
+      var dlStr = (dlExpired?ic('alert-triangle',12,'#fff','margin-right:4px')+'-':'')+(dlDays>0?dlDays+'k ':'')+dlH+'s '+dlM+'d '+dlS+'s';
+      html+='<div style="background:var(--red);padding:6px 12px;min-height:36px;display:flex;gap:8px;justify-content:space-between;align-items:center" id="dl-bar-'+r.user_id+'" data-dl="'+dl.quyilgan_deadline+'">';
+      html+='<div style="font-size:11px;color:#fff;font-weight:700;letter-spacing:.2px;display:flex;align-items:center;gap:5px;min-width:0">'+ic('alarm-clock',13,'#fff')+'DEADLINE: <span id="dl-cnt-'+r.user_id+'" style="font-variant-numeric:tabular-nums">'+dlStr+'</span></div>';
+      if(isCeo) html+='<button onclick="okDeadline('+r.user_id+')" style="background:#fff;color:var(--red);border:none;border-radius:var(--r-xs);padding:4px 10px;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0">OK'+ic('check',12)+'</button>';
       html+='</div>';
     }
     html+='<div class="client-main" onclick="'+clickFn+'">';
     html+='<div class="c-av">'+ini(r.ism)+'</div>';
-    var utag=r.usertype==='master'?'<span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(77,159,255,.15);color:#4d9fff;margin-left:4px">Master</span>':r.usertype==='business_partner'?'<span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(255,184,0,.15);color:#ffb800;margin-left:4px">BP</span>':'';
+    var utag=r.usertype==='master'?'<span style="font-size:11px;font-weight:800;padding:1px 6px;border-radius:var(--r-xs);background:var(--tint-blue);color:var(--blue);margin-left:5px">Master</span>':r.usertype==='business_partner'?'<span style="font-size:11px;font-weight:800;padding:1px 6px;border-radius:var(--r-xs);background:var(--tint-amber);color:var(--amber);margin-left:5px">BP</span>':'';
     html+='<div class="c-info"><div class="c-name">'+(r.ism||"Noma'lum")+utag+'</div><div class="c-phone">'+(tel?'+'+tel:'—')+'</div></div>';
     html+='<div class="c-right"><div class="c-amt" style="color:'+color+'">'+fmtFull(r.summa)+'</div>';
-    if(hasDl) html+='<div style="font-size:10px;color:#ff4d6d;margin-top:2px">'+fmtFull(dl.deadline_summa)+' so\'m</div>';
+    if(hasDl) html+='<div style="font-size:11px;color:var(--red);margin-top:2px;font-variant-numeric:tabular-nums">'+fmtFull(dl.deadline_summa)+' so\'m</div>';
     html+='</div>';
-    if(tel) html+='<a class="call-btn" href="tel:+'+tel+'" onclick="event.stopPropagation()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.95 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012.85 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg></a>';
-    if(isCeo&&lazy) html+='<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism+'\',' +(r.otgan_summa||r.summa)+')" style="margin-left:6px;background:rgba(255,184,0,.15);border:1px solid rgba(255,184,0,.4);border-radius:8px;padding:5px 10px;font-size:10px;font-weight:800;color:#ffb800;cursor:pointer;flex-shrink:0">⏰</button>';
-    html+='<span class="arr" id="ar-'+id+'">▾</span>';
+    if(tel) html+='<a class="call-btn" href="tel:+'+tel+'" onclick="event.stopPropagation()" title="Qo\'ng\'iroq">'+ic('phone',16)+'</a>';
+    if(isCeo&&lazy) html+='<button onclick="event.stopPropagation();setDeadline('+r.user_id+',\''+r.ism+'\',' +(r.otgan_summa||r.summa)+')" title="Deadline qo\'yish" style="margin-left:6px;width:40px;height:40px;background:var(--tint-amber);border:1px solid var(--tint-amber-b);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--amber);cursor:pointer;flex-shrink:0">'+ic('alarm-clock',16)+'</button>';
+    html+='<span class="arr" id="ar-'+id+'">'+ic('chevron-down',16)+'</span>';
     html+='</div>';
     html+='<div class="orders-list" id="ol-'+id+'">';
     if(!lazy&&r.orders&&r.orders.length){
@@ -1323,8 +1477,9 @@ function toggleDetOrd(id,userId,walletBalance){
   var el=document.getElementById('ol-'+id),ar=document.getElementById('ar-'+id);
   if(!el) return;
   var open=el.classList.contains('exp');
-  if(open){el.classList.remove('exp');if(ar){ar.textContent='▾';ar.classList.remove('open');}return;}
-  if(ar){ar.textContent='▴';ar.classList.add('open');}
+  // Strelka SVG — faqat .open klassi bilan aylantiriladi (CSS rotate)
+  if(open){el.classList.remove('exp');if(ar){ar.classList.remove('open');}return;}
+  if(ar){ar.classList.add('open');}
   if(detOrders[userId]!==undefined){
     fillDetOrd(el,detOrders[userId].filter(function(o){return o.deadline<bugunStr;}),walletBalance);
     el.classList.add('exp');return;
@@ -1345,15 +1500,15 @@ function toggleDetInline(id){
   var el=document.getElementById('ol-'+id),ar=document.getElementById('ar-'+id);
   if(!el) return;
   var open=el.classList.contains('exp');
-  if(open){el.classList.remove('exp');if(ar){ar.textContent='▾';ar.classList.remove('open');}}
-  else{el.classList.add('exp');if(ar){ar.textContent='▴';ar.classList.add('open');}}
+  if(open){el.classList.remove('exp');if(ar){ar.classList.remove('open');}}
+  else{el.classList.add('exp');if(ar){ar.classList.add('open');}}
 }
 
 function fillDetOrd(el,orders,walletBalance){
   if(!orders||!orders.length){el.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--text3)">Order topilmadi</div>';return;}
   var html='';
   if(walletBalance&&walletBalance>0){
-    html+='<div class="order-row" style="background:rgba(0,229,160,.07)">';
+    html+='<div class="order-row" style="background:var(--tint-green)">';
     html+='<div><div style="font-size:11px;color:var(--green);font-weight:700">Hamyon balansi</div>';
     html+='<div style="font-size:11px;color:var(--green)">Qarzdan ayiriladi</div></div>';
     html+='<div style="font-size:13px;font-weight:800;color:var(--green)">'+fmtFull(walletBalance)+' so\'m</div></div>';
@@ -1380,7 +1535,7 @@ function load(){
       console.log('CEO parsed:', d?'OK filiallar:'+(d.filiallar?d.filiallar.length:0):'NULL');
       if(!d) throw new Error('Serverdan xato javob keldi: '+txt.substring(0,100));
       if(d.error === 'unauthorized'){
-        document.getElementById('main').innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text2)"><div style="font-size:48px;margin-bottom:16px">🔒</div><div style="font-size:18px;font-weight:700;margin-bottom:8px">Ruxsat yo\'q</div><div style="font-size:13px;color:var(--text3)">Bu sahifaga kirish uchun CEO huquqiga ega bo\'lishingiz kerak</div></div>';
+        document.getElementById('main').innerHTML='<div style="text-align:center;padding:60px 24px;color:var(--text2)"><div style="width:64px;height:64px;margin:0 auto 16px;border-radius:var(--r-lg);background:var(--bg3);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text3)">'+ic('lock',30)+'</div><div style="font-size:18px;font-weight:700;letter-spacing:-.3px;margin-bottom:8px;color:var(--text)">Ruxsat yo\'q</div><div style="font-size:13px;color:var(--text3);line-height:1.45">Bu sahifaga kirish uchun CEO huquqiga ega bo\'lishingiz kerak</div></div>';
         return;
       }
       if(d.error) throw new Error(d.error);
@@ -1396,29 +1551,29 @@ function load(){
       html+='<div class="jami-row"><div class="jami-summa">0</div><div class="jami-foiz">0%</div></div>';
       html+='<div class="jami-bar-bg"><div class="jami-bar" style="width:0%"></div></div>';
       html+='<div class="jami-nums"><span>Bajarildi: <b id="jami-baj">0</b></span><span>Plan: <b id="jami-plan">'+fmt(jPlan)+'</b></span></div>';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
-      html+='<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Prognoz (oy oxirigacha)</div><div style="font-size:14px;font-weight:800;margin-top:2px"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600">so\'m</span></div></div>';
-      html+='<div style="text-align:right"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px">0%</div></div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;background:var(--bg3);border-radius:var(--r-md);margin-top:8px;border:0.5px solid var(--border)">';
+      html+='<div style="min-width:0"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Prognoz (oy oxirigacha)</div><div style="font-size:16px;font-weight:800;letter-spacing:-.3px;margin-top:4px;font-variant-numeric:tabular-nums"><span id="jami-prognoz">0</span> <span style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0">so\'m</span></div></div>';
+      html+='<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Foiz</div><div id="jami-prognoz-foiz" style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--amber);margin-top:4px;font-variant-numeric:tabular-nums">0%</div></div>';
       html+='</div>';
-      html+='<div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-top:8px;border:0.5px solid var(--border)">';
+      html+='<div style="padding:10px 12px;background:var(--bg3);border-radius:var(--r-md);margin-top:8px;border:0.5px solid var(--border)">';
       html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-      html+='<span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Umumiy qarz limit</span>';
-      html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2)">0 / 0 · 0%</span>';
+      html+='<span style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Umumiy qarz limit</span>';
+      html+='<span id="jami-qarz-info" style="font-size:11px;font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums">0 / 0 · 0%</span>';
       html+='</div>';
-      html+='<div style="background:var(--bg2);border-radius:6px;height:6px;overflow:hidden">';
-      html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s ease;border-radius:6px"></div>';
+      html+='<div style="background:var(--bg2);border-radius:var(--r-full);height:6px;overflow:hidden">';
+      html+='<div id="jami-qarz-bar" style="height:100%;width:0%;background:var(--green);transition:width 1s cubic-bezier(.22,1,.36,1);border-radius:var(--r-full)"></div>';
       html+='</div>';
       html+='</div>';
       // MML Download tugma
-      html+='<button id="mml-dl-btn" onclick="downloadMmlBatch()" style="width:100%;margin-top:8px;padding:11px 14px;background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s">';
-      html+='<span style="font-size:15px">📥</span><span id="mml-dl-text">MML yetishmovchi tovarlarni yuklash</span>';
+      html+='<button id="mml-dl-btn" onclick="downloadMmlBatch()" style="width:100%;min-height:44px;margin-top:8px;padding:11px 14px;background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border:none;border-radius:var(--r-md);color:#fff;font-size:13px;font-weight:700;letter-spacing:-.1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .12s ease">';
+      html+='<span id="mml-dl-ic" style="display:flex">'+ic('download',16,'#fff')+'</span><span id="mml-dl-text">MML yetishmovchi tovarlarni yuklash</span>';
       html+='</button>';
       html+='<div class="jami-qarz">';
       html+='<div class="jq-box"><div class="jq-lbl">Muddati o\'tgan qarz</div><div class="jq-val" style="color:var(--red)" id="jami-qarz">0</div></div>';
       html+='<div class="jq-box"><div class="jq-lbl">Tugall. buyurtma</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-buyurtma">0</div></div>';
       html+='<div class="jq-box"><div class="jq-lbl">Savdo oyna</div><div class="jq-val" style="color:var(--amber)" id="jami-tug-savdo">0</div></div>';
       html+='</div></div>';
-      html+='<div style="margin:14px 0 8px"><input id="ceo-search-input" type="search" placeholder="🔍 Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)" style="width:100%;padding:10px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);outline:none"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
+      html+='<div class="srch" style="margin:16px 0 12px"><span class="srch-ic">'+ic('search',16)+'</span><input id="ceo-search-input" type="search" placeholder="Filial qidirish..." value="'+(curSearch||'').replace(/"/g,'&quot;')+'" oninput="onCeoSearch(this.value)"></div>';html+='<div class="sec-hdr"><div class="sec-title">Filiallar</div><span class="sec-badge">'+filiallar.length+' ta</span></div>';
       var allData=new Array(filiallar.length);
       for(var i=0;i<filiallar.length;i++) html+='<div class="filial-card" id="fc-'+i+'"><div class="fc-loading"><div class="mini-spin"></div></div></div>';
       document.getElementById('main').innerHTML=html;
@@ -1435,18 +1590,19 @@ function load(){
       cachedOy=curOy;
       cachedYil=curYil;
     })
-    .catch(function(e){document.getElementById('main').innerHTML='<div class="err-box">⚠️ '+e.message+'</div>';});
+    .catch(function(e){document.getElementById('main').innerHTML='<div class="err-box">'+ic('alert-triangle',16)+'<span>'+e.message+'</span></div>';});
 }
 
 var isDark=true;
 function toggleTheme(){
   isDark=!isDark;
   document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
-  document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';
+  // SVG — textContent emas, innerHTML
+  document.getElementById('themeBtn').innerHTML=ic(isDark?'moon':'sun',17);
   try{localStorage.setItem('ceo-theme',isDark?'dark':'light');}catch(e){}
 }
 (function(){
-  try{var t=localStorage.getItem('ceo-theme');if(t==='light'){isDark=false;document.documentElement.setAttribute('data-theme','light');document.getElementById('themeBtn').textContent='☀️';}}catch(e){}
+  try{var t=localStorage.getItem('ceo-theme');if(t==='light'){isDark=false;document.documentElement.setAttribute('data-theme','light');document.getElementById('themeBtn').innerHTML=ic('sun',17);}}catch(e){}
 })();
 
 buildOyOptions();
@@ -1482,19 +1638,19 @@ function showConfirmedModal(){
   }
   orders.forEach(function(o){ o._kun = kunHisob(o.created_datetime || o.sana); });
   orders.sort(function(a,b){ return (b._kun||0) - (a._kun||0); });
-  var html='<div style="padding:16px">';
-  html+='<div style="font-size:14px;font-weight:800;margin-bottom:12px">Ochiq buyurtmalar ('+orders.length+' ta)</div>';
+  var html='<div style="padding:12px 16px 24px">';
+  html+='<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Ochiq buyurtmalar ('+orders.length+' ta)</div>';
   orders.forEach(function(o){
     var url='https://admin.aros.uz/orders/'+o.order_id+'/';
     var kun = o._kun || 0;
-    var kunBadge = kun>0 ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,77,109,.15);color:#ff6b8a;margin-left:6px">'+kun+' kun</span>' : '';
+    var kunBadge = kun>0 ? '<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:var(--r-xs);background:var(--tint-red);border:0.5px solid var(--tint-red-b);color:var(--red);margin-left:6px;flex-shrink:0">'+kun+' kun</span>' : '';
     var dtStr = fmtDateTime(o.created_datetime || o.sana);
     html+='<a href="'+url+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:8px">';
-    html+='<div style="background:var(--bg3);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">';
+    html+='<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px 12px;min-height:56px;display:flex;gap:8px;justify-content:space-between;align-items:center">';
     html+='<div style="flex:1;min-width:0">';
-    html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:700">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
-    html+='<div style="font-size:11px;color:var(--text3);margin-top:2px">Order #'+o.order_id+' · '+dtStr+'</div></div>';
-    html+='<div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;margin-left:8px">'+fmtFull(o.summa)+' so\'m</div>';
+    html+='<div style="display:flex;align-items:center;flex-wrap:wrap"><div style="font-size:13px;font-weight:700;letter-spacing:-.1px">'+(o.ism||"Noma\'lum")+'</div>'+kunBadge+'</div>';
+    html+='<div style="font-size:11px;color:var(--text3);margin-top:3px">Order #'+o.order_id+' · '+dtStr+'</div></div>';
+    html+='<div style="font-size:13px;font-weight:800;letter-spacing:-.2px;color:var(--green);flex-shrink:0;font-variant-numeric:tabular-nums">'+fmtFull(o.summa)+' so\'m</div>';
     html+='</div></a>';
   });
   html+='</div>';
@@ -1502,15 +1658,32 @@ function showConfirmedModal(){
   document.getElementById('det-ochiq-modal').style.display='flex';
 }
 
+// Dashboard (aros-cache-filial) bo\'yicha shu ombor uchun jami vozvrat.
+// Kalendar bilan solishtirib, mos kelmasa ogohlantiramiz.
+function dashReturnsFor(w, oy, yil, yarim){
+  try{
+    if(Number(yarim||0) !== Number(curYarim||0)) return null;
+    var arr = (typeof cachedAllData !== 'undefined' && cachedAllData) ? cachedAllData : [];
+    for(var i=0;i<arr.length;i++){
+      if(String(arr[i].warehouse_id) === String(w)){
+        if(Number(oy) !== Number(curOy) || Number(yil) !== Number(curYil)) return null;
+        var v = Number(arr[i].returns_summa);
+        return isNaN(v) ? null : v;
+      }
+    }
+  }catch(e){}
+  return null;
+}
 function openCalendar(wid, filialNomi, oy, yil, yarim){
   var modal = document.getElementById('cal-modal');
   var title = document.getElementById('cal-title');
   var subtitle = document.getElementById('cal-subtitle');
   var body = document.getElementById('cal-body');
   var yarimNum = (yarim !== undefined && yarim !== null) ? parseInt(yarim) : curYarim;
-  title.textContent = '📅 ' + (filialNomi||'Kalendar');
+  // Ikon alohida statik elementda (#cal-title-ic) — textContent SVG'ni render qilmaydi
+  title.textContent = (filialNomi||'Kalendar');
   subtitle.textContent = getOyNomi(parseInt(oy), parseInt(yil), yarimNum);
-  body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
+  body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
   modal.style.display = 'flex';
   var calUrl = CALENDAR_API+'?wid='+wid+'&oy='+oy+'&yil='+yil + (yarimNum ? '&yarim='+yarimNum : '');
   fetch(calUrl)
@@ -1537,71 +1710,109 @@ function renderCalendar(d){
   var offset = firstDay === 0 ? 6 : firstDay - 1;
   var dayMap = {};
   days.forEach(function(day){ dayMap[day.kun] = day; });
-  var totalBaj = days.reduce(function(s,x){return x.is_day_off ? s : s+(x.bajarilgan||0);},0);
-  var greenCount = days.filter(function(x){return x.status==='green';}).length;
-  var amberCount = days.filter(function(x){return x.status==='amber';}).length;
-  var redCount = days.filter(function(x){return x.status==='red';}).length;
-  var dayOffCount = Object.keys(dayOffMap).length;
+  // --- Yarimlik (davr) chegarasi ---
+  // MUHIM: API yarimlik so'ralganda ham OYNING BARCHA kunlarini qaytaradi,
+  // yarimlikdan tashqari kunlar status='outofyarim', in_yarim=false bo'ladi.
+  // Statistika faqat joriy yarimlik kunlari bo'yicha hisoblanishi shart.
+  var yarimNo = parseInt(d.oy_yarim) || 0;
+  var yStart = parseInt(d.yarim_start_kun) || 1;
+  var yEnd = parseInt(d.yarim_end_kun) || oyKunlari;
+  var yarimMode = !!(yarimNo && d.yarim_start_kun);
+  function inDavr(x){
+    if(!yarimMode) return true;
+    if(x && typeof x.in_yarim === 'boolean') return x.in_yarim;
+    var kn = x && x.kun != null ? parseInt(x.kun) : parseInt(x);
+    return kn >= yStart && kn <= yEnd;
+  }
+  var davrDays = days.filter(inDavr);
+  // Statistika (faqat joriy davr + faqat ish kunlari)
+  var totalBaj = davrDays.reduce(function(s,x){return x.is_day_off ? s : s+(x.bajarilgan||0);},0);
+  var greenCount = davrDays.filter(function(x){return x.status==='green';}).length;
+  var amberCount = davrDays.filter(function(x){return x.status==='amber';}).length;
+  var redCount = davrDays.filter(function(x){return x.status==='red';}).length;
+  var dayOffCount = Object.keys(dayOffMap).filter(function(k){return inDavr(k);}).length;
+  // Davr plani (yarimlikda d.plan — yarimlik plani, aks holda oylik plan)
+  var davrPlan = parseInt(d.plan) || (kunlikPlan * ishKunlari) || 0;
+  var davrFoiz = davrPlan > 0 ? Math.round(totalBaj / davrPlan * 100) : 0;
+  var davrLabel = yarimMode ? (yStart + '–' + yEnd + ' · ' + yarimNo + '-yarim') : '1–' + oyKunlari;
+  // Davr ichida bugungacha o'tgan ish kunlari (kelajak kunlarni API qaytarmaydi)
+  var otganIshKun = davrDays.filter(function(x){return !x.is_day_off;}).length;
+  var kutilganFoiz = ishKunlari > 0 ? Math.round(otganIshKun / ishKunlari * 100) : 0;
+  // Rang umumiy planga emas, SUR'ATGA qarab beriladi — aks holda davr boshida qizil chiqadi
+  var surat = kutilganFoiz > 0 ? (davrFoiz / kutilganFoiz) : 0;
+  var davrColor = otganIshKun === 0 ? 'var(--text2)'
+    : surat >= 0.95 ? 'var(--green)' : surat >= 0.8 ? 'var(--amber)' : 'var(--red)';
 
-  function dayOffIcon(reason){
-    return reason === 'inventory' ? '📊' : '🎉';
+  function dayOffIcon(reason, size){
+    return reason === 'inventory' ? ic('bar-chart-3',size||13,'var(--text2)') : ic('gift',size||13,'var(--text2)');
   }
 
   var html = '';
-  html += '<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:14px">';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
-  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kunlik plan</div><div style="font-weight:700;color:var(--text)">'+fmt(kunlikPlan)+'</div><div style="font-size:9px;color:var(--text3);margin-top:1px">'+ishKunlari+' ish kuni</div></div>';
-  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Jami bajarilgan</div><div style="font-weight:700;color:var(--green)">'+fmt(totalBaj)+'</div></div>';
+  html += '<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:12px;margin-bottom:14px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-variant-numeric:tabular-nums">';
+  html += '<div style="min-width:0"><div style="color:var(--text2);font-size:11px;font-weight:600;letter-spacing:-.1px;margin-bottom:4px">Kunlik plan</div><div style="font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--text)">'+fmt(kunlikPlan)+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+ishKunlari+' ish kuni</div></div>';
+  html += '<div style="min-width:0"><div style="color:var(--text2);font-size:11px;font-weight:600;letter-spacing:-.1px;margin-bottom:4px">Bajarilgan · '+davrLabel+'</div><div style="font-size:15px;font-weight:800;letter-spacing:-.3px;color:'+davrColor+'">'+fmt(totalBaj)+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+davrFoiz+'% · kutilgan '+kutilganFoiz+'%'+'</div></div>';
   html += '</div>';
-  html += '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
-  html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--green)">'+greenCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">YAXSHI</div></div>';
-  html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--amber)">'+amberCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">O\'RTACHA</div></div>';
-  html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--red)">'+redCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">PAST</div></div>';
+  html += '<div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-variant-numeric:tabular-nums">';
+  html += '<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:800;letter-spacing:-.4px;color:var(--green)">'+greenCount+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Yaxshi</div></div>';
+  html += '<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:800;letter-spacing:-.4px;color:var(--amber)">'+amberCount+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">O\'rtacha</div></div>';
+  html += '<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:800;letter-spacing:-.4px;color:var(--red)">'+redCount+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Past</div></div>';
   if(dayOffCount > 0){
-    html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--text2)">'+dayOffCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">DAM</div></div>';
+    html += '<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:800;letter-spacing:-.4px;color:var(--text2)">'+dayOffCount+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Dam</div></div>';
   }
   html += '</div></div>';
+  // Vozvrat manbalari nomuvofiqligi — raqamni yashirmaymiz, ogohlantiramiz
+  var calRet = davrDays.reduce(function(s,x){return s+(x.qaytarilgan||0);},0);
+  var dashRet = dashReturnsFor(d.warehouse_id, d.oy, d.yil, d.oy_yarim);
+  if(dashRet !== null && dashRet > 0 && calRet < dashRet * 0.9){
+    html += '<div style="display:flex;align-items:flex-start;gap:8px;background:var(--tint-amber);border:1px solid var(--tint-amber-b);border-radius:var(--r-md);padding:10px 12px;margin-bottom:14px">';
+    html += '<div style="display:flex;flex-shrink:0;padding-top:1px">'+ic('alert-triangle',15,'var(--amber)')+'</div><div>';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--amber)">Vozvrat ma\'lumoti to\'liq emas</div>';
+    html += '<div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.35">Kalendar: '+fmt(calRet)+' \u00b7 Dashboard: '+fmt(dashRet)+'</div>';
+    html += '<div style="font-size:11px;color:var(--text2);margin-top:2px;line-height:1.35">Kunlik vozvrat raqamlariga tayanmang \u2014 dashboarddagi summa to\'g\'ri.</div>';
+    html += '</div></div>';
+  }
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
   html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:6px;width:100%">';
   haftaKunlari.forEach(function(h){
-    html += '<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:600;padding:4px 0">'+h+'</div>';
+    html += '<div style="text-align:center;font-size:11px;color:var(--text3);font-weight:600;padding:4px 0">'+h+'</div>';
   });
   html += '</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%" id="cal-grid">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%;font-variant-numeric:tabular-nums" id="cal-grid">';
   for(var i=0;i<offset;i++){ html += '<div></div>'; }
   for(var k=1;k<=oyKunlari;k++){
     var isDayOff = !!dayOffMap[k];
     var reason = dayOffMap[k] || '';
     var dayData = dayMap[k];
     if(isDayOff){
-      var icon = dayOffIcon(reason);
-      var bg = 'rgba(148,163,184,.18)';
+      var icon = dayOffIcon(reason,13);
+      var bg = 'var(--tint-neutral)';
       var txtColor = 'var(--text2)';
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s;min-width:0;overflow:hidden">';
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" role="button" tabindex="0" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:var(--r-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:1px dashed var(--border);transition:border-color .15s;min-width:0;overflow:hidden">';
       html += '<div style="font-size:13px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
-      html += '<div style="font-size:13px;margin-top:1px;line-height:1">'+icon+'</div>';
+      html += '<div style="display:flex;line-height:1">'+icon+'</div>';
       html += '</div>';
     } else if(dayData){
-      var bg, txtColor;
-      if(dayData.status==='outofyarim'){ bg='var(--bg3)'; txtColor='var(--text3)'; }
-      else if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
-      else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
-      else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
-      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
+      var bg, txtColor, outOf = (dayData.status==='outofyarim') || !inDavr(dayData);
+      if(outOf){ bg='var(--bg3)'; txtColor='var(--text3)'; }
+      else if(dayData.status==='green'){ bg='var(--tint-green)'; txtColor='var(--green)'; }
+      else if(dayData.status==='amber'){ bg='var(--tint-amber)'; txtColor='var(--amber)'; }
+      else{ bg='var(--tint-red)'; txtColor='var(--red)'; }
+      html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" role="button" tabindex="0" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:var(--r-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
       html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
-      html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px;line-height:1">'+(dayData.foiz||0)+'%</div>';
+      html += '<div style="font-size:11px;color:'+txtColor+';opacity:.85;line-height:1">'+(outOf?'·':(dayData.foiz||0)+'%')+'</div>';
       html += '</div>';
     } else {
-      html += '<div style="position:relative;aspect-ratio:1;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.35;min-width:0;overflow:hidden"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
+      html += '<div style="position:relative;aspect-ratio:1;background:var(--bg3);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;opacity:.4;min-width:0;overflow:hidden"><div style="font-size:13px;color:var(--text3)">'+k+'</div></div>';
     }
   }
   html += '</div>';
-  html += '<div style="display:flex;justify-content:center;gap:8px;margin-top:14px;font-size:9px;color:var(--text3);flex-wrap:wrap">';
-  html += '<div style="display:flex;align-items:center;gap:3px"><div style="width:9px;height:9px;border-radius:3px;background:rgba(34,197,94,.4)"></div>100%+</div>';
-  html += '<div style="display:flex;align-items:center;gap:3px"><div style="width:9px;height:9px;border-radius:3px;background:rgba(251,191,36,.4)"></div>70-99%</div>';
-  html += '<div style="display:flex;align-items:center;gap:3px"><div style="width:9px;height:9px;border-radius:3px;background:rgba(255,77,109,.4)"></div>&lt;70%</div>';
-  html += '<div style="display:flex;align-items:center;gap:3px">🎉 Bayram</div>';
-  html += '<div style="display:flex;align-items:center;gap:3px">📦 MML A</div>';
+  html += '<div style="display:flex;justify-content:center;gap:10px;margin-top:14px;font-size:11px;color:var(--text3);flex-wrap:wrap">';
+  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:var(--tint-green-b)"></div>100%+</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:var(--tint-amber-b)"></div>70-99%</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:var(--tint-red-b)"></div>&lt;70%</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px">'+ic('gift',12)+'Bayram</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px">'+ic('package',12)+'MML A</div>';
   html += '</div>';
   html += '<div id="cal-day-detail" style="margin-top:14px"></div>';
 
@@ -1616,7 +1827,7 @@ function renderCalendar(d){
   loadAndApplyMmlBadges(d.warehouse_id, oy, yil, oyKunlari);
 }
 
-// MML badge loader - har kun cell'ga 📦 X/Y badge qo'shadi
+// MML badge loader - har kun cell'ga X/Y indikator nuqta qo'shadi
 function loadAndApplyMmlBadges(wid, oy, yil, oyKunlari){
   if(!wid) return;
   fetch(MML_HISTORY_API+'?wid='+wid+'&oy='+oy+'&yil='+yil)
@@ -1632,9 +1843,9 @@ function loadAndApplyMmlBadges(wid, oy, yil, oyKunlari){
         if(!cell) continue;
         var foiz = mml.total_a > 0 ? Math.round(mml.mavjud_a / mml.total_a * 100) : 0;
         var badgeColor, badgeBg;
-        if(foiz >= 100){ badgeColor='#22c55e'; badgeBg='rgba(34,197,94,.18)'; }
-        else if(foiz >= 90){ badgeColor='#fbbf24'; badgeBg='rgba(251,191,36,.18)'; }
-        else { badgeColor='#ff4d6d'; badgeBg='rgba(255,77,109,.18)'; }
+        if(foiz >= 100){ badgeColor='var(--green)'; badgeBg='var(--tint-green-b)'; }
+        else if(foiz >= 90){ badgeColor='var(--amber)'; badgeBg='var(--tint-amber-b)'; }
+        else { badgeColor='var(--red)'; badgeBg='var(--tint-red-b)'; }
         // MML indikator - kichik rangli nuqta cell'ning yuqori-o'ng burchagida
         var badge = document.createElement('div');
         badge.style.cssText = 'position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:'+badgeColor+';box-shadow:0 0 0 1.5px '+badgeBg+';pointer-events:none';
@@ -1655,12 +1866,12 @@ function showDayDetail(kun){
   
   if(isDayOff){
     var reason = dayOffMap[kun];
-    var icon = reason === 'inventory' ? '📊' : '🎉';
+    var icon = reason === 'inventory' ? ic('bar-chart-3',18,'var(--text2)') : ic('gift',18,'var(--text2)');
     var label = reason === 'inventory' ? 'Inventory kuni' : 'Bayram kuni';
-    var html = '<div style="background:var(--bg3);border-radius:14px;padding:14px;border:1px dashed var(--border)">';
+    var html = '<div style="background:var(--bg3);border-radius:var(--r-lg);padding:14px;border:1px dashed var(--border)">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
-    html += '<div style="font-size:14px;font-weight:700">'+kun+'-kun</div>';
-    html += '<div style="font-size:20px">'+icon+'</div>';
+    html += '<div style="font-size:14px;font-weight:700;letter-spacing:-.2px">'+kun+'-kun</div>';
+    html += '<div style="display:flex">'+icon+'</div>';
     html += '</div>';
     html += '<div style="font-size:12px;color:var(--text2);text-align:center;padding:8px 0">'+label+' — ish kuni emas</div>';
     html += '</div>';
@@ -1670,35 +1881,39 @@ function showDayDetail(kun){
   }
   
   if(!d) return;
-  var color = d.status==='green'?'var(--green)':d.status==='amber'?'#fbbf24':'#ff4d6d';
-  var html = '<div style="background:var(--bg3);border-radius:14px;padding:14px;border:1px solid '+color+'40">';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
-  html += '<div style="font-size:14px;font-weight:700">'+kun+'-kun · '+d.sana+'</div>';
-  html += '<div style="font-size:15px;font-weight:800;color:'+color+'">'+(d.foiz||0)+'%</div>';
+  var outOf = (d.status==='outofyarim') || (d.in_yarim === false);
+  var color = outOf?'var(--text3)':d.status==='green'?'var(--green)':d.status==='amber'?'var(--amber)':'var(--red)';
+  var tintBd = outOf?'var(--border)':d.status==='green'?'var(--tint-green-b)':d.status==='amber'?'var(--tint-amber-b)':'var(--tint-red-b)';
+  var html = '<div style="background:var(--bg3);border-radius:var(--r-lg);padding:14px;border:1px solid '+tintBd+'">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px">';
+  html += '<div style="font-size:14px;font-weight:700;letter-spacing:-.2px">'+kun+'-kun · '+d.sana+'</div>';
+  html += outOf
+    ? '<div style="font-size:11px;font-weight:700;color:var(--text3);background:var(--bg2);padding:3px 8px;border-radius:var(--r-xs);flex-shrink:0">boshqa yarimlik</div>'
+    : '<div style="font-size:18px;font-weight:800;letter-spacing:-.5px;flex-shrink:0;font-variant-numeric:tabular-nums;color:'+color+'">'+(d.foiz||0)+'%</div>';
   html += '</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
-  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Tushum</div><div style="font-weight:700;color:var(--green)">'+fmt(d.tushum||0)+'</div></div>';
-  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Qaytarilgan</div><div style="font-weight:700;color:var(--red)">-'+fmt(d.qaytarilgan||0)+'</div></div>';
-  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Bajarilgan</div><div style="font-weight:700;color:'+color+'">'+fmt(d.bajarilgan||0)+'</div></div>';
-  html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Kunlik plan</div><div style="font-weight:700;color:var(--text2)">'+fmt(kp)+'</div></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-variant-numeric:tabular-nums">';
+  html += '<div style="min-width:0"><div style="color:var(--text2);font-size:11px;font-weight:600;letter-spacing:-.1px;margin-bottom:3px">Tushum</div><div style="font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--green)">'+fmt(d.tushum||0)+'</div></div>';
+  html += '<div style="min-width:0"><div style="color:var(--text2);font-size:11px;font-weight:600;letter-spacing:-.1px;margin-bottom:3px">Qaytarilgan</div><div style="font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--red)">-'+fmt(d.qaytarilgan||0)+'</div></div>';
+  html += '<div style="min-width:0"><div style="color:var(--text2);font-size:11px;font-weight:600;letter-spacing:-.1px;margin-bottom:3px">Bajarilgan</div><div style="font-size:14px;font-weight:800;letter-spacing:-.2px;color:'+color+'">'+fmt(d.bajarilgan||0)+'</div></div>';
+  html += '<div style="min-width:0"><div style="color:var(--text2);font-size:11px;font-weight:600;letter-spacing:-.1px;margin-bottom:3px">Kunlik plan</div><div style="font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--text2)">'+fmt(kp)+'</div></div>';
   html += '</div>';
   // MML A toifa qismi
   var mml = (window._calMmlDays||{})[kun];
   if(mml && mml.total_a){
     var mmlFoiz = mml.total_a > 0 ? Math.round(mml.mavjud_a / mml.total_a * 100) : 0;
-    var mmlColor = mmlFoiz>=100?'#22c55e':mmlFoiz>=90?'#fbbf24':'#ff4d6d';
-    html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html += '<div style="font-size:11px;color:var(--text2);font-weight:600">📦 A toifa MML</div>';
-    html += '<div style="font-size:13px;font-weight:800;color:'+mmlColor+'">'+mml.mavjud_a+' / '+mml.total_a+' ('+mmlFoiz+'%)</div>';
+    var mmlColor = mmlFoiz>=100?'var(--green)':mmlFoiz>=90?'var(--amber)':'var(--red)';
+    html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">';
+    html += '<div style="font-size:11px;color:var(--text2);font-weight:600;display:flex;align-items:center;gap:5px">'+ic('package',13)+'A toifa MML</div>';
+    html += '<div style="font-size:13px;font-weight:800;letter-spacing:-.2px;font-variant-numeric:tabular-nums;color:'+mmlColor+'">'+mml.mavjud_a+' / '+mml.total_a+' ('+mmlFoiz+'%)</div>';
     html += '</div>';
     if(mml.yetishmovchi_a > 0){
-      html += '<div onclick="loadMissingList('+(window._calWid||0)+',\''+(mml.sana||d.sana)+'\')" style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">';
-      html += '<span style="font-size:11px;color:#ff4d6d;font-weight:600">❌ '+mml.yetishmovchi_a+' yetishmovchi</span>';
-      html += '<span style="font-size:11px;color:#ff4d6d">📋 Ro\'yxat + Excel →</span>';
+      html += '<div onclick="loadMissingList('+(window._calWid||0)+',\''+(mml.sana||d.sana)+'\')" role="button" tabindex="0" style="background:var(--tint-red);border:1px solid var(--tint-red-b);border-radius:var(--r-sm);padding:8px 10px;min-height:40px;cursor:pointer;display:flex;gap:8px;justify-content:space-between;align-items:center">';
+      html += '<span style="font-size:11px;color:var(--red);font-weight:700;display:flex;align-items:center;gap:5px">'+ic('x-circle',13)+mml.yetishmovchi_a+' yetishmovchi</span>';
+      html += '<span style="font-size:11px;color:var(--red);display:flex;align-items:center;gap:4px">'+ic('clipboard-list',13)+'Ro\'yxat + Excel'+ic('chevron-right',12)+'</span>';
       html += '</div>';
     } else {
-      html += '<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:6px 10px;font-size:11px;color:#22c55e;text-align:center;font-weight:600">✅ Barcha A toifa to\'liq</div>';
+      html += '<div style="background:var(--tint-green);border:1px solid var(--tint-green-b);border-radius:var(--r-sm);padding:8px 10px;font-size:11px;color:var(--green);display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600">'+ic('check-circle-2',13)+'Barcha A toifa to\'liq</div>';
     }
     html += '</div>';
   }
@@ -1715,29 +1930,33 @@ function loadMissingList(wid, sana){
     modal = document.createElement('div');
     modal.id = 'mml-modal';
     modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:700;align-items:flex-end;justify-content:center';
-    modal.innerHTML = '<div style="background:var(--bg2);width:100%;max-width:520px;max-height:90vh;border-radius:20px 20px 0 0;overflow:hidden;display:flex;flex-direction:column">'+
-      '<div style="padding:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">'+
-        '<div><div id="mml-modal-title" style="font-size:14px;font-weight:700">📦 Yetishmovchi A toifa</div>'+
-        '<div id="mml-modal-subtitle" style="font-size:11px;color:var(--text3);margin-top:2px"></div></div>'+
-        '<div style="display:flex;gap:8px">'+
-          '<button id="mml-excel-btn" onclick="downloadMmlExcel()" style="background:#22c55e;color:white;border:none;border-radius:10px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;display:none">📥 Excel</button>'+
-          '<button onclick="document.getElementById(\'mml-modal\').style.display=\'none\'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>'+
+    modal.innerHTML = '<div style="background:var(--bg2);width:100%;max-width:520px;max-height:90vh;border-radius:22px 22px 0 0;overflow:hidden;display:flex;flex-direction:column">'+
+      '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;justify-content:space-between;align-items:center;flex-shrink:0">'+
+        '<div style="display:flex;align-items:center;gap:10px;min-width:0">'+
+          '<div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--tint-red);color:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('package',18)+'</div>'+
+          '<div style="min-width:0"><div id="mml-modal-title" style="font-size:15px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Yetishmovchi A toifa</div>'+
+          '<div id="mml-modal-subtitle" style="font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'+
+          '<button id="mml-excel-btn" onclick="downloadMmlExcel()" style="background:var(--green);color:#fff;border:none;border-radius:var(--r-sm);min-height:36px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;display:none;align-items:center;gap:5px">'+ic('download',14,'#fff')+'Excel</button>'+
+          '<button class="x-btn" onclick="document.getElementById(\'mml-modal\').style.display=\'none\'" aria-label="Yopish">'+ic('x',17)+'</button>'+
         '</div>'+
       '</div>'+
       '<div id="mml-modal-body" style="flex:1;overflow-y:auto;padding:12px"></div>'+
     '</div>';
     document.body.appendChild(modal);
   }
-  
+
   var titleEl = document.getElementById('mml-modal-title');
   var subtitleEl = document.getElementById('mml-modal-subtitle');
   var bodyEl = document.getElementById('mml-modal-body');
   var excelBtn = document.getElementById('mml-excel-btn');
-  
-  titleEl.textContent = '📦 Yetishmovchi A toifa';
+
+  // Ikon sarlavhadan tashqarida — bu yerda faqat matn (textContent SVG'ni render qilmaydi)
+  titleEl.textContent = 'Yetishmovchi A toifa';
   subtitleEl.textContent = sana;
   excelBtn.style.display = 'none';
-  bodyEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:24px;height:24px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:8px;font-size:11px">Yuklanmoqda...</div></div>';
+  bodyEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:24px;height:24px;border:3px solid var(--bg3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:8px;font-size:11px">Yuklanmoqda...</div></div>';
   modal.style.display = 'flex';
   
   fetch(MML_CHECK_API+'?wid='+wid+'&sana='+sana)
@@ -1754,27 +1973,27 @@ function loadMissingList(wid, sana){
         sana: d.sana,
         products: d.missing_products
       };
-      excelBtn.style.display = 'inline-block';
-      
-      titleEl.textContent = '📦 ' + (d.filial_nomi || 'Filial');
+      excelBtn.style.display = 'inline-flex';
+
+      titleEl.textContent = (d.filial_nomi || 'Filial');
       subtitleEl.textContent = d.sana + ' · ' + d.missing_products.length + ' ta yetishmovchi A toifa';
-      
+
       var html = '';
       d.missing_products.forEach(function(p, i){
-        html += '<div style="background:var(--bg3);border-radius:10px;padding:10px;margin-bottom:6px;border-left:3px solid #ff4d6d">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">';
-        html += '<div style="font-weight:600;color:var(--text);font-size:12px;flex:1">'+(i+1)+'. '+(p.nomi||'—')+'</div>';
-        html += '<span style="background:rgba(255,77,109,.15);color:#ff4d6d;padding:2px 7px;border-radius:5px;font-weight:700;font-size:10px;flex-shrink:0;margin-left:8px">ID '+p.id+'</span>';
+        html += '<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:6px;border-left:3px solid var(--red)">';
+        html += '<div style="display:flex;gap:8px;justify-content:space-between;align-items:flex-start;margin-bottom:8px">';
+        html += '<div style="font-weight:600;color:var(--text);font-size:12px;line-height:1.35;flex:1;min-width:0">'+(i+1)+'. '+(p.nomi||'—')+'</div>';
+        html += '<span style="background:var(--tint-red);border:0.5px solid var(--tint-red-b);color:var(--red);padding:2px 7px;border-radius:var(--r-xs);font-weight:700;font-size:11px;flex-shrink:0">ID '+p.id+'</span>';
         html += '</div>';
-        html += '<div style="display:flex;gap:5px;flex-wrap:wrap;font-size:10px">';
-        if(p.kategoriya) html += '<span style="background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--text2)">📁 '+p.kategoriya+'</span>';
-        if(p.sifat) html += '<span style="background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--text2)">⭐ '+p.sifat+'</span>';
-        if(p.rang) html += '<span style="background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--text2)">🎨 '+p.rang+'</span>';
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px">';
+        if(p.kategoriya) html += '<span style="background:var(--bg2);border:0.5px solid var(--border);padding:2px 7px;border-radius:var(--r-xs);color:var(--text2);display:inline-flex;align-items:center;gap:4px">'+ic('folder',11)+p.kategoriya+'</span>';
+        if(p.sifat) html += '<span style="background:var(--bg2);border:0.5px solid var(--border);padding:2px 7px;border-radius:var(--r-xs);color:var(--text2);display:inline-flex;align-items:center;gap:4px">'+ic('star',11)+p.sifat+'</span>';
+        if(p.rang) html += '<span style="background:var(--bg2);border:0.5px solid var(--border);padding:2px 7px;border-radius:var(--r-xs);color:var(--text2);display:inline-flex;align-items:center;gap:4px">'+ic('palette',11)+p.rang+'</span>';
         html += '</div></div>';
       });
       bodyEl.innerHTML = html;
     })
-    .catch(function(e){ bodyEl.innerHTML = '<div style="text-align:center;padding:20px;color:#ff4d6d;font-size:11px">Xato: '+e.message+'</div>'; });
+    .catch(function(e){ bodyEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:12px">Xato: '+e.message+'</div>'; });
 }
 
 // Excel/CSV download
@@ -1821,6 +2040,9 @@ function downloadMmlBatch(){
   _mmlDlBusy = true;
   var btn = document.getElementById('mml-dl-btn');
   var txt = document.getElementById('mml-dl-text');
+  var icEl = document.getElementById('mml-dl-ic');
+  // Ikon alohida span'da — matn textContent bilan, ikon innerHTML bilan yangilanadi
+  function setDlIcon(name){ if(icEl) icEl.innerHTML = ic(name,16,'#fff'); }
   if(btn){ btn.style.opacity = '0.75'; btn.style.cursor = 'wait'; btn.disabled = true; }
 
   var total = filiallar.length;
@@ -1835,6 +2057,7 @@ function downloadMmlBatch(){
 
   function finalize(){
     if(sheets.length === 0){
+      setDlIcon('alert-triangle');
       if(txt) txt.textContent = 'Hech qanday ma\'lumot topilmadi';
       setTimeout(resetBtn, 2000);
       return;
@@ -1873,10 +2096,12 @@ function downloadMmlBatch(){
       if(curProfil && curProfil !== 'all') filterLabel += '_'+curProfil;
       var filename = 'MML_yetishmovchi'+filterLabel+'_'+sana+'.xlsx';
       XLSX.writeFile(wb, filename);
-      if(txt) txt.textContent = '✓ Yuklab olindi · '+sheets.length+' filial'+(errors>0?' ('+errors+' xato)':'');
+      setDlIcon('check');
+      if(txt) txt.textContent = 'Yuklab olindi · '+sheets.length+' filial'+(errors>0?' ('+errors+' xato)':'');
     } catch(e){
       console.error('Excel yaratishda xato:', e);
-      if(txt) txt.textContent = '✗ Xato: '+e.message;
+      setDlIcon('x');
+      if(txt) txt.textContent = 'Xato: '+e.message;
     }
     setTimeout(resetBtn, 3000);
   }
@@ -1884,6 +2109,7 @@ function downloadMmlBatch(){
   function resetBtn(){
     _mmlDlBusy = false;
     if(btn){ btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.disabled = false; }
+    setDlIcon('download');
     if(txt) txt.textContent = 'MML yetishmovchi tovarlarni yuklash';
   }
 
@@ -1947,7 +2173,7 @@ function downloadMmlBatch(){
 
 function renderTransferCard(t){
   var sLabels={created:'Yaratilgan',on_way:"Yo'lda",canceled:'Qaytarilgan',returned:'Qaytarilgan'};
-  var sColors={created:'#378ADD',on_way:'#ff9f0a',canceled:'#ef4444',returned:'#ef4444'};
+  var sColors={created:'#378ADD',on_way:'#ff9f0a',canceled:'#f04a5f',returned:'#f04a5f'};
   var color=sColors[t.status]||'var(--text2)';
   var label=sLabels[t.status]||t.status;
   var isCancelLike=(t.status==='canceled'||t.status==='returned');
@@ -1967,32 +2193,32 @@ function renderTransferCard(t){
   var kun=t.kun_otgan||0;
   var masulTel=(t.masul_telefon||'').replace(/\D/g,'');
   var html='';
-  html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:6px">';
-  html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:10px;padding:8px 10px;border:1px solid '+color+'4D'+(isCancelLike?';opacity:.85':'')+'">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  html+='<div style="display:flex;align-items:center;gap:5px">';
-  html+='<span style="font-size:12px;font-weight:700;color:var(--text)">#'+t.id+'</span>';
-  html+=(kun>0?'<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,77,109,.15);color:#ff6b8a">'+kun+' kun</span>':'');
+  html+='<a href="'+link+'" style="display:block;text-decoration:none;color:inherit;margin-bottom:8px">';
+  html+='<div class="'+pulseClass+'" style="background:var(--bg3);border-radius:var(--r-md);padding:10px 12px;border:1px solid '+color+'4D'+(isCancelLike?';opacity:.85':'')+'">';
+  html+='<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  html+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0">';
+  html+='<span style="font-size:13px;font-weight:800;letter-spacing:-.2px;color:var(--text)">#'+t.id+'</span>';
+  html+=(kun>0?'<span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:var(--r-xs);background:var(--tint-red);color:var(--red)">'+kun+' kun</span>':'');
   if(!isCancelLike) html+=kechikishBadge(t);
   html+='</div>';
-  html+='<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:5px;background:'+color+'26;color:'+color+'">'+label+'</span>';
+  html+='<span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:var(--r-xs);flex-shrink:0;background:'+color+'26;color:'+color+'">'+label+'</span>';
   html+='</div>';
-  html+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;font-size:10px">';
-  html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.from_warehouse||'—')+'</span>';
-  html+='<span style="color:var(--text3);flex-shrink:0;font-size:9px">→</span>';
-  html+='<span style="font-weight:600;flex:1;background:var(--bg2);padding:3px 5px;border-radius:5px;text-align:center;color:var(--text2)">'+(t.to_warehouse||'—')+'</span>';
+  html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11px">';
+  html+='<span style="font-weight:600;flex:1;min-width:0;background:var(--bg2);padding:5px 6px;border-radius:var(--r-xs);text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(t.from_warehouse||'—')+'</span>';
+  html+='<span style="color:var(--text3);flex-shrink:0;display:flex">'+ic('arrow-right',13)+'</span>';
+  html+='<span style="font-weight:600;flex:1;min-width:0;background:var(--bg2);padding:5px 6px;border-radius:var(--r-xs);text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(t.to_warehouse||'—')+'</span>';
   html+='</div>';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Summa</span>';
-  html+='<div style="display:flex;align-items:center;gap:6px">';
-  html+='<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmtFull(t.document_price)+'</span>';
-  if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:2px 7px;font-size:10px;text-decoration:none;flex-shrink:0">📞</a>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">';
+  html+='<span style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">Summa</span>';
+  html+='<div style="display:flex;align-items:center;gap:8px">';
+  html+='<span style="font-size:13px;font-weight:800;letter-spacing:-.2px;color:var(--text);font-variant-numeric:tabular-nums">'+fmtFull(t.document_price)+'</span>';
+  if(masulTel) html+='<a href="tel:+'+masulTel+'" onclick="event.stopPropagation()" title="Qo\'ng\'iroq" style="display:inline-flex;align-items:center;justify-content:center;background:var(--tint-green);border:1px solid var(--tint-green-b);border-radius:var(--r-sm);padding:5px 8px;color:var(--green);text-decoration:none;flex-shrink:0">'+ic('phone',13)+'</a>';
   html+='</div>';
   html+='</div>';
-  if(t.comment) html+='<div style="margin-bottom:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:10px;color:var(--text3);font-style:italic">💬 '+t.comment+'</div>';
-  html+='<div style="padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
-  html+='<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">'+sanaLabel+'</span>';
-  html+='<span style="font-size:10px;font-weight:600;color:var(--text2)">'+(sana||'—')+'</span>';
+  if(t.comment) html+='<div style="margin-bottom:8px;padding:6px 8px;background:var(--bg2);border-radius:var(--r-xs);font-size:11px;color:var(--text3);line-height:1.35;display:flex;gap:6px;align-items:flex-start"><span style="display:flex;flex-shrink:0;padding-top:1px">'+ic('message-square',12)+'</span><span style="font-style:italic;min-width:0">'+t.comment+'</span></div>';
+  html+='<div style="padding-top:8px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:space-between;align-items:center">';
+  html+='<span style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:-.1px">'+sanaLabel+'</span>';
+  html+='<span style="font-size:11px;font-weight:600;color:var(--text2);font-variant-numeric:tabular-nums">'+(sana||'—')+'</span>';
   html+='</div>';
   html+='</div></a>';
   return html;
@@ -2023,7 +2249,7 @@ function trSwitchTab(tab){
     if(k===tab){
       el.style.background='var(--bg2)';
       el.style.border='1.5px solid var(--border)';
-      if(lbl) lbl.style.color='#38bdf8';
+      if(lbl) lbl.style.color='var(--blue)';
     } else {
       el.style.background='transparent';
       el.style.border='1.5px solid transparent';
@@ -2065,16 +2291,16 @@ function showTransfersModal(transfers, filialNomi, brakTransfers){
   subtitle.textContent=(filialNomi||'')+' · '+all.length+' ta';
 
   // Segmented pill tabs (soni tepada, label pastda)
-  var tabsHtml='<div style="display:flex;background:var(--bg3);border-radius:28px;padding:5px;margin-bottom:12px;gap:4px">';
+  var tabsHtml='<div style="display:flex;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r-full);padding:4px;margin-bottom:12px;gap:4px">';
   var tabs=[
     {key:'aktiv', lbl:'Aktiv', cnt:_trModalData.aktiv.length},
     {key:'bekor', lbl:'Qaytarilgan', cnt:_trModalData.bekor.length},
     {key:'brak',  lbl:'Brak baza', cnt:_trModalData.brak.length}
   ];
   tabs.forEach(function(tb){
-    tabsHtml+='<div id="tr-tab-'+tb.key+'" onclick="trSwitchTab(\''+tb.key+'\')" style="flex:1;text-align:center;padding:7px 4px;border-radius:22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s">';
-    tabsHtml+='<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.2">'+tb.cnt+'</div>';
-    tabsHtml+='<div class="tr-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:1px">'+tb.lbl+'</div>';
+    tabsHtml+='<div id="tr-tab-'+tb.key+'" onclick="trSwitchTab(\''+tb.key+'\')" role="button" tabindex="0" style="flex:1;min-width:0;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px 4px;border-radius:var(--r-full);cursor:pointer;border:1.5px solid transparent;transition:background .15s,border-color .15s">';
+    tabsHtml+='<div style="font-size:14px;font-weight:800;letter-spacing:-.3px;color:var(--text);line-height:1.15;font-variant-numeric:tabular-nums">'+tb.cnt+'</div>';
+    tabsHtml+='<div class="tr-tab-lbl" style="font-size:11px;font-weight:700;color:var(--text3);margin-top:2px;letter-spacing:-.1px">'+tb.lbl+'</div>';
     tabsHtml+='</div>';
   });
   tabsHtml+='</div>';
@@ -2120,88 +2346,79 @@ function showOmborModal(f){
   var kassaUsd = turganPulSom / USD_RATE;
   var transferUsd = transferSom / USD_RATE;
   var balansUsd = omborUsd + qarzUsd + kassaUsd + transferUsd;
-  var balansColor = balansUsd >= 0 ? '#16a34a' : '#ef4444';
+  var balansColor = balansUsd >= 0 ? 'var(--green)' : 'var(--red)';
 
   var html = '';
 
+  // Bir qatorli metrika bloki (ikon + sarlavha + izoh + summa)
+  function balRow(opts){
+    var h = '<div style="background:'+opts.bg+';border:1px solid '+opts.bd+';border-radius:var(--r-lg);padding:12px">';
+    h += '<div style="display:flex;align-items:center;gap:12px">';
+    h += '<div style="width:40px;height:40px;border-radius:var(--r-md);background:'+opts.icBg+';color:'+opts.color+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(opts.icon,19)+'</div>';
+    h += '<div style="flex:1;min-width:0">';
+    h += '<div style="font-size:12px;color:'+opts.color+';font-weight:700;letter-spacing:-.1px">'+opts.title+'</div>';
+    h += '<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.35">'+opts.sub+'</div>';
+    h += '</div>';
+    h += '<div style="font-size:18px;font-weight:800;letter-spacing:-.4px;flex-shrink:0;font-variant-numeric:tabular-nums;color:'+opts.color+'">'+opts.val+'</div>';
+    h += '</div></div>';
+    return h;
+  }
+
   // JAMI BALANS (top header)
-  html += '<div style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border-radius:16px;padding:16px;text-align:center;margin-bottom:12px;box-shadow:0 4px 14px rgba(59,130,246,.25)">';
-  html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.9">💎 Umumiy balans</div>';
-  html += '<div style="font-size:28px;font-weight:800;margin-top:6px">'+(balansUsd<0?'-':'')+'$'+fmt(Math.abs(Math.round(balansUsd)))+'</div>';
-  html += '<div style="font-size:10px;opacity:.75;margin-top:4px">kurs: 1$ = '+fmt(USD_RATE)+' so\'m</div>';
+  html += '<div style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border-radius:var(--r-lg);padding:18px 16px;text-align:center;margin-bottom:12px;box-shadow:0 4px 14px rgba(59,130,246,.25)">';
+  html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.92;display:flex;align-items:center;justify-content:center;gap:6px">'+ic('gem',13,'#fff')+'Umumiy balans</div>';
+  html += '<div style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-top:8px;line-height:1;font-variant-numeric:tabular-nums">'+(balansUsd<0?'-':'')+'$'+fmt(Math.abs(Math.round(balansUsd)))+'</div>';
+  html += '<div style="font-size:11px;opacity:.8;margin-top:6px">kurs: 1$ = '+fmt(USD_RATE)+' so\'m</div>';
   html += '</div>';
 
-  html += '<div style="display:flex;flex-direction:column;gap:10px">';
+  html += '<div style="display:flex;flex-direction:column;gap:8px">';
 
   // 1. Ombordagi yuk
   if(omborUsd > 0){
-    html += '<div style="background:#EEEDFE;border:1px solid #d6d3f5;border-radius:14px;padding:14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px">';
-    html += '<div style="width:38px;height:38px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📦</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:11px;color:#6b66a8;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Ombordagi yuk</div>';
-    html += '<div style="font-size:11px;color:#8b87b5;margin-top:2px">'+(omborSoni>0?fmt(omborSoni)+' dona mahsulot':'jami qiymat')+'</div>';
-    html += '</div>';
-    html += '<div style="text-align:right">';
-    html += '<div style="font-size:18px;font-weight:800;color:#26215C">$'+fmt(Math.round(omborUsd))+'</div>';
-    html += '</div>';
-    html += '</div>';
-    html += '</div>';
+    html += balRow({
+      icon:'package', color:'var(--violet)',
+      bg:'var(--tint-violet)', bd:'var(--tint-violet-b)', icBg:'var(--tint-violet)',
+      title:'Ombordagi yuk',
+      sub:(omborSoni>0?fmt(omborSoni)+' dona mahsulot':'jami qiymat'),
+      val:'$'+fmt(Math.round(omborUsd))
+    });
   }
 
   // 2. Qarz
   if(qarzFaktSom > 0 || qarzMuddatiSom > 0){
-    html += '<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px">';
-    html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">⚠️</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:11px;color:#ef4444;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mijozlardagi qarz</div>';
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+fmt(qarzFaktSom)+' so\'m'+(qarzMuddatiSom>0?' · muddati o\'tgan: '+fmt(qarzMuddatiSom):'')+'</div>';
-    html += '</div>';
-    html += '<div style="text-align:right">';
-    html += '<div style="font-size:18px;font-weight:800;color:#ef4444">$'+fmt(Math.round(qarzUsd))+'</div>';
-    html += '</div>';
-    html += '</div>';
-    html += '</div>';
+    html += balRow({
+      icon:'alert-triangle', color:'var(--red)',
+      bg:'var(--tint-red)', bd:'var(--tint-red-b)', icBg:'var(--tint-red)',
+      title:'Mijozlardagi qarz',
+      sub:fmt(qarzFaktSom)+' so\'m'+(qarzMuddatiSom>0?' · muddati o\'tgan: '+fmt(qarzMuddatiSom):''),
+      val:'$'+fmt(Math.round(qarzUsd))
+    });
   }
 
   // 3. Filialda turgan pul (kassa)
   if(turganPulSom > 0){
-    html += '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px">';
-    html += '<div style="width:38px;height:38px;border-radius:11px;background:rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">💰</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:11px;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Filialda turgan pul</div>';
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+turganKun+' kunlik · jo\'natilmagan · '+fmt(turganPulSom)+' so\'m</div>';
-    html += '</div>';
-    html += '<div style="text-align:right">';
-    html += '<div style="font-size:18px;font-weight:800;color:#f59e0b">$'+fmt(Math.round(kassaUsd))+'</div>';
-    html += '</div>';
-    html += '</div>';
-    html += '</div>';
+    html += balRow({
+      icon:'banknote', color:'var(--amber)',
+      bg:'var(--tint-amber)', bd:'var(--tint-amber-b)', icBg:'var(--tint-amber)',
+      title:'Filialda turgan pul',
+      sub:turganKun+' kunlik · jo\'natilmagan · '+fmt(turganPulSom)+' so\'m',
+      val:'$'+fmt(Math.round(kassaUsd))
+    });
   }
 
-  // 4. Transfer (YANGI) - musbat (kelayotgan) yoki manfiy (chiqayotgan)
+  // 4. Transfer — musbat (kelayotgan) yoki manfiy (chiqayotgan)
   if(transferSom !== 0){
-    var trColor = transferSom >= 0 ? '#378ADD' : '#ef4444';
-    var trBg = transferSom >= 0 ? 'rgba(55,138,221,.08)' : 'rgba(239,68,68,.06)';
-    var trBorder = transferSom >= 0 ? 'rgba(55,138,221,.3)' : 'rgba(239,68,68,.25)';
-    var trBgIcon = transferSom >= 0 ? 'rgba(55,138,221,.15)' : 'rgba(239,68,68,.15)';
-    var trLabel = transferSom >= 0 ? 'Kelayotgan yuk (yo\'lda)' : 'Chiqib ketadigan yuk (yaratilgan)';
-    var trIcon = transferSom >= 0 ? '📥' : '📤';
-    var trSign = transferSom >= 0 ? '+' : '-';
-    html += '<div style="background:'+trBg+';border:1px solid '+trBorder+';border-radius:14px;padding:14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px">';
-    html += '<div style="width:38px;height:38px;border-radius:11px;background:'+trBgIcon+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">'+trIcon+'</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:11px;color:'+trColor+';font-weight:700;text-transform:uppercase;letter-spacing:.3px">Transfer</div>';
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+trLabel+' · '+fmt(Math.abs(transferSom))+' so\'m</div>';
-    html += '</div>';
-    html += '<div style="text-align:right">';
-    html += '<div style="font-size:18px;font-weight:800;color:'+trColor+'">'+trSign+'$'+fmt(Math.abs(Math.round(transferUsd)))+'</div>';
-    html += '</div>';
-    html += '</div>';
-    html += '</div>';
+    var trPos = transferSom >= 0;
+    html += balRow({
+      icon: trPos ? 'download' : 'upload',
+      color: trPos ? 'var(--blue)' : 'var(--red)',
+      bg:   trPos ? 'var(--tint-blue)' : 'var(--tint-red)',
+      bd:   trPos ? 'var(--tint-blue-b)' : 'var(--tint-red-b)',
+      icBg: trPos ? 'var(--tint-blue)' : 'var(--tint-red)',
+      title:'Transfer',
+      sub:(trPos ? 'Kelayotgan yuk (yo\'lda)' : 'Chiqib ketadigan yuk (yaratilgan)')+' · '+fmt(Math.abs(transferSom))+' so\'m',
+      val:(trPos?'+':'-')+'$'+fmt(Math.abs(Math.round(transferUsd)))
+    });
   }
 
   if(omborUsd<=0 && turganPulSom<=0 && qarzFaktSom<=0 && qarzMuddatiSom<=0 && transferSom===0){
@@ -2266,14 +2483,14 @@ function renderTilxatDebtors(){
   var html = '';
   _tilxatDebtors.forEach(function(m, i){
     var tel = (m.telefon||'').replace(/\D/g,'');
-    html += '<div onclick="selectTilxatMijoz('+i+')" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">';
+    html += '<div onclick="selectTilxatMijoz('+i+')" role="button" tabindex="0" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:6px;min-height:56px;cursor:pointer;display:flex;gap:10px;justify-content:space-between;align-items:center">';
     html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(m.ism||'—')+'</div>';
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(tel?'+'+tel:'—')+' · '+(m.filial||'')+'</div>';
+    html += '<div style="font-size:13px;font-weight:700;letter-spacing:-.1px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(m.ism||'—')+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(tel?'+'+tel:'—')+' · '+(m.filial||'')+'</div>';
     html += '</div>';
-    html += '<div style="text-align:right;flex-shrink:0;margin-left:10px">';
-    html += '<div style="font-size:13px;font-weight:800;color:#ef4444">'+fmt(m.summa)+'</div>';
-    html += '<div style="font-size:9px;color:var(--text3)">so\'m</div>';
+    html += '<div style="text-align:right;flex-shrink:0">';
+    html += '<div style="font-size:13px;font-weight:800;letter-spacing:-.2px;color:var(--red);font-variant-numeric:tabular-nums">'+fmt(m.summa)+'</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">so\'m</div>';
     html += '</div>';
     html += '</div>';
   });
@@ -2307,15 +2524,15 @@ function loadTilxatHistory(userId){
         hist.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:8px 0">Hali tilxat yo\'q</div>';
         return;
       }
-      var html = '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:8px 0 6px">Avvalgi tilxatlar ('+arr.length+')</div>';
+      var html = '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin:12px 0 8px">Avvalgi tilxatlar ('+arr.length+')</div>';
       arr.forEach(function(t){
         var sana = (t.created_at||'').replace('T',' ').substring(0,16);
-        html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px">';
+        html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 10px;margin-bottom:6px;min-height:48px;display:flex;justify-content:space-between;align-items:center;gap:10px">';
         html += '<div style="flex:1;min-width:0">';
-        html += '<div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+(t.izoh||t.file_name||'Tilxat')+'</div>';
-        html += '<div style="font-size:10px;color:var(--text3);margin-top:1px">'+sana+'</div>';
+        html += '<div style="font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><span style="display:flex;flex-shrink:0;color:var(--text3)">'+ic('file-text',13)+'</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">'+(t.izoh||t.file_name||'Tilxat')+'</span></div>';
+        html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+sana+'</div>';
         html += '</div>';
-        html += '<a href="'+t.download_link+'" target="_blank" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:4px 8px;font-size:11px;text-decoration:none;color:var(--green);flex-shrink:0">⬇</a>';
+        html += '<a href="'+t.download_link+'" target="_blank" title="Yuklab olish" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--tint-green);border:1px solid var(--tint-green-b);border-radius:var(--r-sm);text-decoration:none;color:var(--green);flex-shrink:0">'+ic('download',15)+'</a>';
         html += '</div>';
       });
       hist.innerHTML = html;
@@ -2354,21 +2571,22 @@ function submitTilxat(){
     .then(function(r){ return r.json(); })
     .then(function(d){
       var data = Array.isArray(d) ? d[0] : d;
+      // Ikon SVG — textContent emas, innerHTML
       if(data && data.ok){
         statusEl.style.color = 'var(--green)';
-        statusEl.textContent = '✅ Tilxat saqlandi';
+        statusEl.innerHTML = ic('check-circle-2',14)+'<span>Tilxat saqlandi</span>';
         fileInput.value = '';
         document.getElementById('tilxat-izoh').value = '';
         loadTilxatHistory(_tilxatSelected.user_id);
       } else {
         statusEl.style.color = 'var(--red)';
-        statusEl.textContent = '❌ Xatolik yuz berdi';
+        statusEl.innerHTML = ic('x-circle',14)+'<span>Xatolik yuz berdi</span>';
       }
       btn.disabled = false;
     })
     .catch(function(){
       statusEl.style.color = 'var(--red)';
-      statusEl.textContent = '❌ Tarmoq xatosi';
+      statusEl.innerHTML = ic('x-circle',14)+'<span>Tarmoq xatosi</span>';
       btn.disabled = false;
     });
 }
@@ -2378,12 +2596,15 @@ function submitTilxat(){
 <!-- TRANSFERS MODAL -->
 <div id="tr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:flex-end;justify-content:center">
   <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-height:80vh;overflow-y:auto;border-top:1px solid var(--border)">
-    <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);padding-bottom:12px">
-      <div>
-        <div style="font-size:15px;font-weight:700">Ochiq transferlar</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="tr-subtitle"></div>
+    <div style="padding:14px 16px;display:flex;gap:12px;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--tint-blue);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg class="lu" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Ochiq transferlar</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="tr-subtitle"></div>
+        </div>
       </div>
-      <button onclick="document.getElementById('tr-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
+      <button class="x-btn" onclick="document.getElementById('tr-modal').style.display='none'" aria-label="Yopish"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div id="tr-list" style="padding:12px 16px 24px"></div>
   </div>
@@ -2392,34 +2613,40 @@ function submitTilxat(){
 <!-- TILXAT PANEL -->
 <div id="tilxat-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:700;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeTilxatPanel()">
   <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;border-top:1px solid var(--border)">
-    <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10">
-      <div>
-        <div style="font-size:15px;font-weight:700">📄 Tilxat yuklash</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">Qarzdor mijoz tanlang</div>
+    <div style="padding:14px 18px;display:flex;gap:12px;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--tint-violet);color:var(--violet);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg class="lu" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg></div>
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Tilxat yuklash</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Qarzdor mijoz tanlang</div>
+        </div>
       </div>
-      <button onclick="closeTilxatPanel()" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer;flex-shrink:0">✕</button>
+      <button class="x-btn" onclick="closeTilxatPanel()" aria-label="Yopish"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div style="padding:14px 18px 24px">
-      <input id="tilxat-search" oninput="onTilxatSearchInput()" placeholder="🔍 Mijoz ismi yoki telefon..." style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:11px 14px;font-size:13px;color:var(--text);outline:none;margin-bottom:12px">
+      <div class="srch" style="margin-bottom:12px">
+        <span class="srch-ic"><svg class="lu" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+        <input id="tilxat-search" oninput="onTilxatSearchInput()" placeholder="Mijoz ismi yoki telefon..." style="background:var(--bg3)">
+      </div>
       <div id="tilxat-debtors-list" style="max-height:280px;overflow-y:auto"></div>
 
-      <div id="tilxat-upload-box" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px">
-        <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:0.5px solid var(--border);margin-bottom:12px">
-          <div style="width:34px;height:34px;border-radius:10px;background:rgba(168,85,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">👤</div>
+      <div id="tilxat-upload-box" style="display:none;margin-top:16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px">
+        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:0.5px solid var(--border);margin-bottom:12px">
+          <div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--tint-violet);color:var(--violet);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           <div style="flex:1;min-width:0">
-            <div id="tilxat-sel-name" style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
-            <div id="tilxat-sel-info" style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div id="tilxat-sel-name" style="font-size:13px;font-weight:700;letter-spacing:-.1px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+            <div id="tilxat-sel-info" style="font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
           </div>
         </div>
 
-        <label style="display:block;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Fayl (PDF / Word / hujjat)</label>
-        <input id="tilxat-file-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:12px;color:var(--text);margin-bottom:10px">
+        <label style="display:block;font-size:11px;color:var(--text2);font-weight:700;letter-spacing:-.1px;margin-bottom:6px">Fayl (PDF / Word / hujjat)</label>
+        <input id="tilxat-file-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:12px;color:var(--text);margin-bottom:12px">
 
-        <label style="display:block;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Izoh (ixtiyoriy)</label>
-        <input id="tilxat-izoh" placeholder="Masalan: 5 mln to'lov tilxati" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text);outline:none;margin-bottom:12px">
+        <label style="display:block;font-size:11px;color:var(--text2);font-weight:700;letter-spacing:-.1px;margin-bottom:6px">Izoh (ixtiyoriy)</label>
+        <input id="tilxat-izoh" placeholder="Masalan: 5 mln to'lov tilxati" style="width:100%;box-sizing:border-box;min-height:44px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;font-size:13px;color:var(--text);outline:none;margin-bottom:12px">
 
-        <button id="tilxat-submit-btn" onclick="submitTilxat()" style="width:100%;background:#a855f7;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">📤 Tilxatni yuklash</button>
-        <div id="tilxat-upload-status" style="text-align:center;font-size:12px;margin-top:8px;min-height:16px"></div>
+        <button id="tilxat-submit-btn" onclick="submitTilxat()" style="width:100%;min-height:44px;background:var(--violet);border:none;border-radius:var(--r-md);padding:12px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="lu" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Tilxatni yuklash</button>
+        <div id="tilxat-upload-status" style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:600;margin-top:10px;min-height:18px"></div>
 
         <div id="tilxat-history"></div>
       </div>
@@ -2429,26 +2656,29 @@ function submitTilxat(){
 
 <!-- OMBOR / FILIAL KASSA MODAL (markaziy) -->
 <div id="ombor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:700;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
-  <div style="background:var(--bg2);border-radius:20px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.4)">
-    <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:11px;color:#a855f7;font-weight:700;text-transform:uppercase;letter-spacing:.3px">🟣 Franshiza</div>
-        <div style="font-size:15px;font-weight:700;margin-top:2px" id="ombor-modal-title">Filial</div>
+  <div style="background:var(--bg2);border-radius:var(--r-lg);width:100%;max-width:400px;max-height:80vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="padding:14px 18px;display:flex;gap:12px;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10">
+      <div style="min-width:0">
+        <div style="font-size:11px;color:var(--violet);font-weight:700;text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:5px"><svg class="lu" viewBox="0 0 24 24" width="10" height="10" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg>Franshiza</div>
+        <div style="font-size:15px;font-weight:700;letter-spacing:-.2px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="ombor-modal-title">Filial</div>
       </div>
-      <button onclick="document.getElementById('ombor-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer;flex-shrink:0">✕</button>
+      <button class="x-btn" onclick="document.getElementById('ombor-modal').style.display='none'" aria-label="Yopish"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div id="ombor-modal-body" style="padding:16px 18px 20px"></div>
   </div>
 </div>
 
 <div id="cal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:flex-end;justify-content:center">
-  <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-height:85vh;overflow-y:auto;border-top:1px solid var(--border)">
-    <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);padding-bottom:12px;z-index:10">
-      <div>
-        <div style="font-size:15px;font-weight:700" id="cal-title">Kalendar</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="cal-subtitle"></div>
+  <div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;border-top:1px solid var(--border)">
+    <div style="padding:14px 16px;display:flex;gap:12px;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div id="cal-title-ic" style="width:36px;height:36px;border-radius:var(--r-md);background:var(--tint-blue);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg class="lu" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg></div>
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="cal-title">Kalendar</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="cal-subtitle"></div>
+        </div>
       </div>
-      <button onclick="document.getElementById('cal-modal').style.display='none'" style="background:var(--bg3);border:none;width:30px;height:30px;border-radius:15px;font-size:16px;color:var(--text2);cursor:pointer">✕</button>
+      <button class="x-btn" onclick="document.getElementById('cal-modal').style.display='none'" aria-label="Yopish"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div id="cal-body" style="padding:12px 16px 24px;overflow-x:hidden"></div>
   </div>

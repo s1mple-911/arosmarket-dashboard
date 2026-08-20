@@ -1502,6 +1502,24 @@ function showConfirmedModal(){
   document.getElementById('det-ochiq-modal').style.display='flex';
 }
 
+// Dashboard (aros-cache-filial) bo\'yicha shu ombor uchun jami vozvrat.
+// Kalendar API (aros-cache-calendar) 2026-yil iyulidan buyon vozvratlarning
+// bir qismini ushlamayapti — shuning uchun ikkovini solishtirib ogohlantiramiz.
+// null qaytsa — solishtirib bo\'lmaydi (boshqa davr yoki ma\'lumot yo\'q).
+function dashReturnsFor(w, oy, yil, yarim){
+  try{
+    if(Number(yarim||0) !== Number(curYarim||0)) return null;
+    var arr = (typeof cachedAllData !== 'undefined' && cachedAllData) ? cachedAllData : [];
+    for(var i=0;i<arr.length;i++){
+      if(String(arr[i].warehouse_id) === String(w)){
+        if(Number(oy) !== Number(curOy) || Number(yil) !== Number(curYil)) return null;
+        var v = Number(arr[i].returns_summa);
+        return isNaN(v) ? null : v;
+      }
+    }
+  }catch(e){}
+  return null;
+}
 function openCalendar(wid, filialNomi, oy, yil, yarim){
   var modal = document.getElementById('cal-modal');
   var title = document.getElementById('cal-title');
@@ -1588,6 +1606,17 @@ function renderCalendar(d){
     html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--text2)">'+dayOffCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">DAM</div></div>';
   }
   html += '</div></div>';
+  // Vozvrat manbalari nomuvofiqligi — raqamni yashirmaymiz, ogohlantiramiz
+  var calRet = davrDays.reduce(function(s,x){return s+(x.qaytarilgan||0);},0);
+  var dashRet = dashReturnsFor(d.warehouse_id, d.oy, d.yil, d.oy_yarim);
+  if(dashRet !== null && dashRet > 0 && calRet < dashRet * 0.9){
+    html += '<div style="display:flex;align-items:flex-start;gap:8px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:10px 12px;margin-bottom:14px">';
+    html += '<div style="font-size:14px;line-height:1.2">\u26a0</div><div>';
+    html += '<div style="font-size:12px;font-weight:700;color:#fbbf24">Vozvrat ma\'lumoti to\'liq emas</div>';
+    html += '<div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.35">Kalendar: '+fmt(calRet)+' \u00b7 Dashboard: '+fmt(dashRet)+'</div>';
+    html += '<div style="font-size:11px;color:var(--text2);margin-top:2px;line-height:1.35">Kunlik vozvrat raqamlariga tayanmang \u2014 dashboarddagi summa to\'g\'ri.</div>';
+    html += '</div></div>';
+  }
   var haftaKunlari = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
   html += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:6px;width:100%">';
   haftaKunlari.forEach(function(h){
