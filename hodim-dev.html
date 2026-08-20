@@ -50,6 +50,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
 .stat-val{font-size:18px;font-weight:800}
 .stat-sub{font-size:10px;color:var(--text3);margin-top:2px}
+/* ==== SHAXSIY PLAN HERO ==== */
+.plan-hero{margin-top:16px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.plan-hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.plan-lbl{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.plan-lbl svg{flex-shrink:0}
+.plan-pill{font-size:10px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;flex-shrink:0}
+.plan-figure{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:14px}
+.plan-pct,.plan-money-v,.pm-v,.plan-prog-v{font-variant-numeric:tabular-nums}
+.plan-pct{font-size:38px;font-weight:800;line-height:.9;letter-spacing:-1.6px;white-space:nowrap}
+.plan-pct.sm{font-size:26px;letter-spacing:-.8px}
+.plan-cap{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-top:7px}
+.plan-money{text-align:right;flex-shrink:0}
+.plan-money-v{font-size:15px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
+.plan-bar-wrap{position:relative;padding-bottom:15px}
+.plan-bar{position:relative;height:12px;border-radius:999px;background:var(--bg3)}
+.plan-bar-fill{height:100%;border-radius:999px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.plan-mark{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:2px;background:var(--text);opacity:.5;margin-left:-1px}
+.plan-mark-lbl{position:absolute;top:16px;font-size:9px;color:var(--text3);white-space:nowrap;letter-spacing:.2px;transform:translateX(-50%)}
+.plan-metrics{display:grid;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.pm-l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.pm-v{font-size:13px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
+.pm-u{font-size:9px;color:var(--text3);margin-top:1px}
+.plan-done{display:flex;align-items:center;gap:7px;margin-top:12px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:10px;padding:9px 11px;font-size:11px;font-weight:700;color:var(--green)}
+.plan-note{font-size:11px;color:var(--text2);line-height:1.55;margin-top:2px}
+.plan-prog{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.plan-prog-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.plan-prog-v{font-size:15px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
+.plan-prog-msg{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:5px}
+.plan-prog-txt{font-size:11px;font-weight:600;line-height:1.4}
+.plan-prog-meta{font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0}
 .section-hdr{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;display:flex;align-items:center;justify-content:space-between}
 .sec-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(55,138,221,.15);color:var(--blue);border:1px solid rgba(55,138,221,.25)}
 .mijoz-row{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
@@ -124,6 +154,9 @@ var oylikPlan = 0;
 var curView = 'aktiv'; // 'aktiv' | 'jami'
 
 function fmt(n){ return Math.round(Number(n)||0).toLocaleString('uz-UZ'); }
+function num(v){ var n = Number(v); return isFinite(n) ? n : 0; }
+function pctFmt(v){ var n = Number(v); if(!isFinite(n)) return '0'; return String(Math.round(n*100)/100); }
+function calcFoiz(fakt, plan){ return plan > 0 ? Math.round(num(fakt) / plan * 100) : 0; }
 function ini(name){ if(!name) return '?'; return name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase(); }
 
 function goBack(){
@@ -223,6 +256,12 @@ function loadHodimData(){
           '<div style="font-size:12px">Bu xodimga adminkadagi worker hali ulanmagan. Administrator bilan bog\'laning.</div></div>';
         return;
       }
+      if(d.ok === false || (d.error && d.error !== 'no_worker')){
+        main.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div>'+
+          '<div style="font-weight:700;margin-bottom:6px">Ma\'lumot olinmadi</div>'+
+          '<div style="font-size:12px">Server javobi: '+String(d.error||'noma\'lum xato')+'</div></div>';
+        return;
+      }
       if(d.no_data){
         main.innerHTML = '<div class="empty"><div class="empty-ic">📭</div>'+
           '<div style="font-weight:700;margin-bottom:6px">Arxiv yo\'q</div>'+
@@ -244,16 +283,49 @@ function loadHodimData(){
 function renderHodim(d){
   var main = document.getElementById('main');
   var jamiSof = d.jami_sof || 0;
-  var hodimPlan = d.hodim_plan || 0;
-  var hodimFoiz = d.hodim_foiz || 0;
+  // Plan bir nechta nom bilan kelishi mumkin — barchasini tekshiramiz
+  var hodimPlan = num(d.hodim_plan) || num(d.oylik_hodim_plan) || num(d.hodim_plan_summa) || num(d.plan) || 0;
   var prognoz = d.prognoz || 0;
-  var prognozFoiz = d.prognoz_foiz || 0;
+  // Foizni server bermasa (yoki 0 bersa) — o'zimiz hisoblaymiz
+  var hodimFoiz = hodimPlan > 0 ? (num(d.hodim_foiz) > 0 ? num(d.hodim_foiz) : calcFoiz(jamiSof, hodimPlan)) : 0;
+  var prognozFoiz = hodimPlan > 0 ? (num(d.prognoz_foiz) > 0 ? num(d.prognoz_foiz) : calcFoiz(prognoz, hodimPlan)) : 0;
   var isBoshliq = d.is_boshliq || false;
   var isArchive = d.is_archive || !d.is_current;
 
-  // Plan bar rangi
-  var planColor = hodimFoiz >= 80 ? 'var(--green)' : hodimFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
+  // Plan qoldig'i va kunlik temp
+  var qoldiSum = Math.max(0, hodimPlan - jamiSof);
+  var kunJami = num(d.oy_kunlari);
+  var kunBugun = num(d.bugun);
+  var kunQoldi = (kunJami > 0 && kunBugun > 0) ? Math.max(0, kunJami - kunBugun) : 0;
+  var kunlikKerak = (!isArchive && kunQoldi > 0 && qoldiSum > 0) ? Math.ceil(qoldiSum / kunQoldi) : 0;
+
+  // Davrning necha foizi o'tgan (kerakli temp)
+  var tempFoiz = (!isArchive && kunJami > 0 && kunBugun > 0) ? Math.min(100, Math.round(kunBugun / kunJami * 100)) : 0;
+  var farq = tempFoiz > 0 ? (hodimFoiz - tempFoiz) : 0;
+
+  // Plan bar rangi — temp ma'lum bo'lsa tempga nisbatan, aks holda absolyut
+  var planColor;
+  if(hodimFoiz >= 100){ planColor = 'var(--green)'; }
+  else if(tempFoiz > 0){ planColor = farq >= -5 ? 'var(--green)' : (farq >= -15 ? 'var(--amber)' : 'var(--red)'); }
+  else { planColor = hodimFoiz >= 80 ? 'var(--green)' : (hodimFoiz >= 50 ? 'var(--amber)' : 'var(--red)'); }
   var barW = Math.min(100, hodimFoiz);
+
+  // Holat pill (matn + rang)
+  var pillTxt = '', pillCol = 'var(--text3)', pillBg = 'var(--bg3)';
+  if(hodimFoiz >= 100){ pillTxt = 'Plan bajarildi'; pillCol = 'var(--green)'; pillBg = 'rgba(34,197,94,.12)'; }
+  else if(isArchive){ pillTxt = 'Bajarilmadi'; pillCol = 'var(--red)'; pillBg = 'rgba(239,68,68,.12)'; }
+  else if(tempFoiz > 0){
+    if(farq >= 5){ pillTxt = 'Oldinda +'+farq+'%'; pillCol = 'var(--green)'; pillBg = 'rgba(34,197,94,.12)'; }
+    else if(farq >= -5){ pillTxt = 'Tempda'; pillCol = 'var(--green)'; pillBg = 'rgba(34,197,94,.12)'; }
+    else if(farq >= -15){ pillTxt = 'Orqada '+farq+'%'; pillCol = 'var(--amber)'; pillBg = 'rgba(251,191,36,.12)'; }
+    else { pillTxt = 'Orqada '+farq+'%'; pillCol = 'var(--red)'; pillBg = 'rgba(239,68,68,.12)'; }
+  }
+
+  // Ikonkalar (Lucide, inline)
+  var icTarget = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>';
+  var icTrend = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>';
+  var icCheck = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var icAlert = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 17h.01"/></svg>';
 
   // Filial foizi rangi
   var filialColor = d.filial_foiz >= 80 ? 'var(--green)' : d.filial_foiz >= 60 ? 'var(--amber)' : 'var(--red)';
@@ -268,41 +340,110 @@ function renderHodim(d){
   html += '<div class="hodim-lavozim">'+(isBoshliq?'🎯 Filial boshlig\'i':'💼 Sotuvchi')+' · '+(d.filial_nomi||d.warehouse_name||'')+'</div>';
   html += '</div>';
   if(isArchive){
-    html += '<span style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);color:#a855f7;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0">📦 ARXIV</span>';
+    html += '<span style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);color:var(--purple);font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0">📦 ARXIV</span>';
   }
   html += '</div>';
 
-  // ==== HODIM PLAN PROGRESS ====
+  // ==== SHAXSIY PLAN — HERO ====
+  html += '<div class="plan-hero">';
+
   if(hodimPlan > 0){
-    html += '<div style="margin-top:16px">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Shaxsiy plan</span>';
-    html += '<span style="font-size:14px;font-weight:800;color:'+planColor+'">'+hodimFoiz+'%</span>';
+    // Sarlavha + holat
+    html += '<div class="plan-hero-top">';
+    html += '<span class="plan-lbl">'+icTarget+'Shaxsiy plan</span>';
+    if(pillTxt){
+      html += '<span class="plan-pill" style="color:'+pillCol+';background:'+pillBg+'">'+pillTxt+'</span>';
+    }
     html += '</div>';
-    html += '<div style="background:var(--bg3);border-radius:6px;height:10px;overflow:hidden;position:relative">';
-    html += '<div style="height:100%;width:'+barW+'%;background:'+planColor+';transition:width 1s ease;border-radius:6px"></div>';
+
+    // Katta foiz + bajarilgan pul
+    html += '<div class="plan-figure">';
+    html += '<div>';
+    html += '<div class="plan-pct" style="color:'+planColor+'">'+hodimFoiz+'%</div>';
+    html += '<div class="plan-cap">plandan bajarildi</div>';
     html += '</div>';
-    html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:5px">';
-    html += '<span>Bajarildi: <b style="color:var(--text)">'+fmt(jamiSof)+'</b></span>';
-    html += '<span>Plan: <b style="color:var(--text)">'+fmt(hodimPlan)+'</b></span>';
+    html += '<div class="plan-money">';
+    html += '<div class="plan-money-v">'+fmt(jamiSof)+'</div>';
+    html += '<div class="plan-cap" style="margin-top:3px">'+fmt(hodimPlan)+' so\'m dan</div>';
+    html += '</div>';
+    html += '</div>';
+
+    // Progress bar + kerakli temp markeri
+    html += '<div class="plan-bar-wrap"'+(tempFoiz > 0 ? '' : ' style="padding-bottom:0"')+'>';
+    html += '<div class="plan-bar">';
+    html += '<div class="plan-bar-fill" style="width:'+barW+'%;background:'+planColor+'"></div>';
+    if(tempFoiz > 0){
+      var markPos = Math.min(99, Math.max(1, tempFoiz));
+      html += '<div class="plan-mark" style="left:'+markPos+'%"></div>';
+    }
+    html += '</div>';
+    if(tempFoiz > 0){
+      var lblPos = Math.min(86, Math.max(14, tempFoiz));
+      html += '<div class="plan-mark-lbl" style="left:'+lblPos+'%">kerak '+tempFoiz+'%</div>';
+    }
+    html += '</div>';
+
+    // Qoldi / kuniga kerak / qolgan kun
+    if(qoldiSum <= 0){
+      html += '<div class="plan-done">'+icCheck+'<span>Plan bajarildi · +'+fmt(jamiSof-hodimPlan)+' so\'m ortiqcha</span></div>';
+    } else {
+      var mLbl = [], mVal = [], mUnit = [], mCol = [];
+      mLbl.push('Qoldi'); mVal.push(fmt(qoldiSum)); mUnit.push('so\'m'); mCol.push('var(--amber)');
+      if(kunlikKerak > 0){ mLbl.push('Kuniga kerak'); mVal.push(fmt(kunlikKerak)); mUnit.push('so\'m'); mCol.push('var(--text)'); }
+      if(kunQoldi > 0){ mLbl.push('Qolgan'); mVal.push(String(kunQoldi)); mUnit.push('kun'); mCol.push('var(--text)'); }
+      html += '<div class="plan-metrics" style="grid-template-columns:repeat('+mLbl.length+',1fr)">';
+      for(var mi=0; mi<mLbl.length; mi++){
+        html += '<div>';
+        html += '<div class="pm-l">'+mLbl[mi]+'</div>';
+        html += '<div class="pm-v" style="color:'+mCol[mi]+'">'+mVal[mi]+'</div>';
+        html += '<div class="pm-u">'+mUnit[mi]+'</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+  } else {
+    // Plan yo'q — jim yashirmasdan sababini tushuntiramiz
+    html += '<div class="plan-hero-top">';
+    html += '<span class="plan-lbl">'+icTarget+'Shaxsiy plan</span>';
+    html += '<span class="plan-pill" style="color:var(--amber);background:rgba(251,191,36,.12)">Belgilanmagan</span>';
+    html += '</div>';
+    html += '<div class="plan-figure">';
+    html += '<div>';
+    html += '<div class="plan-pct sm">'+fmt(jamiSof)+'</div>';
+    html += '<div class="plan-cap">bajarildi, so\'m</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:8px;align-items:flex-start;padding-top:12px;border-top:1px solid var(--border)">';
+    html += '<span style="color:var(--amber);flex-shrink:0;line-height:0;margin-top:2px">'+icAlert+'</span>';
+    html += '<div class="plan-note"><b>'+getOyNomi(curOy, curYil, curYarim)+'</b> uchun sizga plan kiritilmagan — bajarilish va prognoz foizi hisoblanmaydi. Filial boshlig\'i yoki administratorga murojaat qiling.</div>';
+    html += '</div>';
+  }
+
+  // ==== PROGNOZ (plan blokining davomi, faqat joriy davr) ====
+  if(!isArchive && prognoz > 0){
+    var hasPlan = hodimPlan > 0;
+    var prognozColor = !hasPlan ? 'var(--text2)' : (prognozFoiz >= 100 ? 'var(--green)' : (prognozFoiz >= 90 ? 'var(--amber)' : 'var(--red)'));
+    var prognozTxt = '';
+    if(hasPlan){
+      if(prognozFoiz >= 100) prognozTxt = 'Shu tempda plan bajariladi';
+      else if(prognozFoiz >= 90) prognozTxt = 'Shu tempda plan biroz yetmaydi';
+      else prognozTxt = 'Shu tempda plan bajarilmaydi';
+    }
+    html += '<div class="plan-prog">';
+    html += '<div class="plan-prog-top">';
+    html += '<span class="plan-lbl">'+icTrend+'Oy oxiri prognoz</span>';
+    html += '<span class="plan-prog-v" style="color:'+prognozColor+'">'+fmt(prognoz)+' so\'m</span>';
+    html += '</div>';
+    html += '<div class="plan-prog-msg">';
+    html += '<span class="plan-prog-txt" style="color:'+(hasPlan?prognozColor:'var(--text3)')+'">'+(hasPlan ? prognozTxt : 'Plan yo\'q — foiz hisoblanmaydi')+'</span>';
+    var progMeta = hasPlan ? 'plandan '+prognozFoiz+'%' : '';
+    if(kunJami > 0){ progMeta += (progMeta ? ' · ' : '') + kunBugun + '/' + kunJami + ' kun'; }
+    html += '<span class="plan-prog-meta">'+progMeta+'</span>';
     html += '</div>';
     html += '</div>';
   }
 
-  // ==== PROGNOZ BLOK (faqat joriy oy) ====
-  if(!isArchive && prognoz > 0){
-    var prognozColor = prognozFoiz >= 80 ? 'var(--green)' : prognozFoiz >= 50 ? 'var(--amber)' : 'var(--red)';
-    html += '<div style="margin-top:12px;padding:12px;background:var(--bg3);border-radius:12px;border:0.5px solid var(--border)">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html += '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">📈 Oy oxiri prognoz</span>';
-    html += '<span style="font-size:13px;font-weight:800;color:'+prognozColor+'">'+prognozFoiz+'%</span>';
-    html += '</div>';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center">';
-    html += '<span style="font-size:13px;font-weight:700">'+fmt(prognoz)+' so\'m</span>';
-    html += '<span style="font-size:10px;color:var(--text3)">'+d.bugun+'/'+d.oy_kunlari+' kun</span>';
-    html += '</div>';
-    html += '</div>';
-  }
+  html += '</div>'; // plan-hero end
 
   // ==== STATS GRID ====
   html += '<div class="stats-grid">';
@@ -349,21 +490,21 @@ function renderHodim(d){
   // KPI bonus
   var filialFoizTxt = isArchive ? d.filial_foiz : d.filial_foiz;
   html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
-  html += '<span style="color:var(--text2)">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(shaxsiy savdo × '+(d.kpi_foiz||0)+'%, filial '+filialFoizTxt+'%)</span></span>';
-  html += '<span style="font-weight:700;color:'+((d.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+(d.kpi_bonus>0?'+':'')+fmt(d.kpi_bonus||0)+' so\'m</span>';
+  html += '<span style="color:var(--text2);min-width:0">📊 KPI bonus <span style="font-size:10px;color:var(--text3)">(shaxsiy savdo × '+pctFmt(d.kpi_foiz)+'%, filial '+pctFmt(filialFoizTxt)+'%)</span></span>';
+  html += '<span style="font-weight:700;white-space:nowrap;flex-shrink:0;margin-left:10px;color:'+((d.kpi_bonus||0)>0?'var(--green)':'var(--text3)')+'">'+(d.kpi_bonus>0?'+':'')+fmt(d.kpi_bonus||0)+' so\'m</span>';
   html += '</div>';
   // Boshqaruv bonus (faqat boshliq) — endi FILIAL savdo'ga ko'paytiriladi
   if(isBoshliq){
     html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
-    html += '<span style="color:var(--text2)">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">(filial savdo × '+(d.boshqaruv_foiz||0)+'%)</span></span>';
-    html += '<span style="font-weight:700;color:'+((d.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+(d.boshqaruv_bonus>0?'+':'')+fmt(d.boshqaruv_bonus||0)+' so\'m</span>';
+    html += '<span style="color:var(--text2);min-width:0">🎯 Boshqaruv bonusi <span style="font-size:10px;color:var(--text3)">(filial savdo × '+pctFmt(d.boshqaruv_foiz)+'%)</span></span>';
+    html += '<span style="font-weight:700;white-space:nowrap;flex-shrink:0;margin-left:10px;color:'+((d.boshqaruv_bonus||0)>0?'var(--purple)':'var(--text3)')+'">'+(d.boshqaruv_bonus>0?'+':'')+fmt(d.boshqaruv_bonus||0)+' so\'m</span>';
     html += '</div>';
   }
   // Fidoyilik bonusi — faqat > 0 bo'lsa
   if((d.fidoyilik||0) > 0){
     html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">';
     html += '<span style="color:var(--text2)">💎 Fidoyilik bonusi</span>';
-    html += '<span style="font-weight:700;color:#fbbf24">+'+fmt(d.fidoyilik)+' so\'m</span>';
+    html += '<span style="font-weight:700;white-space:nowrap;flex-shrink:0;margin-left:10px;color:var(--amber)">+'+fmt(d.fidoyilik)+' so\'m</span>';
     html += '</div>';
   }
   html += '</div>';
@@ -379,13 +520,13 @@ function renderHodim(d){
   if(!isArchive && d.prognoz_oylik > d.oylik){
     html += '<details style="margin-top:10px"><summary style="font-size:11px;color:var(--text3);cursor:pointer;text-transform:uppercase;letter-spacing:.3px">📈 Prognoz tafsilot</summary>';
     html += '<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;font-size:11px">';
-    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Filial prognoz foizi</span><span style="font-weight:700">'+(d.filial_prognoz_foiz||0)+'%</span></div>';
-    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz KPI ('+(d.prognoz_kpi_foiz||0)+'%)</span><span style="font-weight:700;color:var(--green)">+'+fmt(d.prognoz_kpi_bonus||0)+'</span></div>';
+    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Filial prognoz foizi</span><span style="font-weight:700">'+pctFmt(d.filial_prognoz_foiz)+'%</span></div>';
+    html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz KPI ('+pctFmt(d.prognoz_kpi_foiz)+'%)</span><span style="font-weight:700;color:var(--green)">+'+fmt(d.prognoz_kpi_bonus||0)+'</span></div>';
     if(isBoshliq){
-      html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz boshqaruv ('+(d.prognoz_boshqaruv_foiz||0)+'%)</span><span style="font-weight:700;color:var(--purple)">+'+fmt(d.prognoz_boshqaruv_bonus||0)+'</span></div>';
+      html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Prognoz boshqaruv ('+pctFmt(d.prognoz_boshqaruv_foiz)+'%)</span><span style="font-weight:700;color:var(--purple)">+'+fmt(d.prognoz_boshqaruv_bonus||0)+'</span></div>';
     }
     if((d.prognoz_fidoyilik||d.fidoyilik||0) > 0){
-      html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">💎 Prognoz fidoyilik</span><span style="font-weight:700;color:#fbbf24">+'+fmt(d.prognoz_fidoyilik||d.fidoyilik||0)+'</span></div>';
+      html += '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">💎 Prognoz fidoyilik</span><span style="font-weight:700;color:var(--amber)">+'+fmt(d.prognoz_fidoyilik||d.fidoyilik||0)+'</span></div>';
     }
     html += '</div></details>';
   }

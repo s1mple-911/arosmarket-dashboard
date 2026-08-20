@@ -1,0 +1,5 @@
+requests>=2.31
+openpyxl>=3.1
+python-dotenv>=1.0
+# ixtiyoriy — PG_DSN ishlatilsa (cache_filial ni to'g'ridan-to'g'ri o'qish uchun)
+# psycopg2-binary>=2.9

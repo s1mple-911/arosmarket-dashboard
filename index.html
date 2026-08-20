@@ -4030,12 +4030,38 @@ function renderCalendar(d){
   // Har kun uchun data map
   var dayMap = {};
   days.forEach(function(day){ dayMap[day.kun] = day; });
-  // Statistika (faqat ish kunlari)
-  var totalBaj = days.reduce(function(s,x){return x.is_day_off ? s : s+(x.bajarilgan||0);},0);
-  var greenCount = days.filter(function(x){return x.status==='green';}).length;
-  var amberCount = days.filter(function(x){return x.status==='amber';}).length;
-  var redCount = days.filter(function(x){return x.status==='red';}).length;
-  var dayOffCount = Object.keys(dayOffMap).length;
+  // --- Yarimlik (davr) chegarasi ---
+  // MUHIM: API yarimlik so'ralganda ham OYNING BARCHA kunlarini qaytaradi,
+  // yarimlikdan tashqari kunlar status='outofyarim', in_yarim=false bo'ladi.
+  // Statistika faqat joriy yarimlik kunlari bo'yicha hisoblanishi shart.
+  var yarimNo = parseInt(d.oy_yarim) || 0;
+  var yStart = parseInt(d.yarim_start_kun) || 1;
+  var yEnd = parseInt(d.yarim_end_kun) || oyKunlari;
+  var yarimMode = !!(yarimNo && d.yarim_start_kun);
+  function inDavr(x){
+    if(!yarimMode) return true;
+    if(x && typeof x.in_yarim === 'boolean') return x.in_yarim;
+    var kn = x && x.kun != null ? parseInt(x.kun) : parseInt(x);
+    return kn >= yStart && kn <= yEnd;
+  }
+  var davrDays = days.filter(inDavr);
+  // Statistika (faqat joriy davr + faqat ish kunlari)
+  var totalBaj = davrDays.reduce(function(s,x){return x.is_day_off ? s : s+(x.bajarilgan||0);},0);
+  var greenCount = davrDays.filter(function(x){return x.status==='green';}).length;
+  var amberCount = davrDays.filter(function(x){return x.status==='amber';}).length;
+  var redCount = davrDays.filter(function(x){return x.status==='red';}).length;
+  var dayOffCount = Object.keys(dayOffMap).filter(function(k){return inDavr(k);}).length;
+  // Davr plani (yarimlikda d.plan — yarimlik plani, aks holda oylik plan)
+  var davrPlan = parseInt(d.plan) || (kunlikPlan * ishKunlari) || 0;
+  var davrFoiz = davrPlan > 0 ? Math.round(totalBaj / davrPlan * 100) : 0;
+  // Davr ichida bugungacha o'tgan ish kunlari (kelajak kunlarni API qaytarmaydi)
+  var otganIshKun = davrDays.filter(function(x){return !x.is_day_off;}).length;
+  var kutilganFoiz = ishKunlari > 0 ? Math.round(otganIshKun / ishKunlari * 100) : 0;
+  // Rang umumiy planga emas, SUR'ATGA qarab beriladi — aks holda davr boshida qizil chiqadi
+  var surat = kutilganFoiz > 0 ? (davrFoiz / kutilganFoiz) : 0;
+  var davrColor = otganIshKun === 0 ? 'var(--text2)'
+    : surat >= 0.95 ? 'var(--green)' : surat >= 0.8 ? '#fbbf24' : '#ff4d6d';
+  var davrLabel = yarimMode ? (yStart + '–' + yEnd + ' · ' + yarimNo + '-yarim') : '1–' + oyKunlari;
 
   function dayOffIcon(reason){
     return reason === 'inventory' ? '📊' : '🎉';
@@ -4046,7 +4072,7 @@ function renderCalendar(d){
   html += '<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:14px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
   html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Kunlik plan</div><div style="font-weight:700;color:var(--text)">'+fmt(kunlikPlan)+'</div><div style="font-size:9px;color:var(--text3);margin-top:1px">'+ishKunlari+' ish kuni</div></div>';
-  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Jami bajarilgan</div><div style="font-weight:700;color:var(--green)">'+fmt(totalBaj)+'</div></div>';
+  html += '<div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">Bajarilgan · '+davrLabel+'</div><div style="font-weight:700;color:'+davrColor+'">'+fmt(totalBaj)+'</div><div style="font-size:9px;color:var(--text3);margin-top:1px">'+davrFoiz+'% · kutilgan '+kutilganFoiz+'%'+'</div></div>';
   html += '</div>';
   html += '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
   html += '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--green)">'+greenCount+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">YAXSHI</div></div>';
@@ -4082,14 +4108,14 @@ function renderCalendar(d){
       html += '<div style="font-size:13px;margin-top:1px;line-height:1">'+icon+'</div>';
       html += '</div>';
     } else if(dayData){
-      var bg, txtColor;
-      if(dayData.status==='outofyarim'){ bg='var(--bg3)'; txtColor='var(--text3)'; }
+      var bg, txtColor, outOf = (dayData.status==='outofyarim') || !inDavr(dayData);
+      if(outOf){ bg='var(--bg3)'; txtColor='var(--text3)'; }
       else if(dayData.status==='green'){ bg='rgba(34,197,94,.18)'; txtColor='var(--green)'; }
       else if(dayData.status==='amber'){ bg='rgba(251,191,36,.18)'; txtColor='#fbbf24'; }
       else{ bg='rgba(255,77,109,.18)'; txtColor='#ff4d6d'; }
       html += '<div onclick="showDayDetail('+k+')" id="cd-'+k+'" style="position:relative;aspect-ratio:1;background:'+bg+';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;transition:border-color .15s;min-width:0;overflow:hidden" onmouseover="this.style.borderColor=\''+txtColor+'\'" onmouseout="this.style.borderColor=\'transparent\'">';
       html += '<div style="font-size:14px;font-weight:700;color:'+txtColor+';line-height:1">'+k+'</div>';
-      html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px;line-height:1">'+(dayData.foiz||0)+'%</div>';
+      html += '<div style="font-size:9px;color:'+txtColor+';opacity:.8;margin-top:1px;line-height:1">'+(outOf?'·':(dayData.foiz||0)+'%')+'</div>';
       html += '</div>';
     } else {
       // Kelajak kun
@@ -4175,11 +4201,14 @@ function showDayDetail(kun){
   }
   
   if(!d) return;
-  var color = d.status==='green'?'var(--green)':d.status==='amber'?'#fbbf24':'#ff4d6d';
+  var outOf = (d.status==='outofyarim') || (d.in_yarim === false);
+  var color = outOf?'var(--text3)':d.status==='green'?'var(--green)':d.status==='amber'?'#fbbf24':'#ff4d6d';
   var html = '<div style="background:var(--bg3);border-radius:14px;padding:14px;border:1px solid '+color+'40">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
   html += '<div style="font-size:14px;font-weight:700">'+kun+'-kun · '+d.sana+'</div>';
-  html += '<div style="font-size:15px;font-weight:800;color:'+color+'">'+(d.foiz||0)+'%</div>';
+  html += outOf
+    ? '<div style="font-size:10px;font-weight:700;color:var(--text3);background:var(--bg2);padding:3px 8px;border-radius:6px">boshqa yarimlik</div>'
+    : '<div style="font-size:15px;font-weight:800;color:'+color+'">'+(d.foiz||0)+'%</div>';
   html += '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
   html += '<div><div style="color:var(--text3);font-size:10px;margin-bottom:2px">Tushum</div><div style="font-weight:700;color:var(--green)">'+fmt(d.tushum||0)+'</div></div>';

@@ -1,0 +1,6 @@
+.env
+hisobotlar/
+.kesh/
+__pycache__/
+*.pyc
+.venv/
