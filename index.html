@@ -107,6 +107,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .call-btn{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.1);text-decoration:none;transition:all .15s}
 .call-btn svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .call-btn:active{transform:scale(.93)}
+/* V2 — ID chiplari (mijoz ID, mahsulot ID, order ID)
+   Neytral fon + faqat raqam rangli: sana/deadline chiplari (rangli fon) ustun bo'lib qolsin */
+.v2-idchip{display:inline-flex;align-items:center;gap:4px;height:17px;padding:0 6px;border-radius:5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;font-weight:700;line-height:1;color:var(--text2);background:var(--bg3);border:0.5px solid var(--border);white-space:nowrap;flex-shrink:0;vertical-align:middle;text-decoration:none}
+.v2-idchip b{font-weight:800;letter-spacing:0;font-variant-numeric:tabular-nums}
+.v2-idchip .k{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:9px;font-weight:700;letter-spacing:.4px;color:var(--text2)}
+.v2-idchip.uid b{color:var(--text)}
+.v2-idchip.pid b{color:#5AB0FF}
+.v2-idchip.oid b{color:#C084FC}
+[data-theme="light"] .v2-idchip{background:rgba(120,120,128,.08);border-color:rgba(60,60,67,.14)}
+[data-theme="light"] .v2-idchip.pid b{color:#0A6DD0}
+[data-theme="light"] .v2-idchip.oid b{color:#7C3AED}
+/* yig'ilgan (checked) itemda chip ustidan chiziq o'tmasin */
+.v2-item-inner .v2-idchip{text-decoration:none}
+.v2-call{width:34px;height:34px;flex-shrink:0}
+.v2-call svg{width:16px;height:16px}
+/* Qarzdor qatori (V2 ro'yxat) */
+.v2-drow{display:flex;align-items:center;gap:8px;padding:11px 10px;background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;margin-bottom:8px;cursor:pointer;transition:background .15s,transform .12s}
+.v2-drow:active{transform:scale(.99);background:var(--bg3)}
+.v2-drow-tel{font-size:10.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text2);letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.v2-drow-av{width:34px;height:34px;border-radius:11px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;flex-shrink:0}
+/* V2 modal header tugmalari */
+.v2-hbtn{width:34px;height:34px;border-radius:10px;background:var(--bg3);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;transition:transform .12s,background .15s}
+.v2-hbtn.sm{width:28px;height:28px;border-radius:8px;font-size:12px;background:transparent;border-color:transparent}
+.v2-hbtn:active{transform:scale(.93)}
+.v2-drow:focus-visible,.v2-hbtn:focus-visible,.call-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .arr{color:var(--text3);font-size:11px;flex-shrink:0;margin-left:4px;min-width:14px;text-align:center;transition:transform .2s}
 .arr.open{transform:rotate(180deg)}
 .client-actions{display:flex;align-items:center;gap:8px;padding:0 14px 12px 14px;flex-wrap:wrap}
@@ -462,6 +487,57 @@ function v2DisplayName(d){
   return v2CustomNames[id] || (d.ism || ((d.first_name||'')+' '+(d.last_name||'')).trim()) || "Noma'lum";
 }
 
+// HTML escape — tashqi matn (ism, telefon) HTML/atribut ichiga qo'yilishidan oldin
+function v2Esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// ID normalizatsiyasi: null / '' / 0 / 'None' -> '' (bunday holatda chip chizilmaydi)
+function v2NormId(v){
+  if(v==null) return '';
+  var s = String(v).trim();
+  if(s==='' || s==='0' || s==='null' || s==='undefined' || s==='None' || s==='NaN') return '';
+  return v2Esc(s);
+}
+// inline onclick="fn('...')" ichiga matn qo'yish uchun: avval JS string, keyin HTML escape
+function v2JsAttr(s){
+  var t = String(s==null?'':s).replace(/[\r\n\u2028\u2029]+/g,' ');
+  return v2Esc(t.replace(/\\/g,'\\\\').replace(/'/g,"\\'").trim());
+}
+// O'zbekiston raqami: 998 + kod(2) + 7 xona. Kod: mobil (20,33,50,55,77,88,9x) yoki viloyat (61-79)
+var V2_TEL_CODE = /^(20|33|50|55|77|88|9[0-9]|6[1-9]|7[0-9])$/;
+// Telefonni normallashtiradi. NOTO'G'RI/axlat raqam bo'lsa '' qaytaradi (xato qo'ng'iroqning oldini oladi)
+// "+998 90 123 45 67" -> "998901234567" · "901234567" -> "998901234567" · "None185682495" -> ''
+function v2TelDigits(tel){
+  var raw = String(tel==null?'':tel).trim();
+  if(/[^\d\s+()\-.]/.test(raw)) return '';   // ichida harf/belgi bor ("id905123456", "None1856…") — telefon emas
+  var s = raw.replace(/\D/g,'');
+  if(!s) return '';
+  if(s.length===14 && s.slice(0,2)==='00' && s.slice(2,5)==='998') s = s.slice(2);   // 00998...
+  else if(s.length===13 && s.slice(0,4)==='9998') s = s.slice(1);                    // 9998... (qo'sh 9)
+  else if(s.length===10 && s.charAt(0)==='8') s = '998'+s.slice(1);                  // eski format: 8 90 123 45 67
+  else if(s.length===9) s = '998'+s;                                                 // 901234567
+  if(s.slice(0,3)==='998') return (s.length===12 && V2_TEL_CODE.test(s.slice(3,5))) ? s : '';
+  // O'zbek raqami emas — faqat aniq xalqaro format ("+" bilan yozilgan, 11-15 xona) qabul qilinadi
+  if(raw.charAt(0)==='+' && s.length>=11 && s.length<=15) return s;
+  return '';
+}
+// Qo'ng'iroq tugmasi — mijoz kartasi / modal header uchun (bosilganda kartani ochmaydi)
+function v2CallBtn(tel, title){
+  var d = v2TelDigits(tel);
+  if(!d) return '';
+  return '<a class="call-btn v2-call" href="tel:+'+d+'" title="'+v2Esc(title||'Qo\'ng\'iroq qilish')+'"'+
+    ' onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()">'+
+    '<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>';
+}
+// Telefonni chiroyli ko'rsatish: 998901234567 -> +998 90 123 45 67
+// Normallashtira olmasa — xom qiymatni qaytaradi (ma'lumot yo'qolmasin; chiqarishda v2Esc bilan escape qilinadi)
+function v2TelPretty(tel){
+  var d = v2TelDigits(tel);
+  if(!d) return String(tel==null?'':tel).trim();
+  if(d.length!==12 || d.slice(0,3)!=='998') return '+'+d;   // xalqaro raqam — bo'lmasdan
+  return '+998 '+d.slice(3,5)+' '+d.slice(5,8)+' '+d.slice(8,10)+' '+d.slice(10,12);
+}
+
 function renderBarcha(){
   var pageBarcha = document.getElementById('page-barcha');
   pageBarcha.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
@@ -568,11 +644,16 @@ function paintV2List(){
   // done (to'liq yig'ilgan) debtorlarni ro'yxatdan chiqaramiz
   var list = v2Debtors.filter(function(d){ var id = d.user_id!=null ? d.user_id : d.id; return !v2DoneSet[String(id)]; });
   if(q){
+    // raqamli qidiruv: "#4082", "90 941", "+998 90..." — probel/belgilar hisobga olinmaydi
+    var qNum = q.replace(/\D/g,'');
     list = list.filter(function(d){
       var id = d.user_id!=null ? d.user_id : d.id;
       var nm = v2DisplayName(d).toLowerCase();
-      var tel = String(d.telefon||d.username||'').toLowerCase();
-      return nm.indexOf(q)>=0 || String(id).indexOf(q)>=0 || tel.indexOf(q)>=0;
+      var telRaw = String(d.telefon||d.username||'').toLowerCase();
+      var telNum = telRaw.replace(/\D/g,'');
+      if(nm.indexOf(q)>=0 || String(id).indexOf(q)>=0 || telRaw.indexOf(q)>=0) return true;
+      if(qNum && (String(id).indexOf(qNum)>=0 || telNum.indexOf(qNum)>=0)) return true;
+      return false;
     });
   }
   if(countEl) countEl.textContent = list.length+' ta qarzdor'+(q?' topildi':'');
@@ -589,17 +670,22 @@ function paintV2List(){
     var utShort = ut==='master' ? 'M' : (ut==='business_partner' ? 'BP' : '?');
     var utColor = ut==='master' ? '#378ADD' : '#a855f7';
     var tel = d.telefon||d.username||'';
-    html += '<div onclick="openV2Modal('+id+')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);margin-bottom:8px;cursor:pointer">';
-    html += '<div style="width:38px;height:38px;border-radius:11px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:'+utColor+';flex-shrink:0">'+utShort+'</div>';
+    var telFull = tel ? v2TelPretty(tel) : '';
+    var telShort = telFull.replace(/^\+998\s/,'');
+    html += '<div class="v2-drow" onclick="openV2Modal('+id+')">';
+    html += '<div class="v2-drow-av" style="color:'+utColor+'">'+utShort+'</div>';
     html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+'</div>';
-    html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+tel+' · ID '+id+'</div>';
+    html += '<div style="font-size:14px;font-weight:600;letter-spacing:-.2px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v2Esc(name)+'</div>';
+    html += '<div style="display:flex;align-items:center;gap:5px;margin-top:4px;min-width:0">';
+    html += '<span class="v2-idchip uid" title="Mijoz ID"><b>#'+id+'</b></span>';
+    if(telFull) html += '<span class="v2-drow-tel" title="'+v2Esc(telFull)+'">'+v2Esc(telShort)+'</span>';
     html += '</div>';
-    html += '<div style="text-align:right;flex-shrink:0">';
-    html += '<div style="font-size:14px;font-weight:800;color:var(--red)">'+fmt(totalDebt)+'</div>';
-    if(wallet>0) html += '<div style="font-size:10px;color:var(--green);margin-top:2px">💰 '+fmt(wallet)+'</div>';
     html += '</div>';
-    html += '<div style="color:var(--text3);font-size:16px;margin-left:2px">›</div>';
+    html += '<div style="text-align:right;flex-shrink:0;margin-left:2px">';
+    html += '<div style="font-size:13px;font-weight:800;color:var(--red);white-space:nowrap;font-variant-numeric:tabular-nums">'+fmt(totalDebt)+'</div>';
+    if(wallet>0) html += '<div style="font-size:9.5px;font-weight:600;color:var(--green);margin-top:3px;white-space:nowrap">💰 '+fmt(wallet)+'</div>';
+    html += '</div>';
+    html += v2CallBtn(tel, 'Qo\'ng\'iroq: '+name.replace(/"/g,'')) || '<div style="width:34px;flex-shrink:0"></div>';
     html += '</div>';
   });
   listEl.innerHTML = html;
@@ -743,10 +829,10 @@ function renderCounterRow(u){
   var uRet = Number(u.ret_cnt)||0;
   var retTxt = uRet>0 ? ' · <span style="color:#FF9F0A;font-weight:700">↩️'+uRet+' qaytdi</span>' : '';
 
-  var h = '<div class="counter-row" data-user="'+u.user_id+'" data-name="'+String(nm).replace(/"/g,'&quot;')+'" data-qolda="'+uQolda+'" data-topsh="'+uTopsh+'" data-action="'+action+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px">';
+  var h = '<div class="counter-row" data-user="'+u.user_id+'" data-name="'+v2Esc(nm)+'" data-qolda="'+uQolda+'" data-topsh="'+uTopsh+'" data-action="'+action+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px">';
   h += '<div class="counter-row-inner" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;transition:transform .2s;position:relative;z-index:1">';
   h += '<div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💰</div>';
-  h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>';
+  h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v2Esc(nm)+'</div>';
   h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+u.cnt+' ta · '+badge+retTxt+(t?' · '+t:'')+'</div>';
   var uCash=Number(u.cash_sum)||0, uCard=Number(u.card_sum)||0;
   if(uCash>0||uCard>0){ h += '<div style="font-size:10px;margin-top:2px">'+(uCash>0?'<span style="color:var(--green);font-weight:700">💵 '+fmt(uCash)+'</span>':'')+(uCard>0?((uCash>0?' · ':'')+'<span style="color:#378ADD;font-weight:700">💳 '+fmt(uCard)+'</span>'):'')+'</div>'; }
@@ -829,15 +915,15 @@ function openCollectUserModal(userId, nm, qolda, topsh){
       html += '<div style="background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px;position:sticky;top:0;z-index:10">';
       html += '<div style="display:flex;align-items:center;gap:10px">';
       html += '<div onclick="openCounterDetail()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
-      html += '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(nm||'Mijoz')+'</div>';
+      html += '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v2Esc(nm||'Mijoz')+'</div>';
       html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">Bugun yig\'ilgan · noto\'g\'ri bo\'lsa qayta suring</div></div>';
       html += '</div>';
       // Topshirish tugmasi (toggle)
       var isDelivered = (qolda<=0 && topsh>0);
       if(isDelivered){
-        html += '<button id="deliverBtn" onclick="deliverUser('+userId+',\''+String(nm).replace(/'/g,"\\'")+'\',\'undeliver\')" style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:1px solid rgba(255,159,10,.4);background:rgba(255,159,10,.12);color:#FF9F0A;font-size:14px;font-weight:800;cursor:pointer">↩️ Qo\'ldaga qaytarish</button>';
+        html += '<button id="deliverBtn" onclick="deliverUser('+userId+',\''+v2JsAttr(nm)+'\',\'undeliver\')" style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:1px solid rgba(255,159,10,.4);background:rgba(255,159,10,.12);color:#FF9F0A;font-size:14px;font-weight:800;cursor:pointer">↩️ Qo\'ldaga qaytarish</button>';
       } else {
-        html += '<button id="deliverBtn" onclick="deliverUser('+userId+',\''+String(nm).replace(/'/g,"\\'")+'\',\'deliver\')" style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:none;background:#378ADD;color:#fff;font-size:14px;font-weight:800;cursor:pointer">✅ Kassaga topshirildi</button>';
+        html += '<button id="deliverBtn" onclick="deliverUser('+userId+',\''+v2JsAttr(nm)+'\',\'deliver\')" style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:none;background:#378ADD;color:#fff;font-size:14px;font-weight:800;cursor:pointer">✅ Kassaga topshirildi</button>';
       }
       html += '</div>';
       html += '<div style="flex:1;overflow-y:auto;padding:12px 14px" id="collectItemsScroll">';
@@ -983,7 +1069,7 @@ function renderCollectHistory(d){
       var hh = hodimlar[i];
       h += '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">';
       h += '<div style="width:38px;height:38px;border-radius:10px;background:rgba(52,199,89,.14);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#34C759;flex-shrink:0">'+(hh.hodim_ism?hh.hodim_ism.charAt(0).toUpperCase():'?')+'</div>';
-      h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(hh.hodim_ism||'Noma\'lum')+'</div><div style="font-size:11px;color:var(--text3);margin-top:1px">'+hh.mijoz_soni+' mijoz · '+hh.item_soni+' mahsulot</div></div>';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v2Esc(hh.hodim_ism||'Noma\'lum')+'</div><div style="font-size:11px;color:var(--text3);margin-top:1px">'+hh.mijoz_soni+' mijoz · '+hh.item_soni+' mahsulot</div></div>';
       h += '<div style="font-size:15px;font-weight:900;color:#34C759;flex-shrink:0">'+fmt(hh.summa)+'</div>';
       h += '</div>';
     }
@@ -995,7 +1081,7 @@ function renderCollectHistory(d){
       var col = isRet ? '#FF9F0A' : 'var(--text)';
       h += '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:center;gap:10px">';
       h += '<div style="font-size:16px;flex-shrink:0">'+payIcon+'</div>';
-      h += '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(it.client_name||'Mijoz')+'</div><div style="font-size:10px;color:var(--text3);margin-top:1px">'+it.vaqt+(it.hodim_ism&&it.hodim_ism!=='Nomalum'?' · '+it.hodim_ism:'')+'</div></div>';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v2Esc(it.client_name||'Mijoz')+'</div><div style="font-size:10px;color:var(--text3);margin-top:1px">'+v2Esc(it.vaqt)+(it.hodim_ism&&it.hodim_ism!=='Nomalum'?' · '+v2Esc(it.hodim_ism):'')+'</div></div>';
       h += '<div style="font-size:14px;font-weight:800;color:'+col+';flex-shrink:0">'+(isRet?'-':'')+fmt(it.summa)+'</div>';
       h += '</div>';
     }
@@ -1010,16 +1096,23 @@ function renderCollectedItem(it, userId){
   var isReturn = (ct==='brak'||ct==='vozvrat');
   var bd = v2BadgeInfo(true, ct, it.pay_method||'');
   var borderCol = isReturn ? (ct==='brak'?'rgba(255,59,48,.3)':'rgba(255,159,10,.3)') : 'rgba(52,199,89,.3)';
-  var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
+  var img = it.image ? '<img src="'+v2Esc(it.image)+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
   var catCap = it.cat_label ? (it.cat_label.charAt(0).toUpperCase()+it.cat_label.slice(1).toLowerCase()) : '';
+  var ciPid = v2NormId(it.product_id) || v2NormId(it.item_id);
+  var ciOid = v2NormId(it.order_id);
   var h = '<div class="collect-item" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checktype="'+ct+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;border:0.5px solid '+borderCol+'">';
   h += '<div class="collect-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;transition:transform .2s;background:var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
-  if(catCap) h += '<div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:2px">'+catCap+'</div>';
-  h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
-  h += '<div style="font-size:11px;color:'+bd.color+';margin-top:3px;font-weight:700">'+bd.txt+' <span style="opacity:.5;font-weight:400;margin-left:4px">#'+(it.product_id||it.item_id)+'</span></div>';
+  if(catCap) h += '<div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:2px">'+v2Esc(catCap)+'</div>';
+  h += '<div class="v2-item-name" style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+v2Esc(it.name)+qtyBadge+'</div>';
+  h += '<div style="font-size:11px;color:'+bd.color+';margin-top:3px;font-weight:700">'+bd.txt+'</div>';
+  // Mahsulot ID + Order ID chiplari
+  h += '<div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap">';
+  if(ciPid) h += '<span class="v2-idchip pid" title="Mahsulot ID"><span class="k">MAH</span><b>'+ciPid+'</b></span>';
+  if(ciOid) h += '<span class="v2-idchip oid" title="Order ID"><span class="k">ORD</span><b>'+ciOid+'</b></span>';
+  h += '</div>';
   h += '</div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:'+(isReturn?'var(--text3)':'var(--text)')+'">'+fmt(it.total_price)+'</div>';
   h += '<div style="font-size:10px;margin-top:2px;color:var(--text3)">← surib qaytar</div></div>';
@@ -1146,15 +1239,19 @@ function renderV2Modal(userId, data){
   var html = '';
   // Header
   html += '<div style="background:var(--bg2);border-bottom:0.5px solid var(--border);padding:14px 14px 12px;position:sticky;top:0;z-index:10">';
-  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
-  html += '<div onclick="closeV2Modal()" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">←</div>';
-  html += '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px">';
-  html += '<div id="v2Name" style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+'</div>';
-  html += '<div onclick="editV2Name('+userId+')" style="cursor:pointer;font-size:14px;flex-shrink:0;opacity:.7">✏️</div>';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
+  html += '<div class="v2-hbtn" onclick="closeV2Modal()" title="Orqaga" style="font-size:18px">←</div>';
+  html += '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:2px">';
+  html += '<div id="v2Name" style="font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v2Esc(name)+'</div>';
+  html += '<div class="v2-hbtn sm" onclick="editV2Name('+userId+')" title="Ismni tahrirlash" style="opacity:.65">✏️</div>';
   html += '</div>';
-  html += '<div id="v2RefreshBtn" onclick="fetchV2Items('+userId+',true)" style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0">🔄</div>';
+  html += v2CallBtn(tel, 'Qo\'ng\'iroq qilish');
+  html += '<div id="v2RefreshBtn" class="v2-hbtn" onclick="fetchV2Items('+userId+',true)" title="Yangilash">🔄</div>';
   html += '</div>';
-  html += '<div style="font-size:11px;color:var(--text3);margin-bottom:10px">ID: '+userId+' · '+tel+'</div>';
+  html += '<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding-left:42px;min-width:0">';
+  html += '<span class="v2-idchip uid" title="Mijoz ID"><span class="k">MIJOZ ID</span><b>'+userId+'</b></span>';
+  if(tel) html += '<span style="font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">'+v2Esc(v2TelPretty(tel))+'</span>';
+  html += '</div>';
   // Stat qatorlar
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += v2StatBox('Jami qarz', fmt(totalDebt), 'var(--red)');
@@ -1167,7 +1264,7 @@ function renderV2Modal(userId, data){
   html += '<div id="v2SalesWindow"></div>';
 
   // Qidiruv (product_id yoki nomi bo'yicha)
-  html += '<div style="padding:8px 14px;background:var(--bg);border-bottom:0.5px solid var(--border)"><input id="v2ItemSearch" type="text" placeholder="🔍 Nomi yoki ID bo\'yicha qidirish..." oninput="v2SearchItems(this.value)" autocomplete="off" style="width:100%;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-size:13px;outline:none"></div>';
+  html += '<div style="padding:8px 14px;background:var(--bg);border-bottom:0.5px solid var(--border)"><input id="v2ItemSearch" type="text" placeholder="🔍 Nomi, mahsulot ID yoki order ID..." oninput="v2SearchItems(this.value)" autocomplete="off" style="width:100%;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-size:13px;outline:none"></div>';
 
   // Itemlar (scroll)
   html += '<div style="flex:1;overflow-y:auto;padding:12px 14px" id="v2ItemsScroll">';
@@ -1225,7 +1322,7 @@ function fetchSalesWindow(userId, tel){
         h += '<div style="background:rgba(55,138,221,.1);border:1px solid rgba(55,138,221,.35);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">';
         h += '<div style="font-size:22px;flex-shrink:0">🪟</div>';
         h += '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:800;color:#378ADD">Savdo oynada ochiq savdo</div>';
-        h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">📤 '+fmtSwDate(doc.sent_at)+(doc.warehouse?(' · '+doc.warehouse):'')+'</div></div>';
+        h += '<div style="font-size:10px;color:var(--text3);margin-top:2px">📤 '+v2Esc(fmtSwDate(doc.sent_at))+(doc.warehouse?(' · '+v2Esc(doc.warehouse)):'')+'</div></div>';
         h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:15px;font-weight:800;color:var(--text)">'+fmt(doc.total_price)+'</div><div style="font-size:9px;color:var(--text3)">so\'m</div></div>';
         h += '</div>';
       });
@@ -1266,6 +1363,10 @@ function v2StatBox(label, val, color){
 
 function v2SearchItems(query){
   var q = String(query||'').trim().toLowerCase();
+  // "#8018", "MAH 8018", "ORD 390443" ham topilsin: belgi/probelsiz variant
+  var qc = q.replace(/[#\s.\-]/g,'');
+  // raqamsiz so'rovda "mah…/ord…" ID tokenlari hisobga olinmaydi (aks holda "ord" hammasini topardi)
+  var qHasDigit = /\d/.test(q);
   var scroll = document.getElementById('v2ItemsScroll');
   if(!scroll) return;
   var blocks = scroll.querySelectorAll(':scope > div[data-order]');
@@ -1275,7 +1376,9 @@ function v2SearchItems(query){
     var anyVisible = false;
     items.forEach(function(it){
       var s = it.getAttribute('data-search')||'';
-      var match = !q || s.indexOf(q) >= 0;
+      if(!qHasDigit) s = s.replace(/(mah|ord)\d+/g,' ');
+      // qc — belgisiz variant: "type c"/"type-c", "MAH 8018", "#8018" bir xil topilsin
+      var match = !q || s.indexOf(q) >= 0 || (qc && qc!==q && (s.indexOf(qc) >= 0 || s.replace(/[\s.\-]/g,'').indexOf(qc) >= 0));
       it.style.display = match ? '' : 'none';
       if(match){ anyVisible = true; totalVisible++; }
     });
@@ -1353,12 +1456,12 @@ function v2DateRow(it){
   if(!sana && !dl) return '';
   var d = v2DaysLeft(it.deadline);
   var st = v2TierStyle(v2Tier(d));
-  var h = '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">';
+  var h = '<div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap">';
   if(sana){
-    h += '<span title="Olingan sana" style="font-size:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#0A84FF;background:rgba(10,132,255,.12);padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">🛒 '+sana+(sanaT?' <span style="opacity:.75">'+sanaT+'</span>':'')+'</span>';
+    h += '<span title="Olingan sana" style="display:inline-flex;align-items:center;height:17px;font-size:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;line-height:1;color:#0A84FF;background:rgba(10,132,255,.12);padding:0 6px;border-radius:5px;letter-spacing:.2px;white-space:nowrap">🛒 '+sana+(sanaT?' <span style="opacity:.75">'+sanaT+'</span>':'')+'</span>';
   }
   if(dl){
-    h += '<span title="To\'lov muddati" style="font-size:10.5px;font-weight:800;color:'+st.col+';background:'+st.chip+';padding:1.5px 6px;border-radius:5px;letter-spacing:.2px">⏳ '+dl+(dlT?' <span style="opacity:.8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600">'+dlT+'</span>':'')+(d!==null?' · '+v2DaysTxt(d):'')+'</span>';
+    h += '<span title="To\'lov muddati" style="display:inline-flex;align-items:center;height:17px;font-size:10.5px;font-weight:800;line-height:1;color:'+st.col+';background:'+st.chip+';padding:0 6px;border-radius:5px;letter-spacing:.2px;white-space:nowrap">⏳ '+dl+(dlT?' <span style="opacity:.8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600">'+dlT+'</span>':'')+(d!==null?' · '+v2DaysTxt(d):'')+'</span>';
   }
   h += '</div>';
   return h;
@@ -1369,21 +1472,29 @@ function renderV2Item(it, userId){
   var pay = it.pay_method || '';       // 'cash' | 'card' | ''
   var checked = it.checked;
   var lineStyle = checked ? 'text-decoration:line-through;opacity:.5' : '';
-  var img = it.image ? '<img src="'+it.image+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
+  var img = it.image ? '<img src="'+v2Esc(it.image)+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;background:var(--bg3);flex-shrink:0" onerror="this.style.display=\'none\'">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--bg3);flex-shrink:0"></div>';
   var qtyBadge = (it.total_qty>1) ? '<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:5px;margin-left:4px">'+(it.unit_index+1)+'/'+it.total_qty+'</span>' : '';
   var bd = v2BadgeInfo(checked, ct, pay);
-  var v2Search = String((it.product_id||it.item_id)+' '+(it.name||'')+' '+(it.cat_label||'')).toLowerCase().replace(/["'<>]/g,' ');
+  var pid = v2NormId(it.product_id) || v2NormId(it.item_id);
+  var oid = v2NormId(it.order_id);
+  // qidiruv: raqamlar + chip matni ("mah8018", "ord390443") + nom/kategoriya/shtrix
+  var v2Search = String((pid?pid+' mah'+pid+' ':'')+(it.item_id||'')+' '+(oid?oid+' ord'+oid+' ':'')+(it.barcode||'')+' '+(it.name||'')+' '+(it.cat_label||'')).toLowerCase().replace(/["'<>&]/g,' ');
   var tSt = v2TierStyle(v2Tier(v2DaysLeft(it.deadline)));
-  var h = '<div class="v2-item" data-search="'+v2Search+'" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" data-pay="'+pay+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid '+tSt.border+'">';
+  var h = '<div class="v2-item" data-search="'+v2Search+'" data-uid="'+it.uid_key+'" data-item="'+it.item_id+'" data-pid="'+pid+'" data-unit="'+it.unit_index+'" data-order="'+it.order_id+'" data-summa="'+it.total_price+'" data-checked="'+(checked?1:0)+'" data-checktype="'+ct+'" data-pay="'+pay+'" style="position:relative;overflow:hidden;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:0.5px solid '+tSt.border+'">';
   h += '<div class="v2-item-inner" style="display:flex;align-items:center;gap:10px;padding:10px;'+lineStyle+';transition:transform .2s;background:linear-gradient(0deg,'+tSt.bg+','+tSt.bg+'),var(--bg2)">';
   h += img;
   h += '<div style="flex:1;min-width:0">';
   if(it.cat_label){
     var catCap = it.cat_label.charAt(0).toUpperCase()+it.cat_label.slice(1).toLowerCase();
-    h += '<div style="font-size:10px;color:var(--text3);font-weight:600;line-height:1.2;margin-bottom:2px">'+catCap+'</div>';
+    h += '<div style="font-size:10px;color:var(--text3);font-weight:500;letter-spacing:.2px;line-height:1.2;margin-bottom:2px">'+v2Esc(catCap)+'</div>';
   }
-  h += '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">'+it.name+qtyBadge+'</div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin-top:3px">'+fmt(it.selling_price)+' so\'m <span style="opacity:.5;margin-left:4px">#'+(it.product_id||it.item_id)+'</span></div>';
+  h += '<div class="v2-item-name" style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3;letter-spacing:-.1px">'+v2Esc(it.name)+qtyBadge+'</div>';
+  h += '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-top:3px">'+fmt(it.selling_price)+' so\'m</div>';
+  // Mahsulot ID + Order ID chiplari
+  h += '<div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap">';
+  if(pid) h += '<span class="v2-idchip pid" title="Mahsulot ID"><span class="k">MAH</span><b>'+pid+'</b></span>';
+  if(oid) h += '<span class="v2-idchip oid" title="Order ID"><span class="k">ORD</span><b>'+oid+'</b></span>';
+  h += '</div>';
   h += v2DateRow(it);
   h += '</div>';
   h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:var(--text)">'+fmt(it.total_price)+'</div>';
@@ -1520,14 +1631,29 @@ var _itemTypeEl=null, _itemTypeUser=null;
 function openItemTypeModal(el, userId){
   closeItemType();
   var checked = el.getAttribute('data-checked')==='1';
-  var nm = (el.querySelector('.v2-item-inner div[style*="font-weight:600"]') || {}).textContent || 'Mahsulot';
+  // faqat nom matni — qty badge ("1/2") qo'shilib ketmasin
+  var nmEl = el.querySelector('.v2-item-name');
+  var nmNode = nmEl && nmEl.firstChild;
+  var nm = ((nmNode && nmNode.nodeType===3) ? nmNode.textContent : '').trim() || 'Mahsulot';
+  var nmPid = v2NormId(el.getAttribute('data-pid'));
+  var nmOid = v2NormId(el.getAttribute('data-order'));
   _itemTypeEl = el; _itemTypeUser = userId;
   var ov = document.createElement('div');
   ov.id='itemTypeOverlay';
   ov.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
   function btn(t,label,bg,fg){ return '<div onclick="pickItemType(\''+t+'\')" style="padding:15px;border-radius:12px;background:'+bg+';color:'+fg+';font-size:15px;font-weight:700;text-align:center;cursor:pointer">'+label+'</div>'; }
   var inner = '<div style="background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:14px 14px 20px;display:flex;flex-direction:column;gap:9px">';
-  inner += '<div style="font-size:12px;color:var(--text3);text-align:center;padding:2px 0 6px;font-weight:600">Holatni tanlang</div>';
+  // Sarlavha — qaysi mahsulot ustida ish ketayotgani aniq ko'rinsin
+  inner += '<div style="text-align:center;padding:2px 0 8px">';
+  inner += '<div style="font-size:13.5px;font-weight:700;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v2Esc(nm)+'</div>';
+  if(nmPid || nmOid){
+    inner += '<div style="display:flex;justify-content:center;gap:5px;margin-top:6px">';
+    if(nmPid) inner += '<span class="v2-idchip pid" title="Mahsulot ID"><span class="k">MAH</span><b>'+nmPid+'</b></span>';
+    if(nmOid) inner += '<span class="v2-idchip oid" title="Order ID"><span class="k">ORD</span><b>'+nmOid+'</b></span>';
+    inner += '</div>';
+  }
+  inner += '<div style="font-size:12px;color:var(--text3);margin-top:8px;font-weight:600">Holatni tanlang</div>';
+  inner += '</div>';
   inner += btn('collect','🟢 Yig\'ildi','rgba(52,199,89,.15)','var(--green)');
   inner += btn('brak','🔴 Brak','rgba(255,59,48,.15)','#FF3B30');
   inner += btn('vozvrat','🟠 Vozvrat','rgba(255,159,10,.15)','#FF9F0A');
