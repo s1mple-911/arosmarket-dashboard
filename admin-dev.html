@@ -523,7 +523,14 @@ async function api(endpoint, params, opts={}){
     try { txt = (await r.text()).slice(0,150); } catch(e){}
     throw new Error('HTTP ' + r.status + (txt?' · '+txt:''));
   }
-  return await r.json();
+  // n8n workflow Respond node'gacha yetmay yiqilsa 200 + bo'sh tana qaytadi
+  const body = await r.text();
+  if (!body.trim()) throw new Error("Server bo'sh javob qaytardi (n8n workflow xatosi)");
+  try {
+    return JSON.parse(body);
+  } catch(e){
+    throw new Error("Server noto'g'ri javob qaytardi: " + body.slice(0,120));
+  }
 }
 
 function hasPerm(key){
@@ -2674,6 +2681,45 @@ ${workers.map(w => {
 // qoldi, javob {"created":1}. Ya'ni har bir bo'lak avvalgisini o'chirmaydi.
 const SCM_ASSIGN_BATCH = 40;
 
+// Aros API xato qaytarsa n8n workflow'i Respond node'gacha yetmay yiqiladi va
+// 200 + bo'sh tana beradi — brauzer buni "CORS error" deb ko'rsatadi (javobda
+// sahifa origin'iga mos ACAO header bo'lmaydi). Bitta yaroqsiz mijoz butun
+// bo'lakni yiqitadi, shuning uchun bo'lak yiqilsa bittalab qayta urinamiz:
+// yaroqlilari baribir ulanadi, yaroqsizi esa nomi bilan ko'rsatiladi.
+
+// DRF xato obyektini ({clients:{non_field_errors:["..."]}}) o'qiladigan matnga aylantiradi
+function scmErrText(v){
+  const out = [];
+  (function walk(x){
+    if (x == null) return;
+    if (typeof x === 'string') { out.push(x); return; }
+    if (Array.isArray(x)) { x.forEach(walk); return; }
+    if (typeof x === 'object') { Object.values(x).forEach(walk); return; }
+    out.push(String(x));
+  })(v);
+  return out.join(' · ') || "Noma'lum xato";
+}
+
+// Bitta so'rov yuboradi. {ok:true,created:N} yoki {ok:false,err,forbidden?}
+async function scmSendAssign(chunk){
+  const payload = {
+    warehouse: parseInt(scmState.wizardWarehouse),
+    worker: scmState.targetWorker,
+    clients: chunk
+  };
+  try {
+    const data = await api('admin-scm-assign', { uid: UID, data: JSON.stringify(payload) });
+    if (data.error) return { ok:false, err:String(data.error), forbidden:String(data.error)==='forbidden' };
+    // Muvaffaqiyat faqat result.created bo'lganda. Aks holda Aros validatsiya
+    // xatosi qaytargan — ilgari UI buni ham "✓ biriktirildi" deb ko'rsatardi.
+    const created = data.result && typeof data.result.created === 'number' ? data.result.created : null;
+    if (created === null) return { ok:false, err: scmErrText(data.result) };
+    return { ok:true, created };
+  } catch(e){
+    return { ok:false, err: e.message };
+  }
+}
+
 async function scmWizardSubmit(){
   if (!scmState.targetWorker) { toast('Sotuvchi tanlang', 'err'); return; }
   const planEl = document.getElementById('wiz-plan');
@@ -2689,10 +2735,15 @@ async function scmWizardSubmit(){
     batches.push(clients.slice(i, i + SCM_ASSIGN_BATCH));
   }
 
-  const renderProgress = (done, total, batchNo) => {
+  const clientName = (id) => {
+    const c = (scmState.wizardClients || []).find(x => x.id === id);
+    return c ? (`${c.first_name||''} ${c.last_name||''}`.trim() || `#${id}`) : `#${id}`;
+  };
+
+  const renderProgress = (done, total, note) => {
     const pct = total ? Math.round(done / total * 100) : 0;
     document.getElementById('modal-content').innerHTML = `
-<div class="modal-h"><div><h3>Yuborilmoqda...</h3><p>${total} ta mijoz${batches.length>1?` · ${batchNo}/${batches.length} bo'lak`:''}</p></div></div>
+<div class="modal-h"><div><h3>Yuborilmoqda...</h3><p>${total} ta mijoz${note?` · ${escapeHtml(note)}`:''}</p></div></div>
 <div class="modal-body"><div style="text-align:center;padding:32px 20px">
 <div class="spinner" style="margin:0 auto 12px"></div>
 <p style="font-size:13px;color:var(--text-2)">${done} / ${total} biriktirildi</p>
@@ -2701,33 +2752,65 @@ async function scmWizardSubmit(){
 `;
   };
 
-  renderProgress(0, clients.length, 1);
+  renderProgress(0, clients.length, batches.length > 1 ? `1/${batches.length} bo'lak` : '');
 
   let done = 0;
-  try {
-    for (let i = 0; i < batches.length; i++) {
-      const payload = {
-        warehouse: parseInt(scmState.wizardWarehouse),
-        worker: scmState.targetWorker,
-        clients: batches[i]
-      };
-      const data = await api('admin-scm-assign', { uid: UID, data: JSON.stringify(payload) });
-      if (data.error) throw new Error(data.error);
-      done += batches[i].length;
-      renderProgress(done, clients.length, Math.min(i + 2, batches.length));
+  const failed = [];   // {id, err}
+  let aborted = null;
+
+  for (let i = 0; i < batches.length && !aborted; i++) {
+    const note = batches.length > 1 ? `${i+1}/${batches.length} bo'lak` : '';
+    const res = await scmSendAssign(batches[i]);
+    if (res.ok) {
+      done += res.created;
+      renderProgress(done, clients.length, note);
+      continue;
     }
+    if (res.forbidden) { aborted = res.err; break; }
+
+    // Bo'lak yiqildi — bittalab urinamiz, yaroqsizini ajratib olamiz
+    for (let j = 0; j < batches[i].length; j++) {
+      const one = batches[i][j];
+      renderProgress(done, clients.length, `bittalab tekshirilmoqda ${j+1}/${batches[i].length}`);
+      const r1 = await scmSendAssign([one]);
+      if (r1.ok) done += r1.created;
+      else if (r1.forbidden) { aborted = r1.err; break; }
+      else failed.push({ id: one.client, err: r1.err });
+    }
+  }
+
+  if (!aborted && !failed.length) {
     toast(`✓ ${done} ta mijoz biriktirildi`);
     scmCloseWizard();
     await loadScmData();
-  } catch(e){
-    document.getElementById('modal-content').innerHTML = `
-<div class="modal-h"><div><h3>Xato</h3></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
-<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p>
-${done ? `<p style="margin-top:8px;font-size:12.5px;color:var(--text-2)">${done} / ${clients.length} ta mijoz biriktirilib ulgurdi — qolganini qayta urinib ko'ring.</p>` : ''}
-</div></div>
-<div class="modal-foot"><button class="btn" onclick="scmState.wizardStep=3;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button></div>
-`;
+    return;
   }
+
+  if (!aborted && done) await loadScmData();
+
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h">
+<div><h3>${aborted ? 'Xato' : 'Qisman bajarildi'}</h3><p>${done} / ${clients.length} ta mijoz biriktirildi</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${aborted ? `<div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(aborted)}</p></div>` : `
+<div style="background:var(--warn-bg);color:var(--warn-text);border-radius:var(--radius);padding:10px 12px;font-size:12.5px;line-height:1.5">
+<i class="ti ti-alert-triangle"></i> ${failed.length} ta mijoz ulanmadi. Qolgan ${done} tasi muvaffaqiyatli biriktirildi.
+</div>
+<div style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-top:10px">
+${failed.map(f => `
+<div style="padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--radius)">
+<div style="font-weight:500;font-size:13px">${escapeHtml(clientName(f.id))} <span style="color:var(--text-3);font-family:var(--mono);font-size:11px">#${f.id}</span></div>
+<div style="font-size:11.5px;color:var(--err-text);margin-top:2px">${escapeHtml(f.err)}</div>
+</div>`).join('')}
+</div>`}
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmState.wizardStep=3;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button>
+<button class="btn primary" onclick="scmCloseWizard()">Yopish</button>
+</div>
+`;
 }
 
 // =========================================================
