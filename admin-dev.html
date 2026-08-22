@@ -510,7 +510,14 @@ async function api(endpoint, params, opts={}){
     const qsStr = qs.toString();
     if (qsStr) url += '?' + qsStr;
   }
-  const r = await fetch(url);
+  let r;
+  try {
+    r = await fetch(url);
+  } catch(err){
+    // 414/CORS'da brauzer status ko'rsatmaydi — sababini aniqroq yozamiz
+    if (url.length > 7000) throw new Error(`So'rov juda uzun (${url.length} belgi) — server qabul qilmadi`);
+    throw new Error('Tarmoqqa ulanib bo\'lmadi: ' + (err.message || 'Failed to fetch'));
+  }
   if (!r.ok) {
     let txt = '';
     try { txt = (await r.text()).slice(0,150); } catch(e){}
@@ -2287,13 +2294,34 @@ async function renderSotuvchiMijoz(root){
   await loadScmData();
 }
 
+// Aros API worker-clients faqat sotuvchisi BOR filiallarni qaytaradi (14 ta).
+// To'liq ro'yxat admin-rbac'dagi `filiallar`da (34 ta) — ikkalasini birlashtiramiz.
+// MUHIM: SCM endpointlari Aros API bilan gaplashadi → api_warehouse_id ishlatiladi
+// (masalan "43- Do'kon": warehouse_id=100, lekin api_warehouse_id=71).
+function scmMergeWarehouses(apiWarehouses){
+  const map = new Map();
+  ((cache.rbac && cache.rbac.filiallar) || []).forEach(f => {
+    const id = String(f.api_warehouse_id || f.warehouse_id || '').trim();
+    if (!id) return;
+    map.set(id, { warehouse_id: Number(id), filial: f.filial || ('#'+id), has_workers: false });
+  });
+  (apiWarehouses || []).forEach(w => {
+    const id = String(w.warehouse_id || '').trim();
+    if (!id) return;
+    const prev = map.get(id);
+    map.set(id, { warehouse_id: Number(id), filial: w.filial || (prev && prev.filial) || ('#'+id), has_workers: true });
+  });
+  return Array.from(map.values()).sort((a,b) => String(a.filial).localeCompare(String(b.filial)));
+}
+
 async function loadScmData(){
   const wrap = document.getElementById('scm-content');
   try {
+    if (!cache.rbac) { try { cache.rbac = await api('admin-rbac', { uid: UID }); } catch(e){} }
     const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.warehouseFilter });
     if (data.error) throw new Error(data.error);
     scmState.workers = data.workers || [];
-    scmState.warehouses = data.warehouses || [];
+    scmState.warehouses = scmMergeWarehouses(data.warehouses);
 
     const sel = document.getElementById('scm-wh-filter');
     if (sel) {
@@ -2328,7 +2356,7 @@ function renderScmWorkers(){
 <div class="kpi-row" style="margin-bottom:14px">
 <div class="kpi"><div class="kpi-lbl"><i class="ti ti-users"></i>Sotuvchilar</div><div class="kpi-val">${list.length}</div><div class="kpi-delta" style="color:var(--text-3)">${scmState.warehouseFilter ? 'filialda' : 'jami'}</div></div>
 <div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-check"></i>Ulangan mijozlar</div><div class="kpi-val">${totalClients}</div><div class="kpi-delta" style="color:var(--text-3)">biriktirilgan</div></div>
-<div class="kpi"><div class="kpi-lbl"><i class="ti ti-building"></i>Filiallar</div><div class="kpi-val">${scmState.warehouses.length}</div><div class="kpi-delta" style="color:var(--text-3)">bizda</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-building"></i>Filiallar</div><div class="kpi-val">${scmState.warehouses.length}</div><div class="kpi-delta" style="color:var(--text-3)">${scmState.warehouses.filter(w=>w.has_workers).length} tasida sotuvchi bor</div></div>
 </div>`;
 
   if (!list.length) {
@@ -2428,7 +2456,7 @@ function scmRenderWizardStep1(){
 <div class="ff"><label>Filial *</label>
 <select class="select" id="wiz-wh">
 <option value="">— tanlang —</option>
-${scmState.warehouses.map(w => `<option value="${w.warehouse_id}" ${String(w.warehouse_id)===String(scmState.wizardWarehouse)?'selected':''}>${escapeHtml(w.filial)}</option>`).join('')}
+${scmState.warehouses.map(w => `<option value="${w.warehouse_id}" ${String(w.warehouse_id)===String(scmState.wizardWarehouse)?'selected':''}>${escapeHtml(w.filial)}${w.has_workers===false?" · sotuvchi yo'q":''}</option>`).join('')}
 </select>
 </div>
 <div class="ff"><label>Rol *</label>
@@ -2634,6 +2662,18 @@ ${workers.map(w => {
 `;
 }
 
+// admin-scm-assign GET orqali ketadi va butun payload URL'ga sig'adi.
+// nginx URI limiti ~8 KB: bitta mijoz ≈ 115 belgi (encode'dan keyin), ya'ni
+// ~70 tadan ko'p mijozda server 414 qaytaradi. 414'da CORS header bo'lmagani
+// uchun brauzer buni "Failed to fetch" deb ko'rsatadi. Shu sababli
+// bo'laklab (batch) yuboramiz.
+//
+// Bo'laklash xavfsiz: Aros API'ning POST /worker-clients/ mijozlarni sotuvchining
+// mavjud ro'yxati USTIGA QO'SHADI (append), almashtirmaydi. Jonli tekshirilgan
+// (2026-08-22): worker 48 → 1 dan 2 ta mijozga o'tdi, eski bog'lanish saqlanib
+// qoldi, javob {"created":1}. Ya'ni har bir bo'lak avvalgisini o'chirmaydi.
+const SCM_ASSIGN_BATCH = 40;
+
 async function scmWizardSubmit(){
   if (!scmState.targetWorker) { toast('Sotuvchi tanlang', 'err'); return; }
   const planEl = document.getElementById('wiz-plan');
@@ -2643,27 +2683,48 @@ async function scmWizardSubmit(){
     plan_monthly_orders_count: plan,
     plan_monthly_orders_sum: "0.00"
   }));
-  const payload = {
-    warehouse: parseInt(scmState.wizardWarehouse),
-    worker: scmState.targetWorker,
-    clients
+
+  const batches = [];
+  for (let i = 0; i < clients.length; i += SCM_ASSIGN_BATCH) {
+    batches.push(clients.slice(i, i + SCM_ASSIGN_BATCH));
+  }
+
+  const renderProgress = (done, total, batchNo) => {
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Yuborilmoqda...</h3><p>${total} ta mijoz${batches.length>1?` · ${batchNo}/${batches.length} bo'lak`:''}</p></div></div>
+<div class="modal-body"><div style="text-align:center;padding:32px 20px">
+<div class="spinner" style="margin:0 auto 12px"></div>
+<p style="font-size:13px;color:var(--text-2)">${done} / ${total} biriktirildi</p>
+<div style="height:6px;background:var(--bg-3);border-radius:3px;overflow:hidden;margin-top:12px"><div style="height:100%;width:${pct}%;background:var(--info-line);transition:width 0.25s"></div></div>
+</div></div>
+`;
   };
 
-  document.getElementById('modal-content').innerHTML = `
-<div class="modal-h"><div><h3>Yuborilmoqda...</h3><p>${clients.length} ta mijoz biriktirilmoqda</p></div></div>
-<div class="modal-body"><div style="text-align:center;padding:32px 20px"><div class="spinner" style="margin:0 auto 12px"></div><p style="font-size:13px;color:var(--text-2)">Iltimos kuting...</p></div></div>
-`;
+  renderProgress(0, clients.length, 1);
 
+  let done = 0;
   try {
-    const data = await api('admin-scm-assign', { uid: UID, data: JSON.stringify(payload) });
-    if (data.error) throw new Error(data.error);
-    toast(`✓ ${clients.length} ta mijoz biriktirildi`);
+    for (let i = 0; i < batches.length; i++) {
+      const payload = {
+        warehouse: parseInt(scmState.wizardWarehouse),
+        worker: scmState.targetWorker,
+        clients: batches[i]
+      };
+      const data = await api('admin-scm-assign', { uid: UID, data: JSON.stringify(payload) });
+      if (data.error) throw new Error(data.error);
+      done += batches[i].length;
+      renderProgress(done, clients.length, Math.min(i + 2, batches.length));
+    }
+    toast(`✓ ${done} ta mijoz biriktirildi`);
     scmCloseWizard();
     await loadScmData();
   } catch(e){
     document.getElementById('modal-content').innerHTML = `
 <div class="modal-h"><div><h3>Xato</h3></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
-<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p></div></div>
+<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p>
+${done ? `<p style="margin-top:8px;font-size:12.5px;color:var(--text-2)">${done} / ${clients.length} ta mijoz biriktirilib ulgurdi — qolganini qayta urinib ko'ring.</p>` : ''}
+</div></div>
 <div class="modal-foot"><button class="btn" onclick="scmState.wizardStep=3;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button></div>
 `;
   }
