@@ -1675,27 +1675,49 @@ async function createRole(){
 // hasPerm('provodka_settings') tekshiruvi va sidebar'ni yashirish
 // qo'shiladi (n8n endpointlari ham o'sha kalitni tekshirishi kerak).
 // =========================================================
-// ⚠️ Bu ro'yxat Provodka'dagi perm_pages() va perms.js PAGES bilan AYNAN mos
-//    bo'lishi shart. Bu yerda yo'q kalitni admin_set_provodka_perms "noma'lum"
-//    deb jimgina tashlab yuboradi — ya'ni o'sha sahifaga ruxsat berib bo'lmaydi.
-const PVS_PAGES = [
-  { key:'kassa',        label:'Kassa' },
-  { key:'jurnal',       label:'Jurnal' },
-  { key:'professional', label:'Professional' },
-  { key:'hisobot',      label:'Hisobot' },
-  { key:'balans',       label:'Balans' },
-  { key:'cashflow',     label:'Cashflow' },
-  { key:'qarzdor',      label:'Qarzdor' },
-  { key:'filial',       label:'Filial' },
-  { key:'valyuta',      label:'Valyuta' },
-  { key:'konvert',      label:'Konvert' },
-  { key:'sozlama',      label:'Sozlama' },
-  { key:'provodka',     label:'Provodka' },
-  { key:'yuklar',       label:'Yuklar' },
-  { key:'standart',     label:'Standart' },
-  { key:'tannarx',      label:'Tannarx' },
-  { key:'ai',           label:'AI agent' }
-];
+// Sahifa ro'yxati DINAMIK: Supabase perm_pages() dan keladi
+// (aros-provodka-pages endpointi orqali). Sababi — admin_set_provodka_perms
+// `where x = any(perm_pages())` qiladi, ya'ni perm_pages() da yo'q kalitni
+// JIMGINA tashlab yuboradi. Demak yagona haqiqiy manba — o'sha funksiya.
+// Provodka'ga yangi sahifa qo'shilsa: perm_pages() ga kalit qo'shiladi —
+// bu ekran uni avtomatik ko'rsatadi, bu yerni tahrirlash SHART EMAS.
+//
+// Label lug'ati faqat KO'RINISH uchun. Notanish kalitga nom kalitning
+// o'zidan yasaladi ('yangi_sahifa' -> 'Yangi sahifa'), ya'ni ro'yxatdan
+// tushib qolmaydi.
+const PVS_PAGE_LABELS = {
+  kassa:'Kassa', jurnal:'Jurnal', professional:'Professional', hisobot:'Hisobot',
+  balans:'Balans', cashflow:'Cashflow', qarzdor:'Qarzdor', filial:'Filial',
+  valyuta:'Valyuta', konvert:'Konvert', sozlama:'Sozlama', provodka:'Provodka',
+  yuklar:'Yuklar', standart:'Standart', tannarx:'Tannarx', ai:'AI agent',
+  sorovlar:"So'rovlar"
+};
+
+// Endpoint javob bermasa shu zaxira ishlatiladi (ekran ishlashdan to'xtamasin)
+const PVS_PAGES_FALLBACK = ['kassa','jurnal','professional','hisobot','balans',
+  'cashflow','qarzdor','filial','valyuta','konvert','sozlama','provodka',
+  'yuklar','standart','tannarx','ai'];
+
+function pvsPageLabel(key){
+  if (PVS_PAGE_LABELS[key]) return PVS_PAGE_LABELS[key];
+  return String(key).replace(/[_-]+/g, ' ').replace(/^./, c => c.toUpperCase());
+}
+function pvsPageItem(key){ return { key: key, label: pvsPageLabel(key) }; }
+
+let PVS_PAGES = PVS_PAGES_FALLBACK.map(pvsPageItem);
+let pvsPagesLive = false;   // true = ro'yxat perm_pages() dan keldi
+
+async function pvsLoadPages(){
+  try {
+    const d = await api('aros-provodka-pages', { uid: UID });
+    if (d && d.ok && Array.isArray(d.pages) && d.pages.length){
+      PVS_PAGES = d.pages.map(pvsPageItem);
+      pvsPagesLive = true;
+    }
+  } catch(e){
+    pvsPagesLive = false;   // zaxira ro'yxat qoladi
+  }
+}
 
 const PVS_TURI = [
   { key:'markaziy', label:'Markaziy kassalar' },
@@ -1724,6 +1746,9 @@ async function renderProvodkaSozlama(root){
   content.innerHTML = `<div class="skeleton" style="height:300px"></div>`;
   root.appendChild(content);
 
+  // Sahifa ro'yxatini parallel yuklaymiz (hech qachon throw qilmaydi)
+  const pagesReady = pvsLoadPages();
+
   try {
     // -v2 profiles + auth.users'ni qo'shib email/telefon ham qaytaradi.
     // Eski endpoint faqat id/full_name/role beradi — fallback sifatida qoladi.
@@ -1736,6 +1761,7 @@ async function renderProvodkaSozlama(root){
       if (!data.ok) throw new Error(data.error || 'Javob ok emas');
     }
     pvsState.users = data.users || [];
+    await pagesReady;
   } catch(e){
     content.innerHTML = `
 <div class="empty">
@@ -2073,7 +2099,9 @@ ${PVS_PAGES.map(pg => pvsKassaCk(
 </div>
 <div class="pvs-hint">${noPages
     ? '<i class="ti ti-alert-triangle" style="color:var(--warn-text,#e0a800)"></i> Hech qaysi sahifa belgilanmagan = <b>userga hech qaysi sahifa ochiq emas</b>. Kirish uchun kamida bitta sahifa tanlang.'
-    : 'Faqat belgilangan sahifalar ochiq. Hammasini olib tashlasangiz — user hech qaysi sahifaga kira olmaydi.'}</div>
+    : 'Faqat belgilangan sahifalar ochiq. Hammasini olib tashlasangiz — user hech qaysi sahifaga kira olmaydi.'}${pvsPagesLive
+    ? ''
+    : '<br><i class="ti ti-alert-triangle" style="color:var(--warn-text,#e0a800)"></i> Ro\'yxat <b>zaxiradan</b> olindi (aros-provodka-pages javob bermadi) — Provodka\'ga yangi qo\'shilgan sahifa bu yerda ko\'rinmasligi mumkin.'}</div>
 </div>
 
 <div class="pvs-blk">
