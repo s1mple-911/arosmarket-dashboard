@@ -354,6 +354,10 @@ var CALENDAR_API = 'https://n8n.arosmarket.com/webhook/aros-cache-calendar';
 var MML_HISTORY_API = 'https://n8n.arosmarket.com/webhook/aros-mml-history';
 var MML_CHECK_API = 'https://n8n.arosmarket.com/webhook/aros-mml-check';
 var WALLET_TX_API = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions';
+// V2 = tuzatilgan endpoint (eskisi created_datetime o'rniga modified_datetime bo'yicha filtrlab
+// hamma tranzaksiyani tashlab yuborardi -> har doim 0 ta chiqardi).
+// V2 hali publish bo'lmagan bo'lsa avtomatik eskisiga qaytamiz.
+var WALLET_TX_API_V2 = 'https://n8n.arosmarket.com/webhook/aros-wallet-transactions-v2';
 var ORDER_DETAIL_API = 'https://n8n.arosmarket.com/webhook/aros-order-detail';
 var ORDER_TO_BOT_API = 'https://n8n.arosmarket.com/webhook/aros-order-to-bot';
 var REC_UPLOAD_API = 'https://n8n.arosmarket.com/webhook/aros-recording-upload';
@@ -2059,7 +2063,7 @@ function toggleOrders(id, userId, walletBalance, userName, tab){
     if(tab==='bugun') flt=orders.filter(function(o){return o.deadline===bugunStr;});
     else if(tab==='ertaga') flt=orders.filter(function(o){return o.deadline===ertagaStr;});
     else flt=orders.filter(function(o){return o.deadline && o.deadline < bugunStr;});
-    fillOrders(el,flt,walletBalance,userId,userName);
+    fillOrders(el,flt,walletBalance,userId,userName,orders);
     if(tab==='otgan'){
       var maxK=0;
       flt.forEach(function(o){if((o.kun_otgan||0)>maxK)maxK=o.kun_otgan||0;});
@@ -2083,6 +2087,25 @@ function toggleOrders(id, userId, walletBalance, userName, tab){
 }
 
 // ============ WALLET SUMMARY (15 kunlik kirim/chiqim) ============
+// V2 endpointni sinaymiz, ishlamasa eskisiga qaytamiz. Javob: {total_in,total_out,transactions,...}
+function fetchWalletTx(userId){
+  function parseTx(txt){
+    try{ var raw=JSON.parse(txt); return Array.isArray(raw)?raw[0]:raw; }catch(e){ return null; }
+  }
+  function legacy(){
+    return fetch(WALLET_TX_API+'?user_id='+userId)
+      .then(function(r){ return r.text(); })
+      .then(function(txt){ return parseTx(txt); });
+  }
+  return fetch(WALLET_TX_API_V2+'?user_id='+userId)
+    .then(function(r){ if(!r.ok) throw new Error('v2'); return r.text(); })
+    .then(function(txt){
+      var d = parseTx(txt);
+      if(!d || d.transactions === undefined) throw new Error('v2');
+      return d;
+    })
+    .catch(function(){ return legacy(); });
+}
 // Qarzdor bosilgan zahoti parallel chaqiriladi. Hamyon balansi tagida kichik shriftda ko'rsatadi.
 function loadWalletSummary(userId){
   if(!userId) return;
@@ -2094,11 +2117,8 @@ function loadWalletSummary(userId){
     return;
   }
   walletSummaryCache[userId] = 'loading';
-  fetch(WALLET_TX_API+'?user_id='+userId)
-    .then(function(r){return r.text();})
-    .then(function(txt){
-      var d=null;
-      try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){}
+  fetchWalletTx(userId)
+    .then(function(d){
       if(!d){ walletSummaryCache[userId] = null; return; }
       walletSummaryCache[userId] = {
         total_in: parseFloat(d.total_in) || 0,
@@ -2139,10 +2159,13 @@ function toggleInline(id, userId){
   }
 }
 
-function fillOrders(el, orders, walletBalance, userId, userName){
-  if(!orders||!orders.length){
-    el.innerHTML='<div class="mini-spin-wrap" style="color:var(--text3)">Order topilmadi</div>';return;
-  }
+function fillOrders(el, orders, walletBalance, userId, userName, allOrders){
+  // FIX: hamyon qatori endi order royxati bosh bolsa ham chiqadi (avval erta return uni yeb ketardi)
+  // FIX: tab filtriga mos order bolmasa, mijozning barcha ochiq orderlarini korsatamiz
+  var _filtEmpty = !orders || !orders.length;
+  var _all = allOrders || [];
+  var _fallback = _filtEmpty && _all.length > 0;
+  if(_fallback) orders = _all;
   var html='';
   if(walletBalance&&walletBalance>0){
     var cached = walletSummaryCache[userId];
@@ -2155,13 +2178,22 @@ function fillOrders(el, orders, walletBalance, userId, userName){
     html+='<div class="o-deadline wallet-sub-line" style="color:var(--green)">'+subText+'</div></div>';
     html+='<div class="o-amt" style="color:var(--green)">'+fmtFull(walletBalance)+' so\'m</div></div>';
   }
+  if(_filtEmpty && !_fallback){
+    html+='<div class="mini-spin-wrap" style="color:var(--text3)">Order topilmadi</div>';
+    el.innerHTML=html;return;
+  }
+  if(_fallback){
+    html+='<div style="padding:7px 14px;font-size:11px;color:#B45309;background:rgba(245,158,11,.10);border-bottom:0.5px solid rgba(245,158,11,.25)">Bu tabga mos order yo\'q &mdash; mijozning barcha ochiq orderlari:</div>';
+  }
   orders.forEach(function(o){
-    var dText=o.deadline+' ('+o.kun_otgan+' kun o\'tgan)';
+    var _ko=o.kun_otgan||0;
+    var dText=_ko>0?(o.deadline+' ('+_ko+' kun o\'tgan)'):(_ko===0?(o.deadline+' (bugun)'):(o.deadline+' ('+Math.abs(_ko)+' kundan keyin)'));
     var _nm=(userName||'').replace(/\'/g,"\\'");
     html+='<div class="order-row" onclick="event.stopPropagation();showOrderModal('+o.order_id+',\''+_nm+'\')" style="cursor:pointer">';
     html+='<div class="o-left"><div class="o-id" style="display:inline-flex;align-items:center;gap:3px">Order #'+o.order_id+' · '+(o.sana||'')+ic('chevron-right',12,'var(--text3)')+'</div>';
-    html+='<div class="o-deadline" style="color:var(--red)">'+dText+'</div></div>';
-    html+='<div class="o-amt" style="color:var(--red)">'+fmtFull(o.summa)+'</div></div>';
+    var _dc=_ko>0?'var(--red)':'var(--text3)';
+    html+='<div class="o-deadline" style="color:'+_dc+'">'+dText+'</div></div>';
+    html+='<div class="o-amt" style="color:'+(_ko>0?'var(--red)':'var(--text)')+'">'+fmtFull(o.summa)+'</div></div>';
   });
   el.innerHTML=html;
 }
@@ -4371,10 +4403,8 @@ function showWalletTxModal(userId, userName, currentBalance){
     return;
   }
   body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)"><div style="display:inline-block;width:28px;height:28px;border:3px solid var(--bg3);border-top-color:#378ADD;border-radius:50%;animation:spin 1s linear infinite"></div><div style="margin-top:10px;font-size:12px">Yuklanmoqda...</div></div>';
-  fetch(WALLET_TX_API+'?user_id='+userId)
-    .then(function(r){return r.text();})
-    .then(function(txt){
-      var d; try{ var raw=JSON.parse(txt); d=Array.isArray(raw)?raw[0]:raw; }catch(e){ d=null; }
+  fetchWalletTx(userId)
+    .then(function(d){
       if(!d){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Ma\'lumot yuklanmadi</div>'; return; }
       // Cache'ga ham saqlaymiz, keyingi safar tezroq
       walletSummaryCache[userId] = {
@@ -4440,9 +4470,14 @@ function renderWalletTx(d){
     html += '</div>';
     html += '<span style="font-size:14px;font-weight:800;color:'+color+'">'+sign+fmtFull(t.amount)+'</span>';
     html += '</div>';
+    // FIX: Aros warehouse'ni obyekt qilib qaytaradi ({id,name,name_uz}) -> [object Object] chiqmasin
+    var _wh = t.warehouse;
+    if(_wh && typeof _wh === 'object') _wh = _wh.name_uz || _wh.name || '';
+    // FIX: Aros tranzaksiyada modified_datetime yo'q, created_datetime bor
+    var _dt = t.modified_datetime || t.created_datetime || '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text3)">';
-    html += '<span>'+(t.warehouse||'')+'</span>';
-    html += '<span>'+fmtDt(t.modified_datetime)+'</span>';
+    html += '<span>'+(_wh||'')+'</span>';
+    html += '<span>'+fmtDt(_dt)+'</span>';
     html += '</div>';
     html += '</div>';
   });
