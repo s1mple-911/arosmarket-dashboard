@@ -510,6 +510,11 @@ async function api(endpoint, params, opts={}){
     const qsStr = qs.toString();
     if (qsStr) url += '?' + qsStr;
   }
+  // nginx URI limiti ~8 KB. 414 javobida Access-Control-Allow-Origin bo'lmagani uchun
+  // brauzer sababini ko'rsatmaydi — shuning uchun yuborishdan OLDIN to'xtatamiz.
+  if (url.length > 7500) {
+    throw new Error(`So'rov juda uzun (${url.length} belgi, limit ~7500) — kamroq element tanlang`);
+  }
   let r;
   try {
     r = await fetch(url);
@@ -2217,7 +2222,13 @@ async function pvsSave(){
     allowed_pages:  p.allowed_pages.slice(),
     kassa_scope:    p.kassa_scope,
     view_kassa_ids: p.kassa_scope === 'list' ? p.view_kassa_ids.slice() : [],
-    op_kassa_ids:   p.op_kassa_ids.filter(id => viewable.includes(id)),
+    // kassa_scope='all' da server (admin_set_provodka_perms) view va op ro'yxatlarini
+    // baribir bo'shatadi: `if v_scope = 'all' then v_view := '{}'; v_op := '{}'`.
+    // Ya'ni 259 ta UUID yuborish natijaga TA'SIR QILMAYDI, faqat URL'ni ~12 KB ga
+    // shishirib nginx'dan 414 oldirardi ("hamma access" berilganda aynan shu bo'lardi).
+    op_kassa_ids:   p.kassa_scope === 'list'
+                      ? p.op_kassa_ids.filter(id => viewable.includes(id))
+                      : [],
     filial_scope:   p.filial_scope,
     filial_ids:     p.filial_scope === 'list' ? p.filial_ids.slice() : [],
     can_convert:    !!p.can_convert
