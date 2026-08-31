@@ -423,7 +423,8 @@ let cache = {
   users: { pending: null, all: null },
   rbac: null,
   audit: null,
-  arosWh: null
+  arosWh: null,
+  scmAllWorkers: null
 };
 
 // =========================================================
@@ -2387,10 +2388,53 @@ function scmMergeWarehouses(apiWarehouses){
   return Array.from(map.values()).sort((a,b) => String(a.filial).localeCompare(String(b.filial)));
 }
 
+// Aros worker-clients faqat mijozi BOR sotuvchini qaytaradi — yangi filialning
+// mijozsiz sotuvchisi (masalan Andijon) umuman chiqmaydi va unga birinchi mijozni
+// biriktirib bo'lmaydi (tuxum-tovuq). admin-scm-all-workers endpointi Aros
+// /users/v2/workers/ dan TO'LIQ ro'yxatni beradi (Salesman/Shop manager/Filial
+// Rahbari) — shu yerdan 0-mijozli sotuvchilar qo'shiladi.
+async function scmLoadAllWorkers(){
+  if (cache.scmAllWorkers) return cache.scmAllWorkers;
+  try {
+    const aw = await api('admin-scm-all-workers', { uid: UID });
+    cache.scmAllWorkers = (aw && aw.workers) || [];
+  } catch(e){ cache.scmAllWorkers = []; }
+  return cache.scmAllWorkers;
+}
+
+// list (worker-clients'dan kelgan, har qator = worker+filial) ustiga mijozi
+// yo'q sotuvchilarni qo'shadi. whFilter bo'lsa faqat o'sha filialniki.
+function scmMergeAllWorkers(list, whFilter){
+  const all = cache.scmAllWorkers || [];
+  if (!all.length) return list;
+  const seen = new Set(list.map(w => w.id + '|' + w.warehouse_id));
+  const whName = id => {
+    const f = (scmState.warehouses || []).find(x => String(x.warehouse_id) === String(id));
+    return f ? f.filial : ('#' + id);
+  };
+  all.forEach(w => {
+    (w.warehouse_ids || []).forEach(wid => {
+      if (whFilter && String(wid) !== String(whFilter)) return;
+      const key = w.id + '|' + wid;
+      if (seen.has(key)) return;
+      seen.add(key);
+      list.push({
+        id: w.id, worker: w.worker,
+        first_name: w.first_name, last_name: w.last_name, username: w.username,
+        role: w.role_name || '', warehouse: whName(wid), warehouse_id: wid,
+        clients_count: 0, cashback_balance: null,
+        is_ordering_enabled: true, clients: []
+      });
+    });
+  });
+  return list;
+}
+
 async function loadScmData(){
   const wrap = document.getElementById('scm-content');
   try {
     if (!cache.rbac) { try { cache.rbac = await api('admin-rbac', { uid: UID }); } catch(e){} }
+    await scmLoadAllWorkers();
     // To'liq Aros ombor ro'yxati — rbac'ga hali ulanmagan yangi filiallar ham chiqsin
     if (!cache.arosWh) {
       try {
@@ -2400,8 +2444,8 @@ async function loadScmData(){
     }
     const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.warehouseFilter });
     if (data.error) throw new Error(data.error);
-    scmState.workers = data.workers || [];
     scmState.warehouses = scmMergeWarehouses(data.warehouses);
+    scmState.workers = scmMergeAllWorkers(data.workers || [], scmState.warehouseFilter);
 
     const sel = document.getElementById('scm-wh-filter');
     if (sel) {
@@ -2688,7 +2732,8 @@ async function scmLoadWorkersForAssign(){
   try {
     const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.wizardWarehouse });
     if (data.error) throw new Error(data.error);
-    scmState.wizardWorkers = data.workers || [];
+    await scmLoadAllWorkers();
+    scmState.wizardWorkers = scmMergeAllWorkers(data.workers || [], scmState.wizardWarehouse);
     scmState.targetWorker = null;
     scmRenderWizardStep3();
   } catch(e){
