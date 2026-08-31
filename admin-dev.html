@@ -2379,11 +2379,14 @@ function scmMergeWarehouses(apiWarehouses){
     const prev = map.get(id);
     map.set(id, { warehouse_id: Number(id), filial: f.filial || (prev && prev.filial) || ('#'+id), has_workers: false });
   });
+  // Nom ustuvorligi: rbac'dagi ICHKI nom (masalan "Mobil senter zapchast")
+  // Aros API nomidan ("O'rikzor Mobile Sentr") ustun — dashboardning qolgan
+  // ekranlari bilan bir xil ko'rinsin.
   (apiWarehouses || []).forEach(w => {
     const id = String(w.warehouse_id || '').trim();
     if (!id) return;
     const prev = map.get(id);
-    map.set(id, { warehouse_id: Number(id), filial: w.filial || (prev && prev.filial) || ('#'+id), has_workers: true });
+    map.set(id, { warehouse_id: Number(id), filial: (prev && prev.filial) || w.filial || ('#'+id), has_workers: true });
   });
   return Array.from(map.values()).sort((a,b) => String(a.filial).localeCompare(String(b.filial)));
 }
@@ -2402,16 +2405,19 @@ async function scmLoadAllWorkers(){
   return cache.scmAllWorkers;
 }
 
+// Filial nomini ichki (rbac) nomda ko'rsatish — worker-clients qaytargan Aros
+// nomi o'rniga ("O'rikzor Mobile Sentr" emas, "Mobil senter zapchast").
+function scmWhName(wid, fallback){
+  const f = (scmState.warehouses || []).find(x => String(x.warehouse_id) === String(wid));
+  return (f && f.filial) || fallback || (wid ? '#'+wid : '—');
+}
+
 // list (worker-clients'dan kelgan, har qator = worker+filial) ustiga mijozi
 // yo'q sotuvchilarni qo'shadi. whFilter bo'lsa faqat o'sha filialniki.
 function scmMergeAllWorkers(list, whFilter){
   const all = cache.scmAllWorkers || [];
   if (!all.length) return list;
   const seen = new Set(list.map(w => w.id + '|' + w.warehouse_id));
-  const whName = id => {
-    const f = (scmState.warehouses || []).find(x => String(x.warehouse_id) === String(id));
-    return f ? f.filial : ('#' + id);
-  };
   all.forEach(w => {
     (w.warehouse_ids || []).forEach(wid => {
       if (whFilter && String(wid) !== String(whFilter)) return;
@@ -2421,7 +2427,7 @@ function scmMergeAllWorkers(list, whFilter){
       list.push({
         id: w.id, worker: w.worker,
         first_name: w.first_name, last_name: w.last_name, username: w.username,
-        role: w.role_name || '', warehouse: whName(wid), warehouse_id: wid,
+        role: w.role_name || '', warehouse: scmWhName(wid), warehouse_id: wid,
         clients_count: 0, cashback_balance: null,
         is_ordering_enabled: true, clients: []
       });
@@ -2502,7 +2508,7 @@ ${list.map((w,i) => `
 <div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id||''}</div>
 </div>
 </div>
-<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-size:12.5px">${escapeHtml(w.warehouse||'—')}</div>
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-size:12.5px">${escapeHtml(scmWhName(w.warehouse_id, w.warehouse))}</div>
 <div style="font-family:var(--mono);font-size:12px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(w.username||'—')}</div>
 <div><span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}">${w.clients_count||0} ta</span></div>
 <div style="display:flex;justify-content:flex-end;color:var(--text-3)"><i class="ti ti-chevron-right"></i></div>
@@ -2518,7 +2524,7 @@ function scmOpenWorker(workerId){
   const name = `${w.first_name||''} ${w.last_name||''}`.trim() || w.worker || 'Nomsiz';
   openModal(`
 <div class="modal-h">
-<div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(w.warehouse||'—')} · ${w.clients_count||0} ta mijoz</p></div>
+<div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(scmWhName(w.warehouse_id, w.warehouse))} · ${w.clients_count||0} ta mijoz</p></div>
 <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
@@ -2526,7 +2532,7 @@ function scmOpenWorker(workerId){
 <div style="color:var(--text-3)">Sotuvchi ID</div><div><code class="mono">#${w.id||''}</code></div>
 <div style="color:var(--text-3)">To'liq nomi</div><div>${escapeHtml(w.worker||'—')}</div>
 <div style="color:var(--text-3)">Telefon</div><div style="font-family:var(--mono)">${escapeHtml(w.username||'—')}</div>
-<div style="color:var(--text-3)">Filial</div><div>${escapeHtml(w.warehouse||'—')}${w.warehouse_id?` <span style="color:var(--text-3)">#${w.warehouse_id}</span>`:''}</div>
+<div style="color:var(--text-3)">Filial</div><div>${escapeHtml(scmWhName(w.warehouse_id, w.warehouse))}${w.warehouse_id?` <span style="color:var(--text-3)">#${w.warehouse_id}</span>`:''}</div>
 <div style="color:var(--text-3)">Mijozlar</div><div><span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}">${w.clients_count||0} ta biriktirilgan</span></div>
 </div>
 <div style="background:var(--bg-2);border-radius:var(--radius);padding:10px 12px;font-size:11.5px;color:var(--text-3);line-height:1.5;margin-top:4px">
