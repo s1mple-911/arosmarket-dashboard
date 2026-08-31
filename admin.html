@@ -72,10 +72,15 @@ input,select,textarea{font:inherit;color:inherit}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 20px;font-size:14px;font-weight:500}
 .brand-dot{width:22px;height:22px;border-radius:6px;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
 .sb-grp{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;padding:14px 10px 6px;font-weight:500}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px;color:var(--text-2);border-radius:var(--radius);line-height:1;transition:all 0.12s}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px;color:var(--text-2);border-radius:var(--radius);line-height:1;transition:all 0.12s;cursor:pointer}
 .nav-item:hover{background:var(--bg-3)}
 .nav-item.active{background:var(--bg);color:var(--text);font-weight:500;box-shadow:var(--shadow)}
-.nav-item i{font-size:16px}
+.nav-item i{font-size:16px;transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1),color 0.18s}
+.nav-item:hover i{transform:scale(1.22) rotate(-6deg);color:var(--info-line)}
+.nav-item.active i{color:var(--text);transform:scale(1.08)}
+.nav-item .icon-on{display:none}
+.nav-item:hover .icon-off,.nav-item.active .icon-off{display:none}
+.nav-item:hover .icon-on,.nav-item.active .icon-on{display:inline-block}
 .nav-item .ct{margin-left:auto;font-size:11px;color:var(--text-3);background:var(--bg-3);padding:1px 7px;border-radius:9px;min-width:18px;text-align:center}
 .nav-item.active .ct{background:var(--info-bg);color:var(--info-text)}
 .nav-sub{padding-left:26px;display:flex;flex-direction:column;gap:1px;margin:2px 0 6px}
@@ -200,6 +205,53 @@ input,select,textarea{font:inherit;color:inherit}
 .perm-name{font-size:13px;color:var(--text);flex:1}
 .perm-desc{font-size:11px;color:var(--text-3);margin-top:1px}
 
+/* === Provodka sozlamalari === */
+.pvs-layout{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start}
+.pvs-list{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:6px;display:flex;flex-direction:column;gap:1px;max-height:calc(100vh - 160px);overflow-y:auto}
+.pvs-user{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;color:var(--text-2);line-height:1.25}
+.pvs-user:hover{background:var(--bg-2)}
+.pvs-user.active{background:var(--bg-2);color:var(--text);font-weight:500}
+.pvs-user.locked{cursor:default;opacity:0.7}
+.pvs-user.locked:hover{background:transparent}
+.pvs-user i{font-size:15px;flex-shrink:0}
+.pvs-uname{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.pvs-uname>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-usub{font-size:11px;color:var(--text-3);font-weight:400}
+.pvs-detail{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
+.pvs-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--border)}
+.pvs-head h3{font-size:16px;font-weight:500}
+.pvs-head p{margin-top:3px;font-size:12px;color:var(--text-3)}
+.pvs-blk{margin-bottom:20px}
+.pvs-blk:last-child{margin-bottom:0}
+.pvs-blk-h{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.pvs-blk-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:500}
+.pvs-blk-h .pvs-acts{margin-left:auto;display:flex;gap:6px}
+.pvs-hint{font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.45}
+.pvs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.pvs-grid.wide{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.pvs-ck{display:flex;align-items:center;gap:9px;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12.5px;color:var(--text-2);transition:all 0.12s;min-width:0}
+.pvs-ck:hover{background:var(--bg-2)}
+.pvs-ck.on{border-color:var(--ok-line);background:var(--ok-bg);color:var(--text)}
+.pvs-ck.dis{opacity:0.4;cursor:not-allowed}
+.pvs-ck.dis:hover{background:transparent}
+.pvs-box{width:16px;height:16px;border-radius:4px;border:1px solid var(--border-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg)}
+.pvs-box i{font-size:11px;color:transparent}
+.pvs-ck.on .pvs-box{background:var(--ok-line);border-color:var(--ok-line)}
+.pvs-ck.on .pvs-box i{color:#fff}
+.pvs-ktxt{min-width:0;flex:1}
+.pvs-kname{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-ksub{display:block;font-size:10.5px;color:var(--text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvs-radios{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.pvs-radio{display:flex;align-items:center;gap:7px;padding:7px 12px;border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12.5px;color:var(--text-2)}
+.pvs-radio:hover{background:var(--bg-2)}
+.pvs-radio.on{border-color:var(--text);color:var(--text);font-weight:500}
+.pvs-dot{width:13px;height:13px;border-radius:50%;border:1px solid var(--border-2);flex-shrink:0;position:relative}
+.pvs-radio.on .pvs-dot{border-color:var(--text)}
+.pvs-radio.on .pvs-dot::after{content:'';position:absolute;inset:2.5px;border-radius:50%;background:var(--text)}
+.pvs-grp{margin-top:12px}
+.pvs-grp:first-child{margin-top:0}
+.pvs-grp-lbl{font-size:10.5px;color:var(--text-3);margin-bottom:6px;font-weight:500}
+
 /* === Audit log === */
 .audit-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .search-box{flex:1;min-width:200px;height:34px;padding:0 12px 0 36px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);font-size:13px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f5e5a' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");background-repeat:no-repeat;background-position:12px center}
@@ -242,6 +294,8 @@ input,select,textarea{font:inherit;color:inherit}
   .topbar h1{font-size:18px}
   .uc-form{grid-template-columns:1fr}
   .roles-layout{grid-template-columns:1fr}
+  .pvs-layout{grid-template-columns:1fr}
+  .pvs-list{max-height:none}
   .audit-toolbar{flex-direction:column;align-items:stretch}
   .search-box{width:100%}
   .table-row,.table-head{padding:10px 12px}
@@ -307,20 +361,24 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
 <div class="brand"><span class="brand-dot">A</span><span class="brand-text">AROS Admin</span><button class="sb-toggle" onclick="toggleCollapse()" title="Yopish/ochish"><i class="ti ti-chevron-left"></i></button></div>
-<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')" title="Bosh sahifa"><i class="ti ti-layout-dashboard"></i><span class="nav-label">Bosh sahifa</span></a>
+<a class="nav-item active" data-screen="dashboard" onclick="goto('dashboard')" title="Bosh sahifa"><i class="ti ti-layout-dashboard icon-off"></i><i class="ti ti-layout-dashboard-filled icon-on"></i><span class="nav-label">Bosh sahifa</span></a>
 <div class="sb-grp">Boshqaruv</div>
-<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')" title="Yangi userlar"><i class="ti ti-user-plus"></i><span class="nav-label">Yangi</span><span class="ct" id="nav-pending-ct">0</span></a>
-<a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users"></i><span class="nav-label">Hammasi</span></a>
-<a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock"></i><span class="nav-label">Rollar</span></a>
-<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store"></i><span class="nav-label">Filiallar</span></a>
-<a class="nav-item" data-screen="filial-plan" onclick="goto('filial-plan')" title="Filial Plan"><i class="ti ti-target-arrow"></i><span class="nav-label">Filial Plan</span></a>
-<a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
-<a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder"></i><span class="nav-label">Yuklanmalar</span></a>
-<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register"></i><span class="nav-label">Bugalter</span></a>
+<a class="nav-item" data-screen="users-pending" onclick="goto('users-pending')" title="Yangi userlar"><i class="ti ti-user-plus icon-off"></i><i class="ti ti-user-plus icon-on"></i><span class="nav-label">Yangi</span><span class="ct" id="nav-pending-ct">0</span></a>
+<a class="nav-item" data-screen="users-all" onclick="goto('users-all')" title="Hammasi userlar"><i class="ti ti-users icon-off"></i><i class="ti ti-users-filled icon-on"></i><span class="nav-label">Hammasi</span></a>
+<a class="nav-item" data-screen="roles" onclick="goto('roles')" title="Rollar"><i class="ti ti-shield-lock icon-off"></i><i class="ti ti-shield-lock-filled icon-on"></i><span class="nav-label">Rollar</span></a>
+<a class="nav-item" data-screen="hodim-sozlamalari" onclick="goto('hodim-sozlamalari')" title="Hodim sozlamalari"><i class="ti ti-user-cog icon-off"></i><i class="ti ti-user-cog icon-on"></i><span class="nav-label">Hodim sozlamalari</span></a>
+<a class="nav-item" data-screen="sotuvchi-mijoz" onclick="goto('sotuvchi-mijoz')" title="Sotuvchi & Mijoz"><i class="ti ti-affiliate icon-off"></i><i class="ti ti-affiliate-filled icon-on"></i><span class="nav-label">Sotuvchi & Mijoz</span></a>
+<a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store icon-off"></i><i class="ti ti-building-store-filled icon-on"></i><span class="nav-label">Filiallar</span></a>
+<a class="nav-item" data-screen="filial-plan" onclick="goto('filial-plan')" title="Filial Plan"><i class="ti ti-target-arrow icon-off"></i><i class="ti ti-target-arrow icon-on"></i><span class="nav-label">Filial Plan</span></a>
+<a class="nav-item" data-screen="hodim-plan" onclick="goto('hodim-plan')" title="Hodim Plan"><i class="ti ti-user-check icon-off"></i><i class="ti ti-user-check icon-on"></i><span class="nav-label">Hodim Plan</span></a>
+<a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x icon-off"></i><i class="ti ti-plug-connected-x icon-on"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
+<a class="nav-item" data-screen="yuklanmalar" onclick="goto('yuklanmalar')" title="Yuklanmalar"><i class="ti ti-folder icon-off"></i><i class="ti ti-folder-filled icon-on"></i><span class="nav-label">Yuklanmalar</span></a>
+<a class="nav-item" data-screen="bugalter" onclick="goto('bugalter')" title="Bugalter"><i class="ti ti-cash-register icon-off"></i><i class="ti ti-cash-register icon-on"></i><span class="nav-label">Bugalter</span></a>
+<a class="nav-item" data-screen="provodka-sozlama" onclick="goto('provodka-sozlama')" title="Provodka sozlamalari"><i class="ti ti-adjustments-dollar icon-off"></i><i class="ti ti-adjustments-dollar icon-on"></i><span class="nav-label">Provodka sozlama</span></a>
 <div class="sb-grp">Sistema</div>
-<a class="nav-item" data-screen="audit" onclick="goto('audit')" title="Kuzatuv"><i class="ti ti-history"></i><span class="nav-label">Kuzatuv</span></a>
-<a class="nav-item" data-screen="workflows" onclick="goto('workflows')" title="Workflow'lar"><i class="ti ti-circuit-bulb"></i><span class="nav-label">Workflow'lar</span></a>
-<a class="nav-item" data-screen="settings" onclick="goto('settings')" title="Sozlamalar"><i class="ti ti-settings"></i><span class="nav-label">Sozlamalar</span></a>
+<a class="nav-item" data-screen="audit" onclick="goto('audit')" title="Kuzatuv"><i class="ti ti-history icon-off"></i><i class="ti ti-history icon-on"></i><span class="nav-label">Kuzatuv</span></a>
+<a class="nav-item" data-screen="workflows" onclick="goto('workflows')" title="Workflow'lar"><i class="ti ti-circuit-bulb icon-off"></i><i class="ti ti-circuit-bulb icon-on"></i><span class="nav-label">Workflow'lar</span></a>
+<a class="nav-item" data-screen="settings" onclick="goto('settings')" title="Sozlamalar"><i class="ti ti-settings icon-off"></i><i class="ti ti-settings-filled icon-on"></i><span class="nav-label">Sozlamalar</span></a>
 <div class="sb-foot">
 <span class="av" id="footer-av">?</span>
 <div class="foot-info" style="flex:1;min-width:0">
@@ -364,7 +422,9 @@ let cache = {
   dashboard: null,
   users: { pending: null, all: null },
   rbac: null,
-  audit: null
+  audit: null,
+  arosWh: null,
+  scmAllWorkers: null
 };
 
 // =========================================================
@@ -452,13 +512,32 @@ async function api(endpoint, params, opts={}){
     const qsStr = qs.toString();
     if (qsStr) url += '?' + qsStr;
   }
-  const r = await fetch(url);
+  // nginx URI limiti ~8 KB. 414 javobida Access-Control-Allow-Origin bo'lmagani uchun
+  // brauzer sababini ko'rsatmaydi — shuning uchun yuborishdan OLDIN to'xtatamiz.
+  if (url.length > 7500) {
+    throw new Error(`So'rov juda uzun (${url.length} belgi, limit ~7500) — kamroq element tanlang`);
+  }
+  let r;
+  try {
+    r = await fetch(url);
+  } catch(err){
+    // 414/CORS'da brauzer status ko'rsatmaydi — sababini aniqroq yozamiz
+    if (url.length > 7000) throw new Error(`So'rov juda uzun (${url.length} belgi) — server qabul qilmadi`);
+    throw new Error('Tarmoqqa ulanib bo\'lmadi: ' + (err.message || 'Failed to fetch'));
+  }
   if (!r.ok) {
     let txt = '';
     try { txt = (await r.text()).slice(0,150); } catch(e){}
     throw new Error('HTTP ' + r.status + (txt?' · '+txt:''));
   }
-  return await r.json();
+  // n8n workflow Respond node'gacha yetmay yiqilsa 200 + bo'sh tana qaytadi
+  const body = await r.text();
+  if (!body.trim()) throw new Error("Server bo'sh javob qaytardi (n8n workflow xatosi)");
+  try {
+    return JSON.parse(body);
+  } catch(e){
+    throw new Error("Server noto'g'ri javob qaytardi: " + body.slice(0,120));
+  }
 }
 
 function hasPerm(key){
@@ -485,11 +564,15 @@ function renderScreen(s){
     case 'users-pending': return renderUsersPending(root);
     case 'users-all': return renderUsersAll(root);
     case 'roles': return renderRoles(root);
+    case 'hodim-sozlamalari': return renderHodimSozlamalari(root);
+    case 'sotuvchi-mijoz': return renderSotuvchiMijoz(root);
     case 'filiallar': return renderFiliallar(root);
     case 'filial-plan': return renderFilialPlan(root);
+    case 'hodim-plan': return renderHodimPlan(root);
     case 'ulanmagan': return renderUlanmagan(root);
     case 'yuklanmalar': return renderYuklanmalar(root);
     case 'bugalter': return renderBugalter(root);
+    case 'provodka-sozlama': return renderProvodkaSozlama(root);
     case 'audit': return renderAudit(root);
     case 'workflows': return renderWorkflows(root);
     case 'settings': return renderSettings(root);
@@ -560,7 +643,7 @@ async function renderFilialPlan(root){
   if(!planFilter.oy){ planFilter.oy = now.getUTCMonth()+1; planFilter.yil = now.getUTCFullYear(); }
   let oyOpts=''; for(let m=1;m<=12;m++) oyOpts += `<option value="${m}" ${m===planFilter.oy?'selected':''}>${PLAN_OYNOM[m]}</option>`;
   let yilOpts=''; for(let y=now.getUTCFullYear()-1;y<=now.getUTCFullYear()+1;y++) yilOpts += `<option value="${y}" ${y===planFilter.yil?'selected':''}>${y}</option>`;
-  root.innerHTML = topbar('Filial Plan', 'Har oy 2 yarim · default = oylik ÷ 2 · tahrirlansa override', `
+  root.innerHTML = topbar('Filial Plan', 'Har oy 2 yarim, default proporsiya, tahrirlansa override', `
     <select class="select" style="height:34px;width:auto" id="plan-oy">${oyOpts}</select>
     <select class="select" style="height:34px;width:auto" id="plan-yil">${yilOpts}</select>
     <button class="icon-btn" onclick="renderFilialPlan(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
@@ -575,14 +658,32 @@ async function renderFilialPlan(root){
     const data = await api('aros-filial-plan-list', { oy: planFilter.oy, yil: planFilter.yil });
     const filials = (data && data.filiallar) || [];
     if(!filials.length){ content.innerHTML = '<div class="empty">Bu oy uchun filial topilmadi</div>'; return; }
-    content.innerHTML = filials.map(planCardHtml).join('');
+    const meta = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="fp-search" placeholder="Filial nomi..." oninput="fpSearch(this.value)" class="input" style="max-width:260px;height:34px">
+      <span style="font-size:11px;color:var(--text-3);margin-left:auto">Oy ${data.oy_kunlari} kun · Y1 = ${data.y1_kun} kun · Y2 = ${data.y2_kun} kun · <b id="fp-count">${filials.length}</b> filial</span>
+    </div><div id="fp-list"></div>`;
+    content.innerHTML = meta;
+    document.getElementById('fp-list').innerHTML = filials.map(planCardHtml).join('');
   } catch(e){
     content.innerHTML = '<div class="empty">Xato: '+escapeHtml(String(e.message||e))+'</div>';
   }
 }
 
+function fpSearch(q){
+  q = String(q||'').trim().toLowerCase();
+  const cards = document.querySelectorAll('#fp-list > .fp-card');
+  let n = 0;
+  cards.forEach(c=>{
+    const show = !q || (c.getAttribute('data-search')||'').indexOf(q)>=0;
+    c.style.display = show ? '' : 'none';
+    if(show) n++;
+  });
+  const cnt = document.getElementById('fp-count'); if(cnt) cnt.textContent = n;
+}
+
 function planCardHtml(f){
-  return `<div class="card" style="margin-bottom:12px">
+  const searchStr = String((f.filial||'')+' '+(f.profil||'')+' '+f.warehouse_id).toLowerCase().replace(/["'<>]/g,' ');
+  return `<div class="fp-card card" data-search="${searchStr}" style="margin-bottom:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <div><div style="font-size:15px;font-weight:600">${escapeHtml(f.filial||'')} <span style="font-size:11px;color:var(--text-3);font-weight:400">#${f.warehouse_id}</span></div>
       <div style="font-size:11px;color:var(--text-3);margin-top:2px">Oylik plan: <b style="color:var(--text-2)">${fmt(f.oylik_plan)}</b> · qarz limit: ${fmt(f.oylik_qarz_limit)}</div></div>
@@ -601,7 +702,7 @@ function planHalfHtml(wid, yarim, v, title){
   return `<div class="plan-half" data-wid="${wid}" data-yarim="${yarim}" style="background:var(--bg-2);border:1px solid ${ed?'var(--warn-line)':'var(--border)'};border-radius:10px;padding:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <b style="font-size:13px">${title}</b>
-      <span class="plan-badge" style="font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600;background:${ed?'var(--warn-bg)':'var(--bg-3)'};color:${ed?'var(--warn-text)':'var(--text-3)'}">${ed?'✎ tahrirlangan':'default ÷2'}</span>
+      <span class="plan-badge" style="font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600;background:${ed?'var(--warn-bg)':'var(--bg-3)'};color:${ed?'var(--warn-text)':'var(--text-3)'}">${ed?'✎ tahrirlangan':'proporsiya'}</span>
     </div>
     ${planFld('Plan','plan',v.plan)}
     ${planFld('Qarz limit','qarz_limit',v.qarz_limit)}
@@ -632,6 +733,7 @@ async function savePlanHalf(wid, yarim, btn){
   btn.disabled=true; const old=btn.textContent; btn.textContent='...';
   try {
     await api('aros-filial-plan-set', { wid, oy: planFilter.oy, yil: planFilter.yil, yarim, plan: vals.plan, qarz_limit: vals.qarz_limit, hodim_plan: vals.hodim_plan, fiksa: vals.fiksa });
+    fetch(API_BASE + '/aros-plan-apply?_='+Date.now()).catch(()=>{});
     planMarkEdited(el, true); toast('Saqlandi ✓','ok');
   } catch(e){ toast('Xato: '+(e.message||e),'err'); }
   btn.disabled=false; btn.textContent=old;
@@ -641,14 +743,128 @@ async function resetPlanHalf(wid, yarim, btn){
   btn.disabled=true;
   try {
     await api('aros-filial-plan-set', { action:'reset', wid, oy: planFilter.oy, yil: planFilter.yil, yarim });
-    toast('Default ga qaytdi','ok'); renderFilialPlan(document.getElementById('screens'));
+    fetch(API_BASE + '/aros-plan-apply?_='+Date.now()).catch(()=>{});
+    toast('Proporsiyaga qaytdi','ok'); renderFilialPlan(document.getElementById('screens'));
   } catch(e){ toast('Xato: '+(e.message||e),'err'); btn.disabled=false; }
 }
 
 function planMarkEdited(el, ed){
   el.style.borderColor = ed?'var(--warn-line)':'var(--border)';
-  const b=el.querySelector('.plan-badge'); if(b){ b.style.background=ed?'var(--warn-bg)':'var(--bg-3)'; b.style.color=ed?'var(--warn-text)':'var(--text-3)'; b.textContent=ed?'✎ tahrirlangan':'default ÷2'; }
+  const b=el.querySelector('.plan-badge'); if(b){ b.style.background=ed?'var(--warn-bg)':'var(--bg-3)'; b.style.color=ed?'var(--warn-text)':'var(--text-3)'; b.textContent=ed?'✎ tahrirlangan':'proporsiya'; }
   const rb=el.querySelector('.plan-reset'); if(rb) rb.disabled=!ed;
+}
+
+/* ===== HODIM PLAN (oy 2 yarim, editable override) ===== */
+let hpFilter = { oy: null, yil: null };
+
+async function renderHodimPlan(root){
+  const now = new Date(Date.now()+5*3600*1000);
+  if(!hpFilter.oy){ hpFilter.oy = now.getUTCMonth()+1; hpFilter.yil = now.getUTCFullYear(); }
+  let oyOpts=''; for(let m=1;m<=12;m++) oyOpts += `<option value="${m}" ${m===hpFilter.oy?'selected':''}>${PLAN_OYNOM[m]}</option>`;
+  let yilOpts=''; for(let y=now.getUTCFullYear()-1;y<=now.getUTCFullYear()+1;y++) yilOpts += `<option value="${y}" ${y===hpFilter.yil?'selected':''}>${y}</option>`;
+  root.innerHTML = topbar('Hodim Plan', 'Har oy 2 yarim, default proporsiya, tahrirlansa override', `
+    <select class="select" style="height:34px;width:auto" id="hp-oy">${oyOpts}</select>
+    <select class="select" style="height:34px;width:auto" id="hp-yil">${yilOpts}</select>
+    <button class="icon-btn" onclick="renderHodimPlan(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+  `);
+  const content = document.createElement('div');
+  content.innerHTML = '<div class="skeleton" style="height:120px;margin-bottom:12px"></div><div class="skeleton" style="height:120px;margin-bottom:12px"></div><div class="skeleton" style="height:120px"></div>';
+  root.appendChild(content);
+  document.getElementById('hp-oy').addEventListener('change', e=>{ hpFilter.oy=parseInt(e.target.value); renderHodimPlan(document.getElementById('screens')); });
+  document.getElementById('hp-yil').addEventListener('change', e=>{ hpFilter.yil=parseInt(e.target.value); renderHodimPlan(document.getElementById('screens')); });
+
+  try {
+    const data = await api('aros-hodim-plan-list', { oy: hpFilter.oy, yil: hpFilter.yil });
+    const hodimlar = (data && data.hodimlar) || [];
+    if(!hodimlar.length){ content.innerHTML = '<div class="empty">Hodim topilmadi</div>'; return; }
+    const meta = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="hp-search" placeholder="Ism yoki filial..." oninput="hpSearch(this.value)" class="input" style="max-width:260px;height:34px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="hp-only" checked onchange="hpSearch(document.getElementById('hp-search').value)"> Faqat plani borlar</label>
+      <span style="font-size:11px;color:var(--text-3);margin-left:auto">Oy ${data.oy_kunlari} kun · Y1 = ${data.y1_kun} kun · Y2 = ${data.y2_kun} kun · <b id="hp-count">0</b> hodim</span>
+    </div><div id="hp-list"></div>`;
+    content.innerHTML = meta;
+    document.getElementById('hp-list').innerHTML = hodimlar.map(hpCardHtml).join('');
+    hpSearch('');
+  } catch(e){
+    content.innerHTML = '<div class="empty">Xato: '+escapeHtml(String(e.message||e))+'</div>';
+  }
+}
+
+function hpSearch(q){
+  q = String(q||'').trim().toLowerCase();
+  const onlyPlan = document.getElementById('hp-only') ? document.getElementById('hp-only').checked : false;
+  const cards = document.querySelectorAll('#hp-list > .hp-card');
+  let n = 0;
+  cards.forEach(c=>{
+    const s = c.getAttribute('data-search')||'';
+    const hasPlan = c.getAttribute('data-hasplan') === '1';
+    const show = (!q || s.indexOf(q)>=0) && (!onlyPlan || hasPlan);
+    c.style.display = show ? '' : 'none';
+    if(show) n++;
+  });
+  const cnt = document.getElementById('hp-count'); if(cnt) cnt.textContent = n;
+}
+
+function hpCardHtml(h){
+  const searchStr = String((h.ism||'')+' '+(h.warehouse_name||'')+' '+h.telegram_id).toLowerCase().replace(/["'<>]/g,' ');
+  const hasPlan = (h.oylik_hodim_plan>0 || h.oylik_fiksa>0 || h.oylik_fidoyilik>0 || h.oylik_plan>0) ? '1' : '0';
+  return `<div class="hp-card card" data-search="${searchStr}" data-hasplan="${hasPlan}" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <div><div style="font-size:15px;font-weight:600">${escapeHtml(h.ism||'—')} <span style="font-size:11px;color:var(--text-3);font-weight:400;font-family:var(--mono)">@${escapeHtml(h.telegram_id)}</span></div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:2px">${escapeHtml(h.warehouse_name||'— filial yo\\u2019q —')} · Oylik hodim plan: <b style="color:var(--text-2)">${fmt(h.oylik_hodim_plan)}</b> · fiksa: ${fmt(h.oylik_fiksa)}</div></div>
+      <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:var(--bg-3);color:var(--text-2);font-weight:500">${escapeHtml(h.lavozim||'—')}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">
+      ${hpHalfHtml(h.telegram_id,1,h.yarim['1'],'Y1 · 1–15 kun')}
+      ${hpHalfHtml(h.telegram_id,2,h.yarim['2'],'Y2 · 16–oxiri')}
+    </div>
+  </div>`;
+}
+
+function hpHalfHtml(tid, yarim, v, title){
+  v = v || { oylik_plan:0, hodim_plan:0, fiksa:0, fidoyilik:0, edited:false };
+  const ed = !!v.edited;
+  return `<div class="hp-half" data-tid="${tid}" data-yarim="${yarim}" style="background:var(--bg-2);border:1px solid ${ed?'var(--warn-line)':'var(--border)'};border-radius:10px;padding:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <b style="font-size:13px">${title}</b>
+      <span class="hp-badge" style="font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600;background:${ed?'var(--warn-bg)':'var(--bg-3)'};color:${ed?'var(--warn-text)':'var(--text-3)'}">${ed?'✎ tahrirlangan':'proporsiya'}</span>
+    </div>
+    ${planFld('Hodim plan','hodim_plan',v.hodim_plan)}
+    ${planFld('Fiksa','fiksa',v.fiksa)}
+    ${planFld('Fidoyilik','fidoyilik',v.fidoyilik)}
+    ${planFld('Oylik plan','oylik_plan',v.oylik_plan)}
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn primary" style="flex:1" onclick="saveHodimHalf('${tid}',${yarim},this)">Saqlash</button>
+      <button class="btn ghost hp-reset" style="flex:1" onclick="resetHodimHalf('${tid}',${yarim},this)" ${ed?'':'disabled'}>Reset</button>
+    </div>
+  </div>`;
+}
+
+function hpHalfEl(tid,yarim){ return document.querySelector('.hp-half[data-tid="'+tid+'"][data-yarim="'+yarim+'"]'); }
+
+async function saveHodimHalf(tid, yarim, btn){
+  const el = hpHalfEl(tid,yarim); const vals = {};
+  el.querySelectorAll('input[data-key]').forEach(i=>{ vals[i.getAttribute('data-key')]=planParse(i.value); });
+  btn.disabled=true; const old=btn.textContent; btn.textContent='...';
+  try {
+    await api('aros-hodim-plan-set', { tid, oy: hpFilter.oy, yil: hpFilter.yil, yarim, hodim_plan: vals.hodim_plan, fiksa: vals.fiksa, fidoyilik: vals.fidoyilik, oylik_plan: vals.oylik_plan });
+    hpMarkEdited(el, true); toast('Saqlandi ✓','ok');
+  } catch(e){ toast('Xato: '+(e.message||e),'err'); }
+  btn.disabled=false; btn.textContent=old;
+}
+
+async function resetHodimHalf(tid, yarim, btn){
+  btn.disabled=true;
+  try {
+    await api('aros-hodim-plan-set', { action:'reset', tid, oy: hpFilter.oy, yil: hpFilter.yil, yarim });
+    toast('Proporsiyaga qaytdi','ok'); renderHodimPlan(document.getElementById('screens'));
+  } catch(e){ toast('Xato: '+(e.message||e),'err'); btn.disabled=false; }
+}
+
+function hpMarkEdited(el, ed){
+  el.style.borderColor = ed?'var(--warn-line)':'var(--border)';
+  const b=el.querySelector('.hp-badge'); if(b){ b.style.background=ed?'var(--warn-bg)':'var(--bg-3)'; b.style.color=ed?'var(--warn-text)':'var(--text-3)'; b.textContent=ed?'✎ tahrirlangan':'proporsiya'; }
+  const rb=el.querySelector('.hp-reset'); if(rb) rb.disabled=!ed;
 }
 const fmtShort = n => {
   n = Number(n)||0;
@@ -1038,6 +1254,304 @@ async function saveUserEdit(telegramId){
 }
 
 // =========================================================
+// SCREEN: HODIM SOZLAMALARI
+// Barcha hodimlar — SQL users jadvalining barcha ustunlari (parolsiz).
+// admin-hodim-list (o'qish) / admin-hodim-save (yozish) / admin-user-delete.
+// =========================================================
+let hsFilter = { status: 'all', search: '' };
+let hsUsers = [];  // joriy ro'yxat (edit modal shu massivdan oladi)
+
+async function renderHodimSozlamalari(root){
+  root.innerHTML = topbar('Boshqaruv', 'Hodim sozlamalari', '<button class="btn primary" onclick="hsNew()"><i class="ti ti-user-plus"></i>Yangi hodim</button><button class="icon-btn" onclick="renderHodimSozlamalari(document.getElementById(\'screens\'))" title="Yangilash"><i class="ti ti-refresh"></i></button>');
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<input type="text" class="search-box" placeholder="Qidiruv · ism, telegram ID yoki telefon" id="hs-search" value="${escapeHtml(hsFilter.search)}">
+<div class="pill-sel ${hsFilter.status==='all'?'active':''}" onclick="hsSetFilter('all')">Hammasi</div>
+<div class="pill-sel ${hsFilter.status==='active'?'active':''}" onclick="hsSetFilter('active')">Aktiv</div>
+<div class="pill-sel ${hsFilter.status==='ceo'?'active':''}" onclick="hsSetFilter('ceo')">CEO</div>
+<div class="pill-sel ${hsFilter.status==='pending'?'active':''}" onclick="hsSetFilter('pending')">Pending</div>
+</div>
+<div id="hs-wrap"><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px;margin-bottom:4px"></div><div class="skeleton" style="height:48px"></div></div>
+`;
+  root.appendChild(content);
+
+  document.getElementById('hs-search').addEventListener('input', (e) => {
+    hsFilter.search = e.target.value;
+    clearTimeout(window._hssearch);
+    window._hssearch = setTimeout(hsLoad, 300);
+  });
+
+  // Filiallar + rollar (edit modal uchun) — oldindan yuklab qo'yamiz
+  if (!cache.rbac) { try { cache.rbac = await api('admin-rbac', { uid: UID }); } catch(e){} }
+  hsLoad();
+}
+
+function hsSetFilter(status){
+  hsFilter.status = status;
+  renderHodimSozlamalari(document.getElementById('screens'));
+}
+
+async function hsLoad(){
+  const wrap = document.getElementById('hs-wrap');
+  if (!wrap) return;
+  try {
+    const data = await api('admin-hodim-list', { uid: UID, status: hsFilter.status, search: hsFilter.search });
+    if (data.error) throw new Error(data.error);
+    const users = data.users || [];
+    hsUsers = users;
+    if (!users.length){
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-users-off"></i><p>Hodim topilmadi</p></div>`;
+      return;
+    }
+    const GT = '1.5fr 1fr 1.1fr 0.85fr 0.95fr 0.95fr 84px 44px';
+    wrap.innerHTML = `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:${GT}">
+<div>Hodim</div><div>Telefon</div><div>Filial</div><div>Lavozim</div><div>Oylik plan</div><div>Hodim plan</div><div>Status</div><div></div>
+</div>
+${users.map((u, i) => {
+  const statBadge = u.status === 'active' ? '<span class="badge ok">Aktiv</span>' :
+    u.status === 'ceo' ? '<span class="badge info">CEO</span>' :
+    u.status === 'pending' ? '<span class="badge warn">Pending</span>' :
+    u.status === 'waiting_name' ? '<span class="badge muted">No name</span>' :
+    `<span class="badge muted">${escapeHtml(u.status||'—')}</span>`;
+  return `
+<div class="table-row" style="grid-template-columns:${GT};cursor:pointer" onclick="hsEdit(${i})">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<div class="av" style="width:30px;height:30px;font-size:11px">${initials(u.ism)}</div>
+<div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.ism||'—')}</div><div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">@${escapeHtml(u.telegram_id||'')}</div></div>
+</div>
+<div style="color:var(--text-2)">${escapeHtml(u.telefon||'—')}</div>
+<div style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.warehouse_name||'—')}${u.warehouse_id?` <span style="color:var(--text-3);font-size:11px">#${escapeHtml(String(u.warehouse_id))}</span>`:''}</div>
+<div><span class="badge muted">${escapeHtml(u.lavozim||'—')}</span></div>
+<div style="font-variant-numeric:tabular-nums">${u.oylik_plan?fmt(u.oylik_plan):'—'}</div>
+<div style="font-variant-numeric:tabular-nums">${(Number(u.hodim_plan)>0)?fmt(u.hodim_plan):'—'}</div>
+<div>${statBadge}</div>
+<div><button class="btn sm" onclick="event.stopPropagation();hsEdit(${i})"><i class="ti ti-edit"></i></button></div>
+</div>`;
+}).join('')}
+</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding:0 4px">Jami: ${users.length} ta hodim</div>`;
+  } catch(e){
+    wrap.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function hsEdit(i){
+  const u = hsUsers[i];
+  if (!u){ toast('Hodim topilmadi', 'err'); return; }
+  const rbac = cache.rbac || { filiallar: [], roles: [] };
+  const filiallar = rbac.filiallar || [];
+  const roles = rbac.roles || [];
+  const userRoleKeys = (u.roles || []).map(r => r.key);
+  const inList = filiallar.some(f => String(f.warehouse_id) === String(u.warehouse_id));
+  const grpLbl = t => `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 -2px">${t}</div>`;
+
+  openModal(`
+<div class="modal-h">
+<div><h3>${escapeHtml(u.ism || 'Hodim')}</h3><p>Telegram ID: <code class="mono">${escapeHtml(u.telegram_id)}</code> · o'zgartirib bo'lmaydi ${u.has_password?'· <span class="badge ok" style="font-size:10px"><i class="ti ti-lock"></i> parol bor</span>':'· <span class="badge muted" style="font-size:10px">parolsiz</span>'}</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${grpLbl('Asosiy')}
+<div class="ff"><label>Ism</label><input type="text" class="input" id="hs-ism" value="${escapeHtml(u.ism||'')}"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Telefon</label><input type="text" class="input" id="hs-telefon" value="${escapeHtml(u.telefon||'')}" placeholder="+998..."></div>
+<div class="ff"><label>Lavozim</label><input type="text" class="input" id="hs-lavozim" value="${escapeHtml(u.lavozim||'')}" placeholder="sotuvchi"></div>
+</div>
+<div class="ff"><label>Filial</label><select class="select" id="hs-fil">
+<option value="">— filial yo'q —</option>
+${(!inList && u.warehouse_id) ? `<option value="${escapeHtml(String(u.warehouse_id))}|${escapeHtml(u.warehouse_name||'')}" selected>${escapeHtml(u.warehouse_name||('#'+u.warehouse_id))} (joriy)</option>` : ''}
+${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}" ${String(f.warehouse_id)===String(u.warehouse_id)?'selected':''}>${escapeHtml(f.filial)}</option>`).join('')}
+</select></div>
+${grpLbl('Rejalar — to\'liq oylik qiymat')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-plan" value="${u.oylik_plan||''}" min="0"></div>
+<div class="ff"><label>Hodim plan</label><input type="number" class="input" id="hs-hodim-plan" value="${(u.hodim_plan??'')}" min="0"></div>
+<div class="ff"><label>Fiksa</label><input type="number" class="input" id="hs-fiksa" value="${(u.fiksa??'')}" min="0"></div>
+<div class="ff"><label>Fidoyilik</label><input type="number" class="input" id="hs-fidoyilik" value="${(u.fidoyilik??'')}" min="0"></div>
+</div>
+${grpLbl('Tizim')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Status</label><select class="select" id="hs-stat">
+<option value="active" ${u.status==='active'?'selected':''}>Aktiv</option>
+<option value="ceo" ${u.status==='ceo'?'selected':''}>CEO</option>
+<option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
+<option value="waiting_name" ${u.status==='waiting_name'?'selected':''}>Ism kutilmoqda</option>
+</select></div>
+<div class="ff"><label>Worker ID (Aros)</label><input type="number" class="input" id="hs-worker" value="${(u.worker_id??'')}" placeholder="—"></div>
+</div>
+${grpLbl('Rollar')}
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${roles.length ? roles.map(r => `
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+<input type="checkbox" class="hs-role-cb" value="${r.key}" ${userRoleKeys.includes(r.key)?'checked':''}>
+${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
+<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
+</label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn danger" style="margin-right:auto" onclick="hsDelete('${escapeHtml(u.telegram_id)}')"><i class="ti ti-trash"></i>O'chirish</button>
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" id="hs-save-btn" onclick="hsSave('${escapeHtml(u.telegram_id)}')"><i class="ti ti-check"></i>Saqlash</button>
+</div>
+`);
+}
+
+async function hsSave(telegramId){
+  const g = id => (document.getElementById(id)?.value ?? '').trim();
+  const filVal = document.getElementById('hs-fil').value;
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  const roleKeys = Array.from(document.querySelectorAll('.hs-role-cb:checked')).map(cb => cb.value);
+  const btn = document.getElementById('hs-save-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Saqlanyapti...'; }
+  try {
+    const r1 = await api('admin-hodim-save', {
+      uid: UID, telegram_id: telegramId,
+      ism: g('hs-ism'), telefon: g('hs-telefon'), lavozim: g('hs-lavozim'),
+      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
+      oylik_plan: g('hs-plan'), hodim_plan: g('hs-hodim-plan'),
+      fiksa: g('hs-fiksa'), fidoyilik: g('hs-fidoyilik'),
+      worker_id: g('hs-worker'), status: g('hs-stat')
+    });
+    if (r1.error) throw new Error(r1.error);
+    const r2 = await api('admin-role-assign', { uid: UID, telegram_id: telegramId, role_keys: roleKeys });
+    if (r2.error) throw new Error(r2.error);
+    toast('SQL\'da saqlandi');
+    closeModal();
+    hsLoad();
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Saqlash'; }
+  }
+}
+
+// --- Yangi hodim qo'shish ---
+function hsNew(){
+  const rbac = cache.rbac || { filiallar: [], roles: [] };
+  const filiallar = rbac.filiallar || [];
+  const roles = rbac.roles || [];
+  const grpLbl = t => `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 -2px">${t}</div>`;
+  openModal(`
+<div class="modal-h">
+<div><h3>Yangi hodim</h3><p>Saqlansa SQL users jadvaliga qo'shiladi.</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${grpLbl('Asosiy')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Telegram ID *</label><input type="text" inputmode="numeric" class="input" id="hs-new-tgid" placeholder="1255605633"></div>
+<div class="ff"><label>Telefon</label><input type="text" class="input" id="hs-new-telefon" placeholder="+998..."></div>
+</div>
+<div class="ff"><label>Ism *</label><input type="text" class="input" id="hs-new-ism" placeholder="Ism Familiya"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Lavozim</label><input type="text" class="input" id="hs-new-lavozim" value="sotuvchi"></div>
+<div class="ff"><label>Worker ID (Aros)</label><input type="number" class="input" id="hs-new-worker" placeholder="—"></div>
+</div>
+<div class="ff"><label>Filial</label><select class="select" id="hs-new-fil">
+<option value="">— filial yo'q —</option>
+${filiallar.map(f=>`<option value="${f.warehouse_id}|${escapeHtml(f.filial)}">${escapeHtml(f.filial)}</option>`).join('')}
+</select></div>
+${grpLbl('Rejalar — oylik qiymat')}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="ff"><label>Oylik plan (so'm)</label><input type="number" class="input" id="hs-new-plan" value="0" min="0"></div>
+<div class="ff"><label>Hodim plan</label><input type="number" class="input" id="hs-new-hodim-plan" value="0" min="0"></div>
+<div class="ff"><label>Fiksa</label><input type="number" class="input" id="hs-new-fiksa" value="0" min="0"></div>
+<div class="ff"><label>Fidoyilik</label><input type="number" class="input" id="hs-new-fidoyilik" value="0" min="0"></div>
+</div>
+${grpLbl('Tizim')}
+<div class="ff"><label>Status</label><select class="select" id="hs-new-stat">
+<option value="active" selected>Aktiv</option>
+<option value="ceo">CEO</option>
+<option value="pending">Pending</option>
+<option value="waiting_name">Ism kutilmoqda</option>
+</select></div>
+${grpLbl('Rollar')}
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${roles.length ? roles.map(r=>`
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+<input type="checkbox" class="hs-new-role-cb" value="${r.key}">
+${r.icon?`<i class="ti ${r.icon}"></i>`:''}<span>${escapeHtml(r.label)}</span>
+<span style="margin-left:auto;font-size:11px;color:var(--text-3)">${r.permission_count} ruxsat</span>
+</label>`).join('') : '<span style="color:var(--text-3);font-size:12px">Rollar yuklanmadi</span>'}
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn primary" id="hs-new-btn" onclick="hsCreate()"><i class="ti ti-check"></i>Qo'shish</button>
+</div>
+`);
+}
+
+async function hsCreate(){
+  const g = id => (document.getElementById(id)?.value ?? '').trim();
+  const tgid = g('hs-new-tgid');
+  const ism = g('hs-new-ism');
+  const filVal = document.getElementById('hs-new-fil').value;
+  const roleKeys = Array.from(document.querySelectorAll('.hs-new-role-cb:checked')).map(cb => cb.value);
+  if (!/^\d+$/.test(tgid)){ toast('Telegram ID faqat raqam bo\'lishi kerak', 'err'); return; }
+  if (!ism){ toast('Ism kiriting', 'err'); return; }
+  if (hsUsers.some(u => String(u.telegram_id) === tgid)){ toast('Bu Telegram ID allaqachon mavjud', 'err'); return; }
+  const [warehouse_id, warehouse_name] = filVal.split('|');
+  const btn = document.getElementById('hs-new-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Qo\'shilyapti...'; }
+  try {
+    const r1 = await api('admin-hodim-save', {
+      uid: UID, telegram_id: tgid,
+      ism, telefon: g('hs-new-telefon'), lavozim: g('hs-new-lavozim') || 'sotuvchi',
+      warehouse_id: warehouse_id || '', warehouse_name: warehouse_name || '',
+      oylik_plan: g('hs-new-plan'), hodim_plan: g('hs-new-hodim-plan'),
+      fiksa: g('hs-new-fiksa'), fidoyilik: g('hs-new-fidoyilik'),
+      worker_id: g('hs-new-worker'), status: g('hs-new-stat')
+    });
+    if (r1.error) throw new Error(r1.error);
+    if (roleKeys.length){
+      const r2 = await api('admin-role-assign', { uid: UID, telegram_id: tgid, role_keys: roleKeys });
+      if (r2.error) throw new Error(r2.error);
+    }
+    toast('Hodim qo\'shildi');
+    closeModal();
+    hsLoad();
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Qo\'shish'; }
+  }
+}
+
+// --- Hodimni o'chirish ---
+function hsDelete(telegramId){
+  const u = hsUsers.find(x => String(x.telegram_id) === String(telegramId));
+  const ism = u ? (u.ism || telegramId) : telegramId;
+  openModal(`
+<div class="modal-h">
+<div><h3>O'chirilsinmi?</h3><p><b>${escapeHtml(ism)}</b> (<code class="mono">${escapeHtml(telegramId)}</code>) SQL users jadvalidan butunlay o'chiriladi, rollari ham olib tashlanadi. Bu amalni qaytarib bo'lmaydi.</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Bekor</button>
+<button class="btn danger primary" id="hs-del-btn" style="background:var(--err-text);border-color:var(--err-text);color:#fff" onclick="hsDeleteConfirm('${escapeHtml(telegramId)}')"><i class="ti ti-trash"></i>Ha, o'chir</button>
+</div>
+`);
+}
+
+async function hsDeleteConfirm(telegramId){
+  const btn = document.getElementById('hs-del-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> O\'chirilyapti...'; }
+  try {
+    const r = await api('admin-user-delete', { uid: UID, telegram_id: telegramId });
+    if (r.error) throw new Error(r.error === 'not_found' ? 'Hodim topilmadi' : r.error);
+    toast('Hodim o\'chirildi');
+    closeModal();
+    hsLoad();
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+    if (btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-trash"></i>Ha, o\'chir'; }
+  }
+}
+
+// =========================================================
 // SCREEN: ROLES
 // =========================================================
 let selectedRoleKey = null;
@@ -1166,6 +1680,1261 @@ async function createRole(){
     selectedRoleKey = key;
     renderRoles(document.getElementById('screens'));
   } catch(e){ toast('Xato: ' + e.message, 'err'); }
+}
+
+// =========================================================
+// SCREEN: PROVODKA SOZLAMALARI
+// Har bir Provodka userига: qaysi sahifalar ochiq, qaysi kassalarni
+// ko'radi, qaysi kassalar bilan amaliyot qiladi, konvert ruxsati.
+// Endpointlar: aros-provodka-users / -perms / -perms-save (n8n GET).
+//
+// RUXSAT: hozircha admin-check'ning has_admin_access'i yetarli (ekranga
+// kirgan har bir admin sozlay oladi). Server tomonda RBAC'ga alohida
+// 'provodka_settings' permission kaliti qo'shilsa — bu yerda
+// hasPerm('provodka_settings') tekshiruvi va sidebar'ni yashirish
+// qo'shiladi (n8n endpointlari ham o'sha kalitni tekshirishi kerak).
+// =========================================================
+// Sahifa ro'yxati DINAMIK: Supabase perm_pages() dan keladi
+// (aros-provodka-pages endpointi orqali). Sababi — admin_set_provodka_perms
+// `where x = any(perm_pages())` qiladi, ya'ni perm_pages() da yo'q kalitni
+// JIMGINA tashlab yuboradi. Demak yagona haqiqiy manba — o'sha funksiya.
+// Provodka'ga yangi sahifa qo'shilsa: perm_pages() ga kalit qo'shiladi —
+// bu ekran uni avtomatik ko'rsatadi, bu yerni tahrirlash SHART EMAS.
+//
+// Label lug'ati faqat KO'RINISH uchun. Notanish kalitga nom kalitning
+// o'zidan yasaladi ('yangi_sahifa' -> 'Yangi sahifa'), ya'ni ro'yxatdan
+// tushib qolmaydi.
+const PVS_PAGE_LABELS = {
+  kassa:'Kassa', jurnal:'Jurnal', professional:'Professional', hisobot:'Hisobot',
+  balans:'Balans', cashflow:'Cashflow', qarzdor:'Qarzdor', filial:'Filial',
+  valyuta:'Valyuta', konvert:'Konvert', sozlama:'Sozlama', provodka:'Provodka',
+  yuklar:'Yuklar', standart:'Standart', tannarx:'Tannarx', ai:'AI agent',
+  sorovlar:"So'rovlar"
+};
+
+// Endpoint javob bermasa shu zaxira ishlatiladi (ekran ishlashdan to'xtamasin)
+const PVS_PAGES_FALLBACK = ['kassa','jurnal','professional','hisobot','balans',
+  'cashflow','qarzdor','filial','valyuta','konvert','sozlama','provodka',
+  'yuklar','standart','tannarx','ai'];
+
+function pvsPageLabel(key){
+  if (PVS_PAGE_LABELS[key]) return PVS_PAGE_LABELS[key];
+  return String(key).replace(/[_-]+/g, ' ').replace(/^./, c => c.toUpperCase());
+}
+function pvsPageItem(key){ return { key: key, label: pvsPageLabel(key) }; }
+
+let PVS_PAGES = PVS_PAGES_FALLBACK.map(pvsPageItem);
+let pvsPagesLive = false;   // true = ro'yxat perm_pages() dan keldi
+
+async function pvsLoadPages(){
+  try {
+    const d = await api('aros-provodka-pages', { uid: UID });
+    if (d && d.ok && Array.isArray(d.pages) && d.pages.length){
+      PVS_PAGES = d.pages.map(pvsPageItem);
+      pvsPagesLive = true;
+    }
+  } catch(e){
+    pvsPagesLive = false;   // zaxira ro'yxat qoladi
+  }
+}
+
+const PVS_TURI = [
+  { key:'markaziy', label:'Markaziy kassalar' },
+  { key:'filial',   label:'Filial kassalari' },
+  { key:'xarajat',  label:'Xarajat (hodim) kassalari' },
+  { key:'boshqa',   label:'Boshqa' }
+];
+
+let pvsState = {
+  users: [],
+  kassalar: [],
+  selectedId: null,
+  perms: null,
+  // Ism-familiya: Provodka'da gmail o'rniga shu ko'rinadi (profiles.full_name).
+  // fullNameKnown — endpoint bu maydonni umuman qaytardimi. Bilmasak
+  // payloadga QO'SHMAYMIZ, aks holda mavjud ismni bo'sh bilan o'chirib yuborardik.
+  fullName: '',
+  fullNameKnown: false,
+  loading: false,
+  saving: false
+};
+
+async function renderProvodkaSozlama(root){
+  root.innerHTML = topbar('Boshqaruv', 'Provodka sozlamalari');
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="skeleton" style="height:300px"></div>`;
+  root.appendChild(content);
+
+  // Sahifa ro'yxatini parallel yuklaymiz (hech qachon throw qilmaydi)
+  const pagesReady = pvsLoadPages();
+
+  try {
+    // -v2 profiles + auth.users'ni qo'shib email/telefon ham qaytaradi.
+    // Eski endpoint faqat id/full_name/role beradi — fallback sifatida qoladi.
+    let data;
+    try {
+      data = await api('aros-provodka-users-v2', { uid: UID });
+      if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    } catch(e2){
+      data = await api('aros-provodka-users', { uid: UID });
+      if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    }
+    pvsState.users = data.users || [];
+    await pagesReady;
+  } catch(e){
+    content.innerHTML = `
+<div class="empty">
+<i class="ti ti-plug-connected-x"></i>
+<p>n8n endpoint hali ulanmagan</p>
+<p style="margin-top:6px;font-size:11.5px;color:var(--text-3)">aros-provodka-users · ${escapeHtml(e.message)}</p>
+<button class="btn sm" style="margin-top:14px" onclick="renderProvodkaSozlama(document.getElementById('screens'))"><i class="ti ti-refresh"></i>Qayta urinish</button>
+</div>`;
+    return;
+  }
+
+  // Birinchi admin bo'lmagan userni avto-tanlash
+  if (!pvsState.users.some(u => u.id === pvsState.selectedId)) {
+    pvsState.selectedId = (pvsState.users.find(u => u.role !== 'admin') || {}).id || null;
+    pvsState.perms = null;
+  }
+
+  content.innerHTML = `
+<div class="pvs-layout">
+<div class="pvs-list" id="pvs-users"></div>
+<div class="pvs-detail" id="pvs-detail"></div>
+</div>`;
+  pvsRenderUsers();
+  if (pvsState.selectedId) pvsLoadPerms(pvsState.selectedId);
+  else pvsRenderDetail();
+}
+
+// Asosiy qator: ism → email → telefon → (oxirgi chora) qisqartirilgan id.
+// Ostidagi kulrang qator: asosiyda ishlatilmagan birinchi identifikator.
+function pvsUserTitle(u){
+  return (u.full_name || '').trim()
+      || (u.email || '').trim()
+      || (u.phone || '').trim()
+      || (u.label || '').trim()
+      || (u.id ? 'ID ' + String(u.id).slice(0, 8) : '—');
+}
+
+function pvsUserSub(u){
+  const title = pvsUserTitle(u);
+  const email = (u.email || '').trim();
+  const phone = (u.phone || '').trim();
+  if (email && email !== title) return email;
+  if (phone && phone !== title) return phone;
+  return '';
+}
+
+function pvsUserName(u){
+  const sub = pvsUserSub(u);
+  return `<span>${escapeHtml(pvsUserTitle(u))}</span>${sub ? `<span class="pvs-usub">${escapeHtml(sub)}</span>` : ''}`;
+}
+
+function pvsRenderUsers(){
+  const box = document.getElementById('pvs-users');
+  if (!box) return;
+  if (!pvsState.users.length){
+    box.innerHTML = `<div class="empty" style="padding:24px 12px"><i class="ti ti-users-off"></i><p>User yo'q</p></div>`;
+    return;
+  }
+  box.innerHTML = pvsState.users.map(u => {
+    const isAdmin = u.role === 'admin';
+    const name = pvsUserName(u);
+    if (isAdmin) return `
+<div class="pvs-user locked" title="Admin — doim to'liq huquqli, cheklanmaydi">
+<i class="ti ti-shield-check" style="color:var(--ok-text)"></i>
+<span class="pvs-uname">${name}</span>
+<span class="badge ok" style="flex-shrink:0">to'liq</span>
+</div>`;
+    return `
+<div class="pvs-user ${u.id===pvsState.selectedId?'active':''}" onclick="pvsSelectUser('${escapeHtml(u.id)}')">
+<i class="ti ti-user"></i>
+<span class="pvs-uname">${name}</span>
+<span class="badge muted" style="flex-shrink:0">${escapeHtml(u.role || '—')}</span>
+</div>`;
+  }).join('');
+}
+
+function pvsSelectUser(id){
+  if (id === pvsState.selectedId && pvsState.perms) return;
+  pvsState.selectedId = id;
+  pvsState.perms = null;
+  pvsRenderUsers();
+  pvsLoadPerms(id);
+}
+
+function pvsNormPerms(p, userId){
+  p = p || {};
+  return {
+    user_id:        userId,
+    allowed_pages:  Array.isArray(p.allowed_pages)  ? p.allowed_pages.slice()  : [],
+    kassa_scope:    p.kassa_scope === 'list' ? 'list' : 'all',
+    view_kassa_ids: Array.isArray(p.view_kassa_ids) ? p.view_kassa_ids.slice() : [],
+    op_kassa_ids:   Array.isArray(p.op_kassa_ids)   ? p.op_kassa_ids.slice()   : [],
+    filial_scope:   p.filial_scope === 'list' ? 'list' : 'all',
+    filial_ids:     Array.isArray(p.filial_ids)     ? p.filial_ids.slice()     : [],
+    can_convert:    p.can_convert !== false
+  };
+}
+
+async function pvsLoadPerms(userId){
+  const box = document.getElementById('pvs-detail');
+  if (box) box.innerHTML = `<div class="skeleton" style="height:260px"></div>`;
+  pvsState.loading = true;
+  try {
+    const data = await api('aros-provodka-perms', { uid: UID, user_id: userId });
+    if (!data.ok) throw new Error(data.error || 'Javob ok emas');
+    if (pvsState.selectedId !== userId) return;   // boshqa user tanlandi
+    pvsState.kassalar = data.kassalar || [];
+    pvsState.perms = pvsNormPerms(data.perms, userId);
+    // Ism-familiya userlar ro'yxatidan keladi (aros-provodka-users[-v2]).
+    // Maydon umuman kelmagan bo'lsa — saqlashda ham yubormaymiz.
+    const u0 = pvsState.users.find(x => x.id === userId) || {};
+    pvsState.fullNameKnown = Object.prototype.hasOwnProperty.call(u0, 'full_name');
+    pvsState.fullName = (u0.full_name || '').toString();
+    pvsState.loading = false;
+    pvsRenderDetail();
+  } catch(e){
+    pvsState.loading = false;
+    if (pvsState.selectedId !== userId) return;
+    const b = document.getElementById('pvs-detail');
+    if (b) b.innerHTML = `
+<div class="empty">
+<i class="ti ti-plug-connected-x"></i>
+<p>Ruxsatlar yuklanmadi</p>
+<p style="margin-top:6px;font-size:11.5px;color:var(--text-3)">aros-provodka-perms · ${escapeHtml(e.message)}</p>
+<button class="btn sm" style="margin-top:14px" onclick="pvsLoadPerms('${escapeHtml(userId)}')"><i class="ti ti-refresh"></i>Qayta urinish</button>
+</div>`;
+  }
+}
+
+// scope='all' bo'lsa hamma kassa ko'rinadi — amaliyot ham hammasidan tanlanadi
+function pvsViewableIds(){
+  const p = pvsState.perms;
+  if (!p) return [];
+  if (p.kassa_scope === 'all') return pvsState.kassalar.map(k => k.id);
+  return p.view_kassa_ids;
+}
+
+// Kassaning BOLA-HISOBI ro'yxatda alohida kassa bo'lib ko'rinmasligi kerak:
+// bitta "Abrorxo'ja" o'rniga naqd / Click / Payme / USD qatorlari chiqib ketardi va
+// admin qaysi birini belgilashni bilmasdi. Ruxsat baribir ILDIZ kassaga beriladi —
+// serverdagi kassa_root()/perm_op_key() bola-hisobni parentga bog'laydi, ya'ni
+// parentga berilgan ruxsat uning hamma bolasini qamraydi.
+// ⚠️ parent_id UCH ma'noli: hodim kassasining parenti 5400 (konteyner guruh) —
+//    u bola-hisob EMAS. Shuning uchun shart faqat pul_turi/currency bo'yicha,
+//    parent_id bor-yo'qligi bo'yicha emas (aks holda hamma hodim kassasi yo'qolardi).
+// ⚠️ CHIDAMLILIK: n8n 'Get Kassalar' so'rovi hozircha pul_turi/parent_id qaytarmaydi.
+//    Maydon kelmasa hech narsa filtrlanmaydi — sahifa avvalgidek ishlayveradi.
+function pvsIsSubKassa(k){
+  if (!k || !k.parent_id) return false;
+  if (k.pul_turi) return true;                                    // naqd / click / payme (UZS)
+  return (k.currency || 'UZS').toString().toUpperCase() !== 'UZS'; // USD / CNY / ...
+}
+
+// Ko'rsatish uchun kassa ro'yxati — faqat ildiz kassalar.
+// DIQQAT: pvsState.kassalar TO'LIQ qoladi (filtrlanmaydi). Filial guruhlash
+// (pvsFilialGroups) va saqlash payloadi (pvsViewableIds) bola id'lariga tayanadi —
+// ular ataylab tegilmagan, filial_ids/op_kassa_ids kontrakti o'zgarmaydi.
+function pvsKassaRoyxat(){
+  return pvsState.kassalar.filter(k => !pvsIsSubKassa(k));
+}
+
+function pvsGroupKassalar(list){
+  const groups = {};
+  list.forEach(k => {
+    const t = (k.kassa_turi || '').toString().toLowerCase();
+    const key = PVS_TURI.some(g => g.key === t && t !== 'boshqa') ? t : 'boshqa';
+    (groups[key] = groups[key] || []).push(k);
+  });
+  return groups;
+}
+
+function pvsKassaCk(k, checked, disabled, onclick){
+  const sub = k.subtitle ? `<span class="pvs-ksub">${escapeHtml(k.subtitle)}</span>` : '';
+  const title = escapeHtml([k.code, k.name, k.subtitle].filter(Boolean).join(' · '));
+  return `
+<div class="pvs-ck ${checked?'on':''} ${disabled?'dis':''}" title="${title}" ${disabled?'':`onclick="${onclick}"`}>
+<span class="pvs-box"><i class="ti ti-check"></i></span>
+<span class="pvs-ktxt"><span class="pvs-kname">${escapeHtml(k.name || k.code || '—')}</span>${sub}</span>
+</div>`;
+}
+
+// mode: 'view' | 'op'
+function pvsKassaBlock(mode){
+  const p = pvsState.perms;
+  // Ro'yxatda faqat ildiz kassalar — bola-hisoblar (naqd/Click/Payme, USD) yashirin
+  const source = mode === 'op'
+    ? pvsKassaRoyxat().filter(k => pvsViewableIds().includes(k.id))
+    : pvsKassaRoyxat();
+  if (!source.length){
+    return `<div class="empty" style="padding:20px 12px"><i class="ti ti-wallet-off"></i><p>${mode==='op'?'Avval ko\'rish kassalarini tanlang':'Kassa ro\'yxati bo\'sh'}</p></div>`;
+  }
+  const selected = mode === 'op' ? p.op_kassa_ids : p.view_kassa_ids;
+  const disabled = mode === 'view' && p.kassa_scope === 'all';
+  const groups = pvsGroupKassalar(source);
+  return PVS_TURI.filter(g => groups[g.key]?.length).map(g => `
+<div class="pvs-grp">
+<div class="pvs-grp-lbl">${escapeHtml(g.label)} · ${groups[g.key].length}</div>
+<div class="pvs-grid wide">
+${groups[g.key].map(k => pvsKassaCk(
+    k,
+    selected.includes(k.id),
+    disabled,
+    `pvsToggleKassa('${mode}','${escapeHtml(k.id)}')`
+  )).join('')}
+</div>
+</div>`).join('');
+}
+
+// FILIALLAR — yangi endpoint kerak emas: kassalar ro'yxatidan kassa_turi='filial'
+// (5201–5231) filtrlanadi. Bu op_kassa'dan alohida — faqat xarajat metadata'si.
+function pvsFilialList(){
+  return pvsState.kassalar.filter(k => (k.kassa_turi || '').toString().toLowerCase() === 'filial');
+}
+
+// Accounts'da bitta filial to'lov turiga qarab bir necha kassaga bo'lingan
+// ("Izza Showroom Naqd", "Izza Showroom Click" ...). Hodim esa FILIALNI
+// tanlaydi — to'lov turini emas. Shuning uchun ro'yxat filial nomi bo'yicha
+// guruhlanadi: bitta filial = bitta checkbox, ichida o'sha filialning hamma
+// kassa id'lari (filial_ids'ga hammasi yoziladi — hodim qaysi kassa orqali
+// yozilganidan qat'i nazar filial ruxsatiga tushadi).
+const PVS_TOLOV = [
+  'naqd','nal','naqt','click','payme','uzum','humo','uzcard','visa','mastercard',
+  'karta','plastik','plastic','terminal','bank','beznal','p2p','transfer',
+  'kredit','muddatli','bolib','tolash','apelsin','anor','paynet','oson'
+];
+
+function pvsNormTxt(s){
+  return (s || '').toString().toLowerCase()
+    .replace(/[’'`ʼ]/g, '')
+    .replace(/[^0-9a-zа-яё]+/gi, ' ')
+    .trim().replace(/\s+/g, ' ');
+}
+
+// Nom oxiridagi to'lov turi so'zlarini kesib tashlaydi (asl yozuvni saqlagan holda)
+function pvsFilialLabel(k){
+  let s = (k.name || k.code || '').toString().trim();
+  for (;;){
+    const m = s.match(/[\s·\-–—/|,()]*([^\s·\-–—/|,()]+)[\s)]*$/);
+    if (!m || !m.index || !PVS_TOLOV.includes(pvsNormTxt(m[1]))) break;
+    s = s.slice(0, m.index).trim();
+  }
+  return s || (k.name || k.code || '—');
+}
+
+function pvsFilialGroups(){
+  const map = new Map();
+  pvsFilialList().forEach(k => {
+    const label = pvsFilialLabel(k);
+    const key = pvsNormTxt(label) || pvsNormTxt(k.code || k.id);
+    let g = map.get(key);
+    if (!g){ g = { key, label, ids: [], turlar: [] }; map.set(key, g); }
+    g.ids.push(k.id);
+    // "Izza Showroom Click" → "Click"; nomda bo'lmasa subtitle'dan
+    const tail = (k.name || '').toString().trim().slice(label.length)
+      .replace(/^[\s·\-–—/|,()]+/, '').replace(/[\s)]+$/, '');
+    const turi = tail || (k.subtitle || '').toString().trim();
+    if (turi && !g.turlar.includes(turi)) g.turlar.push(turi);
+  });
+  return [...map.values()];
+}
+
+function pvsFilialBlock(){
+  const p = pvsState.perms;
+  if (p.filial_scope !== 'list') return '';
+  const groups = pvsFilialGroups();
+  if (!groups.length) return '<div class="pvs-hint">Filial kassalari topilmadi (kassa_turi=\'filial\').</div>';
+  return `
+<div class="pvs-grid wide">
+${groups.map(g => pvsKassaCk(
+    { name: g.label, subtitle: g.ids.length > 1 ? `${g.ids.length} kassa${g.turlar.length ? ' · ' + g.turlar.join(', ') : ''}` : '' },
+    g.ids.some(id => p.filial_ids.includes(id)),
+    false,
+    `pvsToggleFilial('${escapeHtml(g.key)}')`
+  )).join('')}
+</div>`;
+}
+
+// Nechta FILIAL tanlangan (kassa soni emas — bitta filial bir necha kassa bo'lishi mumkin)
+function pvsFilialCount(){
+  const ids = pvsState.perms.filial_ids;
+  return pvsFilialGroups().filter(g => g.ids.some(id => ids.includes(id))).length;
+}
+
+function pvsRenderDetail(){
+  const box = document.getElementById('pvs-detail');
+  if (!box) return;
+  const user = pvsState.users.find(u => u.id === pvsState.selectedId);
+  if (!user || !pvsState.perms){
+    box.innerHTML = `<div class="empty"><i class="ti ti-user-search"></i><p>Chapdan user tanlang</p></div>`;
+    return;
+  }
+  const p = pvsState.perms;
+  // Bo'sh ro'yxat = HECH QAYSI sahifa ochiq emas (cheklovsiz emas!)
+  const noPages = p.allowed_pages.length === 0;
+  const opCount = p.op_kassa_ids.length;
+  // Hint uchun — ro'yxatda KO'RINADIGAN (ildiz) kassalar soni. Saqlashdagi
+  // pvsViewableIds() tegilmagan: u bola id'larini ham o'z ichiga oladi.
+  const viewable = pvsKassaRoyxat().filter(k => pvsViewableIds().includes(k.id));
+  const filialCount = pvsFilialCount();
+
+  box.innerHTML = `
+<div class="pvs-head">
+<div>
+<h3>${escapeHtml(pvsUserTitle(user))}</h3>
+${pvsUserSub(user) ? `<p style="color:var(--text-3);font-size:11.5px;margin:2px 0 0">${escapeHtml(pvsUserSub(user))}</p>` : ''}
+<p>${escapeHtml(user.role || '—')} · ${noPages ? 'sahifa yo\'q' : p.allowed_pages.length + ' sahifa'} · ${p.kassa_scope==='all' ? 'hamma kassa' : p.view_kassa_ids.length + ' kassa ko\'radi'} · ${opCount} amaliyot · ${p.filial_scope==='all' ? 'hamma filial' : filialCount + ' filial'}</p>
+</div>
+<button class="btn primary sm" id="pvs-save" onclick="pvsSave()"><i class="ti ti-check"></i>Saqlash</button>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h"><span class="pvs-blk-lbl">Ism-familiya</span></div>
+<input type="text" class="input" id="pvs-fullname" style="max-width:320px"
+       value="${escapeHtml(pvsState.fullName || '')}"
+       placeholder="${escapeHtml((user.email || '').trim() || 'Ism Familiya')}"
+       oninput="pvsFullNameInput(this.value)">
+<div class="pvs-hint">Provodka'da (jurnal, kassa, konvert, hisobot) gmail o'rniga shu ism ko'rinadi. Bo'sh qoldirilsa — gmail ko'rinadi. Ruxsat bilan birga, "Saqlash" tugmasida saqlanadi.</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h">
+<span class="pvs-blk-lbl">Sahifalar</span>
+<div class="pvs-acts">
+<button class="btn sm ghost" onclick="pvsAllPages(true)">Hammasi</button>
+<button class="btn sm ghost" onclick="pvsAllPages(false)" title="Ro'yxatni bo'shatish = hech qaysi sahifa ochiq emas">Tozalash</button>
+</div>
+</div>
+<div class="pvs-grid">
+${PVS_PAGES.map(pg => pvsKassaCk(
+    { name: pg.label },
+    p.allowed_pages.includes(pg.key),
+    false,
+    `pvsTogglePage('${pg.key}')`
+  )).join('')}
+</div>
+<div class="pvs-hint">${noPages
+    ? '<i class="ti ti-alert-triangle" style="color:var(--warn-text,#e0a800)"></i> Hech qaysi sahifa belgilanmagan = <b>userga hech qaysi sahifa ochiq emas</b>. Kirish uchun kamida bitta sahifa tanlang.'
+    : 'Faqat belgilangan sahifalar ochiq. Hammasini olib tashlasangiz — user hech qaysi sahifaga kira olmaydi.'}${pvsPagesLive
+    ? ''
+    : '<br><i class="ti ti-alert-triangle" style="color:var(--warn-text,#e0a800)"></i> Ro\'yxat <b>zaxiradan</b> olindi (aros-provodka-pages javob bermadi) — Provodka\'ga yangi qo\'shilgan sahifa bu yerda ko\'rinmasligi mumkin.'}</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h"><span class="pvs-blk-lbl">Ko'rish kassalari</span></div>
+<div class="pvs-radios">
+<div class="pvs-radio ${p.kassa_scope==='all'?'on':''}" onclick="pvsSetScope('all')"><span class="pvs-dot"></span>Barcha kassalar</div>
+<div class="pvs-radio ${p.kassa_scope==='list'?'on':''}" onclick="pvsSetScope('list')"><span class="pvs-dot"></span>Faqat tanlanganlar${p.kassa_scope==='list'?` · ${p.view_kassa_ids.length}`:''}</div>
+</div>
+${pvsKassaBlock('view')}
+<div class="pvs-hint">Ro'yxatda faqat asosiy kassalar. Bola-hisoblar (naqd / Click / Payme, USD va boshqa valyutalar) alohida ko'rsatilmaydi — ruxsat kassaning o'ziga beriladi va bolalarini ham qamraydi.${p.kassa_scope==='all' ? ' Barcha kassalar rejimida ro\'yxat o\'chirilgan — user hamma kassani ko\'radi.' : ''}</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h">
+<span class="pvs-blk-lbl">Amaliyot kassalari · ${opCount}</span>
+<div class="pvs-acts">
+<button class="btn sm ghost" onclick="pvsAllOps(true)">Hammasi</button>
+<button class="btn sm ghost" onclick="pvsAllOps(false)">Tozalash</button>
+</div>
+</div>
+${pvsKassaBlock('op')}
+<div class="pvs-hint">Transfer / kirim / chiqim shu kassalar bilan qilinadi. Faqat ko'rish ro'yxatidagi ${viewable.length} kassadan tanlanadi — ko'rishdan olib tashlansa, bu yerdan ham avtomatik o'chadi.</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h">
+<span class="pvs-blk-lbl">Filiallar</span>
+${p.filial_scope==='list' ? `<div class="pvs-acts">
+<button class="btn sm ghost" onclick="pvsAllFilials(true)">Hammasi</button>
+<button class="btn sm ghost" onclick="pvsAllFilials(false)">Tozalash</button>
+</div>` : ''}
+</div>
+<div class="pvs-radios">
+<div class="pvs-radio ${p.filial_scope==='all'?'on':''}" onclick="pvsSetFilialScope('all')"><span class="pvs-dot"></span>Barcha filiallar</div>
+<div class="pvs-radio ${p.filial_scope==='list'?'on':''}" onclick="pvsSetFilialScope('list')"><span class="pvs-dot"></span>Faqat tanlanganlar${p.filial_scope==='list'?` · ${filialCount}`:''}</div>
+</div>
+${pvsFilialBlock()}
+<div class="pvs-hint">Xarajatga qaysi filial(lar) biriktirilishi mumkinligini belgilaydi (metadata — pul harakati emas). ${p.filial_scope==='all' ? 'Barcha filiallar rejimida — user hamma filialni tanlay oladi.' : 'Faqat belgilangan filiallar hodim.html multiselect\'ida ko\'rinadi.'} Bitta filial = bitta qator: to\'lov turiga bo\'lingan kassalar (naqd/click/terminal) birga belgilanadi.</div>
+</div>
+
+<div class="pvs-blk">
+<div class="pvs-blk-h"><span class="pvs-blk-lbl">Konvert</span></div>
+<div class="perm-row" style="border-bottom:none;padding-top:0">
+<span class="toggle ${p.can_convert?'on':''}" onclick="pvsToggleConvert()"><span class="toggle-knob"></span></span>
+<div class="perm-name">Valyuta konvert qilish<div class="perm-desc">O'chirilsa — konvert tugmasi yashirinadi va server rad etadi</div></div>
+</div>
+</div>
+`;
+}
+
+// Ism-familiya inputi — ATAYLAB pvsRenderDetail() chaqirmaydi: har harfda
+// qayta chizilsa input fokusni yo'qotadi. Qiymat holatda turadi, saqlashda ketadi.
+function pvsFullNameInput(v){
+  pvsState.fullName = (v || '').toString();
+}
+
+function pvsTogglePage(key){
+  const a = pvsState.perms.allowed_pages;
+  const i = a.indexOf(key);
+  if (i >= 0) a.splice(i, 1); else a.push(key);
+  pvsRenderDetail();
+}
+
+// on=true  → PVS_PAGES dagi hamma sahifani ochiq deb belgilaydi
+// on=false → ro'yxatni bo'shatadi (bo'sh = HECH QAYSI sahifa ochiq emas)
+function pvsAllPages(on){
+  pvsState.perms.allowed_pages = on ? PVS_PAGES.map(pg => pg.key) : [];
+  pvsRenderDetail();
+}
+
+function pvsSetScope(scope){
+  const p = pvsState.perms;
+  p.kassa_scope = scope;
+  if (scope === 'all'){
+    p.view_kassa_ids = [];
+  } else {
+    // 'all' dan qaytganda op ro'yxati bo'sh view bilan mos kelishi uchun tozalanadi
+    p.op_kassa_ids = p.op_kassa_ids.filter(id => p.view_kassa_ids.includes(id));
+  }
+  pvsRenderDetail();
+}
+
+function pvsToggleKassa(mode, id){
+  const p = pvsState.perms;
+  if (mode === 'view'){
+    if (p.kassa_scope !== 'list') return;
+    const i = p.view_kassa_ids.indexOf(id);
+    if (i >= 0){
+      p.view_kassa_ids.splice(i, 1);
+      // view'dan chiqsa — op'dan ham avtomatik o'chadi
+      p.op_kassa_ids = p.op_kassa_ids.filter(x => x !== id);
+    } else {
+      p.view_kassa_ids.push(id);
+    }
+  } else {
+    if (!pvsViewableIds().includes(id)) return;
+    const i = p.op_kassa_ids.indexOf(id);
+    if (i >= 0) p.op_kassa_ids.splice(i, 1); else p.op_kassa_ids.push(id);
+  }
+  pvsRenderDetail();
+}
+
+function pvsAllOps(on){
+  pvsState.perms.op_kassa_ids = on ? pvsViewableIds().slice() : [];
+  pvsRenderDetail();
+}
+
+function pvsSetFilialScope(scope){
+  pvsState.perms.filial_scope = scope;
+  if (scope === 'all') pvsState.perms.filial_ids = [];
+  pvsRenderDetail();
+}
+
+// key — filial guruhi (pvsFilialGroups().key), bitta filialning hamma kassasi birga
+function pvsToggleFilial(key){
+  const p = pvsState.perms;
+  if (p.filial_scope !== 'list') return;
+  const g = pvsFilialGroups().find(x => x.key === key);
+  if (!g) return;
+  if (g.ids.some(id => p.filial_ids.includes(id))){
+    p.filial_ids = p.filial_ids.filter(id => !g.ids.includes(id));
+  } else {
+    g.ids.forEach(id => { if (!p.filial_ids.includes(id)) p.filial_ids.push(id); });
+  }
+  pvsRenderDetail();
+}
+
+function pvsAllFilials(on){
+  pvsState.perms.filial_ids = on ? pvsFilialList().map(k => k.id) : [];
+  pvsRenderDetail();
+}
+
+function pvsToggleConvert(){
+  pvsState.perms.can_convert = !pvsState.perms.can_convert;
+  pvsRenderDetail();
+}
+
+async function pvsSave(){
+  const p = pvsState.perms;
+  if (!p || pvsState.saving) return;
+  const btn = document.getElementById('pvs-save');
+  // op ⊆ view kafolati (server ham majburlaydi, lekin yubormaymiz ham)
+  const viewable = pvsViewableIds();
+  const payload = {
+    user_id:        p.user_id,
+    allowed_pages:  p.allowed_pages.slice(),
+    kassa_scope:    p.kassa_scope,
+    view_kassa_ids: p.kassa_scope === 'list' ? p.view_kassa_ids.slice() : [],
+    // kassa_scope='all' da server (admin_set_provodka_perms) view va op ro'yxatlarini
+    // baribir bo'shatadi: `if v_scope = 'all' then v_view := '{}'; v_op := '{}'`.
+    // Ya'ni 259 ta UUID yuborish natijaga TA'SIR QILMAYDI, faqat URL'ni ~12 KB ga
+    // shishirib nginx'dan 414 oldirardi ("hamma access" berilganda aynan shu bo'lardi).
+    op_kassa_ids:   p.kassa_scope === 'list'
+                      ? p.op_kassa_ids.filter(id => viewable.includes(id))
+                      : [],
+    filial_scope:   p.filial_scope,
+    filial_ids:     p.filial_scope === 'list' ? p.filial_ids.slice() : [],
+    can_convert:    !!p.can_convert
+  };
+  // Ism-familiya — mavjud payloadga qo'shimcha maydon (yangi webhook YO'Q).
+  // admin_set_provodka_perms uni ixtiyoriy o'qiydi: bo'sh matn -> null (gmailga qaytadi).
+  // Endpoint full_name'ni qaytarmagan va admin ham yozmagan bo'lsa — kalitni
+  // umuman yubormaymiz (mavjud ismni tasodifan o'chirmaslik uchun).
+  const fname = (pvsState.fullName || '').trim();
+  if (pvsState.fullNameKnown || fname) payload.full_name = fname;
+  pvsState.saving = true;
+  if (btn){ btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:13px;height:13px;margin:0;border-width:1.5px"></div>Saqlanmoqda'; }
+  try {
+    // data — JSON matn. api() ichidagi URLSearchParams uni encodeURIComponent
+    // bilan bir xil kodlaydi; qo'lda yana kodlasak ikki marta bo'lib ketadi ('%' → '%25').
+    const r = await api('aros-provodka-perms-save', { uid: UID, data: JSON.stringify(payload) });
+    if (!r.ok) throw new Error(r.error || 'Saqlanmadi');
+    pvsState.perms = pvsNormPerms(payload, p.user_id);
+    // Chapdagi ro'yxat ham darrov yangi ismni ko'rsatsin
+    if ('full_name' in payload){
+      const u = pvsState.users.find(x => x.id === p.user_id);
+      if (u){ u.full_name = payload.full_name || null; pvsState.fullNameKnown = true; }
+      pvsRenderUsers();
+    }
+    // Bo'sh allowed_pages = hech qanday ruxsat yo'q (Provodka tomonda ham shunday
+    // talqin qilinishi kerak — my_perms/nav guard'da bo'sh ro'yxat 'hammasi' emas)
+    toast(payload.allowed_pages.length ? 'Ruxsatlar saqlandi' : 'Saqlandi — bu userga hech qaysi sahifa ochiq emas');
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+  } finally {
+    pvsState.saving = false;
+    pvsRenderDetail();
+  }
+}
+
+// =========================================================
+// SCREEN: SOTUVCHI & MIJOZ (Seller ↔ Client management)
+// Bizdagi workerlar va ularning clientlari. Ulanmagan mijozlarni worker'ga biriktirish.
+// =========================================================
+let scmState = {
+  warehouseFilter: '',
+  workers: [],
+  warehouses: [],
+  search: '',
+  // Wizard state
+  wizardStep: 1,           // 1=filter, 2=clients, 3=worker
+  wizardRole: 'master',
+  wizardWarehouse: '',
+  wizardPage: 1,
+  wizardPageSize: 20,
+  wizardClients: [],
+  wizardTotalClients: 0,
+  wizardHasNext: false,
+  selectedClients: new Set(),
+  wizardWorkers: [],
+  targetWorker: null,
+  planCount: 5
+};
+
+async function renderSotuvchiMijoz(root){
+  root.innerHTML = topbar('Boshqaruv', 'Sotuvchi & Mijoz', `
+<button class="btn primary" onclick="scmOpenWizard()"><i class="ti ti-user-plus"></i>Ulanmagan mijozlar</button>
+<button class="icon-btn" onclick="renderSotuvchiMijoz(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+`);
+  const content = document.createElement('div');
+  content.innerHTML = `
+<div class="audit-toolbar">
+<select class="select" style="max-width:220px;height:36px" id="scm-wh-filter"><option value="">Filial · hammasi</option></select>
+<input type="text" class="search-box" placeholder="Sotuvchi ismi yoki telefon..." id="scm-search" value="${escapeHtml(scmState.search)}" style="max-width:280px">
+</div>
+<div id="scm-content"><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  root.appendChild(content);
+
+  document.getElementById('scm-search').addEventListener('input', (e) => {
+    scmState.search = e.target.value;
+    clearTimeout(window._scmSearch);
+    window._scmSearch = setTimeout(renderScmWorkers, 250);
+  });
+
+  await loadScmData();
+}
+
+// Aros API worker-clients faqat sotuvchisi BOR filiallarni qaytaradi (14 ta).
+// To'liq ro'yxat admin-rbac'dagi `filiallar`da — LEKIN u yerda faqat cache_filial'ga
+// ulangan filiallar bor (yangi ochilgan filial, masalan Andijon, tushmay qoladi).
+// Shuning uchun Aros API'ning TO'LIQ ombor ro'yxati (admin-unlinked-warehouses:
+// linked + unlinked) ham qo'shiladi — uch manba birlashtiriladi.
+// MUHIM: SCM endpointlari Aros API bilan gaplashadi → api_warehouse_id ishlatiladi
+// (masalan "43- Do'kon": warehouse_id=100, lekin api_warehouse_id=71).
+function scmMergeWarehouses(apiWarehouses){
+  const map = new Map();
+  (cache.arosWh || []).forEach(w => {
+    const id = String(w.id || '').trim();
+    if (!id) return;
+    map.set(id, { warehouse_id: Number(id), filial: w.name_uz || w.name || ('#'+id), has_workers: false });
+  });
+  ((cache.rbac && cache.rbac.filiallar) || []).forEach(f => {
+    const id = String(f.api_warehouse_id || f.warehouse_id || '').trim();
+    if (!id) return;
+    const prev = map.get(id);
+    map.set(id, { warehouse_id: Number(id), filial: f.filial || (prev && prev.filial) || ('#'+id), has_workers: false });
+  });
+  // Nom ustuvorligi: rbac'dagi ICHKI nom (masalan "Mobil senter zapchast")
+  // Aros API nomidan ("O'rikzor Mobile Sentr") ustun — dashboardning qolgan
+  // ekranlari bilan bir xil ko'rinsin.
+  (apiWarehouses || []).forEach(w => {
+    const id = String(w.warehouse_id || '').trim();
+    if (!id) return;
+    const prev = map.get(id);
+    map.set(id, { warehouse_id: Number(id), filial: (prev && prev.filial) || w.filial || ('#'+id), has_workers: true });
+  });
+  return Array.from(map.values()).sort((a,b) => String(a.filial).localeCompare(String(b.filial)));
+}
+
+// Aros worker-clients faqat mijozi BOR sotuvchini qaytaradi — yangi filialning
+// mijozsiz sotuvchisi (masalan Andijon) umuman chiqmaydi va unga birinchi mijozni
+// biriktirib bo'lmaydi (tuxum-tovuq). admin-scm-all-workers endpointi Aros
+// /users/v2/workers/ dan TO'LIQ ro'yxatni beradi (Salesman/Shop manager/Filial
+// Rahbari) — shu yerdan 0-mijozli sotuvchilar qo'shiladi.
+async function scmLoadAllWorkers(){
+  if (cache.scmAllWorkers) return cache.scmAllWorkers;
+  try {
+    const aw = await api('admin-scm-all-workers', { uid: UID });
+    cache.scmAllWorkers = (aw && aw.workers) || [];
+  } catch(e){ cache.scmAllWorkers = []; }
+  return cache.scmAllWorkers;
+}
+
+// Filial nomini ichki (rbac) nomda ko'rsatish — worker-clients qaytargan Aros
+// nomi o'rniga ("O'rikzor Mobile Sentr" emas, "Mobil senter zapchast").
+function scmWhName(wid, fallback){
+  const f = (scmState.warehouses || []).find(x => String(x.warehouse_id) === String(wid));
+  return (f && f.filial) || fallback || (wid ? '#'+wid : '—');
+}
+
+// list (worker-clients'dan kelgan, har qator = worker+filial) ustiga mijozi
+// yo'q sotuvchilarni qo'shadi. whFilter bo'lsa faqat o'sha filialniki.
+function scmMergeAllWorkers(list, whFilter){
+  const all = cache.scmAllWorkers || [];
+  if (!all.length) return list;
+  const seen = new Set(list.map(w => w.id + '|' + w.warehouse_id));
+  all.forEach(w => {
+    (w.warehouse_ids || []).forEach(wid => {
+      if (whFilter && String(wid) !== String(whFilter)) return;
+      const key = w.id + '|' + wid;
+      if (seen.has(key)) return;
+      seen.add(key);
+      list.push({
+        id: w.id, worker: w.worker,
+        first_name: w.first_name, last_name: w.last_name, username: w.username,
+        role: w.role_name || '', warehouse: scmWhName(wid), warehouse_id: wid,
+        clients_count: 0, cashback_balance: null,
+        is_ordering_enabled: true, clients: []
+      });
+    });
+  });
+  return list;
+}
+
+async function loadScmData(){
+  const wrap = document.getElementById('scm-content');
+  try {
+    if (!cache.rbac) { try { cache.rbac = await api('admin-rbac', { uid: UID }); } catch(e){} }
+    await scmLoadAllWorkers();
+    // To'liq Aros ombor ro'yxati — rbac'ga hali ulanmagan yangi filiallar ham chiqsin
+    if (!cache.arosWh) {
+      try {
+        const aw = await api('admin-unlinked-warehouses', { uid: UID });
+        cache.arosWh = [ ...(aw.linked || []), ...(aw.unlinked || []) ];
+      } catch(e){ cache.arosWh = []; }
+    }
+    const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.warehouseFilter });
+    if (data.error) throw new Error(data.error);
+    scmState.warehouses = scmMergeWarehouses(data.warehouses);
+    scmState.workers = scmMergeAllWorkers(data.workers || [], scmState.warehouseFilter);
+
+    const sel = document.getElementById('scm-wh-filter');
+    if (sel) {
+      const cur = scmState.warehouseFilter;
+      sel.innerHTML = '<option value="">Filial · hammasi</option>' +
+        scmState.warehouses.map(w => `<option value="${w.warehouse_id}" ${cur==String(w.warehouse_id)?'selected':''}>${escapeHtml(w.filial)}</option>`).join('');
+      sel.onchange = (e) => { scmState.warehouseFilter = e.target.value; loadScmData(); };
+    }
+    renderScmWorkers();
+  } catch(e){
+    wrap.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderScmWorkers(){
+  const wrap = document.getElementById('scm-content');
+  if (!wrap) return;
+  const q = (scmState.search||'').toLowerCase().trim();
+  let list = scmState.workers.slice();
+  if (q) {
+    list = list.filter(w =>
+      (`${w.first_name||''} ${w.last_name||''}`).toLowerCase().includes(q) ||
+      String(w.username||'').toLowerCase().includes(q) ||
+      String(w.id||'').includes(q)
+    );
+  }
+  list.sort((a,b) => (Number(b.clients_count)||0) - (Number(a.clients_count)||0));
+
+  const totalClients = list.reduce((s,w) => s + (Number(w.clients_count)||0), 0);
+
+  const kpiHtml = `
+<div class="kpi-row" style="margin-bottom:14px">
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-users"></i>Sotuvchilar</div><div class="kpi-val">${list.length}</div><div class="kpi-delta" style="color:var(--text-3)">${scmState.warehouseFilter ? 'filialda' : 'jami'}</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-check"></i>Ulangan mijozlar</div><div class="kpi-val">${totalClients}</div><div class="kpi-delta" style="color:var(--text-3)">biriktirilgan</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-building"></i>Filiallar</div><div class="kpi-val">${scmState.warehouses.length}</div><div class="kpi-delta" style="color:var(--text-3)">${scmState.warehouses.filter(w=>w.has_workers).length} tasida sotuvchi bor</div></div>
+</div>`;
+
+  if (!list.length) {
+    wrap.innerHTML = kpiHtml + `<div class="empty"><i class="ti ti-user-off"></i><p>Sotuvchi topilmadi</p></div>`;
+    return;
+  }
+
+  wrap.innerHTML = kpiHtml + `
+<div class="table-wrap">
+<div class="table-head" style="grid-template-columns:2fr 1.4fr 150px 120px 40px">
+<div>Sotuvchi</div><div>Filial</div><div>Telefon</div><div>Mijozlar</div><div></div>
+</div>
+${list.map((w,i) => `
+<div class="table-row" style="grid-template-columns:2fr 1.4fr 150px 120px 40px;cursor:pointer" onclick="scmOpenWorker(${w.id})">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<div class="av" style="width:32px;height:32px;font-size:11px">${initials((w.first_name||'')+' '+(w.last_name||''))}</div>
+<div style="min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(((w.first_name||'')+' '+(w.last_name||'')).trim())||escapeHtml(w.worker||'Nomsiz')}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id||''}</div>
+</div>
+</div>
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-size:12.5px">${escapeHtml(scmWhName(w.warehouse_id, w.warehouse))}</div>
+<div style="font-family:var(--mono);font-size:12px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(w.username||'—')}</div>
+<div><span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}">${w.clients_count||0} ta</span></div>
+<div style="display:flex;justify-content:flex-end;color:var(--text-3)"><i class="ti ti-chevron-right"></i></div>
+</div>
+`).join('')}
+</div>
+`;
+}
+
+function scmOpenWorker(workerId){
+  const w = scmState.workers.find(x => x.id === workerId);
+  if (!w) return;
+  const name = `${w.first_name||''} ${w.last_name||''}`.trim() || w.worker || 'Nomsiz';
+  openModal(`
+<div class="modal-h">
+<div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(scmWhName(w.warehouse_id, w.warehouse))} · ${w.clients_count||0} ta mijoz</p></div>
+<div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div style="display:grid;grid-template-columns:120px 1fr;gap:8px;font-size:12.5px">
+<div style="color:var(--text-3)">Sotuvchi ID</div><div><code class="mono">#${w.id||''}</code></div>
+<div style="color:var(--text-3)">To'liq nomi</div><div>${escapeHtml(w.worker||'—')}</div>
+<div style="color:var(--text-3)">Telefon</div><div style="font-family:var(--mono)">${escapeHtml(w.username||'—')}</div>
+<div style="color:var(--text-3)">Filial</div><div>${escapeHtml(scmWhName(w.warehouse_id, w.warehouse))}${w.warehouse_id?` <span style="color:var(--text-3)">#${w.warehouse_id}</span>`:''}</div>
+<div style="color:var(--text-3)">Mijozlar</div><div><span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}">${w.clients_count||0} ta biriktirilgan</span></div>
+</div>
+<div style="background:var(--bg-2);border-radius:var(--radius);padding:10px 12px;font-size:11.5px;color:var(--text-3);line-height:1.5;margin-top:4px">
+<i class="ti ti-info-circle"></i> Ushbu sotuvchiga yangi mijoz biriktirish uchun yuqoridagi <b>"Ulanmagan mijozlar"</b> tugmasidan foydalaning.
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="closeModal()">Yopish</button>
+</div>
+`);
+}
+
+// -------- WIZARD: Ulanmagan mijozlarni workerga biriktirish --------
+function scmOpenWizard(){
+  if (!scmState.warehouses.length) {
+    toast('Avval sahifa yuklanishini kutib turing', 'err');
+    return;
+  }
+  scmState.wizardStep = 1;
+  scmState.wizardRole = 'master';
+  scmState.wizardWarehouse = scmState.warehouseFilter || '';
+  scmState.wizardPage = 1;
+  scmState.wizardClients = [];
+  scmState.wizardTotalClients = 0;
+  scmState.selectedClients = new Set();
+  scmState.wizardWorkers = [];
+  scmState.targetWorker = null;
+  scmState.planCount = 5;
+  scmRenderWizard();
+}
+
+function scmRenderWizard(){
+  if (scmState.wizardStep === 1) scmRenderWizardStep1();
+  else if (scmState.wizardStep === 2) scmRenderWizardStep2();
+  else if (scmState.wizardStep === 3) scmRenderWizardStep3();
+}
+
+function scmCloseWizard(){
+  closeModal();
+  document.getElementById('modal-content').style.maxWidth = '';
+}
+
+function scmRenderWizardStep1(){
+  document.getElementById('modal-content').style.maxWidth = '';
+  openModal(`
+<div class="modal-h">
+<div><h3>Ulanmagan mijozlar</h3><p>1/3 · Filial va rol tanlang</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+<div class="ff"><label>Filial *</label>
+<select class="select" id="wiz-wh">
+<option value="">— tanlang —</option>
+${scmState.warehouses.map(w => `<option value="${w.warehouse_id}" ${String(w.warehouse_id)===String(scmState.wizardWarehouse)?'selected':''}>${escapeHtml(w.filial)}${w.has_workers===false?" · sotuvchi yo'q":''}</option>`).join('')}
+</select>
+</div>
+<div class="ff"><label>Rol *</label>
+<div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--bg-2);border-radius:var(--radius)">
+${[
+  {v:'master', l:'Master', d:'Deadline 1 kun'},
+  {v:'business_partner', l:'Business Partner', d:'Deadline 7+ kun'},
+  {v:'customer', l:'Customer', d:'Oddiy mijoz'}
+].map(r => `
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border-radius:var(--radius);background:${scmState.wizardRole===r.v?'var(--bg)':'transparent'};border:0.5px solid ${scmState.wizardRole===r.v?'var(--info-line)':'transparent'}">
+<input type="radio" name="wiz-role" value="${r.v}" ${scmState.wizardRole===r.v?'checked':''} onchange="scmState.wizardRole=this.value;scmRenderWizardStep1()">
+<div style="flex:1"><div style="font-weight:500">${r.l}</div><div style="font-size:11px;color:var(--text-3);margin-top:1px">${r.d}</div></div>
+</label>`).join('')}
+</div>
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmCloseWizard()">Bekor</button>
+<button class="btn primary" onclick="scmWizardStep1Next()"><i class="ti ti-arrow-right"></i>Ko'rsatish</button>
+</div>
+`);
+}
+
+async function scmWizardStep1Next(){
+  const wh = document.getElementById('wiz-wh').value;
+  if (!wh) { toast('Filial tanlang', 'err'); return; }
+  scmState.wizardWarehouse = wh;
+  scmState.wizardPage = 1;
+  scmState.selectedClients = new Set();
+  scmState.wizardStep = 2;
+  await scmLoadUnassigned();
+}
+
+async function scmLoadUnassigned(){
+  document.getElementById('modal-content').style.maxWidth = '680px';
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Ulanmagan mijozlar</h3><p>2/3 · Yuklanmoqda...</p></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  try {
+    const data = await api('admin-scm-unassigned', {
+      uid: UID,
+      role: scmState.wizardRole,
+      warehouse_id: scmState.wizardWarehouse,
+      page: scmState.wizardPage,
+      page_size: scmState.wizardPageSize
+    });
+    if (data.error) throw new Error(data.error);
+    scmState.wizardClients = data.results || [];
+    scmState.wizardTotalClients = data.count || 0;
+    scmState.wizardHasNext = !!data.next;
+    scmRenderWizardStep2();
+  } catch(e){
+    document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Xato</h3></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p></div></div>
+<div class="modal-foot"><button class="btn" onclick="scmState.wizardStep=1;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button></div>
+`;
+  }
+}
+
+function scmRenderWizardStep2(){
+  const list = scmState.wizardClients;
+  const whName = (scmState.warehouses.find(w => String(w.warehouse_id)===String(scmState.wizardWarehouse)) || {}).filial || '';
+  const roleLabels = {master:'Master', business_partner:'Business Partner', customer:'Customer'};
+  const totalPages = Math.max(1, Math.ceil(scmState.wizardTotalClients / scmState.wizardPageSize));
+  const allSelected = list.length > 0 && list.every(c => scmState.selectedClients.has(c.id));
+
+  document.getElementById('modal-content').style.maxWidth = '680px';
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h">
+<div><h3>Ulanmagan mijozlar</h3><p>2/3 · ${escapeHtml(whName)} · ${roleLabels[scmState.wizardRole]||scmState.wizardRole} · ${scmState.wizardTotalClients} ta jami</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${list.length === 0 ? `<div class="empty"><i class="ti ti-users-off"></i><p>Ushbu filial va rol uchun ulanmagan mijoz yo'q</p></div>` : `
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-2);border-radius:var(--radius)">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500">
+<input type="checkbox" ${allSelected?'checked':''} onchange="scmToggleSelectAll(this.checked)" style="width:16px;height:16px">
+<span>Hammasini tanlash (${list.length} ta)</span>
+</label>
+<span style="font-size:13px;color:var(--info-text);font-weight:600">${scmState.selectedClients.size} ta tanlangan</span>
+</div>
+<div style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:2px">
+${list.map(c => {
+  const sel = scmState.selectedClients.has(c.id);
+  const name = `${c.first_name||''} ${c.last_name||''}`.trim() || 'Nomsiz';
+  return `
+<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${sel?'var(--info-bg)':'var(--bg)'};border:0.5px solid ${sel?'var(--info-line)':'var(--border)'};border-radius:var(--radius-lg);cursor:pointer;transition:all 0.12s">
+<input type="checkbox" ${sel?'checked':''} onchange="scmToggleClient(${c.id})" style="width:16px;height:16px;flex-shrink:0">
+<div class="av" style="width:32px;height:32px;font-size:11px;background:var(--bg-2);color:var(--text-2);flex-shrink:0">${initials(name)}</div>
+<div style="flex:1;min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(name)}</div>
+<div style="font-size:11px;color:var(--text-3);display:flex;gap:8px;flex-wrap:wrap"><span>#${c.id}</span><span style="font-family:var(--mono)">${escapeHtml(c.username||'')}</span></div>
+</div>
+<div style="text-align:right;flex-shrink:0">
+<div style="font-size:12px;font-weight:500;font-variant-numeric:tabular-nums">${fmt(c.cashback_balance||0)}</div>
+<div style="font-size:10px;color:var(--text-3)">cashback</div>
+</div>
+</label>`;
+}).join('')}
+</div>
+${totalPages > 1 ? `
+<div style="display:flex;justify-content:center;align-items:center;gap:10px;padding:10px 0">
+<button class="btn sm" ${scmState.wizardPage<=1?'disabled':''} onclick="scmWizardChangePage(${scmState.wizardPage-1})"><i class="ti ti-chevron-left"></i>Oldingi</button>
+<span style="font-size:12px;color:var(--text-2)">Sahifa <b>${scmState.wizardPage}</b> / ${totalPages}</span>
+<button class="btn sm" ${!scmState.wizardHasNext?'disabled':''} onclick="scmWizardChangePage(${scmState.wizardPage+1})">Keyingi<i class="ti ti-chevron-right"></i></button>
+</div>` : ''}
+`}
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmState.wizardStep=1;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button>
+<button class="btn primary" ${scmState.selectedClients.size===0?'disabled':''} onclick="scmWizardStep2Next()"><i class="ti ti-arrow-right"></i>${scmState.selectedClients.size} ta biriktirish</button>
+</div>
+`;
+}
+
+function scmToggleSelectAll(checked){
+  scmState.wizardClients.forEach(c => {
+    if (checked) scmState.selectedClients.add(c.id);
+    else scmState.selectedClients.delete(c.id);
+  });
+  scmRenderWizardStep2();
+}
+
+function scmToggleClient(id){
+  if (scmState.selectedClients.has(id)) scmState.selectedClients.delete(id);
+  else scmState.selectedClients.add(id);
+  scmRenderWizardStep2();
+}
+
+async function scmWizardChangePage(p){
+  if (p < 1) return;
+  scmState.wizardPage = p;
+  await scmLoadUnassigned();
+}
+
+async function scmWizardStep2Next(){
+  if (scmState.selectedClients.size === 0) { toast('Kamida bitta mijoz tanlang', 'err'); return; }
+  scmState.wizardStep = 3;
+  await scmLoadWorkersForAssign();
+}
+
+async function scmLoadWorkersForAssign(){
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Sotuvchi tanlash</h3><p>3/3 · Yuklanmoqda...</p></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px"></div></div>
+`;
+  try {
+    const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.wizardWarehouse });
+    if (data.error) throw new Error(data.error);
+    await scmLoadAllWorkers();
+    scmState.wizardWorkers = scmMergeAllWorkers(data.workers || [], scmState.wizardWarehouse);
+    scmState.targetWorker = null;
+    scmRenderWizardStep3();
+  } catch(e){
+    document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Xato</h3></div><div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div></div>
+<div class="modal-body"><div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(e.message)}</p></div></div>
+<div class="modal-foot"><button class="btn" onclick="scmState.wizardStep=2;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button></div>
+`;
+  }
+}
+
+function scmRenderWizardStep3(){
+  const whName = (scmState.warehouses.find(w => String(w.warehouse_id)===String(scmState.wizardWarehouse)) || {}).filial || '';
+  const workers = scmState.wizardWorkers;
+  document.getElementById('modal-content').style.maxWidth = '680px';
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h">
+<div><h3>Sotuvchi tanlash</h3><p>3/3 · ${escapeHtml(whName)} · ${scmState.selectedClients.size} ta mijoz biriktirilyapti</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${workers.length === 0 ? `<div class="empty"><i class="ti ti-user-off"></i><p>Ushbu filialda sotuvchi yo'q</p></div>` : `
+<div class="ff"><label>Plan (oyiga har mijoz uchun buyurtma soni)</label>
+<input type="number" class="input" id="wiz-plan" value="${scmState.planCount}" min="1" onchange="scmState.planCount=parseInt(this.value)||5">
+<div style="font-size:11px;color:var(--text-3);margin-top:3px">Barcha tanlangan mijozlarga bir xil qiymat qo'yiladi</div>
+</div>
+<div class="ff"><label>Sotuvchi * (${workers.length} ta)</label>
+<div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;padding:2px">
+${workers.map(w => {
+  const sel = scmState.targetWorker === w.id;
+  const name = `${w.first_name||''} ${w.last_name||''}`.trim() || 'Nomsiz';
+  return `
+<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${sel?'var(--info-bg)':'var(--bg)'};border:0.5px solid ${sel?'var(--info-line)':'var(--border)'};border-radius:var(--radius-lg);cursor:pointer;transition:all 0.12s">
+<input type="radio" name="wiz-worker" value="${w.id}" ${sel?'checked':''} onchange="scmState.targetWorker=${w.id};scmRenderWizardStep3()" style="flex-shrink:0">
+<div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${initials(name)}</div>
+<div style="flex:1;min-width:0">
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(name)}</div>
+<div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id} · ${escapeHtml(w.username||'')}</div>
+</div>
+<span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}" style="flex-shrink:0">${w.clients_count||0} mijoz</span>
+</label>`;
+}).join('')}
+</div>
+</div>
+`}
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmState.wizardStep=2;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button>
+<button class="btn primary" ${!scmState.targetWorker?'disabled':''} onclick="scmWizardSubmit()"><i class="ti ti-check"></i>Biriktirish</button>
+</div>
+`;
+}
+
+// admin-scm-assign GET orqali ketadi va butun payload URL'ga sig'adi.
+// nginx URI limiti ~8 KB: bitta mijoz ≈ 115 belgi (encode'dan keyin), ya'ni
+// ~70 tadan ko'p mijozda server 414 qaytaradi. 414'da CORS header bo'lmagani
+// uchun brauzer buni "Failed to fetch" deb ko'rsatadi. Shu sababli
+// bo'laklab (batch) yuboramiz.
+//
+// Bo'laklash xavfsiz: Aros API'ning POST /worker-clients/ mijozlarni sotuvchining
+// mavjud ro'yxati USTIGA QO'SHADI (append), almashtirmaydi. Jonli tekshirilgan
+// (2026-08-22): worker 48 → 1 dan 2 ta mijozga o'tdi, eski bog'lanish saqlanib
+// qoldi, javob {"created":1}. Ya'ni har bir bo'lak avvalgisini o'chirmaydi.
+const SCM_ASSIGN_BATCH = 40;
+
+// Aros API xato qaytarsa n8n workflow'i Respond node'gacha yetmay yiqiladi va
+// 200 + bo'sh tana beradi — brauzer buni "CORS error" deb ko'rsatadi (javobda
+// sahifa origin'iga mos ACAO header bo'lmaydi). Bitta yaroqsiz mijoz butun
+// bo'lakni yiqitadi, shuning uchun bo'lak yiqilsa bittalab qayta urinamiz:
+// yaroqlilari baribir ulanadi, yaroqsizi esa nomi bilan ko'rsatiladi.
+
+// DRF xato obyektini ({clients:{non_field_errors:["..."]}}) o'qiladigan matnga aylantiradi
+function scmErrText(v){
+  const out = [];
+  (function walk(x){
+    if (x == null) return;
+    if (typeof x === 'string') { out.push(x); return; }
+    if (Array.isArray(x)) { x.forEach(walk); return; }
+    if (typeof x === 'object') { Object.values(x).forEach(walk); return; }
+    out.push(String(x));
+  })(v);
+  return out.join(' · ') || "Noma'lum xato";
+}
+
+// Bitta so'rov yuboradi. {ok:true,created:N} yoki {ok:false,err,forbidden?}
+async function scmSendAssign(chunk){
+  const payload = {
+    warehouse: parseInt(scmState.wizardWarehouse),
+    worker: scmState.targetWorker,
+    clients: chunk
+  };
+  try {
+    const data = await api('admin-scm-assign', { uid: UID, data: JSON.stringify(payload) });
+    if (data.error) return { ok:false, err:String(data.error), forbidden:String(data.error)==='forbidden' };
+    // Muvaffaqiyat faqat result.created bo'lganda. Aks holda Aros validatsiya
+    // xatosi qaytargan — ilgari UI buni ham "✓ biriktirildi" deb ko'rsatardi.
+    const created = data.result && typeof data.result.created === 'number' ? data.result.created : null;
+    if (created === null) return { ok:false, err: scmErrText(data.result) };
+    return { ok:true, created };
+  } catch(e){
+    return { ok:false, err: e.message };
+  }
+}
+
+async function scmWizardSubmit(){
+  if (!scmState.targetWorker) { toast('Sotuvchi tanlang', 'err'); return; }
+  const planEl = document.getElementById('wiz-plan');
+  const plan = parseInt(planEl?.value) || scmState.planCount || 5;
+  const clients = Array.from(scmState.selectedClients).map(id => ({
+    client: id,
+    plan_monthly_orders_count: plan,
+    plan_monthly_orders_sum: "0.00"
+  }));
+
+  const batches = [];
+  for (let i = 0; i < clients.length; i += SCM_ASSIGN_BATCH) {
+    batches.push(clients.slice(i, i + SCM_ASSIGN_BATCH));
+  }
+
+  const clientName = (id) => {
+    const c = (scmState.wizardClients || []).find(x => x.id === id);
+    return c ? (`${c.first_name||''} ${c.last_name||''}`.trim() || `#${id}`) : `#${id}`;
+  };
+
+  const renderProgress = (done, total, note) => {
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById('modal-content').innerHTML = `
+<div class="modal-h"><div><h3>Yuborilmoqda...</h3><p>${total} ta mijoz${note?` · ${escapeHtml(note)}`:''}</p></div></div>
+<div class="modal-body"><div style="text-align:center;padding:32px 20px">
+<div class="spinner" style="margin:0 auto 12px"></div>
+<p style="font-size:13px;color:var(--text-2)">${done} / ${total} biriktirildi</p>
+<div style="height:6px;background:var(--bg-3);border-radius:3px;overflow:hidden;margin-top:12px"><div style="height:100%;width:${pct}%;background:var(--info-line);transition:width 0.25s"></div></div>
+</div></div>
+`;
+  };
+
+  renderProgress(0, clients.length, batches.length > 1 ? `1/${batches.length} bo'lak` : '');
+
+  let done = 0;
+  const failed = [];   // {id, err}
+  let aborted = null;
+
+  for (let i = 0; i < batches.length && !aborted; i++) {
+    const note = batches.length > 1 ? `${i+1}/${batches.length} bo'lak` : '';
+    const res = await scmSendAssign(batches[i]);
+    if (res.ok) {
+      done += res.created;
+      renderProgress(done, clients.length, note);
+      continue;
+    }
+    if (res.forbidden) { aborted = res.err; break; }
+
+    // Bo'lak yiqildi — bittalab urinamiz, yaroqsizini ajratib olamiz
+    for (let j = 0; j < batches[i].length; j++) {
+      const one = batches[i][j];
+      renderProgress(done, clients.length, `bittalab tekshirilmoqda ${j+1}/${batches[i].length}`);
+      const r1 = await scmSendAssign([one]);
+      if (r1.ok) done += r1.created;
+      else if (r1.forbidden) { aborted = r1.err; break; }
+      else failed.push({ id: one.client, err: r1.err });
+    }
+  }
+
+  if (!aborted && !failed.length) {
+    toast(`✓ ${done} ta mijoz biriktirildi`);
+    scmCloseWizard();
+    await loadScmData();
+    return;
+  }
+
+  if (!aborted && done) await loadScmData();
+
+  document.getElementById('modal-content').innerHTML = `
+<div class="modal-h">
+<div><h3>${aborted ? 'Xato' : 'Qisman bajarildi'}</h3><p>${done} / ${clients.length} ta mijoz biriktirildi</p></div>
+<div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+${aborted ? `<div class="empty"><i class="ti ti-alert-circle"></i><p>${escapeHtml(aborted)}</p></div>` : `
+<div style="background:var(--warn-bg);color:var(--warn-text);border-radius:var(--radius);padding:10px 12px;font-size:12.5px;line-height:1.5">
+<i class="ti ti-alert-triangle"></i> ${failed.length} ta mijoz ulanmadi. Qolgan ${done} tasi muvaffaqiyatli biriktirildi.
+</div>
+<div style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-top:10px">
+${failed.map(f => `
+<div style="padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--radius)">
+<div style="font-weight:500;font-size:13px">${escapeHtml(clientName(f.id))} <span style="color:var(--text-3);font-family:var(--mono);font-size:11px">#${f.id}</span></div>
+<div style="font-size:11.5px;color:var(--err-text);margin-top:2px">${escapeHtml(f.err)}</div>
+</div>`).join('')}
+</div>`}
+</div>
+<div class="modal-foot">
+<button class="btn" onclick="scmState.wizardStep=3;scmRenderWizard()"><i class="ti ti-arrow-left"></i>Orqaga</button>
+<button class="btn primary" onclick="scmCloseWizard()">Yopish</button>
+</div>
+`;
 }
 
 // =========================================================
