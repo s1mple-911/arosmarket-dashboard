@@ -422,7 +422,8 @@ let cache = {
   dashboard: null,
   users: { pending: null, all: null },
   rbac: null,
-  audit: null
+  audit: null,
+  arosWh: null
 };
 
 // =========================================================
@@ -656,15 +657,32 @@ async function renderFilialPlan(root){
     const data = await api('aros-filial-plan-list', { oy: planFilter.oy, yil: planFilter.yil });
     const filials = (data && data.filiallar) || [];
     if(!filials.length){ content.innerHTML = '<div class="empty">Bu oy uchun filial topilmadi</div>'; return; }
-    const meta = `<div style="font-size:11px;color:var(--text-3);margin-bottom:10px">Oy ${data.oy_kunlari} kun · Y1 = ${data.y1_kun} kun · Y2 = ${data.y2_kun} kun</div>`;
-    content.innerHTML = meta + filials.map(planCardHtml).join('');
+    const meta = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="fp-search" placeholder="Filial nomi..." oninput="fpSearch(this.value)" class="input" style="max-width:260px;height:34px">
+      <span style="font-size:11px;color:var(--text-3);margin-left:auto">Oy ${data.oy_kunlari} kun · Y1 = ${data.y1_kun} kun · Y2 = ${data.y2_kun} kun · <b id="fp-count">${filials.length}</b> filial</span>
+    </div><div id="fp-list"></div>`;
+    content.innerHTML = meta;
+    document.getElementById('fp-list').innerHTML = filials.map(planCardHtml).join('');
   } catch(e){
     content.innerHTML = '<div class="empty">Xato: '+escapeHtml(String(e.message||e))+'</div>';
   }
 }
 
+function fpSearch(q){
+  q = String(q||'').trim().toLowerCase();
+  const cards = document.querySelectorAll('#fp-list > .fp-card');
+  let n = 0;
+  cards.forEach(c=>{
+    const show = !q || (c.getAttribute('data-search')||'').indexOf(q)>=0;
+    c.style.display = show ? '' : 'none';
+    if(show) n++;
+  });
+  const cnt = document.getElementById('fp-count'); if(cnt) cnt.textContent = n;
+}
+
 function planCardHtml(f){
-  return `<div class="card" style="margin-bottom:12px">
+  const searchStr = String((f.filial||'')+' '+(f.profil||'')+' '+f.warehouse_id).toLowerCase().replace(/["'<>]/g,' ');
+  return `<div class="fp-card card" data-search="${searchStr}" style="margin-bottom:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <div><div style="font-size:15px;font-weight:600">${escapeHtml(f.filial||'')} <span style="font-size:11px;color:var(--text-3);font-weight:400">#${f.warehouse_id}</span></div>
       <div style="font-size:11px;color:var(--text-3);margin-top:2px">Oylik plan: <b style="color:var(--text-2)">${fmt(f.oylik_plan)}</b> · qarz limit: ${fmt(f.oylik_qarz_limit)}</div></div>
@@ -2341,15 +2359,24 @@ async function renderSotuvchiMijoz(root){
 }
 
 // Aros API worker-clients faqat sotuvchisi BOR filiallarni qaytaradi (14 ta).
-// To'liq ro'yxat admin-rbac'dagi `filiallar`da (34 ta) — ikkalasini birlashtiramiz.
+// To'liq ro'yxat admin-rbac'dagi `filiallar`da — LEKIN u yerda faqat cache_filial'ga
+// ulangan filiallar bor (yangi ochilgan filial, masalan Andijon, tushmay qoladi).
+// Shuning uchun Aros API'ning TO'LIQ ombor ro'yxati (admin-unlinked-warehouses:
+// linked + unlinked) ham qo'shiladi — uch manba birlashtiriladi.
 // MUHIM: SCM endpointlari Aros API bilan gaplashadi → api_warehouse_id ishlatiladi
 // (masalan "43- Do'kon": warehouse_id=100, lekin api_warehouse_id=71).
 function scmMergeWarehouses(apiWarehouses){
   const map = new Map();
+  (cache.arosWh || []).forEach(w => {
+    const id = String(w.id || '').trim();
+    if (!id) return;
+    map.set(id, { warehouse_id: Number(id), filial: w.name_uz || w.name || ('#'+id), has_workers: false });
+  });
   ((cache.rbac && cache.rbac.filiallar) || []).forEach(f => {
     const id = String(f.api_warehouse_id || f.warehouse_id || '').trim();
     if (!id) return;
-    map.set(id, { warehouse_id: Number(id), filial: f.filial || ('#'+id), has_workers: false });
+    const prev = map.get(id);
+    map.set(id, { warehouse_id: Number(id), filial: f.filial || (prev && prev.filial) || ('#'+id), has_workers: false });
   });
   (apiWarehouses || []).forEach(w => {
     const id = String(w.warehouse_id || '').trim();
@@ -2364,6 +2391,13 @@ async function loadScmData(){
   const wrap = document.getElementById('scm-content');
   try {
     if (!cache.rbac) { try { cache.rbac = await api('admin-rbac', { uid: UID }); } catch(e){} }
+    // To'liq Aros ombor ro'yxati — rbac'ga hali ulanmagan yangi filiallar ham chiqsin
+    if (!cache.arosWh) {
+      try {
+        const aw = await api('admin-unlinked-warehouses', { uid: UID });
+        cache.arosWh = [ ...(aw.linked || []), ...(aw.unlinked || []) ];
+      } catch(e){ cache.arosWh = []; }
+    }
     const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.warehouseFilter });
     if (data.error) throw new Error(data.error);
     scmState.workers = data.workers || [];
