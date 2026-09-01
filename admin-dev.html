@@ -369,6 +369,7 @@ code.mono{font-family:var(--mono);font-size:11.5px;background:var(--bg-2);paddin
 <a class="nav-item" data-screen="hodim-sozlamalari" onclick="goto('hodim-sozlamalari')" title="Hodim sozlamalari"><i class="ti ti-user-cog icon-off"></i><i class="ti ti-user-cog icon-on"></i><span class="nav-label">Hodim sozlamalari</span></a>
 <a class="nav-item" data-screen="sotuvchi-mijoz" onclick="goto('sotuvchi-mijoz')" title="Sotuvchi & Mijoz"><i class="ti ti-affiliate icon-off"></i><i class="ti ti-affiliate-filled icon-on"></i><span class="nav-label">Sotuvchi & Mijoz</span></a>
 <a class="nav-item" data-screen="filiallar" onclick="goto('filiallar')" title="Filiallar"><i class="ti ti-building-store icon-off"></i><i class="ti ti-building-store-filled icon-on"></i><span class="nav-label">Filiallar</span></a>
+<a class="nav-item" data-screen="ceo-bolimlar" onclick="goto('ceo-bolimlar')" title="CEO bo'limlari"><i class="ti ti-users-group icon-off"></i><i class="ti ti-users-group icon-on"></i><span class="nav-label">CEO bo'limlari</span><span class="ct" id="nav-ceomgr-ct" style="display:none">·</span></a>
 <a class="nav-item" data-screen="filial-plan" onclick="goto('filial-plan')" title="Filial Plan"><i class="ti ti-target-arrow icon-off"></i><i class="ti ti-target-arrow icon-on"></i><span class="nav-label">Filial Plan</span></a>
 <a class="nav-item" data-screen="hodim-plan" onclick="goto('hodim-plan')" title="Hodim Plan"><i class="ti ti-user-check icon-off"></i><i class="ti ti-user-check icon-on"></i><span class="nav-label">Hodim Plan</span></a>
 <a class="nav-item" data-screen="ulanmagan" onclick="goto('ulanmagan')" title="Ulanmagan filiallar"><i class="ti ti-plug-connected-x icon-off"></i><i class="ti ti-plug-connected-x icon-on"></i><span class="nav-label">Ulanmagan</span><span class="ct" id="nav-unlinked-ct" style="display:none">·</span></a>
@@ -567,6 +568,7 @@ function renderScreen(s){
     case 'hodim-sozlamalari': return renderHodimSozlamalari(root);
     case 'sotuvchi-mijoz': return renderSotuvchiMijoz(root);
     case 'filiallar': return renderFiliallar(root);
+    case 'ceo-bolimlar': return renderCeoBolimlar(root);
     case 'filial-plan': return renderFilialPlan(root);
     case 'hodim-plan': return renderHodimPlan(root);
     case 'ulanmagan': return renderUlanmagan(root);
@@ -3186,6 +3188,225 @@ function openFilDetail(idx) {
 <div class="modal-foot">
   <button class="btn" onclick="closeModal()">Yopish</button>
   <a class="btn primary" href="https://s1mple-911.github.io/arosmarket-dashboard/ceo.html?uid=${UID}&wid=${f.warehouse_id}" target="_blank"><i class="ti ti-external-link"></i>To'liq sahifa</a>
+</div>
+`);
+}
+
+// =========================================================
+// SCREEN: CEO BO'LIMLARI (menejer tablari — filial biriktirish)
+// ceo.html tepasidagi tablar shu yerdan boshqariladi (aros-ceo-managers)
+// =========================================================
+let ceoMgrState = { managers: [], filiallar: [], whName: {} };
+
+async function renderCeoBolimlar(root){
+  root.innerHTML = topbar("CEO bo'limlari", 'Menejer tablari va filial biriktirish', `
+    <button class="btn primary" onclick="ceoMgrCreate()"><i class="ti ti-plus"></i>Yangi bo'lim</button>
+    <button class="icon-btn" onclick="renderCeoBolimlar(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
+  `);
+  const content = document.createElement('div');
+  content.innerHTML = `<div class="kpi-row"><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div><div class="skeleton" style="height:80px"></div></div><div class="skeleton" style="height:300px"></div>`;
+  root.appendChild(content);
+
+  try {
+    const yarim = new Date().getDate() <= 15 ? 1 : 2;
+    const [mgrData, ceoData] = await Promise.all([
+      api('aros-ceo-managers'),
+      api('admin-ceo-data', { uid: UID, yarim })
+    ]);
+    if (mgrData.error) throw new Error(mgrData.error);
+    ceoMgrState.managers = mgrData.managers || [];
+    ceoMgrState.filiallar = (ceoData && ceoData.filiallar) || [];
+    ceoMgrState.whName = {};
+    ceoMgrState.filiallar.forEach(f => { ceoMgrState.whName[parseInt(f.warehouse_id)] = f.filial || ('#' + f.warehouse_id); });
+    content.innerHTML = `<div class="kpi-row" id="ceomgr-kpi"></div><div id="ceomgr-body"></div>`;
+    ceoMgrRender();
+  } catch(e){
+    content.innerHTML = `<div class="empty"><i class="ti ti-alert-circle"></i><p>Xato: ${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function ceoMgrAssignedSet(){
+  const s = new Set();
+  ceoMgrState.managers.forEach(m => (m.warehouse_ids || []).forEach(w => s.add(parseInt(w))));
+  return s;
+}
+
+function ceoMgrChip(wid, actionsHtml, missing){
+  const name = ceoMgrState.whName[wid];
+  return `<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:999px;font-size:12.5px;${missing ? 'opacity:.6' : ''}">
+    <span style="font-weight:500">${escapeHtml(name || ('#' + wid))}</span>
+    <span style="color:var(--text-3);font-size:11px">${wid}</span>
+    ${actionsHtml}
+  </div>`;
+}
+
+function ceoMgrRender(){
+  const assigned = ceoMgrAssignedSet();
+  const unassigned = ceoMgrState.filiallar
+    .map(f => parseInt(f.warehouse_id))
+    .filter(w => !assigned.has(w));
+
+  const badge = document.getElementById('nav-ceomgr-ct');
+  if (badge) {
+    if (unassigned.length > 0) { badge.style.display = ''; badge.textContent = unassigned.length; }
+    else badge.style.display = 'none';
+  }
+
+  const kpiEl = document.getElementById('ceomgr-kpi');
+  if (kpiEl) kpiEl.innerHTML = `
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-building-store"></i>Jami filial</div><div class="kpi-val">${ceoMgrState.filiallar.length}</div><div class="kpi-delta" style="color:var(--text-3)">cache'da bor</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-check"></i>Biriktirilgan</div><div class="kpi-val" style="color:var(--ok-text)">${assigned.size}</div><div class="kpi-delta up">${ceoMgrState.managers.length} bo'limda</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-question"></i>Biriktirilmagan</div><div class="kpi-val" style="color:${unassigned.length > 0 ? 'var(--warn-text)' : 'var(--text)'}">${unassigned.length}</div><div class="kpi-delta ${unassigned.length > 0 ? 'warn' : ''}">${unassigned.length > 0 ? 'biriktirish kerak' : 'hammasi joyida'}</div></div>
+`;
+
+  let html = '';
+
+  html += `<div class="table-wrap" style="margin-bottom:14px;padding:14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <i class="ti ti-user-question" style="color:var(--warn-text)"></i>
+      <div style="font-weight:600;font-size:13.5px">Biriktirilmagan filiallar (${unassigned.length})</div>
+    </div>
+    ${unassigned.length === 0
+      ? `<div style="font-size:12.5px;color:var(--text-3)">Barcha filiallar bo'limlarga biriktirilgan</div>`
+      : `<div style="display:flex;flex-wrap:wrap;gap:6px">${unassigned.map(w =>
+          ceoMgrChip(w, `<button class="icon-btn" style="width:24px;height:24px;min-width:24px" onclick="ceoMgrPickTarget(${w})" title="Bo'limga biriktirish"><i class="ti ti-plus" style="font-size:13px"></i></button>`)
+        ).join('')}</div>`}
+  </div>`;
+
+  for (const m of ceoMgrState.managers) {
+    const wids = (m.warehouse_ids || []).map(Number);
+    html += `<div class="table-wrap" style="margin-bottom:14px;padding:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <i class="ti ti-user" style="color:var(--text-2)"></i>
+        <div style="font-weight:600;font-size:13.5px;flex:1">${escapeHtml(m.label)} <span style="color:var(--text-3);font-weight:400">· ${wids.length} filial</span></div>
+        <button class="icon-btn" onclick="ceoMgrRename(${m.id})" title="Nomini o'zgartirish"><i class="ti ti-pencil"></i></button>
+        <button class="icon-btn" onclick="ceoMgrDelete(${m.id})" title="Bo'limni o'chirish"><i class="ti ti-trash" style="color:var(--err-text)"></i></button>
+      </div>
+      ${wids.length === 0
+        ? `<div style="font-size:12.5px;color:var(--text-3)">Filial biriktirilmagan</div>`
+        : `<div style="display:flex;flex-wrap:wrap;gap:6px">${wids.map(w =>
+            ceoMgrChip(w,
+              `<button class="icon-btn" style="width:24px;height:24px;min-width:24px" onclick="ceoMgrPickTarget(${w}, ${m.id})" title="Boshqa bo'limga ko'chirish"><i class="ti ti-arrows-exchange" style="font-size:13px"></i></button>` +
+              `<button class="icon-btn" style="width:24px;height:24px;min-width:24px" onclick="ceoMgrUnassign(${w})" title="Biriktirishni olib tashlash"><i class="ti ti-x" style="font-size:13px;color:var(--err-text)"></i></button>`,
+              !ceoMgrState.whName[w]
+            )
+          ).join('')}</div>`}
+    </div>`;
+  }
+
+  const bodyEl = document.getElementById('ceomgr-body');
+  if (bodyEl) bodyEl.innerHTML = html;
+}
+
+async function ceoMgrAction(params, okMsg){
+  try {
+    const res = await api('aros-ceo-managers-save', Object.assign({ uid: UID }, params));
+    if (res.error) throw new Error(res.error === 'forbidden' ? "Ruxsat yo'q" : res.error);
+    const fresh = await api('aros-ceo-managers');
+    ceoMgrState.managers = fresh.managers || [];
+    ceoMgrRender();
+    if (okMsg) toast(okMsg);
+  } catch(e){
+    toast('Xato: ' + e.message, 'err');
+  }
+}
+
+function ceoMgrPickTarget(wid, fromId){
+  const targets = ceoMgrState.managers.filter(m => m.id !== fromId);
+  const name = ceoMgrState.whName[wid] || ('#' + wid);
+  openModal(`
+<div class="modal-h">
+  <div><h3>${escapeHtml(name)}</h3><p>Qaysi bo'limga biriktirilsin? · warehouse_id: ${wid}</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  ${targets.length === 0 ? `<div class="empty" style="padding:20px"><p>Boshqa bo'lim yo'q — avval yangi bo'lim yarating</p></div>` : `
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${targets.map(m => `<button class="btn" style="justify-content:flex-start" onclick="ceoMgrAssignTo(${m.id}, ${wid})"><i class="ti ti-user"></i>${escapeHtml(m.label)} <span style="color:var(--text-3)">· ${(m.warehouse_ids || []).length} filial</span></button>`).join('')}
+  </div>`}
+</div>
+<div class="modal-foot"><button class="btn" onclick="closeModal()">Bekor</button></div>
+`);
+}
+
+function ceoMgrAssignTo(mid, wid){
+  closeModal();
+  const m = ceoMgrState.managers.find(x => x.id === mid);
+  const name = ceoMgrState.whName[wid] || ('#' + wid);
+  ceoMgrAction({ action: 'assign', id: mid, wid }, name + ' → ' + (m ? m.label : ''));
+}
+
+function ceoMgrUnassign(wid){
+  const name = ceoMgrState.whName[wid] || ('#' + wid);
+  ceoMgrAction({ action: 'unassign', wid }, name + ' biriktirishdan chiqarildi');
+}
+
+function ceoMgrCreate(){
+  openModal(`
+<div class="modal-h">
+  <div><h3>Yangi bo'lim</h3><p>CEO dashboardda alohida tab bo'lib chiqadi</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  <label style="font-size:12px;color:var(--text-2);display:block;margin-bottom:6px">Bo'lim nomi (menejer ismi)</label>
+  <input type="text" class="search-box" id="ceomgr-new-label" placeholder="Masalan: Aziz" style="width:100%">
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Bekor</button>
+  <button class="btn primary" onclick="ceoMgrCreateSave()"><i class="ti ti-plus"></i>Yaratish</button>
+</div>
+`);
+  setTimeout(() => document.getElementById('ceomgr-new-label')?.focus(), 50);
+}
+
+function ceoMgrCreateSave(){
+  const label = (document.getElementById('ceomgr-new-label')?.value || '').trim();
+  if (!label) { toast('Nom kiriting', 'err'); return; }
+  closeModal();
+  ceoMgrAction({ action: 'create', label }, `"${label}" bo'limi yaratildi`);
+}
+
+function ceoMgrRename(id){
+  const m = ceoMgrState.managers.find(x => x.id === id);
+  if (!m) return;
+  openModal(`
+<div class="modal-h">
+  <div><h3>Nomini o'zgartirish</h3><p>${escapeHtml(m.label)}</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  <input type="text" class="search-box" id="ceomgr-rename-label" value="${escapeHtml(m.label)}" style="width:100%">
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Bekor</button>
+  <button class="btn primary" onclick="ceoMgrRenameSave(${id})"><i class="ti ti-check"></i>Saqlash</button>
+</div>
+`);
+  setTimeout(() => document.getElementById('ceomgr-rename-label')?.focus(), 50);
+}
+
+function ceoMgrRenameSave(id){
+  const label = (document.getElementById('ceomgr-rename-label')?.value || '').trim();
+  if (!label) { toast('Nom kiriting', 'err'); return; }
+  closeModal();
+  ceoMgrAction({ action: 'rename', id, label }, 'Nom o\'zgartirildi');
+}
+
+function ceoMgrDelete(id){
+  const m = ceoMgrState.managers.find(x => x.id === id);
+  if (!m) return;
+  const ct = (m.warehouse_ids || []).length;
+  openModal(`
+<div class="modal-h">
+  <div><h3>Bo'limni o'chirish</h3><p>${escapeHtml(m.label)}</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  <p style="font-size:13px">"${escapeHtml(m.label)}" bo'limi o'chirilsinmi?${ct > 0 ? ` Unga biriktirilgan <b>${ct} ta filial</b> biriktirilmaganlar ro'yxatiga qaytadi.` : ''}</p>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Bekor</button>
+  <button class="btn danger" onclick="closeModal();ceoMgrAction({action:'delete', id:${id}}, 'Bo\\'lim o\\'chirildi')"><i class="ti ti-trash"></i>O'chirish</button>
 </div>
 `);
 }

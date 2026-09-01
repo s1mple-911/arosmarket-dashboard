@@ -217,7 +217,7 @@ input,select,button,textarea{font-family:inherit}
   <div class="theme-btn" onclick="doLogout()" id="logoutBtn" style="background:var(--tint-red);border-color:var(--tint-red-b);color:var(--red)" title="Chiqish"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
 </div>
 
-<div class="mgr-tabs">
+<div class="mgr-tabs" id="mgr-tabs">
   <div class="mgr-tab active" onclick="changeMgr('all',this)" style="color:var(--green);border-bottom-color:var(--green)">Hammasi</div>
   <div class="mgr-tab" onclick="changeMgr('giyosbek',this)">Giyosbek</div>
   <div class="mgr-tab" onclick="changeMgr('sherdil',this)">Sherdil</div>
@@ -678,12 +678,50 @@ function parseSafe(txt){
   try{var t=txt.trim();if(t[0]==='"')t=JSON.parse(t);var r=JSON.parse(t);return Array.isArray(r)?r[0]:r;}catch(e){return null;}
 }
 
+// Fallback (API ishlamasa) — asosiy ro'yxat aros-ceo-managers'dan dinamik keladi
 var MANAGER_WAREHOUSES = {
   all:       null,
   giyosbek:  [61,23,15,5,1,37,17,29],
   sherdil:   [71,13,33,25,35,21,27,100,101,102,103,104]
 };
+var MANAGER_LABELS = { giyosbek: 'Giyosbek', sherdil: 'Sherdil' };
+var MANAGERS_API = 'https://n8n.arosmarket.com/webhook/aros-ceo-managers';
 var curMgr = 'all';
+
+function renderMgrTabs(list){
+  var bar = document.getElementById('mgr-tabs');
+  if(!bar) return;
+  bar.innerHTML = '';
+  function mk(key, label){
+    var t = document.createElement('div');
+    t.className = 'mgr-tab';
+    t.textContent = label;
+    if(curMgr === key){ t.style.color = 'var(--green)'; t.style.borderBottomColor = 'var(--green)'; }
+    t.onclick = function(){ changeMgr(key, t); };
+    bar.appendChild(t);
+  }
+  mk('all', 'Hammasi');
+  list.forEach(function(m){ mk('mgr_'+m.id, m.label); });
+}
+
+function loadManagers(){
+  fetch(MANAGERS_API).then(function(r){ return r.json(); }).then(function(d){
+    var data = Array.isArray(d) ? d[0] : d;
+    var list = (data && data.managers) || [];
+    if(!list.length) return;
+    var map = { all: null };
+    var labels = {};
+    list.forEach(function(m){
+      map['mgr_'+m.id] = (m.warehouse_ids || []).map(Number);
+      labels['mgr_'+m.id] = m.label;
+    });
+    MANAGER_WAREHOUSES = map;
+    MANAGER_LABELS = labels;
+    if(!(curMgr in MANAGER_WAREHOUSES)) curMgr = 'all';
+    renderMgrTabs(list);
+    if(cachedAllData) renderFromCache();
+  }).catch(function(){ /* fallback hardcoded ro'yxat ishlayveradi */ });
+}
 var curProfil = 'Zapchast';
 var curSearch = '';
 var cachedAllData = null;
@@ -1606,6 +1644,7 @@ function toggleTheme(){
 })();
 
 buildOyOptions();
+loadManagers();
 load();
 
 
@@ -2092,7 +2131,7 @@ function downloadMmlBatch(){
       });
       var sana = new Date().toISOString().split('T')[0];
       var filterLabel = '';
-      if(curMgr !== 'all') filterLabel += '_'+curMgr;
+      if(curMgr !== 'all') filterLabel += '_'+(MANAGER_LABELS[curMgr] || curMgr);
       if(curProfil && curProfil !== 'all') filterLabel += '_'+curProfil;
       var filename = 'MML_yetishmovchi'+filterLabel+'_'+sana+'.xlsx';
       XLSX.writeFile(wb, filename);
