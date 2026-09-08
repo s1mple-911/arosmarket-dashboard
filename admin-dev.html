@@ -3196,7 +3196,33 @@ function openFilDetail(idx) {
 // SCREEN: CEO BO'LIMLARI (menejer tablari — filial biriktirish)
 // ceo.html tepasidagi tablar shu yerdan boshqariladi (aros-ceo-managers)
 // =========================================================
-let ceoMgrState = { managers: [], filiallar: [], whName: {} };
+let ceoMgrState = { managers: [], filiallar: [], whName: {}, whProfil: {}, profil: 'all' };
+
+// Profil: Zapchast / Aksessuar / Franshiza (is_franchise ustun)
+function ceoMgrProfilOf(f){
+  if (!f) return '';
+  if (f.is_franchise === true || f.profil === 'Franshiza') return 'Franshiza';
+  return f.profil || 'Zapchast';
+}
+
+function ceoMgrProfilBadge(wid){
+  const p = ceoMgrState.whProfil[wid];
+  if (p === 'Franshiza') return '<span class="badge muted" style="padding:1px 6px;font-size:10px">Franshiza</span>';
+  if (p === 'Aksessuar') return '<span class="badge info" style="padding:1px 6px;font-size:10px">Aksessuar</span>';
+  if (p === 'Zapchast')  return '<span class="badge ok" style="padding:1px 6px;font-size:10px">Zapchast</span>';
+  return '';
+}
+
+// Profil filtri: 'all' — hammasi; aks holda faqat shu profil (noma'lum profil faqat 'all'da ko'rinadi)
+function ceoMgrPassProfil(wid){
+  if (ceoMgrState.profil === 'all') return true;
+  return ceoMgrState.whProfil[wid] === ceoMgrState.profil;
+}
+
+function setCeoMgrProfil(p){
+  ceoMgrState.profil = p;
+  ceoMgrRender();
+}
 
 async function renderCeoBolimlar(root){
   root.innerHTML = topbar("CEO bo'limlari", 'Menejer tablari va filial biriktirish', `
@@ -3208,16 +3234,34 @@ async function renderCeoBolimlar(root){
   root.appendChild(content);
 
   try {
+    // Ikkala yarimdan ham olamiz — bir yarimda yo'q filial (masalan, yangi qo'shilgan) ikkinchisida bo'lishi mumkin.
+    // Joriy yarim ustun, ikkinchisi faqat yetishmagan warehouse_id'larni to'ldiradi.
     const yarim = new Date().getDate() <= 15 ? 1 : 2;
-    const [mgrData, ceoData] = await Promise.all([
+    const [mgrData, ceoData, ceoDataOther] = await Promise.all([
       api('aros-ceo-managers'),
-      api('admin-ceo-data', { uid: UID, yarim })
+      api('admin-ceo-data', { uid: UID, yarim }),
+      api('admin-ceo-data', { uid: UID, yarim: yarim === 1 ? 2 : 1 }).catch(() => null)
     ]);
     if (mgrData.error) throw new Error(mgrData.error);
     ceoMgrState.managers = mgrData.managers || [];
-    ceoMgrState.filiallar = (ceoData && ceoData.filiallar) || [];
+    const seen = new Set();
+    const merged = [];
+    [(ceoData && ceoData.filiallar) || [], (ceoDataOther && ceoDataOther.filiallar) || []].forEach(list => {
+      list.forEach(f => {
+        const w = parseInt(f.warehouse_id);
+        if (isNaN(w) || seen.has(w)) return;
+        seen.add(w);
+        merged.push(f);
+      });
+    });
+    ceoMgrState.filiallar = merged;
     ceoMgrState.whName = {};
-    ceoMgrState.filiallar.forEach(f => { ceoMgrState.whName[parseInt(f.warehouse_id)] = f.filial || ('#' + f.warehouse_id); });
+    ceoMgrState.whProfil = {};
+    ceoMgrState.filiallar.forEach(f => {
+      const w = parseInt(f.warehouse_id);
+      ceoMgrState.whName[w] = f.filial || ('#' + f.warehouse_id);
+      ceoMgrState.whProfil[w] = ceoMgrProfilOf(f);
+    });
     content.innerHTML = `<div class="kpi-row" id="ceomgr-kpi"></div><div id="ceomgr-body"></div>`;
     ceoMgrRender();
   } catch(e){
@@ -3236,30 +3280,46 @@ function ceoMgrChip(wid, actionsHtml, missing){
   return `<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:999px;font-size:12.5px;${missing ? 'opacity:.6' : ''}">
     <span style="font-weight:500">${escapeHtml(name || ('#' + wid))}</span>
     <span style="color:var(--text-3);font-size:11px">${wid}</span>
+    ${ceoMgrProfilBadge(wid)}
     ${actionsHtml}
   </div>`;
 }
 
 function ceoMgrRender(){
   const assigned = ceoMgrAssignedSet();
-  const unassigned = ceoMgrState.filiallar
+  // Barcha biriktirilmaganlar (nav badge va KPI uchun — profil filtridan qat'i nazar)
+  const unassignedAll = ceoMgrState.filiallar
     .map(f => parseInt(f.warehouse_id))
     .filter(w => !assigned.has(w));
+  // Ko'rsatiladiganlar — profil filtriga binoan
+  const unassigned = unassignedAll.filter(ceoMgrPassProfil);
 
   const badge = document.getElementById('nav-ceomgr-ct');
   if (badge) {
-    if (unassigned.length > 0) { badge.style.display = ''; badge.textContent = unassigned.length; }
+    if (unassignedAll.length > 0) { badge.style.display = ''; badge.textContent = unassignedAll.length; }
     else badge.style.display = 'none';
   }
+
+  // Profil bo'yicha sonlar (pill'lar uchun)
+  const cnt = { all: ceoMgrState.filiallar.length, Zapchast: 0, Aksessuar: 0, Franshiza: 0 };
+  ceoMgrState.filiallar.forEach(f => { const p = ceoMgrProfilOf(f); if (cnt[p] !== undefined) cnt[p]++; });
 
   const kpiEl = document.getElementById('ceomgr-kpi');
   if (kpiEl) kpiEl.innerHTML = `
 <div class="kpi"><div class="kpi-lbl"><i class="ti ti-building-store"></i>Jami filial</div><div class="kpi-val">${ceoMgrState.filiallar.length}</div><div class="kpi-delta" style="color:var(--text-3)">cache'da bor</div></div>
 <div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-check"></i>Biriktirilgan</div><div class="kpi-val" style="color:var(--ok-text)">${assigned.size}</div><div class="kpi-delta up">${ceoMgrState.managers.length} bo'limda</div></div>
-<div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-question"></i>Biriktirilmagan</div><div class="kpi-val" style="color:${unassigned.length > 0 ? 'var(--warn-text)' : 'var(--text)'}">${unassigned.length}</div><div class="kpi-delta ${unassigned.length > 0 ? 'warn' : ''}">${unassigned.length > 0 ? 'biriktirish kerak' : 'hammasi joyida'}</div></div>
+<div class="kpi"><div class="kpi-lbl"><i class="ti ti-user-question"></i>Biriktirilmagan</div><div class="kpi-val" style="color:${unassignedAll.length > 0 ? 'var(--warn-text)' : 'var(--text)'}">${unassignedAll.length}</div><div class="kpi-delta ${unassignedAll.length > 0 ? 'warn' : ''}">${unassignedAll.length > 0 ? 'biriktirish kerak' : 'hammasi joyida'}</div></div>
 `;
 
   let html = '';
+
+  const pf = ceoMgrState.profil;
+  html += `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+    <div class="pill-sel ${pf==='all'?'active':''}" onclick="setCeoMgrProfil('all')">Hammasi (${cnt.all})</div>
+    <div class="pill-sel ${pf==='Zapchast'?'active':''}" onclick="setCeoMgrProfil('Zapchast')">Zapchast (${cnt.Zapchast})</div>
+    <div class="pill-sel ${pf==='Aksessuar'?'active':''}" onclick="setCeoMgrProfil('Aksessuar')">Aksessuar (${cnt.Aksessuar})</div>
+    <div class="pill-sel ${pf==='Franshiza'?'active':''}" onclick="setCeoMgrProfil('Franshiza')">Franshiza (${cnt.Franshiza})</div>
+  </div>`;
 
   html += `<div class="table-wrap" style="margin-bottom:14px;padding:14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -3274,16 +3334,18 @@ function ceoMgrRender(){
   </div>`;
 
   for (const m of ceoMgrState.managers) {
-    const wids = (m.warehouse_ids || []).map(Number);
+    const widsAll = (m.warehouse_ids || []).map(Number);
+    const wids = widsAll.filter(ceoMgrPassProfil);
+    const cntLbl = pf === 'all' ? `${widsAll.length} filial` : `${wids.length} / ${widsAll.length} filial`;
     html += `<div class="table-wrap" style="margin-bottom:14px;padding:14px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <i class="ti ti-user" style="color:var(--text-2)"></i>
-        <div style="font-weight:600;font-size:13.5px;flex:1">${escapeHtml(m.label)} <span style="color:var(--text-3);font-weight:400">· ${wids.length} filial</span></div>
+        <div style="font-weight:600;font-size:13.5px;flex:1">${escapeHtml(m.label)} <span style="color:var(--text-3);font-weight:400">· ${cntLbl}</span></div>
         <button class="icon-btn" onclick="ceoMgrRename(${m.id})" title="Nomini o'zgartirish"><i class="ti ti-pencil"></i></button>
         <button class="icon-btn" onclick="ceoMgrDelete(${m.id})" title="Bo'limni o'chirish"><i class="ti ti-trash" style="color:var(--err-text)"></i></button>
       </div>
       ${wids.length === 0
-        ? `<div style="font-size:12.5px;color:var(--text-3)">Filial biriktirilmagan</div>`
+        ? `<div style="font-size:12.5px;color:var(--text-3)">${widsAll.length === 0 ? 'Filial biriktirilmagan' : 'Bu profilda filial yo\'q'}</div>`
         : `<div style="display:flex;flex-wrap:wrap;gap:6px">${wids.map(w =>
             ceoMgrChip(w,
               `<button class="icon-btn" style="width:24px;height:24px;min-width:24px" onclick="ceoMgrPickTarget(${w}, ${m.id})" title="Boshqa bo'limga ko'chirish"><i class="ti ti-arrows-exchange" style="font-size:13px"></i></button>` +
