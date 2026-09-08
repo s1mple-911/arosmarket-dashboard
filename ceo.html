@@ -226,8 +226,8 @@ input,select,button,textarea{font-family:inherit}
 <div class="filter-bar" style="gap:8px">
   <select id="oy-select" onchange="changeOy(this.value)"></select>
   <select id="profil-select" onchange="changeProfil(this.value)">
-    <option value="all">Hammasi</option>
-    <option value="Zapchast" selected>Zapchast</option>
+    <option value="all" selected>Hammasi</option>
+    <option value="Zapchast">Zapchast</option>
     <option value="Aksessuar">Aksessuar</option>
     <option value="Franshiza">Franshiza</option>
   </select>
@@ -684,7 +684,7 @@ var MANAGER_WAREHOUSES = {
   sherdil:   [71,13,33,25,35,21,27,100,101,102,103,104]
 };
 var curMgr = 'all';
-var curProfil = 'Zapchast';
+var curProfil = 'all';
 var curSearch = '';
 var cachedAllData = null;
 var cachedOy = null;
