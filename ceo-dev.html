@@ -705,10 +705,12 @@ function renderMgrTabs(list){
 }
 
 function loadManagers(){
-  fetch(MANAGERS_API).then(function(r){ return r.json(); }).then(function(d){
+  // Kesh-buster: admin-dev'da filial bo'limga biriktirilgandan keyin brauzer eski
+  // ro'yxatni (ETag/keshdan) bermasin — aks holda tab eski taqsimotda qoladi.
+  fetch(MANAGERS_API + '?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.json(); }).then(function(d){
     var data = Array.isArray(d) ? d[0] : d;
     var list = (data && data.managers) || [];
-    if(!list.length) return;
+    if(!list.length){ curMgr = 'all'; renderMgrTabs([]); return; }
     var map = { all: null };
     var labels = {};
     list.forEach(function(m){
@@ -720,7 +722,17 @@ function loadManagers(){
     if(!(curMgr in MANAGER_WAREHOUSES)) curMgr = 'all';
     renderMgrTabs(list);
     if(cachedAllData) renderFromCache();
-  }).catch(function(){ /* fallback hardcoded ro'yxat ishlayveradi */ });
+  }).catch(function(){
+    // API javob bermadi: eski QATTIQ yozilgan taqsimotni ko'rsatish = noto'g'ri raqam
+    // (admin-dev'dagi o'zgarishlar bu ro'yxatda yo'q). Shuning uchun faqat "Hammasi"
+    // qoldiramiz va bir marta qayta urinamiz.
+    curMgr = 'all';
+    renderMgrTabs([]);
+    if(!window._mgrRetry){
+      window._mgrRetry = 1;
+      setTimeout(loadManagers, 2500);
+    }
+  });
 }
 var curProfil = 'all';
 var curSearch = '';
