@@ -3228,6 +3228,7 @@ function setCeoMgrProfil(p){
 
 async function renderCeoBolimlar(root){
   root.innerHTML = topbar("CEO bo'limlari", 'Menejer tablari va filial biriktirish', `
+    <button class="btn" onclick="ceoMgrAddById()"><i class="ti ti-hash"></i>ID bo'yicha</button>
     <button class="btn primary" onclick="ceoMgrCreate()"><i class="ti ti-plus"></i>Yangi bo'lim</button>
     <button class="icon-btn" onclick="renderCeoBolimlar(document.getElementById('screens'))" title="Yangilash"><i class="ti ti-refresh"></i></button>
   `);
@@ -3391,6 +3392,40 @@ function ceoMgrPickTarget(wid, fromId){
 </div>
 <div class="modal-foot"><button class="btn" onclick="closeModal()">Bekor</button></div>
 `);
+}
+
+// Ro'yxatda yo'q filialni (cache_filial'da yo'q, masalan yangi ochilgan yoki kalendar
+// keshiga tushmagan ombor) warehouse_id bo'yicha qo'lda biriktirish.
+function ceoMgrAddById(){
+  openModal(`
+<div class="modal-h">
+  <div><h3>ID bo'yicha biriktirish</h3><p>Ro'yxatda ko'rinmayotgan filial uchun</p></div>
+  <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+</div>
+<div class="modal-body">
+  <label style="font-size:12px;color:var(--text-2);display:block;margin-bottom:6px">warehouse_id</label>
+  <input type="number" class="search-box" id="ceomgr-wid" placeholder="Masalan: 71" style="width:100%;margin-bottom:12px">
+  <label style="font-size:12px;color:var(--text-2);display:block;margin-bottom:6px">Bo'lim</label>
+  <select class="select" id="ceomgr-wid-mgr" style="width:100%">
+    ${ceoMgrState.managers.map(m => `<option value="${m.id}">${escapeHtml(m.label)}</option>`).join('')}
+  </select>
+  <p style="font-size:12px;color:var(--text-3);margin-top:10px">Filial kalendar keshida bo'lmasa chip faqat raqam bilan ko'rinadi — biriktirish baribir ishlaydi.</p>
+</div>
+<div class="modal-foot">
+  <button class="btn" onclick="closeModal()">Bekor</button>
+  <button class="btn primary" onclick="ceoMgrAddByIdSave()"><i class="ti ti-check"></i>Biriktirish</button>
+</div>
+`);
+  setTimeout(() => document.getElementById('ceomgr-wid')?.focus(), 50);
+}
+
+function ceoMgrAddByIdSave(){
+  const wid = parseInt(document.getElementById('ceomgr-wid')?.value || '', 10);
+  const mid = parseInt(document.getElementById('ceomgr-wid-mgr')?.value || '', 10);
+  if (!wid || wid < 1) { toast("warehouse_id kiriting", 'err'); return; }
+  if (!mid) { toast("Avval bo'lim yarating", 'err'); return; }
+  closeModal();
+  ceoMgrAssignTo(mid, wid);
 }
 
 function ceoMgrAssignTo(mid, wid){
