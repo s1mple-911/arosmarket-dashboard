@@ -167,7 +167,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="filter-bar">
   <select id="oy-select" onchange="changeOy(this.value)"></select>
-  <button class="refresh-btn" onclick="downloadExcel()" title="Excel'ga yuklab olish" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.35);color:var(--green);width:auto;padding:0 12px;font-size:12px;font-weight:700;gap:5px">📥 Excel</button>
+  <button id="excelBtn" class="refresh-btn" onclick="downloadExcel()" title="Excel'ga yuklab olish" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.35);color:var(--green);width:auto;padding:0 12px;font-size:12px;font-weight:700;gap:5px">📥 Excel</button>
 </div>
 
 <div class="main" id="main">
@@ -545,11 +545,11 @@ function openHodimPage(tgId){
 // ===== EXCEL EXPORT =====
 function downloadExcel(){
   if(!ceoData || !ceoData.filiallar || !ceoData.filiallar.length){
-    alert("Ma'lumot yo'q yoki hali yuklanmagan");
+    tgSay("Ma'lumot yo'q yoki hali yuklanmagan");
     return;
   }
   if(typeof XLSX === 'undefined'){
-    alert("Excel kutubxonasi yuklanmagan, qayta urinib ko'ring");
+    tgSay("Excel kutubxonasi yuklanmagan, qayta urinib ko'ring");
     return;
   }
   
@@ -633,39 +633,81 @@ function downloadExcel(){
   
   var fileName = 'Hodimlar_KPI_' + curYil + '-' + (curOy<10?'0':'') + curOy + (curYarim?'_Y'+curYarim:'') + '.xlsx';
 
-  // Telefonmi? Telegram mobil in-app brauzer blob/anchor downloadni bloklaydi.
-  // Shuning uchun mobil'da: base64'ni serverga yuboramiz -> GET URL'ni openLink/downloadFile bilan yuklaymiz.
+  // 🔴 Telegram ICHIDA (telefon ham, Mac/Desktop ham) blob/anchor download ISHLAMAYDI:
+  // Mac'da «Open Link blob:https://…» oynasi chiqadi va hech narsa yuklanmaydi, telefonda esa
+  // umuman jim qoladi. Shuning uchun Telegram bo'lsa DOIM: base64 -> n8n saqlash -> tayyor URL.
+  // Faqat oddiy brauzerda (Telegram tashqarisida) XLSX.writeFile ishlatiladi.
   var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-  var plat = tg && tg.platform ? tg.platform : '';
-  var isMobile = (plat === 'ios' || plat === 'android');
+  var plat = (tg && tg.platform) ? tg.platform : '';
+  var inTG = !!(tg && plat && plat !== 'unknown');
 
-  if(isMobile && tg){
-    // base64 chiqarib serverga yuboramiz
-    var b64;
-    try { b64 = XLSX.write(wb, {bookType:'xlsx', type:'base64'}); }
-    catch(e){ alert("Excel yasashda xato: "+e.message); return; }
-    var token = 'x'+Date.now()+Math.random().toString(36).slice(2,8);
-    var fileUrl = EXCEL_GET_API + '?token=' + encodeURIComponent(token);
-    // text/plain -> preflight yo'q (CORS muammosi bo'lmaydi)
-    fetch(EXCEL_STORE_API, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({ token: token, filename: fileName, b64: b64 })
-    }).then(function(){
-      // downloadFile (Bot API 8.0+) bo'lsa native yuklab olish; bo'lmasa tashqi brauzerda ochamiz
-      if(tg.downloadFile){
-        try { tg.downloadFile({ url: fileUrl, file_name: fileName }); return; } catch(e){}
-      }
-      if(tg.openLink){ tg.openLink(fileUrl); }
-      else { window.location.href = fileUrl; }
-    }).catch(function(e){
-      alert("Yuklashda xato: "+e.message+"\nQayta urinib ko'ring");
-    });
+  if(!inTG){
+    XLSX.writeFile(wb, fileName);
     return;
   }
 
-  // Kompyuter — oddiy yuklab olish
-  XLSX.writeFile(wb, fileName);
+  var btn = document.getElementById('excelBtn');
+  var btnHtml = btn ? btn.innerHTML : '';
+  if(btn){ btn.innerHTML = '⏳'; btn.disabled = true; }
+  function excelDone(){ if(btn){ btn.innerHTML = btnHtml; btn.disabled = false; } }
+
+  var b64;
+  try { b64 = XLSX.write(wb, {bookType:'xlsx', type:'base64'}); }
+  catch(e){ excelDone(); tgSay("Excel yasashda xato: "+e.message); return; }
+
+  var token = 'x'+Date.now()+Math.random().toString(36).slice(2,8);
+  var fileUrl = EXCEL_GET_API + '?token=' + encodeURIComponent(token);
+  // text/plain -> preflight yo'q (CORS muammosi bo'lmaydi)
+  fetch(EXCEL_STORE_API, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({ token: token, filename: fileName, b64: b64 })
+  }).then(function(r){
+    if(!r.ok) throw new Error('server '+r.status);
+    // downloadFile — FAQAT Bot API 8.0+ (yangi klientlar). Eski klientda u xato tashlaydi,
+    // shuning uchun avval versiya tekshiriladi, keyin ham try/catch qoladi.
+    var canDl = tg.downloadFile && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0');
+    if(canDl){
+      try { tg.downloadFile({ url: fileUrl, file_name: fileName }); excelDone(); return; } catch(e){}
+    }
+    // Eski klient: havolani tashqarida ochamiz (fayl attachment — brauzer yuklab oladi).
+    // 🔴 Telegram in-app brauzeri yuklab ololmasligi mumkin, shuning uchun havola
+    // DOIM ekranda ham qoladi — «bosdim, hech narsa bo'lmadi» holati takrorlanmasin.
+    if(tg.openLink){ try { tg.openLink(fileUrl); } catch(e){} }
+    else { try { window.open(fileUrl, '_blank'); } catch(e){} }
+    excelDone();
+    excelFallback(fileUrl, '');
+  }).catch(function(e){
+    excelDone();
+    excelFallback(fileUrl, (e && e.message) || '');
+  });
+}
+
+// 🔴 Telegram Mini App'da native alert() KO'RINMAYDI (WebView uni to'sadi) — «hech narsa
+// chiqmayapti» ning sababi ko'pincha shu. Telegram bo'lsa showAlert ishlatiladi.
+function tgSay(msg){
+  var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  if(tg && tg.showAlert){ try { tg.showAlert(String(msg).slice(0,200)); return; } catch(e){} }
+  alert(msg);
+}
+
+// Yuklash yo'li jim qolmasin — havolani ekranda ham ko'rsatamiz
+function excelFallback(url, err){
+  var old = document.getElementById('excelFallback');
+  if(old) old.remove();
+  var box = document.createElement('div');
+  box.id = 'excelFallback';
+  box.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:#111827;'
+    + 'border:1px solid rgba(34,197,94,.35);border-radius:14px;padding:14px;color:#e5e7eb;font-size:13px;'
+    + 'box-shadow:0 10px 30px rgba(0,0,0,.5)';
+  box.innerHTML = "<div style='margin-bottom:8px'>"
+    + (err ? "Yuklab olinmadi (<span style='opacity:.7'>"+String(err).replace(/[<>&]/g,'')+"</span>). "
+           : "Fayl tayyor. Yuklanmasa — ")
+    + "quyidagi havolani bosing:</div>"
+    + "<a href='"+url+"' target='_blank' rel='noopener' style='color:#22c55e;font-weight:700;word-break:break-all'>📥 Excel faylni ochish</a>"
+    + "<div style='text-align:right;margin-top:10px'><button onclick=\"document.getElementById('excelFallback').remove()\" "
+    + "style='background:rgba(255,255,255,.08);border:0;color:#e5e7eb;border-radius:8px;padding:6px 12px;cursor:pointer'>Yopish</button></div>";
+  document.body.appendChild(box);
 }
 
 // Init
