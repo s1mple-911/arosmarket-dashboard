@@ -633,18 +633,14 @@ function downloadExcel(){
   
   var fileName = 'Hodimlar_KPI_' + curYil + '-' + (curOy<10?'0':'') + curOy + (curYarim?'_Y'+curYarim:'') + '.xlsx';
 
-  // 🔴 Telegram ICHIDA (telefon ham, Mac/Desktop ham) blob/anchor download ISHLAMAYDI:
-  // Mac'da «Open Link blob:https://…» oynasi chiqadi va hech narsa yuklanmaydi, telefonda esa
-  // umuman jim qoladi. Shuning uchun Telegram bo'lsa DOIM: base64 -> n8n saqlash -> tayyor URL.
-  // Faqat oddiy brauzerda (Telegram tashqarisida) XLSX.writeFile ishlatiladi.
+  // 🔴 BLOB UMUMAN ISHLATILMAYDI. Sabab: bu sahifa Telegram'da ko'pincha Mini App emas, ICHKI
+  // BRAUZERDA ochiladi (ceo-dev.html goHodimlar -> openLink) — u yerda platform 'unknown' bo'ladi,
+  // ya'ni «Telegram ichidamizmi» degan tekshiruv yordam bermaydi. blob:// ni esa Telegram/macOS
+  // ocholmaydi («There is no application set to open the URL blob:…»), telefonda esa jim qoladi.
+  // Shuning uchun HAMMA muhitda bitta yo'l: base64 -> n8n saqlash -> oddiy https URL (attachment).
   var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
   var plat = (tg && tg.platform) ? tg.platform : '';
-  var inTG = !!(tg && plat && plat !== 'unknown');
-
-  if(!inTG){
-    XLSX.writeFile(wb, fileName);
-    return;
-  }
+  var miniApp = !!(tg && plat && plat !== 'unknown');   // haqiqiy Mini App (Telegram API ishlaydi)
 
   var btn = document.getElementById('excelBtn');
   var btnHtml = btn ? btn.innerHTML : '';
@@ -664,17 +660,16 @@ function downloadExcel(){
     body: JSON.stringify({ token: token, filename: fileName, b64: b64 })
   }).then(function(r){
     if(!r.ok) throw new Error('server '+r.status);
-    // downloadFile — FAQAT Bot API 8.0+ (yangi klientlar). Eski klientda u xato tashlaydi,
-    // shuning uchun avval versiya tekshiriladi, keyin ham try/catch qoladi.
-    var canDl = tg.downloadFile && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0');
-    if(canDl){
+    // 1) Mini App + Bot API 8.0+ -> native yuklash oynasi. Eski klientda downloadFile XATO
+    //    tashlaydi, shuning uchun avval versiya tekshiriladi.
+    if(miniApp && tg.downloadFile && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0')){
       try { tg.downloadFile({ url: fileUrl, file_name: fileName }); excelDone(); return; } catch(e){}
     }
-    // Eski klient: havolani tashqarida ochamiz (fayl attachment — brauzer yuklab oladi).
-    // 🔴 Telegram in-app brauzeri yuklab ololmasligi mumkin, shuning uchun havola
-    // DOIM ekranda ham qoladi — «bosdim, hech narsa bo'lmadi» holati takrorlanmasin.
-    if(tg.openLink){ try { tg.openLink(fileUrl); } catch(e){} }
-    else { try { window.open(fileUrl, '_blank'); } catch(e){} }
+    // 2) Mini App (eski klient) -> tashqi brauzerda ochamiz.
+    if(miniApp && tg.openLink){ try { tg.openLink(fileUrl); } catch(e){} }
+    // 3) Oddiy brauzer VA Telegram ichki brauzeri -> to'g'ridan yuklab olish
+    //    (javob 'attachment; filename=…' bilan keladi, sahifa almashmaydi).
+    else { try { window.location.href = fileUrl; } catch(e){ try { window.open(fileUrl,'_blank'); } catch(e2){} } }
     excelDone();
     excelFallback(fileUrl, '');
   }).catch(function(e){
@@ -705,9 +700,26 @@ function excelFallback(url, err){
            : "Fayl tayyor. Yuklanmasa — ")
     + "quyidagi havolani bosing:</div>"
     + "<a href='"+url+"' target='_blank' rel='noopener' style='color:#22c55e;font-weight:700;word-break:break-all'>📥 Excel faylni ochish</a>"
-    + "<div style='text-align:right;margin-top:10px'><button onclick=\"document.getElementById('excelFallback').remove()\" "
+    + "<div style='text-align:right;margin-top:10px'><button onclick=\"excelCopy('"+url+"',this)\" "
+    + "style='background:rgba(255,255,255,.08);border:0;color:#e5e7eb;border-radius:8px;padding:6px 12px;margin-right:6px;cursor:pointer'>Havolani nusxalash</button>"
+    + "<button onclick=\"document.getElementById('excelFallback').remove()\" "
     + "style='background:rgba(255,255,255,.08);border:0;color:#e5e7eb;border-radius:8px;padding:6px 12px;cursor:pointer'>Yopish</button></div>";
   document.body.appendChild(box);
+}
+
+// Oxirgi chora: havolani nusxalab, brauzerga qo'lda qo'yish (in-app brauzer yuklolmasa)
+function excelCopy(url, el){
+  function ok(){ if(el){ el.textContent = 'Nusxalandi ✓'; } }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(ok, fallbackCopy);
+  } else { fallbackCopy(); }
+  function fallbackCopy(){
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = url; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok();
+    }catch(e){ if(el){ el.textContent = 'Nusxalanmadi'; } }
+  }
 }
 
 // Init

@@ -405,7 +405,7 @@ function goHodimlar(){
   var isDev = curPage.indexOf('-dev') !== -1;
   var hodimlarFile = isDev ? 'ceo-hodimlar-dev.html' : 'ceo-hodimlar.html';
   var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
-  var hodimlarUrl = basePath + hodimlarFile + '?uid=' + uid;
+  var hodimlarUrl = basePath + hodimlarFile + '?uid=' + uid + '&_=' + Date.now();
   if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink){
     window.Telegram.WebApp.openLink(hodimlarUrl);
   } else {
