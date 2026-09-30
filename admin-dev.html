@@ -2647,31 +2647,6 @@ async function scmLoadUnassigned(){
     scmState.wizardClients = data.results || [];
     scmState.wizardTotalClients = data.count || 0;
     scmState.wizardHasNext = !!data.next;
-    scmState.wizardFallback = false;
-    // 🔴 2026-09-30 (Asilbek): Aros API'ning `warehouses=<id>` filtri ba'zi omborlar uchun ISHLAMAYDI
-    //    (Qarshi Asosiy ombor 33: filtr bilan 0, filtrsiz ro'yxatda esa shu ombor mijozi bor — Ilxom Chiyal).
-    //    Zaxira: filtrlangan natija bo'sh bo'lsa to'liq ulanmagan ro'yxatni sahifalab olib, `warehouse_id`
-    //    bo'yicha klientda saralaymiz (master ~300, business_partner ~120, customer ~11 000 → ≤30 sahifa).
-    if (scmState.wizardTotalClients === 0 && scmState.wizardWarehouse) {
-      const wid = String(scmState.wizardWarehouse);
-      const found = [];
-      const MAX_PAGES = 30, PS = 500;
-      for (let p = 1; p <= MAX_PAGES; p++) {
-        const el = document.querySelector('#modal-content .modal-h p');
-        if (el) el.textContent = `2/3 · Aros filial filtri bo'sh — to'liq ro'yxat tekshirilyapti (${p}-sahifa)…`;
-        const d2 = await api('admin-scm-unassigned', { uid: UID, role: scmState.wizardRole, warehouse_id: '', page: p, page_size: PS });
-        if (d2.error) break;
-        const rs = d2.results || [];
-        rs.forEach(r => { if (String(r.warehouse_id) === wid) found.push(r); });
-        if (!d2.next || !rs.length) break;
-      }
-      if (found.length) {
-        scmState.wizardClients = found;
-        scmState.wizardTotalClients = found.length;
-        scmState.wizardHasNext = false;
-        scmState.wizardFallback = true;
-      }
-    }
     scmRenderWizardStep2();
   } catch(e){
     document.getElementById('modal-content').innerHTML = `
@@ -2692,7 +2667,7 @@ function scmRenderWizardStep2(){
   document.getElementById('modal-content').style.maxWidth = '680px';
   document.getElementById('modal-content').innerHTML = `
 <div class="modal-h">
-<div><h3>Ulanmagan mijozlar</h3><p>2/3 · ${escapeHtml(whName)} · ${roleLabels[scmState.wizardRole]||scmState.wizardRole} · ${scmState.wizardTotalClients} ta jami${scmState.wizardFallback?' · <span style="color:var(--warn-text)">to\'liq ro\'yxatdan saralandi</span>':''}</p></div>
+<div><h3>Ulanmagan mijozlar</h3><p>2/3 · ${escapeHtml(whName)} · ${roleLabels[scmState.wizardRole]||scmState.wizardRole} · ${scmState.wizardTotalClients} ta jami</p></div>
 <div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
