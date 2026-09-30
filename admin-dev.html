@@ -2336,6 +2336,11 @@ let scmState = {
   selectedClients: new Set(),
   wizardWorkers: [],
   targetWorker: null,
+  // 2026-09-30 (Asilbek): mijoz Aros'da O'Z filiali bo'yicha chiqadi, sotuvchi esa boshqa
+  // omborda (Qarshi Bahor mijozi ↔ Qarshi Asosiy ombor sotuvchisi) bo'lishi mumkin —
+  // 3-qadamda barcha omborlar sotuvchilarini ko'rsatish rejimi va tanlangan sotuvchining ombori.
+  wizardAllWh: false,
+  targetWorkerWh: null,
   planCount: 5
 };
 
@@ -2666,7 +2671,7 @@ function scmRenderWizardStep2(){
 <div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
-${list.length === 0 ? `<div class="empty"><i class="ti ti-users-off"></i><p>Ushbu filial va rol uchun ulanmagan mijoz yo'q</p></div>` : `
+${list.length === 0 ? `<div class="empty"><i class="ti ti-users-off"></i><p>Ushbu filial va rol uchun ulanmagan mijoz yo'q</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Mijoz Aros'dagi <b>o'z filiali</b> bo'yicha chiqadi (sotuvchining ombori bo'yicha emas). Masalan Qarshi Asosiy ombor sotuvchisining mijozi «Qarshi Bahor» filialida bo'lishi mumkin — 1-qadamda o'sha filialni va to'g'ri rolni (Master / Business Partner / Customer) tanlang, 3-qadamda esa boshqa ombor sotuvchisini tanlash mumkin.</p></div>` : `
 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-2);border-radius:var(--radius)">
 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500">
 <input type="checkbox" ${allSelected?'checked':''} onchange="scmToggleSelectAll(this.checked)" style="width:16px;height:16px">
@@ -2740,11 +2745,14 @@ async function scmLoadWorkersForAssign(){
 <div class="modal-body"><div class="skeleton" style="height:60px;margin-bottom:6px"></div><div class="skeleton" style="height:60px"></div></div>
 `;
   try {
-    const data = await api('admin-scm-workers', { uid: UID, warehouse_id: scmState.wizardWarehouse });
+    // wizardAllWh — barcha omborlar sotuvchilari (mijoz filiali ≠ sotuvchi ombori holati)
+    const whParam = scmState.wizardAllWh ? '' : scmState.wizardWarehouse;
+    const data = await api('admin-scm-workers', { uid: UID, warehouse_id: whParam });
     if (data.error) throw new Error(data.error);
     await scmLoadAllWorkers();
-    scmState.wizardWorkers = scmMergeAllWorkers(data.workers || [], scmState.wizardWarehouse);
-    scmState.targetWorker = null;
+    scmState.wizardWorkers = scmMergeAllWorkers(data.workers || [], whParam);
+    if (scmState.wizardAllWh) scmState.wizardWorkers.sort((a,b)=>String(a.warehouse||'').localeCompare(String(b.warehouse||'')) || String(a.first_name||'').localeCompare(String(b.first_name||'')));
+    scmState.targetWorker = null; scmState.targetWorkerWh = null;
     scmRenderWizardStep3();
   } catch(e){
     document.getElementById('modal-content').innerHTML = `
@@ -2765,7 +2773,11 @@ function scmRenderWizardStep3(){
 <div class="modal-close" onclick="scmCloseWizard()"><i class="ti ti-x"></i></div>
 </div>
 <div class="modal-body">
-${workers.length === 0 ? `<div class="empty"><i class="ti ti-user-off"></i><p>Ushbu filialda sotuvchi yo'q</p></div>` : `
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;margin-bottom:8px;border-radius:var(--radius);background:var(--bg-2)">
+<input type="checkbox" ${scmState.wizardAllWh?'checked':''} onchange="scmState.wizardAllWh=this.checked;scmLoadWorkersForAssign()" style="width:16px;height:16px">
+<span>Boshqa omborlar sotuvchilarini ham ko'rsat <span style="color:var(--text-3)">(mijoz boshqa ombordan xizmat oladigan bo'lsa)</span></span>
+</label>
+${workers.length === 0 ? `<div class="empty"><i class="ti ti-user-off"></i><p>Ushbu filialda sotuvchi yo'q</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Yuqoridagi katakchani belgilab boshqa omborlar sotuvchilarini ko'rishingiz mumkin.</p></div>` : `
 <div class="ff"><label>Plan (oyiga har mijoz uchun buyurtma soni)</label>
 <input type="number" class="input" id="wiz-plan" value="${scmState.planCount}" min="1" onchange="scmState.planCount=parseInt(this.value)||5">
 <div style="font-size:11px;color:var(--text-3);margin-top:3px">Barcha tanlangan mijozlarga bir xil qiymat qo'yiladi</div>
@@ -2773,14 +2785,16 @@ ${workers.length === 0 ? `<div class="empty"><i class="ti ti-user-off"></i><p>Us
 <div class="ff"><label>Sotuvchi * (${workers.length} ta)</label>
 <div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;padding:2px">
 ${workers.map(w => {
-  const sel = scmState.targetWorker === w.id;
+  // bitta sotuvchi bir nechta omborda bo'lishi mumkin — tanlov (id, ombor) juftligi bo'yicha
+  const sel = scmState.targetWorker === w.id && String(scmState.targetWorkerWh||scmState.wizardWarehouse) === String(w.warehouse_id||scmState.wizardWarehouse);
   const name = `${w.first_name||''} ${w.last_name||''}`.trim() || 'Nomsiz';
+  const otherWh = String(w.warehouse_id||'') && String(w.warehouse_id) !== String(scmState.wizardWarehouse);
   return `
 <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${sel?'var(--info-bg)':'var(--bg)'};border:0.5px solid ${sel?'var(--info-line)':'var(--border)'};border-radius:var(--radius-lg);cursor:pointer;transition:all 0.12s">
-<input type="radio" name="wiz-worker" value="${w.id}" ${sel?'checked':''} onchange="scmState.targetWorker=${w.id};scmRenderWizardStep3()" style="flex-shrink:0">
+<input type="radio" name="wiz-worker" value="${w.id}" ${sel?'checked':''} onchange="scmState.targetWorker=${w.id};scmState.targetWorkerWh=${w.warehouse_id!=null?Number(w.warehouse_id):'null'};scmRenderWizardStep3()" style="flex-shrink:0">
 <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${initials(name)}</div>
 <div style="flex:1;min-width:0">
-<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(name)}</div>
+<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(name)}${otherWh?` <span class="badge ${sel?'info':'muted'}" style="margin-left:6px;font-weight:500">${escapeHtml(w.warehouse||scmWhName(w.warehouse_id))}</span>`:''}</div>
 <div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">#${w.id} · ${escapeHtml(w.username||'')}</div>
 </div>
 <span class="badge ${(Number(w.clients_count)||0)>0?'info':'muted'}" style="flex-shrink:0">${w.clients_count||0} mijoz</span>
@@ -2830,8 +2844,9 @@ function scmErrText(v){
 
 // Bitta so'rov yuboradi. {ok:true,created:N} yoki {ok:false,err,forbidden?}
 async function scmSendAssign(chunk){
+  // warehouse — SOTUVCHINING ombori (boshqa ombor sotuvchisi tanlanganda wizard filialidan farq qiladi)
   const payload = {
-    warehouse: parseInt(scmState.wizardWarehouse),
+    warehouse: parseInt(scmState.targetWorkerWh || scmState.wizardWarehouse),
     worker: scmState.targetWorker,
     clients: chunk
   };
