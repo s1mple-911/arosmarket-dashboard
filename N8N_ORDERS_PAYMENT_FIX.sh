@@ -8,6 +8,8 @@
 #     — Qarshi Bahor aksessuar (102→91) TUSHIB QOLGAN → mijoz 16008 bosilganda «Order topilmadi» (buyurtmalar warehouse 91,
 #     filtr 102). Xaritaga 102:91 qo'shiladi VA klient yuboradigan `api_warehouse_id` ham qabul qilinadi (kelajakda yangi
 #     aksessuar filial qo'shilsa xaritani kutmaydi).
+#  4) Cache Builder trigger «Every 1 Hour»: har soat → cron `0 0,7-23 * * *` (n8n TZ=Asia/Tashkent): 07:00–23:00 har soat,
+#     oxirgi 00:00, kechasi 01:00–06:00 ISHLAMAYDI (Asilbek 2026-10-06). Node nomi saqlanadi (ichki havolalar buzilmasin).
 #
 # ISHLATISH (Asilbek, bitta buyruq):
 #   ssh root@37.27.15.184 'bash -s' < /Users/s1mple/Projects/arosmarket-dashboard/N8N_ORDERS_PAYMENT_FIX.sh
@@ -39,6 +41,15 @@ for n in nodes:
              "    delivery_method: o.delivery_method || null\n  };")
         n["parameters"]["jsCode"]=c.replace(old,new); hit=True; print("Build Cache: payment_method qo'shildi")
 assert hit, "Build Cache node topilmadi"
+# 4) Cache Builder trigger — kechasi 01:00–06:00 ishlamasin
+trg=[n for n in nodes if n.get("type")=="n8n-nodes-base.scheduleTrigger"]
+assert len(trg)==1, "scheduleTrigger node 1 ta bo'lishi kerak: %d" % len(trg)
+rule=trg[0]["parameters"].get("rule",{}); iv=rule.get("interval",[{}])
+if iv and iv[0].get("field")=="cronExpression" and iv[0].get("expression")=="0 0,7-23 * * *":
+    print("Trigger: cron allaqachon 0 0,7-23")
+else:
+    trg[0]["parameters"]["rule"]={"interval":[{"field":"cronExpression","expression":"0 0,7-23 * * *"}]}
+    print("Trigger: har soat → cron 0 0,7-23 * * * (Toshkent; 01:00–06:00 ishlamaydi)")
 json.dump(nodes, open(p+".new","w"), ensure_ascii=False)
 # 2) Debtors V2 API — Prep Orders
 p="/tmp/zQXwQmoheSiUj6qm_nodes.json"; nodes=json.load(open(p)); hit=False
