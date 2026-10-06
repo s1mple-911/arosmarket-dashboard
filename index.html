@@ -2221,6 +2221,10 @@ function toggleOrders(id, userId, walletBalance, userName, tab){
   var _wh=wid||userData.warehouse_id||null;
   var _url=ORDERS_API+'?user_id='+userId;
   if(_wh) _url+='&warehouse_id='+_wh;
+  // 2026-10-06: aksessuar filiallarda dashboard id ≠ Aros id (102 → 91). Orders API faqat qattiq xaritaga tayanardi —
+  // 102 tushib qolgan edi → «Order topilmadi». Endi cache_filial'dagi api_warehouse_id ham yuboriladi (server ikkalasini qabul qiladi).
+  var _apiWh=(filialData&&filialData.api_warehouse_id)?String(filialData.api_warehouse_id):'';
+  if(_apiWh && _apiWh!==String(_wh)) _url+='&api_warehouse_id='+_apiWh;
   fetch(_url)
     .then(function(r){return r.json();})
     .then(function(data){
@@ -3897,6 +3901,16 @@ function renderOchiq(confirmedOrders){
     if(etaVal){
       etaBadge = '<div style="margin-top:5px">'+kechikishBadge({is_auto:true, kutilgan_yetkazish: etaVal})+'</div>';
     }
+    // 2026-10-06 (Asilbek): to'lov turi — Cache Builder confirmedOrders[].payment_method (Aros order.payment_method).
+    // Eski keshda maydon yo'q bo'lsa chip chizilmaydi. wallet = nasiya (qarzga) — qizg'ish, qolgani neytral.
+    var payBadge = '';
+    var _pm = (o.payment_method||'').toLowerCase();
+    if(_pm){
+      var _PM = {cash:'Naqd', wallet:'Nasiya', cashback:'Cashback', card:'Karta', click:'Click', payme:'Payme', terminal:'Terminal', uzum:'Uzum'};
+      var _pmLbl = _PM[_pm] || o.payment_method;
+      var _pmSt = _pm==='wallet' ? 'background:rgba(255,77,109,.14);color:#ff6b8a' : 'background:rgba(55,138,221,.12);color:#378ADD';
+      payBadge = '<span title="To\'lov turi" style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;'+_pmSt+'">'+_pmLbl+'</span>';
+    }
     var cardBorder = isTransfer ? '1px solid rgba(139,92,246,.35)' : '1px solid var(--border)';
     var cardBg = isTransfer ? 'linear-gradient(90deg,rgba(139,92,246,.04),var(--bg2))' : 'var(--bg2)';
     html+='<a href="'+adminUrl+'" style="display:block;text-decoration:none;color:inherit">';
@@ -3904,7 +3918,7 @@ function renderOchiq(confirmedOrders){
     html+='<div class="c-av">'+ini(o.ism)+'</div>';
     html+='<div style="flex:1;min-width:0">';
     html+='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px"><div class="c-name">'+(o.ism||"Noma\'lum")+'</div>'+utypeBadge+(o.client_id?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(55,138,221,.15);color:#378ADD">ID '+o.client_id+'</span>':'')+kunBadge+'</div>';
-    html+='<div class="c-phone">Order #'+o.order_id+' · '+dtStr+'</div>';
+    html+='<div class="c-phone" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">Order #'+o.order_id+' · '+dtStr+(payBadge?' '+payBadge:'')+'</div>';
     html+=transferBadge;
     html+=etaBadge;
     html+='</div>';
