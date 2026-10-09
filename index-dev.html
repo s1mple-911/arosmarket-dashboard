@@ -2714,37 +2714,6 @@ function onPageTypeFilter(pageId, type){
 }
 
 // =============================================
-// QO'LDA TUZATISH: ayrim filiallar "bajarildi"sidan hardcode summa ayiriladi
-// (Oktyabr 2026, 1-yarim). foiz/qoldi/prognoz qayta hisoblanadi.
-// =============================================
-var BAJARILDI_AYIRISH = [
-  {match:/izza\s*sh(o|ou)wroom\s*aksessuar|izza\s*shourum\s*aksessuar/i, summa:638000000},
-  {match:/^43-?\s*do'?kon/i, summa:236400000}
-];
-function applyBajarildiAyirish(f, oy, yil, yarim){
-  if(!f || f._ayirildi) return f;
-  if(Number(oy)!==10 || Number(yil)!==2026 || Number(yarim||0)!==1) return f;
-  var name=String(f.filial||'');
-  var rule=null;
-  BAJARILDI_AYIRISH.forEach(function(r){ if(!rule && r.match.test(name)) rule=r; });
-  if(!rule) return f;
-  var oldB=Number(f.bajarildi)||0;
-  var newB=Math.max(0, oldB-rule.summa);
-  var plan=Number(f.plan)||0;
-  f.bajarildi=newB;
-  f.qoldi=Math.max(0, plan-newB);
-  f.foiz=plan>0?Math.round(newB/plan*100):0;
-  if(oldB>0){
-    var k=newB/oldB;
-    if(f.prognoz!=null) f.prognoz=Math.round((Number(f.prognoz)||0)*k);
-    if(f.prognoz_foiz!=null) f.prognoz_foiz=Math.round((Number(f.prognoz_foiz)||0)*k);
-    if(f.prognoz!=null && plan>0) f.prognoz_yetishmaydi=Math.max(0, plan-f.prognoz);
-  }
-  f._ayirildi=true;
-  return f;
-}
-
-// =============================================
 // YANGI FUNKSIYA: Filial stats yuklash
 // Eski kodga tegmadi - faqat qo'shildi
 // =============================================
@@ -2756,7 +2725,7 @@ function loadFilialStats(cb){
   fetch(url)
     .then(function(r){return r.text();})
     .then(function(txt){
-      try{var raw=JSON.parse(txt);filialData=Array.isArray(raw)?raw[0]:raw;applyBajarildiAyirish(filialData, filialData&&filialData.oy_raqami||curOy, filialData&&filialData.yil||curYil, filialData&&filialData.oy_yarim!=null?filialData.oy_yarim:curYarim);}catch(e){filialData=null;}
+      try{var raw=JSON.parse(txt);filialData=Array.isArray(raw)?raw[0]:raw;}catch(e){filialData=null;}
       if(cb) cb();
     })
     .catch(function(){filialData=null;if(cb) cb();});
@@ -2772,7 +2741,6 @@ function loadAllFiliallar(cb){
         var raw=JSON.parse(txt);
         var d=Array.isArray(raw)?raw[0]:raw;
         allFiliallar = (d && d.filiallar) ? d.filiallar : [];
-        allFiliallar.forEach(function(f){ applyBajarildiAyirish(f, curOy, curYil, curYarim); });
       }catch(e){ allFiliallar=[]; }
       if(cb) cb();
     })
@@ -3710,7 +3678,6 @@ function load(){
       loadAllCustomNames();  // custom ismlar — hamma tab uchun
       // Leaderboard'ni stats javobidan olamiz (CEO_API o'rniga - hammaga ochiq)
       allFiliallar = d.leaderboard || [];
-      allFiliallar.forEach(function(f){ applyBajarildiAyirish(f, curOy, curYil, curYarim); });
       document.getElementById('av').textContent=ini(userData.ism);
       document.getElementById('hn').textContent=userData.ism||'Hodim';
       var _hsOyTxt;
