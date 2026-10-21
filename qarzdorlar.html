@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#7BC93F">
+<title>AROS Qarzdorlar</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{
+--bg:#060610;--bg2:#0e0e20;--bg3:#161628;--border:#1e1e38;
+--text:#f0f0ff;--text2:#9393b8;--text3:#5e5e83;
+--green:#00e5a0;--red:#ff4d6d;--amber:#ffb800;--blue:#378ADD;--violet:#a855f7;
+--r-xs:6px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-full:999px;
+--tint-green:rgba(0,229,160,.13);  --tint-green-b:rgba(0,229,160,.28);
+--tint-amber:rgba(255,184,0,.13);  --tint-amber-b:rgba(255,184,0,.30);
+--tint-red:rgba(255,77,109,.13);   --tint-red-b:rgba(255,77,109,.30);
+--tint-blue:rgba(55,138,221,.14);  --tint-blue-b:rgba(55,138,221,.32);
+--tint-violet:rgba(168,85,247,.15);--tint-violet-b:rgba(168,85,247,.32);
+--tint-neutral:rgba(148,148,190,.13);--tint-neutral-b:rgba(148,148,190,.26);
+}
+[data-theme="light"]{
+--bg:#f4f4fa;--bg2:#ffffff;--bg3:#f1f1f7;--border:#e2e2ee;
+--text:#0a0a1a;--text2:#54546e;--text3:#84849c;
+--green:#00875a;--red:#d92646;--amber:#a06400;--blue:#185FA5;--violet:#7C3AED;
+--tint-green:rgba(0,135,90,.10);   --tint-green-b:rgba(0,135,90,.24);
+--tint-amber:rgba(160,100,0,.11);  --tint-amber-b:rgba(160,100,0,.26);
+--tint-red:rgba(217,38,70,.09);    --tint-red-b:rgba(217,38,70,.24);
+--tint-blue:rgba(24,95,165,.10);   --tint-blue-b:rgba(24,95,165,.26);
+--tint-violet:rgba(124,58,237,.10);--tint-violet-b:rgba(124,58,237,.26);
+--tint-neutral:rgba(30,30,60,.06); --tint-neutral-b:rgba(30,30,60,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+input,select,button{font-family:inherit}
+.lu{display:inline-block;vertical-align:middle;flex-shrink:0}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:var(--r-xs)}
+
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:100}
+.hdr-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green);letter-spacing:2px;flex-shrink:0}
+.hdr-info{flex:1;min-width:0}
+.hdr-title{font-size:14px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-sub{font-size:11px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibtn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text2);transition:transform .12s ease}
+.ibtn:active{transform:scale(.92)}
+.ibtn.spin svg{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* Jami karta */
+.sum{margin:12px 14px 0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.sum-l{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.sum-v{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sum-s{font-size:10px;color:var(--text2);margin-top:2px}
+.prog{margin:8px 14px 0;height:4px;background:var(--bg3);border-radius:var(--r-full);overflow:hidden;display:none}
+.prog>div{height:100%;width:0;background:var(--green);transition:width .3s ease}
+
+/* Filtrlar */
+.filters{padding:10px 14px 0;display:flex;flex-direction:column;gap:8px}
+.search{position:relative}
+.search input{width:100%;min-height:42px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 36px 10px 38px;color:var(--text);font-size:14px;outline:none;font-weight:600}
+.search input::placeholder{color:var(--text3);font-weight:500}
+.search .lu{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.search .clr{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;display:none;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;background:var(--bg3)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frow.three{grid-template-columns:1fr 1fr 1fr}
+.fld{position:relative;min-width:0}
+.fld label{position:absolute;left:10px;top:4px;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;pointer-events:none}
+.fld select,.fld input{width:100%;min-height:44px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 28px 4px 10px;color:var(--text);font-size:13px;font-weight:700;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer}
+.fld input{padding-right:10px}
+.fld::after{content:'';position:absolute;right:11px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--text3);border-bottom:1.5px solid var(--text3);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.fld.noarrow::after{display:none}
+.fld.on select,.fld.on input{border-color:var(--tint-green-b);background:linear-gradient(0deg,var(--tint-green),var(--tint-green)),var(--bg2)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;height:30px;padding:0 11px;border-radius:var(--r-full);border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+.chip b{font-weight:800;color:var(--text3)}
+.chip.on{background:var(--tint-red);border-color:var(--tint-red-b);color:var(--red)}
+.chip.on b{color:var(--red)}
+.chip.on.amb{background:var(--tint-amber);border-color:var(--tint-amber-b);color:var(--amber)}
+.chip.on.amb b{color:var(--amber)}
+.chip.on.blu{background:var(--tint-blue);border-color:var(--tint-blue-b);color:var(--blue)}
+.chip.on.blu b{color:var(--blue)}
+.chip.on.neu{background:var(--tint-neutral);border-color:var(--tint-neutral-b);color:var(--text)}
+.chip.on.neu b{color:var(--text)}
+.sortbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px 4px}
+.sortbar .cnt{font-size:12px;color:var(--text2);font-weight:700}
+.sortbar .cnt b{color:var(--text)}
+.reset{font-size:12px;font-weight:700;color:var(--red);cursor:pointer;display:none}
+
+/* Ro'yxat */
+.list{padding:6px 14px 40px;display:flex;flex-direction:column;gap:8px}
+.row{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;cursor:pointer}
+.row:active{transform:scale(.995)}
+.row-top{display:flex;align-items:flex-start;gap:10px}
+.av{width:38px;height:38px;border-radius:var(--r-sm);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.r-name{font-size:14px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-meta{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:5px;font-size:10px;font-weight:800;white-space:nowrap;line-height:1}
+.tag.id{background:var(--bg3);color:var(--text2)}
+.tag.fil{background:var(--tint-neutral);border:1px solid var(--tint-neutral-b);color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;display:inline-block;line-height:17px}
+.tag.red{background:var(--tint-red);color:var(--red)}
+.tag.amb{background:var(--tint-amber);color:var(--amber)}
+.tag.grn{background:var(--tint-green);color:var(--green)}
+.tag.blu{background:var(--tint-blue);color:var(--blue)}
+.r-tel{font-size:11px;color:var(--text2);font-weight:600;white-space:nowrap}
+.r-right{text-align:right;flex-shrink:0;margin-left:4px}
+.r-sum{font-size:14px;font-weight:800;color:var(--red);white-space:nowrap}
+.r-sub{font-size:10px;color:var(--text3);margin-top:3px;white-space:nowrap}
+.r-det{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.row.open .r-det{display:block}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.kv div{display:flex;justify-content:space-between;gap:8px;font-size:12px}
+.kv span{color:var(--text3)}
+.kv b{font-weight:700}
+.acts{display:flex;gap:8px;margin-top:10px}
+.acts a,.acts div{flex:1;min-height:38px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--r-sm);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text)}
+.acts .pri{background:var(--tint-green);border-color:var(--tint-green-b);color:var(--green)}
+.empty{text-align:center;padding:50px 24px;color:var(--text2);font-size:13px}
+.loading{text-align:center;padding:50px 24px;color:var(--text2);font-size:13px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:rot .8s linear infinite;margin:0 auto 12px}
+.err-box{margin:14px;padding:14px;background:var(--tint-red);border:1px solid var(--tint-red-b);border-radius:var(--r-md);color:var(--red);font-size:13px;font-weight:600}
+.note{margin:6px 14px 0;font-size:11px;color:var(--amber);font-weight:600}
+@media(min-width:700px){.list{display:grid;grid-template-columns:1fr 1fr}.sum{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="ibtn" onclick="goBack()" title="CEO sahifasi"><svg class="lu" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></div>
+  <div class="hdr-info">
+    <div class="hdr-title">Qarzdorlar · barcha filiallar</div>
+    <div class="hdr-sub" id="hdr-sub">Yuklanmoqda...</div>
+  </div>
+  <div class="ibtn" id="refreshBtn" onclick="load(true)" title="Yangilash"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></div>
+  <div class="ibtn" id="themeBtn" onclick="toggleTheme()" title="Tema"><svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>
+</div>
+
+<div class="sum" id="sum">
+  <div><div class="sum-l">Qarzdorlar</div><div class="sum-v num" id="s-cnt">—</div><div class="sum-s" id="s-cnt-s">filtr bo'yicha</div></div>
+  <div><div class="sum-l">Muddati o'tgan</div><div class="sum-v num" id="s-otgan" style="color:var(--red)">—</div><div class="sum-s">so'm (hamyon ayirilgan)</div></div>
+  <div><div class="sum-l">Jami qarz</div><div class="sum-v num" id="s-jami">—</div><div class="sum-s">so'm</div></div>
+</div>
+<div class="prog" id="prog"><div id="prog-bar"></div></div>
+<div class="note" id="note" style="display:none"></div>
+
+<div class="filters">
+  <div class="search">
+    <svg class="lu" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="q" type="search" placeholder="Ism, telefon yoki ID bo'yicha qidirish" autocomplete="off" oninput="onFilter()">
+    <div class="clr" id="q-clr" onclick="clearQ()"><svg class="lu" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+  </div>
+  <div class="chips" id="status-chips"></div>
+  <div class="frow">
+    <div class="fld" id="f-fil-w"><label>Filial</label><select id="f-fil" onchange="onFilter()"><option value="">Hammasi</option></select></div>
+    <div class="fld" id="f-prof-w"><label>Profil</label><select id="f-prof" onchange="onFilter()"><option value="">Hammasi</option><option>Zapchast</option><option>Aksessuar</option><option>Franshiza</option></select></div>
+  </div>
+  <div class="frow three">
+    <div class="fld" id="f-kun-w"><label>Kun</label><select id="f-kun" onchange="onFilter()">
+      <option value="">Hammasi</option><option value="1-7">1–7 kun</option><option value="8-15">8–15 kun</option><option value="16-30">16–30 kun</option><option value="31-60">31–60 kun</option><option value="61-">60+ kun</option>
+    </select></div>
+    <div class="fld" id="f-sum-w"><label>Summa</label><select id="f-sum" onchange="onFilter()">
+      <option value="">Hammasi</option><option value="100000">≥ 100 ming</option><option value="500000">≥ 500 ming</option><option value="1000000">≥ 1 mln</option><option value="5000000">≥ 5 mln</option><option value="10000000">≥ 10 mln</option><option value="50000000">≥ 50 mln</option>
+    </select></div>
+    <div class="fld" id="f-tur-w"><label>Turi</label><select id="f-tur" onchange="onFilter()">
+      <option value="">Hammasi</option><option value="master">Master</option><option value="business_partner">Biznes partnyor</option><option value="limit">Limitdan oshgan</option>
+    </select></div>
+  </div>
+  <div class="frow">
+    <div class="fld" id="f-sort-w"><label>Saralash</label><select id="f-sort" onchange="onFilter()">
+      <option value="kun">Muddati o'tgan kun</option><option value="otgan">O'tgan summa</option><option value="jami">Jami qarz</option><option value="limit">Limit foizi</option><option value="wallet">Hamyon</option><option value="ism">Ism</option><option value="fil">Filial</option>
+    </select></div>
+    <div class="fld" id="f-dir-w"><label>Tartib</label><select id="f-dir" onchange="onFilter()"><option value="desc">Kamayish (ko'p → kam)</option><option value="asc">O'sish (kam → ko'p)</option></select></div>
+  </div>
+</div>
+
+<div class="sortbar">
+  <div class="cnt" id="cnt">—</div>
+  <div class="reset" id="reset" onclick="resetFilters()">Filtrlarni tozalash</div>
+</div>
+<div class="list" id="list"><div class="loading"><div class="spinner"></div>Filiallar yuklanmoqda...</div></div>
+
+<script>
+var CEO_API     = 'https://n8n.arosmarket.com/webhook/aros-cache-ceo';
+var DEBTORS_API = 'https://n8n.arosmarket.com/webhook/aros-debtors-cache';
+var uid = new URLSearchParams(window.location.search).get('uid') || '';
+
+// ===== AUTH (ceo.html bilan bir xil) =====
+(function authCheck(){
+  if(uid) return;
+  var token = localStorage.getItem('aros-token');
+  if(!token){ window.location.href = 'login.html'; return; }
+  try{
+    var u = JSON.parse(localStorage.getItem('aros-user')||'null');
+    if(u && u.telegram_id){
+      uid = u.telegram_id;
+      try{ window.history.replaceState({}, '', window.location.pathname+'?uid='+encodeURIComponent(uid)); }catch(e){}
+    }
+  }catch(e){}
+  fetch('https://n8n.arosmarket.com/webhook/aros-verify-token',{method:'POST',body:JSON.stringify({token:token})})
+    .then(function(r){return r.json();}).then(function(d){
+      var data = Array.isArray(d)?d[0]:d;
+      if(!data||!data.ok){ localStorage.removeItem('aros-token'); localStorage.removeItem('aros-user'); window.location.href='login.html'; }
+    }).catch(function(){});
+})();
+
+// ===== Tema (ceo-theme kaliti bilan umumiy) =====
+var isDark = true;
+function setThemeIcon(){
+  document.getElementById('themeBtn').innerHTML = isDark
+    ? '<svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'
+    : '<svg class="lu" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+}
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  setThemeIcon();
+  try{localStorage.setItem('ceo-theme',isDark?'dark':'light');}catch(e){}
+}
+(function(){ try{ if(localStorage.getItem('ceo-theme')==='light'){ isDark=false; document.documentElement.setAttribute('data-theme','light'); setThemeIcon(); } }catch(e){} })();
+
+function goBack(){
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  window.location.href = basePath + (isDev?'ceo-dev.html':'ceo.html') + '?uid=' + uid;
+}
+
+// ===== Yordamchilar =====
+function fmt(n){ return Math.round(Number(n)||0).toLocaleString('uz-UZ'); }
+function fmtShort(n){
+  n = Number(n)||0; var a = Math.abs(n);
+  if(a>=1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'')+' mlrd';
+  if(a>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+' mln';
+  if(a>=1e3) return Math.round(n/1e3)+' ming';
+  return fmt(n);
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function telNorm(t){
+  // "deleted1d137d9c-...+998335096767" kabi o'chirilgan akkaunt username'idan telefon ajratiladi
+  var d = String(t||'').replace(/\D/g,'');
+  if(d.length>12){ var m = d.match(/998\d{9}$/); if(m) d = m[0]; }
+  return d;
+}
+function telPretty(t){
+  var d = telNorm(t);
+  if(d.length===12 && d.indexOf('998')===0) return '+998 '+d.slice(3,5)+' '+d.slice(5,8)+' '+d.slice(8,10)+' '+d.slice(10);
+  if(d.length===9) return '+998 '+d.slice(0,2)+' '+d.slice(2,5)+' '+d.slice(5,7)+' '+d.slice(7);
+  return String(t||'');
+}
+function kunClass(k){ return k>30?'red':(k>7?'amb':'grn'); }
+function parseSafe(txt){ try{ var d=JSON.parse(txt); return Array.isArray(d)?d[0]:d; }catch(e){ return null; } }
+
+// ===== Ma'lumot =====
+var filials = [];        // {warehouse_id, filial, profil}
+var filialMap = {};
+var rows = [];           // tekis ro'yxat: har bir (filial, mijoz)
+var statusFilter = 'otgan';
+var failed = [];
+var openId = null;
+
+function load(force){
+  if(!uid){ document.getElementById('list').innerHTML='<div class="err-box">URL da ?uid= topilmadi</div>'; return; }
+  var btn = document.getElementById('refreshBtn'); btn.classList.add('spin');
+  document.getElementById('list').innerHTML='<div class="loading"><div class="spinner"></div>Filiallar yuklanmoqda...</div>';
+  document.getElementById('hdr-sub').textContent='Yuklanmoqda...';
+  var now = new Date();
+  var url = CEO_API+'?uid='+uid+'&oy='+(now.getMonth()+1)+'&yil='+now.getFullYear()+'&yarim='+(now.getDate()>15?2:1)+'&t='+Date.now();
+  fetch(url,{cache:'no-store'}).then(function(r){return r.text();}).then(function(txt){
+    var d = parseSafe(txt);
+    if(!d) throw new Error('Serverdan xato javob keldi');
+    if(d.error==='unauthorized') throw new Error("Ruxsat yo'q: bu sahifa faqat CEO uchun");
+    if(d.error) throw new Error(d.error);
+    filials = (d.filiallar||[]).map(function(f){ return {warehouse_id:String(f.warehouse_id), filial:f.filial||('#'+f.warehouse_id), profil:f.profil||'', qarz_limit:Number(f.qarz_limit)||0}; });
+    if(!filials.length) throw new Error('Filiallar topilmadi');
+    filialMap = {}; filials.forEach(function(f){ filialMap[f.warehouse_id]=f; });
+    fillFilialSelect();
+    return loadAllDebtors();
+  }).then(function(){
+    btn.classList.remove('spin');
+    document.getElementById('prog').style.display='none';
+    onFilter();
+  }).catch(function(e){
+    btn.classList.remove('spin');
+    document.getElementById('prog').style.display='none';
+    document.getElementById('hdr-sub').textContent='Xato';
+    document.getElementById('list').innerHTML='<div class="err-box">'+esc(e.message||e)+'</div>';
+  });
+}
+
+function fillFilialSelect(){
+  var sel = document.getElementById('f-fil');
+  var cur = sel.value;
+  var sorted = filials.slice().sort(function(a,b){ return a.filial.localeCompare(b.filial,'uz'); });
+  sel.innerHTML = '<option value="">Hammasi ('+filials.length+')</option>' + sorted.map(function(f){ return '<option value="'+f.warehouse_id+'">'+esc(f.filial)+'</option>'; }).join('');
+  sel.value = cur;
+}
+
+// Har bir filial uchun kesh (bugun / ertaga / paslozim) — parallel, 6 tadan
+function loadAllDebtors(){
+  rows = []; failed = [];
+  var done = 0, total = filials.length;
+  var prog = document.getElementById('prog'), bar = document.getElementById('prog-bar');
+  prog.style.display='block'; bar.style.width='0%';
+  document.getElementById('list').innerHTML='<div class="loading"><div class="spinner"></div>Qarzdorlar yuklanmoqda... <span id="prog-txt">0/'+total+'</span></div>';
+  var queue = filials.slice();
+  function next(){
+    var f = queue.shift();
+    if(!f) return Promise.resolve();
+    return fetch(DEBTORS_API+'?wid='+f.warehouse_id+'&t='+Date.now(),{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){ data = Array.isArray(data)?data[0]:data; addRows(f, data||{}); })
+      .catch(function(){ failed.push(f.filial); })
+      .then(function(){
+        done++; bar.style.width = Math.round(done/total*100)+'%';
+        var pt = document.getElementById('prog-txt'); if(pt) pt.textContent = done+'/'+total;
+        return next();
+      });
+  }
+  var workers = []; for(var i=0;i<6;i++) workers.push(next());
+  return Promise.all(workers);
+}
+
+// index.html mapDebtorFromCache bilan bir xil mantiq:
+//  O'tgan  = bugun so'rovi (deadline < bugun), kun = most_outdated_deadline, summa = o'tgan − hamyon
+//  Bugun   = ertaga so'rovida MOD=1 (deadline = bugun)
+//  Ertaga  = paslozim so'rovida MOD=1 (deadline = ertaga)
+function addRows(f, data){
+  var seen = {};
+  function push(d, status){
+    var key = String(d.id);
+    if(seen[key]) return; seen[key]=true;
+    var wallet = Number(d.wallet_balance)||0;
+    var outdated = Number(d.total_outdated_debts)||0;
+    var mod = Number(d.most_outdated_deadline)||0;
+    var dad = Number(d.debt_allowed_days)||0;
+    var limit = Number(d.debt_limit)||0;
+    var total = Number(d.total_debts)||0;
+    rows.push({
+      key: f.warehouse_id+':'+key,
+      id: d.id,
+      ism: ((d.first_name||'')+' '+(d.last_name||'')).trim() || "Noma'lum",
+      tel: d.username||'',
+      wid: f.warehouse_id, filial: f.filial, profil: f.profil,
+      status: status,
+      kun: status==='otgan' ? Math.max(0,mod) : 0,
+      otgan: Math.max(0, outdated - wallet),
+      otgan_brutto: outdated,
+      jami: total, wallet: wallet, limit: limit,
+      limit_foiz: limit>0 ? Math.round(total/limit*100) : 0,
+      dad: dad,
+      tur: dad===1 ? 'master' : (dad>1 ? 'business_partner' : '')
+    });
+  }
+  ((data.bugun&&data.bugun.debtors)||[]).forEach(function(d){ push(d,'otgan'); });
+  ((data.ertaga&&data.ertaga.debtors)||[]).forEach(function(d){ if(Number(d.most_outdated_deadline)===1) push(d,'bugun'); });
+  ((data.paslozim&&data.paslozim.debtors)||[]).forEach(function(d){ if(Number(d.most_outdated_deadline)===1) push(d,'ertaga'); });
+}
+
+// ===== Filtr + saralash =====
+function setStatus(s){ statusFilter=s; onFilter(); }
+function clearQ(){ document.getElementById('q').value=''; onFilter(); }
+function resetFilters(){
+  ['f-fil','f-prof','f-kun','f-sum','f-tur'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('f-sort').value='kun'; document.getElementById('f-dir').value='desc';
+  document.getElementById('q').value=''; statusFilter='otgan'; onFilter();
+}
+function applyBase(list, skipStatus){
+  var q = document.getElementById('q').value.trim().toLowerCase();
+  var qNum = q.replace(/\D/g,'');
+  var fil = document.getElementById('f-fil').value;
+  var prof = document.getElementById('f-prof').value;
+  var kun = document.getElementById('f-kun').value;
+  var sum = Number(document.getElementById('f-sum').value)||0;
+  var tur = document.getElementById('f-tur').value;
+  var kMin=0,kMax=Infinity;
+  if(kun){ var p=kun.split('-'); kMin=Number(p[0])||0; kMax=p[1]?Number(p[1]):Infinity; }
+  return list.filter(function(r){
+    if(!skipStatus && statusFilter!=='all' && r.status!==statusFilter) return false;
+    if(fil && r.wid!==fil) return false;
+    if(prof && r.profil!==prof) return false;
+    if(kun && (r.kun<kMin || r.kun>kMax)) return false;
+    if(sum && (r.status==='otgan' ? r.otgan : r.otgan_brutto) < sum) return false;
+    if(tur==='limit'){ if(!(r.limit>0 && r.jami>r.limit)) return false; }
+    else if(tur && r.tur!==tur) return false;
+    if(q){
+      var tel = String(r.tel).toLowerCase(), telNum = tel.replace(/\D/g,'');
+      var hit = r.ism.toLowerCase().indexOf(q)>=0 || String(r.id).indexOf(q)>=0 || tel.indexOf(q)>=0 || r.filial.toLowerCase().indexOf(q)>=0;
+      if(!hit && qNum && (String(r.id).indexOf(qNum)>=0 || telNum.indexOf(qNum)>=0)) hit=true;
+      if(!hit) return false;
+    }
+    return true;
+  });
+}
+function onFilter(){
+  if(!rows.length && !filials.length) return;
+  var sortKey = document.getElementById('f-sort').value;
+  var dir = document.getElementById('f-dir').value==='asc' ? 1 : -1;
+  var list = applyBase(rows, false);
+  list.sort(function(a,b){
+    var va, vb;
+    switch(sortKey){
+      case 'otgan': va=a.otgan; vb=b.otgan; break;
+      case 'jami': va=a.jami; vb=b.jami; break;
+      case 'limit': va=a.limit_foiz; vb=b.limit_foiz; break;
+      case 'wallet': va=a.wallet; vb=b.wallet; break;
+      case 'ism': return dir * -1 * a.ism.localeCompare(b.ism,'uz',{sensitivity:'base'});
+      case 'fil': var c=a.filial.localeCompare(b.filial,'uz'); if(c) return dir*-1*c; va=a.kun; vb=b.kun; break;
+      default: va=a.kun; vb=b.kun;
+    }
+    if(va!==vb) return dir*(va-vb);
+    if(a.otgan!==b.otgan) return b.otgan-a.otgan;         // teng bo'lsa: summasi kattasi tepada
+    return a.ism.localeCompare(b.ism,'uz',{sensitivity:'base'});
+  });
+
+  // status chiplari (boshqa filtrlardan keyingi sonlar)
+  var base = applyBase(rows, true);
+  var cnt = {otgan:0,bugun:0,ertaga:0};
+  base.forEach(function(r){ cnt[r.status]++; });
+  var chips = [
+    {k:'otgan', t:"Muddati o'tgan", c:''},
+    {k:'bugun', t:'Bugun muddati', c:'amb'},
+    {k:'ertaga', t:'Ertaga muddati', c:'blu'},
+    {k:'all', t:'Hammasi', c:'neu'}
+  ];
+  document.getElementById('status-chips').innerHTML = chips.map(function(c){
+    var n = c.k==='all' ? base.length : cnt[c.k];
+    return '<div class="chip '+(statusFilter===c.k?'on '+c.c:'')+'" onclick="setStatus(\''+c.k+'\')">'+c.t+' <b>'+n+'</b></div>';
+  }).join('');
+
+  // jami
+  var sOtgan=0, sJami=0;
+  list.forEach(function(r){ sOtgan+=r.otgan; sJami+=r.jami; });
+  document.getElementById('s-cnt').textContent = list.length;
+  document.getElementById('s-cnt-s').textContent = list.length===rows.length ? 'barcha filiallar' : ('jami '+rows.length+' tadan');
+  document.getElementById('s-otgan').textContent = fmtShort(sOtgan);
+  document.getElementById('s-otgan').title = fmt(sOtgan)+" so'm";
+  document.getElementById('s-jami').textContent = fmtShort(sJami);
+  document.getElementById('s-jami').title = fmt(sJami)+" so'm";
+  document.getElementById('cnt').innerHTML = '<b>'+list.length+'</b> ta qarzdor · '+filials.length+' filial'+(failed.length?' · <span style="color:var(--amber)">'+failed.length+' filial yuklanmadi</span>':'');
+  document.getElementById('hdr-sub').textContent = rows.filter(function(r){return r.status==='otgan';}).length+" ta muddati o'tgan · "+new Date().toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+  var note = document.getElementById('note');
+  if(failed.length){ note.style.display='block'; note.textContent='Yuklanmadi: '+failed.join(', ')+' — «Yangilash» bosing'; } else note.style.display='none';
+
+  // filtr holati belgilari
+  var anyF = false;
+  [['f-fil','f-fil-w'],['f-prof','f-prof-w'],['f-kun','f-kun-w'],['f-sum','f-sum-w'],['f-tur','f-tur-w']].forEach(function(p){
+    var on = !!document.getElementById(p[0]).value; if(on) anyF=true;
+    document.getElementById(p[1]).classList.toggle('on', on);
+  });
+  var q = document.getElementById('q').value;
+  document.getElementById('q-clr').style.display = q ? 'flex' : 'none';
+  var sortDefault = document.getElementById('f-sort').value==='kun' && document.getElementById('f-dir').value==='desc';
+  document.getElementById('reset').style.display = (anyF || q || statusFilter!=='otgan' || !sortDefault) ? 'block' : 'none';
+
+  render(list);
+}
+
+function render(list){
+  var el = document.getElementById('list');
+  if(!list.length){ el.innerHTML='<div class="empty">Shartlarga mos qarzdor topilmadi</div>'; return; }
+  var html = '';
+  var max = 400, shown = list.slice(0,max);
+  shown.forEach(function(r){
+    var utShort = r.tur==='master' ? 'M' : (r.tur==='business_partner' ? 'BP' : '?');
+    var utColor = r.tur==='master' ? 'var(--blue)' : (r.tur==='business_partner' ? 'var(--violet)' : 'var(--text3)');
+    var kunTag = r.status==='otgan'
+      ? '<span class="tag '+kunClass(r.kun)+'">'+r.kun+' kun o\'tgan</span>'
+      : (r.status==='bugun' ? '<span class="tag amb">bugun muddati</span>' : '<span class="tag blu">ertaga muddati</span>');
+    var mainSum = r.status==='otgan' ? r.otgan : r.otgan_brutto;
+    html += '<div class="row'+(openId===r.key?' open':'')+'" onclick="toggleRow(\''+r.key+'\')">';
+    html += '<div class="row-top">';
+    html += '<div class="av" style="color:'+utColor+'">'+utShort+'</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div class="r-name">'+esc(r.ism)+'</div>';
+    html += '<div class="r-meta"><span class="tag id">#'+r.id+'</span>'+kunTag+'<span class="tag fil" title="'+esc(r.filial)+'">'+esc(r.filial)+'</span></div>';
+    if(r.tel) html += '<div class="r-tel" style="margin-top:4px">'+esc(telPretty(r.tel))+'</div>';
+    html += '</div>';
+    html += '<div class="r-right"><div class="r-sum num">'+fmt(mainSum)+'</div>';
+    html += '<div class="r-sub num">jami '+fmtShort(r.jami)+(r.wallet>0?' · <span style="color:var(--green)">hamyon '+fmtShort(r.wallet)+'</span>':'')+'</div></div>';
+    html += '</div>';
+    // tafsilot
+    html += '<div class="r-det"><div class="kv">';
+    html += '<div><span>Muddati o\'tgan (brutto)</span><b class="num">'+fmt(r.otgan_brutto)+'</b></div>';
+    html += '<div><span>Hamyon</span><b class="num" style="color:var(--green)">'+fmt(r.wallet)+'</b></div>';
+    html += '<div><span>Jami qarz</span><b class="num">'+fmt(r.jami)+'</b></div>';
+    html += '<div><span>Limit</span><b class="num">'+(r.limit?fmt(r.limit)+' · '+r.limit_foiz+'%':'—')+'</b></div>';
+    html += '<div><span>Qarz muddati</span><b>'+(r.dad?r.dad+' kun':'—')+'</b></div>';
+    html += '<div><span>Turi</span><b>'+(r.tur==='master'?'Master':(r.tur==='business_partner'?'Biznes partnyor':'—'))+'</b></div>';
+    html += '</div><div class="acts">';
+    if(r.tel) html += '<a href="tel:+'+esc(telNorm(r.tel))+'" onclick="event.stopPropagation()"><svg class="lu" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Qo\'ng\'iroq</a>';
+    html += '<div class="pri" onclick="event.stopPropagation();openFilial(\''+r.wid+'\')"><svg class="lu" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>Filial sahifasi</div>';
+    html += '</div></div>';
+    html += '</div>';
+  });
+  if(list.length>max) html += '<div class="empty">Yana '+(list.length-max)+' ta — filtrni toraytiring</div>';
+  el.innerHTML = html;
+}
+function toggleRow(key){ openId = (openId===key) ? null : key; onFilter(); }
+function openFilial(wid){
+  var curPage = window.location.pathname.split('/').pop() || '';
+  var isDev = curPage.indexOf('-dev') !== -1;
+  var basePath = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var now = new Date();
+  var url = basePath + (isDev?'index-dev.html':'index.html') + '?uid=' + uid + '&wid=' + wid + '&oy=' + (now.getMonth()+1) + '&yil=' + now.getFullYear() + '&yarim=' + (now.getDate()>15?2:1);
+  if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(url);
+  else window.open(url,'_blank');
+}
+
+if(window.Telegram && window.Telegram.WebApp){ try{ window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }catch(e){} }
+load();
+</script>
+</body>
+</html>
