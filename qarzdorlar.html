@@ -73,6 +73,33 @@ input,select,button{font-family:inherit}
 .fld::after{content:'';position:absolute;right:11px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--text3);border-bottom:1.5px solid var(--text3);transform:translateY(-70%) rotate(45deg);pointer-events:none}
 .fld.noarrow::after{display:none}
 .fld.on select,.fld.on input{border-color:var(--tint-green-b);background:linear-gradient(0deg,var(--tint-green),var(--tint-green)),var(--bg2)}
+/* Multiselect (qidiruvli) — tugma + pastdan chiqadigan varaq */
+.msel-btn{width:100%;min-height:44px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 28px 4px 10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
+.fld.on .msel-btn{border-color:var(--tint-green-b);background:linear-gradient(0deg,var(--tint-green),var(--tint-green)),var(--bg2)}
+.ms-back{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none}
+.ms-back.open{display:block}
+.ms-sheet{position:fixed;left:0;right:0;bottom:0;max-height:82vh;background:var(--bg2);border-top:1px solid var(--border);border-radius:var(--r-lg) var(--r-lg) 0 0;z-index:201;display:none;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.ms-sheet.open{display:flex}
+.ms-head{display:flex;align-items:center;gap:8px;padding:12px 14px 8px}
+.ms-head b{flex:1;font-size:14px}
+.ms-head .ms-cnt{font-size:11px;color:var(--text2);font-weight:700}
+.ms-search{padding:0 14px 8px}
+.ms-search input{width:100%;min-height:40px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;color:var(--text);font-size:14px;outline:none;font-weight:600}
+.ms-list{flex:1;overflow-y:auto;padding:0 8px 8px;-webkit-overflow-scrolling:touch}
+.ms-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:var(--r-sm);cursor:pointer;min-height:44px}
+.ms-item:active{background:var(--bg3)}
+.ms-box{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.ms-item.on .ms-box{background:var(--green);border-color:var(--green)}
+.ms-item.on .ms-box::after{content:'';width:5px;height:9px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(45deg) translate(-1px,-1px)}
+[data-theme="light"] .ms-item.on .ms-box::after{border-color:#fff}
+.ms-t{flex:1;min-width:0}
+.ms-t div{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-t span{font-size:11px;color:var(--text3);font-weight:600}
+.ms-n{font-size:11px;color:var(--text2);font-weight:700;flex-shrink:0}
+.ms-foot{display:flex;gap:8px;padding:8px 14px 12px;border-top:1px solid var(--border)}
+.ms-foot div{flex:1;min-height:42px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text)}
+.ms-foot .ok{background:var(--green);border-color:var(--green);color:#041a10}
+@media(min-width:700px){.ms-sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:440px;max-height:70vh;border-radius:var(--r-lg);border:1px solid var(--border)}}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;height:30px;padding:0 11px;border-radius:var(--r-full);border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
@@ -154,26 +181,35 @@ input,select,button{font-family:inherit}
   </div>
   <div class="chips" id="status-chips"></div>
   <div class="frow">
-    <div class="fld" id="f-fil-w"><label>Filial</label><select id="f-fil" onchange="onFilter()"><option value="">Hammasi</option></select></div>
-    <div class="fld" id="f-prof-w"><label>Profil</label><select id="f-prof" onchange="onFilter()"><option value="">Hammasi</option><option>Zapchast</option><option>Aksessuar</option><option>Franshiza</option></select></div>
+    <div class="fld" id="f-fil-w"><label>Filial</label><div class="msel-btn" id="f-fil-btn" onclick="msOpen('fil')">Hammasi</div></div>
+    <div class="fld" id="f-cli-w"><label>Mijoz</label><div class="msel-btn" id="f-cli-btn" onclick="msOpen('cli')">Hammasi</div></div>
   </div>
   <div class="frow three">
+    <div class="fld" id="f-prof-w"><label>Profil</label><select id="f-prof" onchange="onFilter()"><option value="">Hammasi</option><option>Zapchast</option><option>Aksessuar</option><option>Franshiza</option></select></div>
     <div class="fld" id="f-kun-w"><label>Kun</label><select id="f-kun" onchange="onFilter()">
       <option value="">Hammasi</option><option value="1-7">1–7 kun</option><option value="8-15">8–15 kun</option><option value="16-30">16–30 kun</option><option value="31-60">31–60 kun</option><option value="61-">60+ kun</option>
     </select></div>
     <div class="fld" id="f-sum-w"><label>Summa</label><select id="f-sum" onchange="onFilter()">
       <option value="">Hammasi</option><option value="100000">≥ 100 ming</option><option value="500000">≥ 500 ming</option><option value="1000000">≥ 1 mln</option><option value="5000000">≥ 5 mln</option><option value="10000000">≥ 10 mln</option><option value="50000000">≥ 50 mln</option>
     </select></div>
+  </div>
+  <div class="frow three">
     <div class="fld" id="f-tur-w"><label>Turi</label><select id="f-tur" onchange="onFilter()">
       <option value="">Hammasi</option><option value="master">Master</option><option value="business_partner">Biznes partnyor</option><option value="limit">Limitdan oshgan</option>
     </select></div>
-  </div>
-  <div class="frow">
     <div class="fld" id="f-sort-w"><label>Saralash</label><select id="f-sort" onchange="onFilter()">
       <option value="kun">Muddati o'tgan kun</option><option value="otgan">O'tgan summa</option><option value="jami">Jami qarz</option><option value="limit">Limit foizi</option><option value="wallet">Hamyon</option><option value="ism">Ism</option><option value="fil">Filial</option>
     </select></div>
     <div class="fld" id="f-dir-w"><label>Tartib</label><select id="f-dir" onchange="onFilter()"><option value="desc">Kamayish (ko'p → kam)</option><option value="asc">O'sish (kam → ko'p)</option></select></div>
   </div>
+</div>
+
+<div class="ms-back" id="ms-back" onclick="msClose()"></div>
+<div class="ms-sheet" id="ms-sheet" role="dialog">
+  <div class="ms-head"><b id="ms-title">Tanlash</b><span class="ms-cnt" id="ms-cnt"></span></div>
+  <div class="ms-search"><input id="ms-q" type="search" placeholder="Qidirish..." autocomplete="off" oninput="msRender()"></div>
+  <div class="ms-list" id="ms-list"></div>
+  <div class="ms-foot"><div onclick="msClear()">Tozalash</div><div class="ok" onclick="msClose()">Tayyor</div></div>
 </div>
 
 <div class="sortbar">
@@ -291,12 +327,80 @@ function load(force){
 }
 
 function fillFilialSelect(){
-  var sel = document.getElementById('f-fil');
-  var cur = sel.value;
-  var sorted = filials.slice().sort(function(a,b){ return a.filial.localeCompare(b.filial,'uz'); });
-  sel.innerHTML = '<option value="">Hammasi ('+filials.length+')</option>' + sorted.map(function(f){ return '<option value="'+f.warehouse_id+'">'+esc(f.filial)+'</option>'; }).join('');
-  sel.value = cur;
+  // mavjud bo'lmagan filial tanlovlari (yangilashdan keyin) olib tashlanadi
+  Object.keys(msSel.fil).forEach(function(k){ if(!filialMap[k]) delete msSel.fil[k]; });
+  msLabel('fil'); msLabel('cli');
 }
+
+// ===== Qidiruvli multiselect (filial / mijoz) =====
+var msSel = { fil:{}, cli:{} };     // tanlanganlar: {id:true}
+var msKind = null;
+function msItems(kind){
+  if(kind==='fil'){
+    var cnt = {}; rows.forEach(function(r){ if(r.status==='otgan') cnt[r.wid]=(cnt[r.wid]||0)+1; });
+    return filials.slice().sort(function(a,b){ return a.filial.localeCompare(b.filial,'uz'); })
+      .map(function(f){ return {id:f.warehouse_id, t:f.filial, s:f.profil, n:(cnt[f.warehouse_id]||0)+" ta o'tgan"}; });
+  }
+  var seen = {}, out = [];
+  rows.forEach(function(r){
+    var k = String(r.id);
+    if(seen[k]){ if(seen[k].s.indexOf(r.filial)<0) seen[k].s += ', '+r.filial; return; }
+    seen[k] = {id:k, t:r.ism, s:r.filial, tel:telNorm(r.tel), n:'#'+k};
+    out.push(seen[k]);
+  });
+  return out.sort(function(a,b){ return a.t.localeCompare(b.t,'uz',{sensitivity:'base'}); });
+}
+function msLabel(kind){
+  var sel = Object.keys(msSel[kind]);
+  var btn = document.getElementById('f-'+kind+'-btn');
+  var txt = 'Hammasi';
+  if(sel.length===1){
+    txt = kind==='fil' ? ((filialMap[sel[0]]||{}).filial||sel[0]) : ((rows.filter(function(r){return String(r.id)===sel[0];})[0]||{}).ism||('#'+sel[0]));
+  } else if(sel.length>1) txt = sel.length+' ta tanlangan';
+  btn.textContent = txt; btn.title = txt;
+  document.getElementById('f-'+kind+'-w').classList.toggle('on', sel.length>0);
+}
+function msOpen(kind){
+  msKind = kind;
+  document.getElementById('ms-title').textContent = kind==='fil' ? 'Filiallar' : 'Mijozlar';
+  document.getElementById('ms-q').value = '';
+  document.getElementById('ms-back').classList.add('open');
+  document.getElementById('ms-sheet').classList.add('open');
+  msRender();
+  try{ if(window.innerWidth>=700) document.getElementById('ms-q').focus(); }catch(e){}
+}
+function msClose(){
+  document.getElementById('ms-back').classList.remove('open');
+  document.getElementById('ms-sheet').classList.remove('open');
+  msKind = null;
+}
+function msRender(){
+  if(!msKind) return;
+  var q = document.getElementById('ms-q').value.trim().toLowerCase(), qNum = q.replace(/\D/g,'');
+  var items = msItems(msKind), sel = msSel[msKind];
+  if(q) items = items.filter(function(it){
+    return it.t.toLowerCase().indexOf(q)>=0 || String(it.s||'').toLowerCase().indexOf(q)>=0 || String(it.id).indexOf(q)>=0
+      || (qNum && ((it.tel||'').indexOf(qNum)>=0 || String(it.id).indexOf(qNum)>=0));
+  });
+  // tanlanganlar tepada
+  items.sort(function(a,b){ var sa=sel[a.id]?0:1, sb=sel[b.id]?0:1; return sa-sb; });
+  var n = Object.keys(sel).length;
+  document.getElementById('ms-cnt').textContent = n ? n+' ta tanlangan' : 'hammasi';
+  var html = items.slice(0,300).map(function(it){
+    return '<div class="ms-item'+(sel[it.id]?' on':'')+'" onclick="msToggle(\''+esc(String(it.id))+'\')"><div class="ms-box"></div>'
+      + '<div class="ms-t"><div>'+esc(it.t)+'</div>'+(it.s?'<span>'+esc(it.s)+(it.tel?' · '+esc(telPretty(it.tel)):'')+'</span>':'')+'</div>'
+      + '<div class="ms-n">'+esc(it.n)+'</div></div>';
+  }).join('');
+  if(items.length>300) html += '<div class="empty" style="padding:14px">Yana '+(items.length-300)+' ta — qidiruvni aniqlashtiring</div>';
+  if(!items.length) html = '<div class="empty" style="padding:24px">Topilmadi</div>';
+  document.getElementById('ms-list').innerHTML = html;
+}
+function msToggle(id){
+  var sel = msSel[msKind];
+  if(sel[id]) delete sel[id]; else sel[id]=true;
+  msLabel(msKind); msRender(); onFilter();
+}
+function msClear(){ msSel[msKind] = {}; msLabel(msKind); msRender(); onFilter(); }
 
 // Har bir filial uchun kesh (bugun / ertaga / paslozim) — parallel, 6 tadan
 function loadAllDebtors(){
@@ -363,14 +467,16 @@ function addRows(f, data){
 function setStatus(s){ statusFilter=s; onFilter(); }
 function clearQ(){ document.getElementById('q').value=''; onFilter(); }
 function resetFilters(){
-  ['f-fil','f-prof','f-kun','f-sum','f-tur'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['f-prof','f-kun','f-sum','f-tur'].forEach(function(id){ document.getElementById(id).value=''; });
+  msSel = { fil:{}, cli:{} }; msLabel('fil'); msLabel('cli');
   document.getElementById('f-sort').value='kun'; document.getElementById('f-dir').value='desc';
   document.getElementById('q').value=''; statusFilter='otgan'; onFilter();
 }
 function applyBase(list, skipStatus){
   var q = document.getElementById('q').value.trim().toLowerCase();
   var qNum = q.replace(/\D/g,'');
-  var fil = document.getElementById('f-fil').value;
+  var filSel = msSel.fil, filAny = Object.keys(filSel).length>0;
+  var cliSel = msSel.cli, cliAny = Object.keys(cliSel).length>0;
   var prof = document.getElementById('f-prof').value;
   var kun = document.getElementById('f-kun').value;
   var sum = Number(document.getElementById('f-sum').value)||0;
@@ -379,7 +485,8 @@ function applyBase(list, skipStatus){
   if(kun){ var p=kun.split('-'); kMin=Number(p[0])||0; kMax=p[1]?Number(p[1]):Infinity; }
   return list.filter(function(r){
     if(!skipStatus && statusFilter!=='all' && r.status!==statusFilter) return false;
-    if(fil && r.wid!==fil) return false;
+    if(filAny && !filSel[r.wid]) return false;
+    if(cliAny && !cliSel[String(r.id)]) return false;
     if(prof && r.profil!==prof) return false;
     if(kun && (r.kun<kMin || r.kun>kMax)) return false;
     if(sum && (r.status==='otgan' ? r.otgan : r.otgan_brutto) < sum) return false;
@@ -446,7 +553,8 @@ function onFilter(){
 
   // filtr holati belgilari
   var anyF = false;
-  [['f-fil','f-fil-w'],['f-prof','f-prof-w'],['f-kun','f-kun-w'],['f-sum','f-sum-w'],['f-tur','f-tur-w']].forEach(function(p){
+  if(Object.keys(msSel.fil).length || Object.keys(msSel.cli).length) anyF = true;
+  [['f-prof','f-prof-w'],['f-kun','f-kun-w'],['f-sum','f-sum-w'],['f-tur','f-tur-w']].forEach(function(p){
     var on = !!document.getElementById(p[0]).value; if(on) anyF=true;
     document.getElementById(p[1]).classList.toggle('on', on);
   });
