@@ -557,17 +557,29 @@ function downloadExcel(){
   var yarimSuffix = curYarim ? (' '+curYarim+'-yarim') : '';
   
   // Sarlavhalar — "Filial foiz %" (Filial nomi'dan keyin) va "Xodim plan %" (Xodim fakt oldidan) qo'shildi
+  // 2026-11-02 (Asilbek): "Filial plan" va "Filial bajarildi" (summa) — foiz yonida; API bermasa bo'sh qoladi
   var rows = [];
   rows.push([
-    'Yil', 'Oy raqami', 'Oy', 'Lavozim', "Bo'lim", 'Filial nomi', 'Filial foiz %',
+    'Yil', 'Oy raqami', 'Oy', 'Lavozim', "Bo'lim", 'Filial nomi', 'Filial foiz %', 'Filial plan', 'Filial bajarildi',
     'Telegram ID', 'Xodim ismi', 'Fiksa', 'Xodim plan', 'Xodim plan %', 'Xodim fakt',
     'Savdo KPI', 'Boshqaruv bonusi', 'Fidoyilik', 'Jami'
   ]);
   
   var jamiFiksa = 0, jamiPlan = 0, jamiFakt = 0, jamiKpi = 0, jamiBoshq = 0, jamiFid = 0, jamiOylik = 0;
+  var jamiFilPlan = 0, jamiFilBaj = 0, filBajBor = false;
+  // Filial summasi: hodimda bo'lsa (o'sha vaqtdagi) — undan, bo'lmasa filial obyektidan; yo'q bo'lsa null
+  function filSum(h, f, key){
+    var v = (h[key] != null) ? h[key] : f[key];
+    return (v == null || v === '' || isNaN(Number(v))) ? null : Number(v);
+  }
   
   ceoData.filiallar.forEach(function(f){
+    var fPlan0 = null, fBaj0 = null;
     (f.hodimlar||[]).forEach(function(h){
+      var fPlan = filSum(h, f, 'filial_plan');
+      var fBaj = filSum(h, f, 'filial_bajarildi');
+      if(fPlan0 == null && fPlan != null) fPlan0 = fPlan;
+      if(fBaj0 == null && fBaj != null) fBaj0 = fBaj;
       var fiksa = h.fiksa||0;
       var plan = h.hodim_plan||0;
       var fakt = h.jami_bajarildi||0;
@@ -591,6 +603,8 @@ function downloadExcel(){
         f.profil || '—',
         f.filial_nomi || f.warehouse_name || '',
         filialFoiz,
+        fPlan == null ? '' : Math.round(fPlan),
+        fBaj == null ? '' : Math.round(fBaj),
         String(h.telegram_id||''),
         h.ism || '',
         Math.round(fiksa),
@@ -603,12 +617,16 @@ function downloadExcel(){
         Math.round(jami)
       ]);
     });
+    // Filial summasi JAMI'ga bir marta (hodim soniga ko'paymasin)
+    if(fPlan0 != null){ jamiFilPlan += fPlan0; filBajBor = true; }
+    if(fBaj0 != null){ jamiFilBaj += fBaj0; filBajBor = true; }
   });
   
   // Yakuniy "JAMI" qator
   var jamiFoizAvg = jamiPlan > 0 ? Math.round(jamiFakt/jamiPlan*100) : 0;
   rows.push([
     '', '', '', '', '', 'JAMI ('+ceoData.filiallar.reduce(function(s,f){return s+(f.hodimlar||[]).length;},0)+' hodim)', '',
+    filBajBor ? Math.round(jamiFilPlan) : '', filBajBor ? Math.round(jamiFilBaj) : '',
     '', '',
     Math.round(jamiFiksa),
     Math.round(jamiPlan),
@@ -624,7 +642,7 @@ function downloadExcel(){
   // Ustun kengliklari
   ws['!cols'] = [
     {wch:6},  {wch:10}, {wch:18}, {wch:10}, {wch:12},
-    {wch:25}, {wch:12}, {wch:14}, {wch:25}, {wch:14}, {wch:14}, {wch:12}, {wch:14},
+    {wch:25}, {wch:12}, {wch:16}, {wch:16}, {wch:14}, {wch:25}, {wch:14}, {wch:14}, {wch:12}, {wch:14},
     {wch:14}, {wch:16}, {wch:12}, {wch:14}
   ];
   
